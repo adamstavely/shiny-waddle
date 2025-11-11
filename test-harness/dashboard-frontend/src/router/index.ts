@@ -10,6 +10,7 @@ import PolicyDetail from '../views/PolicyDetail.vue';
 import Analytics from '../views/Analytics.vue';
 import Violations from '../views/Violations.vue';
 import History from '../views/History.vue';
+import Admin from '../views/Admin.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -68,6 +69,11 @@ const router = createRouter({
       path: '/history',
       name: 'History',
       component: History,
+    },
+    {
+      path: '/admin',
+      name: 'Admin',
+      component: Admin,
     },
   ],
 });

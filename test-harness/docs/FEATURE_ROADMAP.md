@@ -353,7 +353,7 @@ This document outlines recommended features and capabilities to enhance the Sent
 - Performance monitoring
 
 ### 27. Distributed Testing
-**Description**: Test across distributed systems
+**Description**: TopNav.vue:311 Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/lucide-vue-next.js?v=ec23f3db' does not provide an export named 'Apps' (at TopNav.vue:311:89)
 - **Multi-Region Testing**: Test across multiple regions
 - **Distributed Policy Evaluation**: Test distributed policy evaluation
 - **Consistency Testing**: Test policy consistency across systems

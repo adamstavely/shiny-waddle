@@ -97,6 +97,7 @@ const menuItems = [
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/violations', label: 'Violations', icon: AlertTriangle },
   { path: '/history', label: 'History', icon: History },
+  { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
 const isActive = (path: string): boolean => {

@@ -39,7 +39,8 @@ import {
   TestTube, 
   BarChart3, 
   AlertTriangle,
-  History
+  History,
+  Settings
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -52,7 +53,8 @@ const menuItems = [
   { path: '/policies', label: 'Policies', icon: Shield, divider: true },
   { path: '/analytics', label: 'Analytics', icon: BarChart3, divider: false },
   { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
-  { path: '/history', label: 'History', icon: History, divider: false },
+  { path: '/history', label: 'History', icon: History, divider: true },
+  { path: '/admin', label: 'Admin', icon: Settings, divider: false },
 ];
 
 const isActive = (path: string): boolean => {
@@ -75,9 +77,10 @@ watch(() => route.path, (newPath) => {
 
 <style scoped>
 .sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  height: calc(100vh - 64px);
   width: 80px;
   background: linear-gradient(180deg, #1a1f2e 0%, #0f1419 100%);
   border-right: 1px solid rgba(79, 172, 254, 0.2);

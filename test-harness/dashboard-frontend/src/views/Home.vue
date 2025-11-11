@@ -154,7 +154,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 
 .hero-section {
   max-width: 1400px;
-  margin: 0 auto 80px;
+  margin: 48px auto 80px;
 }
 
 .hero-card {
@@ -296,7 +296,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 48px;
-  text-align: center;
+  text-align: left;
 }
 
 .features-grid {
@@ -320,10 +320,15 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 }
 
 .feature-icon {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 20px;
   color: #4facfe;
+}
+
+.feature-icon :deep(svg) {
+  width: 100%;
+  height: 100%;
 }
 
 .feature-title {
