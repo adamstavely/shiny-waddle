@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel - Compliance Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .header h1 {
+      color: #667eea;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.1em;
+    }
+
+    .overall-score {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .score-value {
+      font-size: 5em;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 20px 0;
+    }
+
+    .score-label {
+      color: #666;
+      font-size: 1.2em;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: #666;
+      font-size: 1em;
+    }
+
+    .metric-value {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+
+    .status-passed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-failed {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading::after {
+      content: '...';
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🛡️ Sentinel</h1>
+      <p>Compliance Dashboard - Real-time access control monitoring</p>
+    </div>
+
+    <div id="loading" class="loading">Loading dashboard data</div>
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="dashboard" style="display: none;">
+      <div class="overall-score">
+        <div class="score-label">Overall Compliance Score</div>
+        <div class="score-value" id="overall-score">0%</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>By Application</h2>
+          <div id="applications"></div>
+        </div>
+
+        <div class="card">
+          <h2>By Team</h2>
+          <div id="teams"></div>
+        </div>
+
+        <div class="card">
+          <h2>By Category</h2>
+          <div id="categories"></div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <h2 style="margin-bottom: 20px;">Recent Test Results</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Test Name</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="test-results">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        const response = await fetch('/api/dashboard-data');
+        if (!response.ok) {
+          throw new Error('Failed to load dashboard data');
+        }
+        const data = await response.json();
+
+        // Hide loading, show dashboard
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+
+        // Update overall score
+        document.getElementById('overall-score').textContent = 
+          data.overallCompliance.toFixed(1) + '%';
+
+        // Update applications
+        const appsContainer = document.getElementById('applications');
+        appsContainer.innerHTML = '';
+        for (const [app, score] of Object.entries(data.scoresByApplication)) {
+          const appData = data.scoresByApplication[app];
+          const div = document.createElement('div');
+          div.className = 'metric';
+          div.innerHTML = `
+            <span class="metric-label">${app}</span>
+            <span class="metric-value">${appData.overallScore.toFixed(1)}%</span>
+          `;
+          appsContainer.appendChild(div);
+        }
+
+        // Update teams
+        const teamsContainer = document.getElementById('teams');
+        teamsContainer.innerHTML = '';
+        for (const [team, score] of Object.entries(data.scoresByTeam)) {
+          const teamData = data.scoresByTeam[team];
+          const div = document.createElement('div');
+          div.className = 'metric';
+          div.innerHTML = `
+            <span class="metric-label">${team}</span>
+            <span class="metric-value">${teamData.overallScore.toFixed(1)}%</span>
+          `;
+          teamsContainer.appendChild(div);
+        }
+
+        // Update categories
+        const categoriesContainer = document.getElementById('categories');
+        categoriesContainer.innerHTML = '';
+        if (data.scoresByApplication && Object.keys(data.scoresByApplication).length > 0) {
+          const firstApp = Object.values(data.scoresByApplication)[0];
+          const categories = firstApp.scoresByCategory;
+          for (const [category, score] of Object.entries(categories)) {
+            const div = document.createElement('div');
+            div.className = 'metric';
+            div.innerHTML = `
+              <div>
+                <span class="metric-label">${category}</span>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${score}%"></div>
+                </div>
+              </div>
+              <span class="metric-value">${score.toFixed(1)}%</span>
+            `;
+            categoriesContainer.appendChild(div);
+          }
+        }
+
+        // Update test results
+        const resultsContainer = document.getElementById('test-results');
+        resultsContainer.innerHTML = '';
+        const recentResults = data.recentTestResults.slice(0, 10);
+        if (recentResults.length === 0) {
+          resultsContainer.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666;">No test results available</td></tr>';
+        } else {
+          recentResults.forEach(result => {
+            const tr = document.createElement('tr');
+            const date = new Date(result.timestamp);
+            tr.innerHTML = `
+              <td>${result.testName}</td>
+              <td>${result.testType}</td>
+              <td>
+                <span class="status-badge ${result.passed ? 'status-passed' : 'status-failed'}">
+                  ${result.passed ? 'PASSED' : 'FAILED'}
+                </span>
+              </td>
+              <td>${date.toLocaleString()}</td>
+            `;
+            resultsContainer.appendChild(tr);
+          });
+        }
+
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').textContent = 'Error: ' + error.message;
+      }
+    }
+
+    // Load dashboard on page load
+    loadDashboard();
+
+    // Refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>
+

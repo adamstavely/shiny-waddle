@@ -1,0 +1,73 @@
+name: Compliance Testing
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+
+jobs:
+  compliance-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run compliance tests
+        run: |
+          npm run test:compliance
+        env:
+          TEST_HARNESS_CONFIG: ${{ secrets.TEST_HARNESS_CONFIG }}
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: compliance-test-results
+          path: test-harness/reports/*
+
+      - name: Check compliance status
+        run: |
+          node test-harness/ci-cd/check-compliance.js
+        continue-on-error: false
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('test-harness/reports/compliance-report.json', 'utf8'));
+            
+            const comment = `## Compliance Test Results
+            
+            **Overall Score:** ${report.summary.passRate}%
+            
+            **Tests:** ${report.summary.passedTests}/${report.summary.totalTests} passed
+            
+            ${report.summary.failedTests > 0 ? `⚠️ **${report.summary.failedTests} tests failed**` : '✅ All tests passed'}
+            
+            ${report.summary.failedTests > 0 ? 'This PR cannot be merged until compliance issues are resolved.' : ''}
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+

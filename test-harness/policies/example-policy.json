@@ -1,0 +1,55 @@
+{
+  "name": "Default Access Control Policy",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "admin-full-access",
+      "description": "Admin users have full access to all resources",
+      "effect": "allow",
+      "conditions": {
+        "subject.role": "admin"
+      }
+    },
+    {
+      "id": "researcher-internal-access",
+      "description": "Researchers can access public and internal resources",
+      "effect": "allow",
+      "conditions": {
+        "subject.role": "researcher",
+        "resource.sensitivity": ["public", "internal"]
+      }
+    },
+    {
+      "id": "viewer-public-only",
+      "description": "Viewers can only access public resources",
+      "effect": "allow",
+      "conditions": {
+        "subject.role": "viewer",
+        "resource.sensitivity": "public"
+      }
+    },
+    {
+      "id": "confidential-ip-required",
+      "description": "Confidential resources require IP address validation",
+      "effect": "allow",
+      "conditions": {
+        "resource.sensitivity": "confidential",
+        "context.ipAddress": {
+          "exists": true
+        }
+      }
+    },
+    {
+      "id": "restricted-time-window",
+      "description": "Restricted resources only accessible during business hours",
+      "effect": "allow",
+      "conditions": {
+        "resource.sensitivity": "restricted",
+        "context.timeOfDay": {
+          "range": ["08:00", "18:00"]
+        }
+      }
+    }
+  ]
+}
+

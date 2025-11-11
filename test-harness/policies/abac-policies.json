@@ -1,0 +1,141 @@
+{
+  "policies": [
+    {
+      "id": "abac-department-match",
+      "name": "Department Match Policy",
+      "description": "Users can access resources from their own department",
+      "effect": "allow",
+      "priority": 100,
+      "conditions": [
+        {
+          "attribute": "subject.department",
+          "operator": "equals",
+          "value": "{{resource.department}}"
+        }
+      ]
+    },
+    {
+      "id": "abac-clearance-level-required",
+      "name": "Clearance Level Requirement",
+      "description": "Users must have sufficient clearance level for classified resources",
+      "effect": "allow",
+      "priority": 200,
+      "conditions": [
+        {
+          "attribute": "subject.clearanceLevel",
+          "operator": "in",
+          "value": ["high", "top-secret"]
+        },
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "in",
+          "value": ["confidential", "restricted", "top-secret"],
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "abac-project-access",
+      "name": "Project Access Policy",
+      "description": "Users can access resources from projects they have access to",
+      "effect": "allow",
+      "priority": 150,
+      "conditions": [
+        {
+          "attribute": "subject.projectAccess",
+          "operator": "contains",
+          "value": "{{resource.project}}"
+        }
+      ]
+    },
+    {
+      "id": "abac-certification-required",
+      "name": "Certification Requirement",
+      "description": "Users must have required certifications to access certain resources",
+      "effect": "allow",
+      "priority": 180,
+      "conditions": [
+        {
+          "attribute": "subject.certifications",
+          "operator": "contains",
+          "value": "{{resource.requiresCertification}}"
+        }
+      ]
+    },
+    {
+      "id": "abac-location-based",
+      "name": "Location-Based Access",
+      "description": "Users can only access resources from approved locations",
+      "effect": "allow",
+      "priority": 120,
+      "conditions": [
+        {
+          "attribute": "context.location",
+          "operator": "in",
+          "value": ["headquarters", "office", "research-lab"]
+        },
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "in",
+          "value": ["confidential", "restricted"],
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "abac-time-based-restriction",
+      "name": "Time-Based Access Restriction",
+      "description": "Restricted resources only accessible during business hours",
+      "effect": "allow",
+      "priority": 130,
+      "conditions": [
+        {
+          "attribute": "context.timeOfDay",
+          "operator": "regex",
+          "value": "^(0[8-9]|1[0-8]):"
+        },
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "equals",
+          "value": "restricted",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "abac-employment-type-restriction",
+      "name": "Employment Type Restriction",
+      "description": "Contractors cannot access restricted resources",
+      "effect": "deny",
+      "priority": 300,
+      "conditions": [
+        {
+          "attribute": "subject.employmentType",
+          "operator": "equals",
+          "value": "contractor"
+        },
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "in",
+          "value": ["restricted", "top-secret"],
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "abac-region-based",
+      "name": "Region-Based Access",
+      "description": "Users can access resources from their region",
+      "effect": "allow",
+      "priority": 110,
+      "conditions": [
+        {
+          "attribute": "subject.location",
+          "operator": "equals",
+          "value": "{{resource.region}}"
+        }
+      ]
+    }
+  ]
+}
+
