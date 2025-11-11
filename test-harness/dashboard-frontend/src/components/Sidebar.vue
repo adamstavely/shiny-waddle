@@ -40,7 +40,13 @@ import {
   BarChart3, 
   AlertTriangle,
   History,
-  Settings
+  Settings,
+  Globe,
+  Database,
+  Cloud,
+  Lock,
+  Plug,
+  GitBranch
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -50,10 +56,17 @@ const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
   { path: '/reports', label: 'Reports', icon: FileText, divider: false },
-  { path: '/policies', label: 'Policies', icon: Shield, divider: true },
+  { path: '/policies', label: 'Policies', icon: Shield, divider: false },
+  { path: '/configuration-validation', label: 'Config Validation', icon: Shield, divider: true },
   { path: '/analytics', label: 'Analytics', icon: BarChart3, divider: false },
   { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
-  { path: '/history', label: 'History', icon: History, divider: true },
+  { path: '/history', label: 'History', icon: History, divider: false },
+  { path: '/api-security', label: 'API Security', icon: Lock, divider: false },
+  { path: '/pipelines', label: 'Data Pipelines', icon: Database, divider: false },
+  { path: '/distributed-systems', label: 'Distributed Systems', icon: Globe, divider: false },
+  { path: '/environments', label: 'Environments', icon: Cloud, divider: false },
+  { path: '/integrations', label: 'Integrations', icon: Plug, divider: false },
+  { path: '/ci-cd', label: 'CI/CD', icon: GitBranch, divider: true },
   { path: '/admin', label: 'Admin', icon: Settings, divider: false },
 ];
 

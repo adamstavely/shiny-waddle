@@ -56,6 +56,12 @@
           placeholder="All Statuses"
           class="filter-dropdown"
         />
+        <Dropdown
+          v-model="filterValidator"
+          :options="validatorOptions"
+          placeholder="All Validators"
+          class="filter-dropdown"
+        />
       </div>
 
       <div class="test-suites-grid">
@@ -115,6 +121,10 @@
               <FileText class="action-icon" />
               Results
             </button>
+            <button @click.stop="deleteTestSuite(suite.id)" class="action-btn delete-btn">
+              <Trash2 class="action-icon" />
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -157,15 +167,57 @@
           </div>
         </div>
 
+        <div v-if="currentExecution.status === 'completed' || currentExecution.status === 'failed'" class="execution-summary">
+          <div class="summary-stats">
+            <div class="summary-stat">
+              <span class="stat-label">Total Tests</span>
+              <span class="stat-value">{{ currentExecution.total }}</span>
+            </div>
+            <div class="summary-stat">
+              <span class="stat-label">Passed</span>
+              <span class="stat-value passed">{{ currentExecution.passed || 0 }}</span>
+            </div>
+            <div class="summary-stat">
+              <span class="stat-label">Failed</span>
+              <span class="stat-value failed">{{ currentExecution.failed || 0 }}</span>
+            </div>
+            <div class="summary-stat">
+              <span class="stat-label">Duration</span>
+              <span class="stat-value">{{ formatDuration(currentExecution.duration) }}</span>
+            </div>
+          </div>
+          <div v-if="currentExecution.errors && currentExecution.errors.length > 0" class="execution-errors">
+            <h3 class="errors-title">
+              <AlertTriangle class="error-icon" />
+              Errors ({{ currentExecution.errors.length }})
+            </h3>
+            <div v-for="(error, index) in currentExecution.errors" :key="index" class="error-item">
+              <div class="error-header">
+                <span class="error-test">{{ error.testName }}</span>
+                <span class="error-type">{{ error.type }}</span>
+              </div>
+              <div class="error-message">{{ error.message }}</div>
+              <pre v-if="error.stack" class="error-stack">{{ error.stack }}</pre>
+            </div>
+          </div>
+        </div>
+
         <div class="execution-log">
-          <div
-            v-for="(log, index) in currentExecution.logs"
-            :key="index"
-            class="log-entry"
-            :class="`log-${log.level}`"
-          >
-            <span class="log-time">{{ formatTime(log.timestamp) }}</span>
-            <span class="log-message">{{ log.message }}</span>
+          <div class="log-header">
+            <h3>Execution Log</h3>
+            <button @click="clearLog" class="btn-small-text">Clear</button>
+          </div>
+          <div class="log-content">
+            <div
+              v-for="(log, index) in currentExecution.logs"
+              :key="index"
+              class="log-entry"
+              :class="`log-${log.level}`"
+            >
+              <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+              <span class="log-level">{{ log.level.toUpperCase() }}</span>
+              <span class="log-message">{{ log.message }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -210,6 +262,7 @@
             </div>
             <div class="result-meta">
               <span class="result-type">{{ result.testType }}</span>
+              <span v-if="result.validatorName" class="result-validator">{{ result.validatorName }}</span>
               <span class="result-time">{{ formatRelativeTime(result.timestamp) }}</span>
             </div>
           </div>
@@ -227,90 +280,23 @@
       </div>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="showCreateModal || editingSuite" class="modal-overlay" @click="closeModal">
-          <div class="modal-content" @click.stop>
-            <div class="modal-header">
-              <div class="modal-title-group">
-                <TestTube class="modal-title-icon" />
-                <h2>{{ editingSuite ? 'Edit Test Suite' : 'Create Test Suite' }}</h2>
-              </div>
-              <button @click="closeModal" class="modal-close">
-                <X class="close-icon" />
-              </button>
-            </div>
-            <div class="modal-body">
-              <form @submit.prevent="saveTestSuite" class="suite-form">
-                <div class="form-group">
-                  <label>Test Suite Name</label>
-                  <input v-model="suiteForm.name" type="text" required />
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Application</label>
-                    <input v-model="suiteForm.application" type="text" required />
-                  </div>
-                  <div class="form-group">
-                    <label>Team</label>
-                    <input v-model="suiteForm.team" type="text" required />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Test Types</label>
-                  <div class="checkbox-group">
-                    <label class="checkbox-label">
-                      <input
-                        v-model="suiteForm.includeAccessControlTests"
-                        type="checkbox"
-                      />
-                      Access Control Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input
-                        v-model="suiteForm.includeDataBehaviorTests"
-                        type="checkbox"
-                      />
-                      Data Behavior Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input
-                        v-model="suiteForm.includeContractTests"
-                        type="checkbox"
-                      />
-                      Contract Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input
-                        v-model="suiteForm.includeDatasetHealthTests"
-                        type="checkbox"
-                      />
-                      Dataset Health Tests
-                    </label>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>User Roles</label>
-                  <input
-                    v-model="userRolesInput"
-                    type="text"
-                    placeholder="admin, researcher, analyst, viewer"
-                  />
-                  <small>Comma-separated list of roles</small>
-                </div>
-                <div class="form-actions">
-                  <button type="button" @click="closeModal" class="btn-secondary">
-                    Cancel
-                  </button>
-                  <button type="submit" class="btn-primary">Save Test Suite</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <!-- Test Suite Builder Modal -->
+    <TestSuiteBuilderModal
+      :show="showCreateModal || !!editingSuite"
+      :editing-suite="editingSuiteData"
+      @close="closeModal"
+      @save="handleSaveTestSuite"
+      @save-draft="handleSaveDraft"
+    />
+
+    <!-- Test Result Detail Modal -->
+    <TestResultDetailModal
+      :show="showResultDetail"
+      :result="selectedResult"
+      :previous-result="previousResult"
+      @close="closeResultDetail"
+      @export="exportTestResult"
+    />
   </div>
 </template>
 
@@ -328,11 +314,14 @@ import {
   AlertTriangle,
   List,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestSuiteBuilderModal from '../components/TestSuiteBuilderModal.vue';
+import TestResultDetailModal from '../components/TestResultDetailModal.vue';
 
 const breadcrumbItems = [
   { label: 'Tests', icon: TestTube }
@@ -345,8 +334,14 @@ const searchQuery = ref('');
 const filterApplication = ref('');
 const filterTeam = ref('');
 const filterStatus = ref('');
+const filterValidator = ref('');
 const showCreateModal = ref(false);
 const editingSuite = ref<string | null>(null);
+const editingSuiteData = ref<any>(null);
+const validators = ref<any[]>([]);
+const showResultDetail = ref(false);
+const selectedResult = ref<any>(null);
+const previousResult = ref<any>(null);
 
 // Test suites data
 const testSuites = ref([
@@ -435,6 +430,13 @@ const resultsTypeOptions = computed(() => [
   { label: 'Dataset Health', value: 'dataset-health' }
 ]);
 
+const validatorOptions = computed(() => {
+  return [
+    { label: 'All Validators', value: '' },
+    ...validators.value.map(v => ({ label: v.name, value: v.id }))
+  ];
+});
+
 const filteredTestSuites = computed(() => {
   return testSuites.value.filter(suite => {
     const matchesSearch = suite.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -442,7 +444,8 @@ const filteredTestSuites = computed(() => {
     const matchesApp = !filterApplication.value || suite.application === filterApplication.value;
     const matchesTeam = !filterTeam.value || suite.team === filterTeam.value;
     const matchesStatus = !filterStatus.value || suite.status === filterStatus.value;
-    return matchesSearch && matchesApp && matchesTeam && matchesStatus;
+    const matchesValidator = !filterValidator.value || (suite.validatorId === filterValidator.value);
+    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesValidator;
   });
 });
 
@@ -457,7 +460,9 @@ const testResults = ref([
     testType: 'access-control',
     passed: true,
     timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    error: null
+    error: null,
+    validatorId: 'access-control-validator',
+    validatorName: 'Access Control Validator'
   },
   {
     id: '2',
@@ -465,7 +470,9 @@ const testResults = ref([
     testType: 'data-behavior',
     passed: true,
     timestamp: new Date(Date.now() - 35 * 60 * 1000),
-    error: null
+    error: null,
+    validatorId: 'data-behavior-validator',
+    validatorName: 'Data Behavior Validator'
   },
   {
     id: '3',
@@ -473,7 +480,9 @@ const testResults = ref([
     testType: 'contract',
     passed: false,
     timestamp: new Date(Date.now() - 40 * 60 * 1000),
-    error: 'Raw email export detected in query results'
+    error: 'Raw email export detected in query results',
+    validatorId: 'contract-validator',
+    validatorName: 'Contract Validator'
   }
 ]);
 
@@ -492,18 +501,7 @@ const filteredResults = computed(() => {
   });
 });
 
-// Form data
-const suiteForm = ref({
-  name: '',
-  application: '',
-  team: '',
-  includeAccessControlTests: true,
-  includeDataBehaviorTests: true,
-  includeContractTests: false,
-  includeDatasetHealthTests: false
-});
-
-const userRolesInput = ref('admin, researcher, analyst, viewer');
+// Form data - removed, now handled by TestSuiteBuilderModal
 
 const tabs = [
   { id: 'suites', label: 'Test Suites', icon: List, badge: testSuites.value.length },
@@ -520,12 +518,17 @@ const runTestSuite = async (id: string) => {
   if (!suite) return;
   
   activeTab.value = 'execution';
+  const startTime = new Date();
   currentExecution.value = {
     suiteName: suite.name,
     status: 'running',
     progress: 0,
     completed: 0,
-    total: suite.testCount,
+    total: suite.testCount || 10,
+    passed: 0,
+    failed: 0,
+    errors: [] as any[],
+    duration: 0,
     logs: [
       { level: 'info', message: `Starting test suite: ${suite.name}`, timestamp: new Date() },
       { level: 'info', message: 'Initializing test environment...', timestamp: new Date() }
@@ -533,34 +536,57 @@ const runTestSuite = async (id: string) => {
   };
 
   // Simulate test execution
-  simulateTestExecution();
+  simulateTestExecution(startTime);
 };
 
-const simulateTestExecution = () => {
+const simulateTestExecution = (startTime: Date) => {
   if (!currentExecution.value) return;
   
+  let testIndex = 0;
   const interval = setInterval(() => {
     if (!currentExecution.value) {
       clearInterval(interval);
       return;
     }
     
+    testIndex++;
     currentExecution.value.completed++;
     currentExecution.value.progress = Math.round(
       (currentExecution.value.completed / currentExecution.value.total) * 100
     );
     
-    currentExecution.value.logs.push({
-      level: 'info',
-      message: `Running test ${currentExecution.value.completed}/${currentExecution.value.total}...`,
-      timestamp: new Date()
-    });
-
-    if (currentExecution.value.completed >= currentExecution.value.total) {
-      currentExecution.value.status = 'completed';
+    // Simulate some tests passing and some failing
+    const testPassed = Math.random() > 0.2; // 80% pass rate
+    if (testPassed) {
+      currentExecution.value.passed = (currentExecution.value.passed || 0) + 1;
       currentExecution.value.logs.push({
         level: 'success',
-        message: 'All tests completed successfully',
+        message: `Test ${testIndex}: PASSED`,
+        timestamp: new Date()
+      });
+    } else {
+      currentExecution.value.failed = (currentExecution.value.failed || 0) + 1;
+      const error = {
+        testName: `Test ${testIndex}`,
+        type: 'AssertionError',
+        message: `Test assertion failed: Expected value did not match actual value`,
+        stack: `at TestRunner.runTest (test-runner.js:45:12)\n  at Suite.execute (suite.js:123:8)`
+      };
+      currentExecution.value.errors.push(error);
+      currentExecution.value.logs.push({
+        level: 'error',
+        message: `Test ${testIndex}: FAILED - ${error.message}`,
+        timestamp: new Date()
+      });
+    }
+
+    if (currentExecution.value.completed >= currentExecution.value.total) {
+      const endTime = new Date();
+      currentExecution.value.duration = endTime.getTime() - startTime.getTime();
+      currentExecution.value.status = currentExecution.value.failed > 0 ? 'failed' : 'completed';
+      currentExecution.value.logs.push({
+        level: currentExecution.value.failed > 0 ? 'error' : 'success',
+        message: `Test suite ${currentExecution.value.failed > 0 ? 'completed with failures' : 'completed successfully'}. Passed: ${currentExecution.value.passed}, Failed: ${currentExecution.value.failed}`,
         timestamp: new Date()
       });
       clearInterval(interval);
@@ -568,25 +594,44 @@ const simulateTestExecution = () => {
       // Refresh results
       setTimeout(() => {
         activeTab.value = 'results';
-      }, 2000);
+      }, 3000);
     }
   }, 500);
+};
+
+const clearLog = () => {
+  if (currentExecution.value) {
+    currentExecution.value.logs = [];
+  }
+};
+
+const formatDuration = (ms: number): string => {
+  if (!ms) return '0s';
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  }
+  return `${seconds}s`;
 };
 
 const editTestSuite = (id: string) => {
   const suite = testSuites.value.find(s => s.id === id);
   if (suite) {
     editingSuite.value = id;
-    suiteForm.value = {
-      name: suite.name,
-      application: suite.application,
-      team: suite.team,
-      includeAccessControlTests: true,
-      includeDataBehaviorTests: true,
-      includeContractTests: false,
-      includeDatasetHealthTests: false
-    };
+    editingSuiteData.value = suite;
     showCreateModal.value = true;
+  }
+};
+
+const deleteTestSuite = async (id: string) => {
+  if (confirm('Are you sure you want to delete this test suite? This action cannot be undone.')) {
+    const index = testSuites.value.findIndex(s => s.id === id);
+    if (index !== -1) {
+      testSuites.value.splice(index, 1);
+      // In a real app, you would call an API endpoint here
+      // await axios.delete(`/api/test-suites/${id}`);
+    }
   }
 };
 
@@ -596,48 +641,79 @@ const viewResults = (id: string) => {
 };
 
 const viewResultDetails = (id: string) => {
-  router.push(`/tests/results/${id}`);
+  const result = testResults.value.find(r => r.id === id);
+  if (result) {
+    selectedResult.value = result;
+    // Find previous result for comparison
+    const previous = testResults.value
+      .filter(r => r.testName === result.testName && r.id !== id)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+    previousResult.value = previous || null;
+    showResultDetail.value = true;
+  }
 };
 
-const saveTestSuite = () => {
+const closeResultDetail = () => {
+  showResultDetail.value = false;
+  selectedResult.value = null;
+  previousResult.value = null;
+};
+
+const exportTestResult = (result: any) => {
+  const dataStr = JSON.stringify(result, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(dataBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `test-result-${result.id}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const handleSaveTestSuite = (suiteData: any) => {
   if (editingSuite.value) {
     // Update existing
     const index = testSuites.value.findIndex(s => s.id === editingSuite.value);
     if (index !== -1) {
       testSuites.value[index] = {
         ...testSuites.value[index],
-        ...suiteForm.value,
-        userRoles: userRolesInput.value.split(',').map(r => r.trim())
+        ...suiteData,
+        testTypes: getTestTypes(suiteData)
       };
     }
   } else {
     // Create new
     testSuites.value.push({
       id: String(testSuites.value.length + 1),
-      ...suiteForm.value,
+      ...suiteData,
       status: 'pending',
       lastRun: new Date(),
       testCount: 0,
       score: 0,
-      testTypes: []
+      testTypes: getTestTypes(suiteData)
     });
   }
   closeModal();
 };
 
+const handleSaveDraft = (suiteData: any) => {
+  // Same as save, but could mark as draft
+  handleSaveTestSuite(suiteData);
+};
+
+const getTestTypes = (suiteData: any): string[] => {
+  const types: string[] = [];
+  if (suiteData.includeAccessControlTests) types.push('Access Control');
+  if (suiteData.includeDataBehaviorTests) types.push('Data Behavior');
+  if (suiteData.includeContractTests) types.push('Contract');
+  if (suiteData.includeDatasetHealthTests) types.push('Dataset Health');
+  return types;
+};
+
 const closeModal = () => {
   showCreateModal.value = false;
   editingSuite.value = null;
-  suiteForm.value = {
-    name: '',
-    application: '',
-    team: '',
-    includeAccessControlTests: true,
-    includeDataBehaviorTests: true,
-    includeContractTests: false,
-    includeDatasetHealthTests: false
-  };
-  userRolesInput.value = 'admin, researcher, analyst, viewer';
+  editingSuiteData.value = null;
 };
 
 const formatDate = (date: Date): string => {
@@ -663,6 +739,19 @@ const formatRelativeTime = (date: Date): string => {
   if (diffHours < 24) return `${diffHours}h ago`;
   return date.toLocaleDateString();
 };
+
+const loadValidators = async () => {
+  try {
+    const response = await axios.get('/api/validators');
+    validators.value = response.data;
+  } catch (err) {
+    console.error('Error loading validators:', err);
+  }
+};
+
+onMounted(() => {
+  loadValidators();
+});
 
 const getScoreClass = (score: number): string => {
   if (score >= 90) return 'score-high';
@@ -929,6 +1018,7 @@ const getScoreClass = (score: number): string => {
 .suite-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -951,6 +1041,17 @@ const getScoreClass = (score: number): string => {
 .action-btn:hover {
   background: rgba(79, 172, 254, 0.1);
   border-color: rgba(79, 172, 254, 0.5);
+}
+
+.delete-btn {
+  border-color: rgba(252, 129, 129, 0.3);
+  color: #fc8181;
+}
+
+.delete-btn:hover {
+  background: rgba(252, 129, 129, 0.1);
+  border-color: rgba(252, 129, 129, 0.5);
+  color: #fc8181;
 }
 
 .action-icon {
@@ -1025,20 +1126,163 @@ const getScoreClass = (score: number): string => {
   color: #a0aec0;
 }
 
+.execution-summary {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(15, 20, 25, 0.4);
+  border-radius: 12px;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 8px;
+}
+
+.summary-stat .stat-label {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.summary-stat .stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.summary-stat .stat-value.passed {
+  color: #22c55e;
+}
+
+.summary-stat .stat-value.failed {
+  color: #fc8181;
+}
+
+.execution-errors {
+  margin-top: 20px;
+}
+
+.errors-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fc8181;
+  margin: 0 0 12px 0;
+}
+
+.error-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.error-item {
+  padding: 12px;
+  background: rgba(252, 129, 129, 0.1);
+  border-left: 3px solid #fc8181;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.error-test {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.error-type {
+  padding: 2px 8px;
+  background: rgba(252, 129, 129, 0.2);
+  border-radius: 4px;
+  color: #fc8181;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.error-message {
+  color: #fc8181;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+.error-stack {
+  margin: 8px 0 0 0;
+  padding: 8px;
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 4px;
+  color: #a0aec0;
+  font-size: 0.75rem;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
 .execution-log {
-  max-height: 400px;
-  overflow-y: auto;
   background: rgba(15, 20, 25, 0.4);
   border-radius: 8px;
   padding: 16px;
 }
 
-.log-entry {
+.log-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.log-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.btn-small-text {
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 4px;
+  color: #4facfe;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-small-text:hover {
+  background: rgba(79, 172, 254, 0.1);
+}
+
+.log-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 80px 60px 1fr;
   gap: 12px;
   padding: 8px 0;
   font-size: 0.875rem;
   border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  align-items: center;
 }
 
 .log-entry:last-child {
@@ -1048,22 +1292,45 @@ const getScoreClass = (score: number): string => {
 .log-time {
   color: #718096;
   font-family: monospace;
-  min-width: 80px;
+  font-size: 0.75rem;
+}
+
+.log-level {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.log-entry.log-info .log-level {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+.log-entry.log-success .log-level {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.log-entry.log-error .log-level {
+  background: rgba(252, 129, 129, 0.2);
+  color: #fc8181;
 }
 
 .log-message {
   color: #a0aec0;
 }
 
-.log-info .log-message {
+.log-entry.log-info .log-message {
   color: #4facfe;
 }
 
-.log-success .log-message {
+.log-entry.log-success .log-message {
   color: #22c55e;
 }
 
-.log-error .log-message {
+.log-entry.log-error .log-message {
   color: #fc8181;
 }
 
@@ -1139,6 +1406,15 @@ const getScoreClass = (score: number): string => {
 
 .result-type {
   text-transform: capitalize;
+}
+
+.result-validator {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .result-error {

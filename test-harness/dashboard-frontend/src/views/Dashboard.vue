@@ -22,6 +22,9 @@
       </div>
       <TestResultsTable :results="dashboardData.recentTestResults" />
       
+      <!-- Validator Metrics -->
+      <ValidatorMetrics :validators="validators" />
+      
       <!-- Trends Section -->
       <div class="trends-section">
         <h2 class="section-title">Compliance Trends</h2>
@@ -29,23 +32,18 @@
           <div class="trend-card">
             <h3 class="trend-title">Overall Compliance</h3>
             <div class="trend-chart">
-              <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="trendGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0" />
-                  </linearGradient>
-                </defs>
-                <polyline
-                  points="0,180 50,160 100,150 150,140 200,130 250,125 300,120 350,115 400,110"
-                  fill="url(#trendGradient)"
-                  stroke="#4facfe"
-                  stroke-width="2"
-                />
-              </svg>
+              <LineChart
+                v-if="trendsData.overall.length > 0"
+                :data="trendsData.overall"
+                :height="200"
+                color="#4facfe"
+              />
+              <div v-else class="no-data">No trend data available</div>
             </div>
             <div class="trend-stats">
-              <span class="trend-change positive">+5.2%</span>
+              <span class="trend-change" :class="trendsData.overallChange >= 0 ? 'positive' : 'negative'">
+                {{ trendsData.overallChange >= 0 ? '+' : '' }}{{ trendsData.overallChange }}%
+              </span>
               <span class="trend-period">Last 30 days</span>
             </div>
           </div>
@@ -53,26 +51,88 @@
           <div class="trend-card">
             <h3 class="trend-title">By Application</h3>
             <div class="trend-chart">
-              <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="appGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0" />
-                  </linearGradient>
-                </defs>
-                <polyline
-                  points="0,170 50,165 100,160 150,155 200,150 250,145 300,140 350,135 400,130"
-                  fill="url(#appGradient)"
-                  stroke="#00f2fe"
-                  stroke-width="2"
-                />
-              </svg>
-            </div>
-            <div class="trend-stats">
-              <span class="trend-change positive">+3.8%</span>
-              <span class="trend-period">Last 30 days</span>
+              <MultiLineChart
+                v-if="Object.keys(trendsData.byApplication).length > 0"
+                :data="trendsData.byApplication"
+                :height="200"
+              />
+              <div v-else class="no-data">No trend data available</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Compliance Heatmap -->
+      <div class="heatmap-section">
+        <h2 class="section-title">Compliance Heatmap</h2>
+        <div class="heatmap-container">
+          <div class="heatmap-card">
+            <div class="heatmap-header">
+              <h3>Compliance by Application & Category</h3>
+              <div class="heatmap-legend">
+                <span class="legend-item">
+                  <span class="legend-color" style="background: #22c55e;"></span>
+                  High (90-100%)
+                </span>
+                <span class="legend-item">
+                  <span class="legend-color" style="background: #fbbf24;"></span>
+                  Medium (70-89%)
+                </span>
+                <span class="legend-item">
+                  <span class="legend-color" style="background: #fc8181;"></span>
+                  Low (&lt;70%)
+                </span>
+              </div>
+            </div>
+            <div class="heatmap-grid">
+              <div class="heatmap-row">
+                <div class="heatmap-label">Application</div>
+                <div class="heatmap-label">Access Control</div>
+                <div class="heatmap-label">Data Behavior</div>
+                <div class="heatmap-label">Contracts</div>
+                <div class="heatmap-label">Dataset Health</div>
+              </div>
+              <div
+                v-for="(app, appName) in heatmapData"
+                :key="appName"
+                class="heatmap-row"
+              >
+                <div class="heatmap-app-name">{{ appName }}</div>
+                <div
+                  v-for="(score, category) in app.categories"
+                  :key="category"
+                  class="heatmap-cell"
+                  :class="getHeatmapClass(score)"
+                  :title="`${category}: ${score}%`"
+                >
+                  {{ score }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions-section">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="actions-grid">
+          <button @click="navigateTo('/tests/builder')" class="action-card">
+            <TestTube class="action-icon" />
+            <span class="action-label">Create Test Suite</span>
+          </button>
+          <button @click="navigateTo('/reports')" class="action-card">
+            <FileText class="action-icon" />
+            <span class="action-label">Generate Report</span>
+          </button>
+          <button @click="navigateTo('/policies')" class="action-card">
+            <Shield class="action-icon" />
+            <span class="action-label">Manage Policies</span>
+          </button>
+          <button @click="navigateTo('/analytics')" class="action-card">
+            <BarChart3 class="action-icon" />
+            <span class="action-label">View Analytics</span>
+          </button>
         </div>
       </div>
     </div>
@@ -87,6 +147,7 @@ import OverallScore from '../components/OverallScore.vue';
 import ScoreCard from '../components/ScoreCard.vue';
 import CategoryScores from '../components/CategoryScores.vue';
 import TestResultsTable from '../components/TestResultsTable.vue';
+import ValidatorMetrics from '../components/ValidatorMetrics.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 
 const breadcrumbItems = [
@@ -105,6 +166,7 @@ interface DashboardData {
 const loading = ref(true);
 const error = ref<string | null>(null);
 const dashboardData = ref<DashboardData | null>(null);
+const validators = ref<any[]>([]);
 
 const loadDashboard = async () => {
   try {
@@ -116,6 +178,15 @@ const loadDashboard = async () => {
     error.value = err.message || 'Failed to load dashboard data';
   } finally {
     loading.value = false;
+  }
+};
+
+const loadValidators = async () => {
+  try {
+    const response = await axios.get('/api/validators');
+    validators.value = response.data;
+  } catch (err) {
+    console.error('Error loading validators:', err);
   }
 };
 
@@ -133,8 +204,12 @@ const handleRefresh = () => {
 
 onMounted(() => {
   loadDashboard();
+  loadValidators();
   // Refresh every 30 seconds
-  setInterval(loadDashboard, 30000);
+  setInterval(() => {
+    loadDashboard();
+    loadValidators();
+  }, 30000);
   // Listen for refresh event from TopNav
   window.addEventListener('refresh-dashboard', handleRefresh);
 });

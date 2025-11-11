@@ -24,44 +24,73 @@
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Search violations..."
-        class="search-input"
-      />
-      <Dropdown
-        v-model="filterSeverity"
-        :options="severityOptions"
-        placeholder="All Severities"
-        class="filter-dropdown"
-      />
-      <Dropdown
-        v-model="filterType"
-        :options="typeOptions"
-        placeholder="All Types"
-        class="filter-dropdown"
-      />
-      <Dropdown
-        v-model="filterStatus"
-        :options="statusOptions"
-        placeholder="All Statuses"
-        class="filter-dropdown"
-      />
-      <Dropdown
-        v-model="filterApplication"
-        :options="applicationOptions"
-        placeholder="All Applications"
-        class="filter-dropdown"
-      />
+    <!-- Filters and Sort -->
+    <div class="filters-section">
+      <div class="filters">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search violations..."
+          class="search-input"
+        />
+        <Dropdown
+          v-model="filterSeverity"
+          :options="severityOptions"
+          placeholder="All Severities"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterType"
+          :options="typeOptions"
+          placeholder="All Types"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterStatus"
+          :options="statusOptions"
+          placeholder="All Statuses"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterApplication"
+          :options="applicationOptions"
+          placeholder="All Applications"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterTeam"
+          :options="teamOptions"
+          placeholder="All Teams"
+          class="filter-dropdown"
+        />
+      </div>
+      <div class="sort-section">
+        <label class="sort-label">Sort by:</label>
+        <Dropdown
+          v-model="sortBy"
+          :options="sortOptions"
+          placeholder="Date"
+          class="sort-dropdown"
+        />
+        <button
+          @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+          class="sort-order-btn"
+          :class="{ 'desc': sortOrder === 'desc' }"
+        >
+          <ArrowUpDown class="sort-icon" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <p>Loading violations...</p>
     </div>
 
     <!-- Violations List -->
-    <div class="violations-list">
+    <div v-else class="violations-list">
       <div
-        v-for="violation in filteredViolations"
+        v-for="violation in sortedViolations"
         :key="violation.id"
         class="violation-card"
         :class="`severity-${violation.severity}`"
@@ -83,22 +112,26 @@
             </div>
           </div>
           <p class="violation-meta">
-            {{ violation.application }} • {{ violation.team }} • {{ formatDate(violation.detectedAt) }}
+            <span v-if="violation.application">{{ violation.application }}</span>
+            <span v-if="violation.application && violation.team"> • </span>
+            <span v-if="violation.team">{{ violation.team }}</span>
+            <span v-if="(violation.application || violation.team) && violation.detectedAt"> • </span>
+            <span v-if="violation.detectedAt">{{ formatDate(violation.detectedAt) }}</span>
           </p>
         </div>
 
         <p class="violation-description">{{ violation.description }}</p>
 
         <div class="violation-details">
-          <div class="detail-item">
+          <div class="detail-item" v-if="violation.type">
             <span class="detail-label">Type:</span>
-            <span class="detail-value">{{ violation.type }}</span>
+            <span class="detail-value">{{ formatType(violation.type) }}</span>
           </div>
-          <div class="detail-item">
+          <div class="detail-item" v-if="violation.policyName">
             <span class="detail-label">Policy:</span>
             <span class="detail-value">{{ violation.policyName }}</span>
           </div>
-          <div class="detail-item">
+          <div class="detail-item" v-if="violation.resource">
             <span class="detail-label">Resource:</span>
             <span class="detail-value">{{ violation.resource }}</span>
           </div>
@@ -109,11 +142,11 @@
             <User class="action-icon" />
             Assign
           </button>
-          <button @click.stop="resolveViolation(violation.id)" class="action-btn resolve-btn">
+          <button @click.stop="resolveViolation(violation.id)" class="action-btn resolve-btn" v-if="violation.status !== 'resolved'">
             <CheckCircle2 class="action-icon" />
             Resolve
           </button>
-          <button @click.stop="ignoreViolation(violation.id)" class="action-btn ignore-btn">
+          <button @click.stop="ignoreViolation(violation.id)" class="action-btn ignore-btn" v-if="violation.status !== 'ignored'">
             <X class="action-icon" />
             Ignore
           </button>
@@ -121,112 +154,55 @@
       </div>
     </div>
 
-    <div v-if="filteredViolations.length === 0" class="empty-state">
+    <div v-if="!loading && sortedViolations.length === 0" class="empty-state">
       <CheckCircle2 class="empty-icon" />
       <h3>No violations found</h3>
       <p>All access control policies are being followed</p>
     </div>
+
+    <!-- Violation Detail Modal -->
+    <ViolationDetailModal
+      :show="showDetailModal"
+      :violation="selectedViolation"
+      @close="closeDetailModal"
+      @update="handleViolationUpdate"
+      @viewRelated="viewRelatedViolation"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   AlertTriangle,
   CheckCircle2,
   X,
-  User
+  User,
+  ArrowUpDown
 } from 'lucide-vue-next';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import ViolationDetailModal from '../components/ViolationDetailModal.vue';
+import type { ViolationEntity } from '../types/violation';
 
 const breadcrumbItems = [
   { label: 'Violations', icon: AlertTriangle }
 ];
 
+const API_BASE_URL = 'http://localhost:3000/api';
+
+const violations = ref<ViolationEntity[]>([]);
+const loading = ref(true);
 const searchQuery = ref('');
 const filterSeverity = ref('');
 const filterType = ref('');
 const filterStatus = ref('');
 const filterApplication = ref('');
-
-// Mock violations data
-const violations = ref([
-  {
-    id: '1',
-    title: 'Unauthorized Access to Restricted Resource',
-    description: 'User with viewer role attempted to access restricted PII data without proper clearance',
-    type: 'access-control',
-    severity: 'critical',
-    status: 'open',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    policyName: 'Default Access Control Policy',
-    resource: 'pii-data',
-    detectedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    assignedTo: null
-  },
-  {
-    id: '2',
-    title: 'Raw Email Export Detected',
-    description: 'Query attempted to export raw email addresses, violating contract requirement',
-    type: 'contract',
-    severity: 'high',
-    status: 'in-progress',
-    application: 'user-service',
-    team: 'platform-team',
-    policyName: 'No Raw Email Export',
-    resource: 'user-data',
-    detectedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    assignedTo: 'john.doe@example.com'
-  },
-  {
-    id: '3',
-    title: 'Disallowed Join Operation',
-    description: 'Viewer role attempted to join users table, which is disallowed by policy',
-    type: 'data-behavior',
-    severity: 'medium',
-    status: 'open',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    policyName: 'Data Behavior Policy',
-    resource: 'reports',
-    detectedAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    assignedTo: null
-  },
-  {
-    id: '4',
-    title: 'Privacy Threshold Violation',
-    description: 'Dataset failed k-anonymity threshold (k=10), only achieved k=7',
-    type: 'dataset-health',
-    severity: 'high',
-    status: 'resolved',
-    application: 'data-pipeline',
-    team: 'data-engineering',
-    policyName: 'Privacy Threshold Policy',
-    resource: 'masked-users',
-    detectedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    assignedTo: 'jane.smith@example.com'
-  },
-  {
-    id: '5',
-    title: 'Missing Required Filter',
-    description: 'Query executed without required workspace_id filter for viewer role',
-    type: 'data-behavior',
-    severity: 'medium',
-    status: 'ignored',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    policyName: 'Data Behavior Policy',
-    resource: 'reports',
-    detectedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    assignedTo: null
-  }
-]);
-
-const applications = computed(() => {
-  return [...new Set(violations.value.map(v => v.application))];
-});
+const filterTeam = ref('');
+const sortBy = ref('date');
+const sortOrder = ref<'asc' | 'desc'>('desc');
+const showDetailModal = ref(false);
+const selectedViolation = ref<ViolationEntity | null>(null);
 
 const severityOptions = computed(() => [
   { label: 'All Severities', value: '' },
@@ -241,7 +217,10 @@ const typeOptions = computed(() => [
   { label: 'Access Control', value: 'access-control' },
   { label: 'Data Behavior', value: 'data-behavior' },
   { label: 'Contract', value: 'contract' },
-  { label: 'Dataset Health', value: 'dataset-health' }
+  { label: 'Dataset Health', value: 'dataset-health' },
+  { label: 'API Security', value: 'api-security' },
+  { label: 'Pipeline', value: 'pipeline' },
+  { label: 'Distributed System', value: 'distributed-system' }
 ]);
 
 const statusOptions = computed(() => [
@@ -252,10 +231,32 @@ const statusOptions = computed(() => [
   { label: 'Ignored', value: 'ignored' }
 ]);
 
+const sortOptions = computed(() => [
+  { label: 'Date', value: 'date' },
+  { label: 'Severity', value: 'severity' },
+  { label: 'Application', value: 'application' },
+  { label: 'Status', value: 'status' }
+]);
+
+const applications = computed(() => {
+  return [...new Set(violations.value.map(v => v.application).filter(Boolean))];
+});
+
+const teams = computed(() => {
+  return [...new Set(violations.value.map(v => v.team).filter(Boolean))];
+});
+
 const applicationOptions = computed(() => {
   return [
     { label: 'All Applications', value: '' },
     ...applications.value.map(app => ({ label: app, value: app }))
+  ];
+});
+
+const teamOptions = computed(() => {
+  return [
+    { label: 'All Teams', value: '' },
+    ...teams.value.map(team => ({ label: team, value: team }))
   ];
 });
 
@@ -273,60 +274,209 @@ const resolvedCount = computed(() => {
 
 const filteredViolations = computed(() => {
   return violations.value.filter(violation => {
-    const matchesSearch = violation.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                         violation.description.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesSearch = !searchQuery.value ||
+      violation.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      violation.description.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesSeverity = !filterSeverity.value || violation.severity === filterSeverity.value;
     const matchesType = !filterType.value || violation.type === filterType.value;
     const matchesStatus = !filterStatus.value || violation.status === filterStatus.value;
     const matchesApp = !filterApplication.value || violation.application === filterApplication.value;
-    return matchesSearch && matchesSeverity && matchesType && matchesStatus && matchesApp;
+    const matchesTeam = !filterTeam.value || violation.team === filterTeam.value;
+    return matchesSearch && matchesSeverity && matchesType && matchesStatus && matchesApp && matchesTeam;
   });
 });
 
-const viewViolation = (id: string) => {
-  console.log('View violation:', id);
-  // Navigate to violation detail page
+const sortedViolations = computed(() => {
+  const sorted = [...filteredViolations.value];
+  
+  sorted.sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy.value) {
+      case 'date':
+        comparison = new Date(a.detectedAt).getTime() - new Date(b.detectedAt).getTime();
+        break;
+      case 'severity':
+        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        comparison = (severityOrder[a.severity as keyof typeof severityOrder] || 0) -
+                     (severityOrder[b.severity as keyof typeof severityOrder] || 0);
+        break;
+      case 'application':
+        comparison = (a.application || '').localeCompare(b.application || '');
+        break;
+      case 'status':
+        const statusOrder = { open: 1, 'in-progress': 2, resolved: 3, ignored: 4 };
+        comparison = (statusOrder[a.status as keyof typeof statusOrder] || 0) -
+                     (statusOrder[b.status as keyof typeof statusOrder] || 0);
+        break;
+    }
+    
+    return sortOrder.value === 'asc' ? comparison : -comparison;
+  });
+  
+  return sorted;
+});
+
+const loadViolations = async () => {
+  loading.value = true;
+  try {
+    const params = new URLSearchParams();
+    if (filterSeverity.value) params.append('severity', filterSeverity.value);
+    if (filterType.value) params.append('type', filterType.value);
+    if (filterStatus.value) params.append('status', filterStatus.value);
+    if (filterApplication.value) params.append('application', filterApplication.value);
+    if (filterTeam.value) params.append('team', filterTeam.value);
+
+    const response = await fetch(`${API_BASE_URL}/violations?${params.toString()}`);
+    if (response.ok) {
+      const data = await response.json();
+      violations.value = data.map((v: any) => ({
+        ...v,
+        detectedAt: new Date(v.detectedAt),
+        resolvedAt: v.resolvedAt ? new Date(v.resolvedAt) : undefined,
+        ignoredAt: v.ignoredAt ? new Date(v.ignoredAt) : undefined,
+        createdAt: new Date(v.createdAt),
+        updatedAt: new Date(v.updatedAt),
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading violations:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
-const assignViolation = (id: string) => {
+const viewViolation = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/violations/${id}`);
+    if (response.ok) {
+      const violation = await response.json();
+      selectedViolation.value = {
+        ...violation,
+        detectedAt: new Date(violation.detectedAt),
+        resolvedAt: violation.resolvedAt ? new Date(violation.resolvedAt) : undefined,
+        ignoredAt: violation.ignoredAt ? new Date(violation.ignoredAt) : undefined,
+        createdAt: new Date(violation.createdAt),
+        updatedAt: new Date(violation.updatedAt),
+      };
+      showDetailModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error loading violation:', error);
+  }
+};
+
+const closeDetailModal = () => {
+  showDetailModal.value = false;
+  selectedViolation.value = null;
+};
+
+const handleViolationUpdate = (updatedViolation: ViolationEntity) => {
+  const index = violations.value.findIndex(v => v.id === updatedViolation.id);
+  if (index !== -1) {
+    violations.value[index] = updatedViolation;
+  }
+  selectedViolation.value = updatedViolation;
+};
+
+const viewRelatedViolation = (id: string) => {
+  closeDetailModal();
+  viewViolation(id);
+};
+
+const assignViolation = async (id: string) => {
   const violation = violations.value.find(v => v.id === id);
-  if (violation) {
-    const assignee = prompt('Enter assignee email:');
-    if (assignee) {
-      violation.assignedTo = assignee;
-      violation.status = 'in-progress';
+  if (!violation) return;
+  
+  const assignee = prompt('Enter assignee email:', violation.assignedTo || '');
+  if (assignee === null) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/violations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assignedTo: assignee || null,
+        status: assignee ? 'in-progress' : violation.status,
+      }),
+    });
+
+    if (response.ok) {
+      await loadViolations();
     }
+  } catch (error) {
+    console.error('Error assigning violation:', error);
   }
 };
 
-const resolveViolation = (id: string) => {
-  if (confirm('Mark this violation as resolved?')) {
-    const violation = violations.value.find(v => v.id === id);
-    if (violation) {
-      violation.status = 'resolved';
+const resolveViolation = async (id: string) => {
+  if (!confirm('Mark this violation as resolved?')) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/violations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'resolved',
+        resolvedAt: new Date().toISOString(),
+        resolvedBy: 'current-user@example.com', // TODO: Get from auth context
+      }),
+    });
+
+    if (response.ok) {
+      await loadViolations();
     }
+  } catch (error) {
+    console.error('Error resolving violation:', error);
   }
 };
 
-const ignoreViolation = (id: string) => {
-  if (confirm('Ignore this violation? It will be marked as ignored.')) {
-    const violation = violations.value.find(v => v.id === id);
-    if (violation) {
-      violation.status = 'ignored';
+const ignoreViolation = async (id: string) => {
+  if (!confirm('Ignore this violation? It will be marked as ignored.')) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/violations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'ignored',
+        ignoredAt: new Date().toISOString(),
+        ignoredBy: 'current-user@example.com', // TODO: Get from auth context
+      }),
+    });
+
+    if (response.ok) {
+      await loadViolations();
     }
+  } catch (error) {
+    console.error('Error ignoring violation:', error);
   }
 };
 
-const formatDate = (date: Date): string => {
+const formatDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - d.getTime();
   const diffHours = Math.floor(diffMs / 3600000);
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  return d.toLocaleDateString();
 };
+
+const formatType = (type: string): string => {
+  return type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
+// Watch filters and reload violations
+watch([filterSeverity, filterType, filterStatus, filterApplication, filterTeam], () => {
+  loadViolations();
+}, { deep: true });
+
+onMounted(() => {
+  loadViolations();
+});
 </script>
 
 <style scoped>
@@ -415,11 +565,20 @@ const formatDate = (date: Date): string => {
   color: #ffffff;
 }
 
+.filters-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
 .filters {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .search-input {
@@ -430,8 +589,8 @@ const formatDate = (date: Date): string => {
   color: #ffffff;
   font-size: 0.9rem;
   transition: all 0.2s;
-  flex: 1;
   min-width: 200px;
+  flex: 1;
 }
 
 .filter-dropdown {
@@ -442,6 +601,56 @@ const formatDate = (date: Date): string => {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.sort-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.sort-dropdown {
+  min-width: 120px;
+}
+
+.sort-order-btn {
+  padding: 8px;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  color: #4facfe;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sort-order-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.sort-order-btn.desc .sort-icon {
+  transform: rotate(180deg);
+}
+
+.sort-icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: #a0aec0;
 }
 
 .violations-list {

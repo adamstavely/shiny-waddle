@@ -122,7 +122,7 @@ watch(() => route.path, (newPath) => {
 });
 
 const handleSettingsClick = () => {
-  window.dispatchEvent(new CustomEvent('open-settings'));
+  window.location.href = '/settings';
   close();
 };
 </script>

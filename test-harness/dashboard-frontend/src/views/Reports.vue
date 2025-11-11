@@ -7,9 +7,9 @@
           <h1 class="page-title">Reports</h1>
           <p class="page-description">View and download compliance reports</p>
         </div>
-        <button @click="generateReport" class="btn-primary" :disabled="isGenerating">
+        <button @click="openGenerateModal" class="btn-primary">
           <FileText class="btn-icon" />
-          {{ isGenerating ? 'Generating...' : 'Generate Report' }}
+          Generate Report
         </button>
       </div>
     </div>
@@ -40,6 +40,12 @@
         placeholder="All Teams"
         class="filter-dropdown"
       />
+      <Dropdown
+        v-model="filterValidator"
+        :options="validatorOptions"
+        placeholder="All Validators"
+        class="filter-dropdown"
+      />
       <input
         v-model="filterDateFrom"
         type="date"
@@ -54,8 +60,13 @@
       />
     </div>
 
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading-state">
+      <p>Loading reports...</p>
+    </div>
+
     <!-- Reports List -->
-    <div class="reports-grid">
+    <div v-else class="reports-grid">
       <div
         v-for="report in filteredReports"
         :key="report.id"
@@ -93,6 +104,18 @@
             <span class="info-label">Tests:</span>
             <span class="info-value">{{ report.testCount }} total</span>
           </div>
+          <div class="info-item" v-if="report.validators && report.validators.length > 0">
+            <span class="info-label">Validators:</span>
+            <div class="validator-badges">
+              <span
+                v-for="validator in report.validators"
+                :key="validator.id"
+                class="validator-badge"
+              >
+                {{ validator.name }}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="report-summary">
@@ -127,10 +150,19 @@
       <FileText class="empty-icon" />
       <h3>No reports found</h3>
       <p>Generate a report to get started</p>
-      <button @click="generateReport" class="btn-primary">
+      <button @click="openGenerateModal" class="btn-primary">
         Generate Report
       </button>
     </div>
+
+    <!-- Generate Report Modal -->
+    <GenerateReportModal
+      v-model:isOpen="showGenerateModal"
+      :applications="applications"
+      :teams="teams"
+      :validators="validators"
+      @generated="handleReportGenerated"
+    />
 
     <!-- Report Viewer Modal -->
     <Teleport to="body">
@@ -142,14 +174,78 @@
                 <FileText class="modal-title-icon" />
                 <h2>{{ viewingReport?.name }}</h2>
               </div>
-              <button @click="closeViewer" class="modal-close">
-                <X class="close-icon" />
-              </button>
+              <div class="modal-header-actions">
+                <button @click="downloadReport(viewingReport.id, viewingReport.format)" class="action-btn-header">
+                  <Download class="action-icon" />
+                  Download
+                </button>
+                <button @click="closeViewer" class="modal-close">
+                  <X class="close-icon" />
+                </button>
+              </div>
             </div>
             <div class="modal-body">
-              <div v-if="viewingReport?.format === 'html'" class="html-report" v-html="viewingReport.content"></div>
-              <div v-else class="json-report">
-                <pre>{{ JSON.stringify(viewingReport?.content, null, 2) }}</pre>
+              <!-- Report Summary -->
+              <div v-if="viewingReport?.content" class="report-summary-section">
+                <div class="summary-cards">
+                  <div class="summary-card">
+                    <div class="summary-card-label">Compliance Score</div>
+                    <div class="summary-card-value" :class="getScoreClass(viewingReport.complianceScore)">
+                      {{ viewingReport.complianceScore }}%
+                    </div>
+                  </div>
+                  <div class="summary-card">
+                    <div class="summary-card-label">Total Tests</div>
+                    <div class="summary-card-value">{{ viewingReport.testCount }}</div>
+                  </div>
+                  <div class="summary-card">
+                    <div class="summary-card-label">Passed</div>
+                    <div class="summary-card-value passed">{{ viewingReport.passedTests }}</div>
+                  </div>
+                  <div class="summary-card">
+                    <div class="summary-card-label">Failed</div>
+                    <div class="summary-card-value failed">{{ viewingReport.failedTests }}</div>
+                  </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div v-if="viewingReport.content.scores" class="charts-section">
+                  <div class="chart-container">
+                    <h3>Compliance by Category</h3>
+                    <div class="score-bars">
+                      <div
+                        v-for="(score, category) in viewingReport.content.scores.byCategory"
+                        :key="category"
+                        class="score-bar-item"
+                      >
+                        <div class="score-bar-label">{{ formatCategory(category) }}</div>
+                        <div class="score-bar">
+                          <div
+                            class="score-bar-fill"
+                            :style="{ width: `${score}%` }"
+                            :class="getScoreClass(score)"
+                          ></div>
+                          <span class="score-bar-value">{{ score }}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Detailed Content -->
+                <div class="report-content-section">
+                  <h3>Report Details</h3>
+                  <div v-if="viewingReport.format === 'html'" class="html-report" v-html="viewingReport.content.html || viewingReport.content"></div>
+                  <div v-else-if="viewingReport.format === 'json'" class="json-report">
+                    <pre>{{ JSON.stringify(viewingReport.content, null, 2) }}</pre>
+                  </div>
+                  <div v-else class="xml-report">
+                    <pre>{{ viewingReport.content }}</pre>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="report-loading">
+                <p>Loading report content...</p>
               </div>
             </div>
           </div>
@@ -160,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Teleport } from 'vue';
 import {
   FileText,
@@ -173,6 +269,7 @@ import {
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import GenerateReportModal from '../components/GenerateReportModal.vue';
 
 const breadcrumbItems = [
   { label: 'Reports', icon: FileText }
@@ -182,53 +279,14 @@ const searchQuery = ref('');
 const filterFormat = ref('');
 const filterApplication = ref('');
 const filterTeam = ref('');
+const filterValidator = ref('');
 const filterDateFrom = ref('');
 const filterDateTo = ref('');
-const isGenerating = ref(false);
 const viewingReport = ref<any>(null);
-
-// Mock reports data
-const reports = ref([
-  {
-    id: '1',
-    name: 'Compliance Report - Q4 2024',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    format: 'html',
-    status: 'completed',
-    generatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    complianceScore: 95,
-    testCount: 24,
-    passedTests: 23,
-    failedTests: 1
-  },
-  {
-    id: '2',
-    name: 'User Service Compliance Report',
-    application: 'user-service',
-    team: 'platform-team',
-    format: 'json',
-    status: 'completed',
-    generatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    complianceScore: 72,
-    testCount: 18,
-    passedTests: 13,
-    failedTests: 5
-  },
-  {
-    id: '3',
-    name: 'Data Pipeline Compliance Report',
-    application: 'data-pipeline',
-    team: 'data-engineering',
-    format: 'xml',
-    status: 'generating',
-    generatedAt: new Date(Date.now() - 10 * 60 * 1000),
-    complianceScore: 0,
-    testCount: 0,
-    passedTests: 0,
-    failedTests: 0
-  }
-]);
+const validators = ref<any[]>([]);
+const showGenerateModal = ref(false);
+const reports = ref<any[]>([]);
+const isLoading = ref(false);
 
 const applications = computed(() => {
   return [...new Set(reports.value.map(r => r.application))];
@@ -259,55 +317,65 @@ const teamOptions = computed(() => {
   ];
 });
 
+const validatorOptions = computed(() => {
+  return [
+    { label: 'All Validators', value: '' },
+    ...validators.value.map(v => ({ label: v.name, value: v.id }))
+  ];
+});
+
 const filteredReports = computed(() => {
   return reports.value.filter(report => {
     const matchesSearch = report.name.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesFormat = !filterFormat.value || report.format === filterFormat.value;
     const matchesApp = !filterApplication.value || report.application === filterApplication.value;
     const matchesTeam = !filterTeam.value || report.team === filterTeam.value;
+    const matchesValidator = !filterValidator.value || 
+      (report.validators && report.validators.some((v: any) => v.id === filterValidator.value));
     const matchesDate = (!filterDateFrom.value || new Date(report.generatedAt) >= new Date(filterDateFrom.value)) &&
                        (!filterDateTo.value || new Date(report.generatedAt) <= new Date(filterDateTo.value));
-    return matchesSearch && matchesFormat && matchesApp && matchesTeam && matchesDate;
+    return matchesSearch && matchesFormat && matchesApp && matchesTeam && matchesValidator && matchesDate;
   });
 });
 
-const generateReport = async () => {
-  isGenerating.value = true;
+const openGenerateModal = () => {
+  showGenerateModal.value = true;
+};
+
+const handleReportGenerated = async (report: any) => {
+  // Reload reports to get the new one
+  await loadReports();
+};
+
+const loadReports = async () => {
+  isLoading.value = true;
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newReport = {
-      id: String(reports.value.length + 1),
-      name: `Compliance Report - ${new Date().toLocaleDateString()}`,
-      application: 'research-tracker-api',
-      team: 'research-platform',
-      format: 'html',
-      status: 'completed',
-      generatedAt: new Date(),
-      complianceScore: 92,
-      testCount: 20,
-      passedTests: 19,
-      failedTests: 1
-    };
-    
-    reports.value.unshift(newReport);
+    const response = await axios.get('/api/reports');
+    reports.value = response.data.map((report: any) => ({
+      ...report,
+      generatedAt: new Date(report.generatedAt),
+    }));
   } catch (error) {
-    console.error('Failed to generate report:', error);
+    console.error('Failed to load reports:', error);
   } finally {
-    isGenerating.value = false;
+    isLoading.value = false;
   }
 };
 
-const viewReport = (id: string) => {
-  const report = reports.value.find(r => r.id === id);
-  if (report) {
+const viewReport = async (id: string) => {
+  try {
+    const response = await axios.get(`/api/reports/${id}`);
     viewingReport.value = {
-      ...report,
-      content: report.format === 'html' 
-        ? '<h1>Compliance Report</h1><p>Report content would be displayed here...</p>'
-        : { summary: 'Report data', scores: { overall: report.complianceScore } }
+      ...response.data,
+      generatedAt: new Date(response.data.generatedAt),
     };
+  } catch (error) {
+    console.error('Failed to load report:', error);
+    // Fallback to local data
+    const report = reports.value.find(r => r.id === id);
+    if (report) {
+      viewingReport.value = report;
+    }
   }
 };
 
@@ -315,25 +383,34 @@ const closeViewer = () => {
   viewingReport.value = null;
 };
 
-const downloadReport = (id: string, format: string) => {
-  const report = reports.value.find(r => r.id === id);
-  if (report) {
-    // Simulate download
-    const blob = new Blob([`Report content for ${report.name}`], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${report.name}.${format}`;
-    a.click();
-    URL.revokeObjectURL(url);
+const downloadReport = async (id: string, format: string) => {
+  try {
+    const response = await axios.get(`/api/reports/${id}/download`, {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    const report = reports.value.find(r => r.id === id);
+    link.setAttribute('download', `${report?.name || 'report'}.${format}`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Failed to download report:', error);
+    alert('Failed to download report. Please try again.');
   }
 };
 
-const deleteReport = (id: string) => {
+const deleteReport = async (id: string) => {
   if (confirm('Are you sure you want to delete this report?')) {
-    const index = reports.value.findIndex(r => r.id === id);
-    if (index !== -1) {
-      reports.value.splice(index, 1);
+    try {
+      await axios.delete(`/api/reports/${id}`);
+      await loadReports();
+    } catch (error) {
+      console.error('Failed to delete report:', error);
+      alert('Failed to delete report. Please try again.');
     }
   }
 };
@@ -352,6 +429,26 @@ const getScoreClass = (score: number): string => {
   if (score >= 70) return 'score-medium';
   return 'score-low';
 };
+
+const formatCategory = (category: string): string => {
+  return category
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim();
+};
+
+const loadValidators = async () => {
+  try {
+    const response = await axios.get('/api/validators');
+    validators.value = response.data;
+  } catch (err) {
+    console.error('Error loading validators:', err);
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([loadValidators(), loadReports()]);
+});
 </script>
 
 <style scoped>
@@ -714,6 +811,32 @@ const getScoreClass = (score: number): string => {
   border-bottom: 1px solid rgba(79, 172, 254, 0.2);
 }
 
+.modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn-header:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
 .modal-title-group {
   display: flex;
   align-items: center;
@@ -759,6 +882,151 @@ const getScoreClass = (score: number): string => {
 
 .modal-body {
   padding: 24px;
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
+}
+
+.report-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.summary-card {
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.summary-card-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin-bottom: 8px;
+}
+
+.summary-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.summary-card-value.passed {
+  color: #22c55e;
+}
+
+.summary-card-value.failed {
+  color: #fc8181;
+}
+
+.charts-section {
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.charts-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.chart-container {
+  width: 100%;
+}
+
+.score-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.score-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.score-bar-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.score-bar {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  background: rgba(15, 20, 25, 0.8);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.score-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.score-bar-fill.score-high {
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+}
+
+.score-bar-fill.score-medium {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.score-bar-fill.score-low {
+  background: linear-gradient(90deg, #fc8181 0%, #ef4444 100%);
+}
+
+.score-bar-value {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.report-content-section {
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.report-content-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.report-loading {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: #a0aec0;
 }
 
 .html-report {
@@ -788,5 +1056,20 @@ const getScoreClass = (score: number): string => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.validator-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.validator-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 </style>

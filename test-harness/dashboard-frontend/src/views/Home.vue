@@ -10,12 +10,13 @@
           <div class="hero-text">
             <h1 class="hero-title">
               Sentinel
-              <span class="hero-subtitle">Data Access Testing Framework</span>
+              <span class="hero-subtitle">Application Security Posture Management</span>
             </h1>
             <p class="hero-description">
-              Automated compliance verification for access control requirements. 
-              Validate your applications are adhering to data governance policies with 
-              comprehensive testing and real-time monitoring.
+              Comprehensive security posture management platform for modern applications. 
+              Continuously assess, monitor, and improve your application security across 
+              access controls, API security, data protection, and compliance requirements 
+              with automated testing and real-time visibility.
             </p>
             <div class="hero-actions">
               <router-link to="/dashboard" class="btn-primary">View Dashboard</router-link>

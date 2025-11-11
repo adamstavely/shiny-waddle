@@ -51,8 +51,21 @@
       />
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading && policies.length === 0" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading policies...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-if="error" class="error-state">
+      <AlertTriangle class="error-icon" />
+      <p>{{ error }}</p>
+      <button @click="loadPolicies" class="btn-retry">Retry</button>
+    </div>
+
     <!-- Policies List -->
-    <div class="policies-grid">
+    <div v-if="!loading || policies.length > 0" class="policies-grid">
       <div
         v-for="policy in filteredPolicies"
         :key="policy.id"
@@ -96,6 +109,10 @@
           <button @click.stop="testPolicy(policy.id)" class="action-btn test-btn">
             <TestTube class="action-icon" />
             Test
+          </button>
+          <button @click.stop="deletePolicy(policy.id)" class="action-btn delete-btn">
+            <Trash2 class="action-icon" />
+            Delete
           </button>
         </div>
       </div>
@@ -410,7 +427,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Teleport } from 'vue';
 import {
@@ -428,6 +445,7 @@ import {
 } from 'lucide-vue-next';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import axios from 'axios';
 
 const router = useRouter();
 
@@ -442,56 +460,17 @@ const filterStatus = ref('');
 const showCreateModal = ref(false);
 const editingPolicy = ref<string | null>(null);
 const editorTab = ref<'basic' | 'rules' | 'preview'>('basic');
+const loading = ref(false);
+const error = ref<string | null>(null);
 
-// Mock policies data
-const policies = ref([
-  {
-    id: '1',
-    name: 'Default Access Control Policy',
-    description: 'Standard RBAC policy for application access control',
-    type: 'rbac',
-    version: '1.0.0',
-    status: 'active',
-    ruleCount: 5,
-    lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    name: 'Department Match Policy',
-    description: 'ABAC policy for department-based access control',
-    type: 'abac',
-    version: '2.1.0',
-    status: 'active',
-    ruleCount: 8,
-    lastUpdated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    name: 'Clearance Level Check',
-    description: 'ABAC policy for security clearance validation',
-    type: 'abac',
-    version: '1.5.0',
-    status: 'active',
-    ruleCount: 3,
-    lastUpdated: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
-  },
-  {
-    id: '4',
-    name: 'Legacy Access Policy',
-    description: 'Deprecated RBAC policy for legacy systems',
-    type: 'rbac',
-    version: '0.9.0',
-    status: 'deprecated',
-    ruleCount: 4,
-    lastUpdated: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  }
-]);
+// Policies data from API
+const policies = ref<any[]>([]);
 
-const tabs = [
+const tabs = computed(() => [
   { id: 'all', label: 'All Policies', icon: FileText, badge: policies.value.length },
   { id: 'rbac', label: 'RBAC', icon: Shield, badge: policies.value.filter(p => p.type === 'rbac').length },
   { id: 'abac', label: 'ABAC', icon: ShieldCheck, badge: policies.value.filter(p => p.type === 'abac').length }
-];
+]);
 
 const typeOptions = computed(() => [
   { label: 'All Types', value: '' },
@@ -546,39 +525,32 @@ const viewPolicy = (id: string) => {
   router.push(`/policies/${id}`);
 };
 
-const editPolicy = (id: string) => {
-  const policy = policies.value.find(p => p.id === id);
-  if (policy) {
+const editPolicy = async (id: string) => {
+  try {
+    loading.value = true;
+    const response = await axios.get(`/api/policies/${id}`);
+    const policy = response.data;
+    
     editingPolicy.value = id;
     editorTab.value = 'basic';
-    // In a real app, this would load the full policy with rules/conditions from API
     policyForm.value = {
       name: policy.name,
-      description: policy.description,
+      description: policy.description || '',
       type: policy.type,
       version: policy.version,
       status: policy.status,
-      effect: 'allow',
-      priority: 100,
-      rules: policy.type === 'rbac' ? [
-        {
-          id: 'rule-1',
-          description: 'Example rule',
-          effect: 'allow',
-          conditions: { 'subject.role': 'admin' }
-        }
-      ] : [],
-      conditions: policy.type === 'abac' ? [
-        {
-          attribute: 'subject.department',
-          operator: 'equals',
-          value: '{{resource.department}}',
-          logicalOperator: ''
-        }
-      ] : []
+      effect: policy.effect || 'allow',
+      priority: policy.priority || 100,
+      rules: policy.rules || [],
+      conditions: policy.conditions || []
     };
     initializeConditionArrays();
     showCreateModal.value = true;
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to load policy';
+    console.error('Error loading policy:', err);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -591,47 +563,77 @@ const testPolicy = (id: string) => {
   // In a real app, this might trigger a test modal or navigate to tests page
 };
 
-const savePolicy = () => {
+const loadPolicies = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    const response = await axios.get('/api/policies');
+    policies.value = response.data.map((p: any) => ({
+      ...p,
+      lastUpdated: new Date(p.updatedAt),
+      ruleCount: p.ruleCount || (p.type === 'rbac' ? (p.rules?.length || 0) : (p.conditions?.length || 0))
+    }));
+  } catch (err: any) {
+    error.value = err.message || 'Failed to load policies';
+    console.error('Error loading policies:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const savePolicy = async () => {
   if (validationErrors.value.length > 0) {
     editorTab.value = 'preview';
     return;
   }
   
-  if (editingPolicy.value) {
-    // Update existing
-    const index = policies.value.findIndex(p => p.id === editingPolicy.value);
-    if (index !== -1) {
-      const ruleCount = policyForm.value.type === 'rbac' 
-        ? policyForm.value.rules.length 
-        : policyForm.value.conditions.length;
-      policies.value[index] = {
-        ...policies.value[index],
-        name: policyForm.value.name,
-        description: policyForm.value.description,
-        type: policyForm.value.type,
-        version: policyForm.value.version,
-        status: policyForm.value.status,
-        ruleCount,
-        lastUpdated: new Date()
-      };
-    }
-  } else {
-    // Create new
-    const ruleCount = policyForm.value.type === 'rbac' 
-      ? policyForm.value.rules.length 
-      : policyForm.value.conditions.length;
-    policies.value.push({
-      id: String(policies.value.length + 1),
+  try {
+    loading.value = true;
+    error.value = null;
+    
+    const policyData = {
       name: policyForm.value.name,
       description: policyForm.value.description,
       type: policyForm.value.type,
       version: policyForm.value.version,
       status: policyForm.value.status,
-      ruleCount,
-      lastUpdated: new Date()
-    });
+      effect: policyForm.value.effect,
+      priority: policyForm.value.priority,
+      rules: policyForm.value.rules,
+      conditions: policyForm.value.conditions,
+    };
+    
+    if (editingPolicy.value) {
+      await axios.patch(`/api/policies/${editingPolicy.value}`, policyData);
+    } else {
+      await axios.post('/api/policies', policyData);
+    }
+    
+    await loadPolicies();
+    closeModal();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to save policy';
+    console.error('Error saving policy:', err);
+  } finally {
+    loading.value = false;
   }
-  closeModal();
+};
+
+const deletePolicy = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this policy?')) {
+    return;
+  }
+  
+  try {
+    loading.value = true;
+    await axios.delete(`/api/policies/${id}`);
+    await loadPolicies();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to delete policy';
+    console.error('Error deleting policy:', err);
+  } finally {
+    loading.value = false;
+  }
 };
 
 const closeModal = () => {
@@ -906,14 +908,20 @@ watch(() => policyForm.value.type, () => {
   }
 });
 
-const formatDate = (date: Date): string => {
+const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000));
+  const diffDays = Math.floor((now.getTime() - dateObj.getTime()) / (24 * 60 * 60 * 1000));
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
-  return date.toLocaleDateString();
+  return dateObj.toLocaleDateString();
 };
+
+// Load policies on mount
+onMounted(() => {
+  loadPolicies();
+});
 </script>
 
 <style scoped>
@@ -1190,6 +1198,12 @@ const formatDate = (date: Date): string => {
   background: rgba(251, 191, 36, 0.1);
   border-color: rgba(251, 191, 36, 0.5);
   color: #fbbf24;
+}
+
+.delete-btn:hover {
+  background: rgba(252, 129, 129, 0.1);
+  border-color: rgba(252, 129, 129, 0.5);
+  color: #fc8181;
 }
 
 .action-icon {
@@ -1657,5 +1671,68 @@ const formatDate = (date: Date): string => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: #4facfe;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(79, 172, 254, 0.2);
+  border-top-color: #4facfe;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+.error-state {
+  text-align: center;
+  padding: 40px;
+  background: rgba(252, 129, 129, 0.1);
+  border: 1px solid rgba(252, 129, 129, 0.3);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.error-icon {
+  width: 48px;
+  height: 48px;
+  color: #fc8181;
+  margin: 0 auto 16px;
+}
+
+.error-state p {
+  color: #fc8181;
+  font-size: 1rem;
+  margin-bottom: 16px;
+}
+
+.btn-retry {
+  padding: 10px 20px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-retry:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.5);
 }
 </style>

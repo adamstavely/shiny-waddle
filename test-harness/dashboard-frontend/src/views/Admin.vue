@@ -385,6 +385,59 @@
       </div>
     </div>
 
+    <!-- Validators Tab -->
+    <div v-if="activeTab === 'validators'" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">
+            <Shield class="title-icon" />
+            Validators
+          </h2>
+          <p class="section-description">
+            Manage registered validators that execute compliance tests
+          </p>
+        </div>
+        <button @click="showAddValidatorModal = true" class="btn-primary">
+          <Plus class="btn-icon" />
+          Add Validator
+        </button>
+      </div>
+
+      <!-- Loading/Error States -->
+      <div v-if="loadingValidators" class="loading-state">
+        <div class="loading">Loading validators...</div>
+      </div>
+      <div v-if="validatorsError" class="error-state">
+        <div class="error">{{ validatorsError }}</div>
+        <button @click="loadValidators" class="btn-retry">
+          Retry
+        </button>
+      </div>
+
+      <!-- Validators List -->
+      <div v-if="!loadingValidators && !validatorsError" class="validators-grid">
+        <ValidatorCard
+          v-for="validator in validators"
+          :key="validator.id"
+          :validator="validator"
+          @view="viewValidator"
+          @toggle="toggleValidator"
+          @test="testValidator"
+          @delete="deleteValidator"
+        />
+      </div>
+
+      <div v-if="!loadingValidators && !validatorsError && validators.length === 0" class="empty-state">
+        <Shield class="empty-icon" />
+        <h3>No validators registered</h3>
+        <p>Add your first validator to start running compliance tests</p>
+        <button @click="showAddValidatorModal = true" class="btn-primary">
+          <Plus class="btn-icon" />
+          Add Validator
+        </button>
+      </div>
+    </div>
+
     <!-- Create/Edit Banner Modal -->
     <Teleport to="body">
       <Transition name="fade">
@@ -588,6 +641,24 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Validator Detail Modal -->
+    <ValidatorDetailModal
+      :show="showValidatorDetailModal"
+      :validator="selectedValidator"
+      @close="showValidatorDetailModal = false; selectedValidator = null"
+      @edit="editValidator"
+      @toggle="toggleValidator"
+      @test="testValidator"
+    />
+
+    <!-- Add/Edit Validator Modal -->
+    <AddValidatorModal
+      :show="showAddValidatorModal"
+      :validator="editingValidator"
+      @close="showAddValidatorModal = false; editingValidator = null"
+      @submit="handleValidatorSubmit"
+    />
   </div>
 </template>
 
@@ -617,12 +688,24 @@ import {
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
+import ValidatorCard from '../components/ValidatorCard.vue';
+import ValidatorDetailModal from '../components/ValidatorDetailModal.vue';
+import AddValidatorModal from '../components/AddValidatorModal.vue';
 
-const activeTab = ref<'overview' | 'applications' | 'banners'>('overview');
+const activeTab = ref<'overview' | 'applications' | 'banners' | 'validators'>('overview');
 const showCreateModal = ref(false);
 const editingApp = ref<any>(null);
 const showBannerModal = ref(false);
 const editingBanner = ref<any>(null);
+
+// Validators data
+const validators = ref<any[]>([]);
+const loadingValidators = ref(false);
+const validatorsError = ref<string | null>(null);
+const showAddValidatorModal = ref(false);
+const showValidatorDetailModal = ref(false);
+const selectedValidator = ref<any>(null);
+const editingValidator = ref<any>(null);
 
 const breadcrumbItems = [
   { label: 'Admin', icon: Settings }
@@ -631,7 +714,8 @@ const breadcrumbItems = [
 const tabs = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
   { id: 'applications', label: 'Applications', icon: Layers },
-  { id: 'banners', label: 'Banners', icon: Megaphone }
+  { id: 'banners', label: 'Banners', icon: Megaphone },
+  { id: 'validators', label: 'Validators', icon: Shield }
 ];
 
 // Applications data
@@ -820,8 +904,97 @@ const closeBannerModal = () => {
   };
 };
 
+const loadValidators = async () => {
+  try {
+    loadingValidators.value = true;
+    validatorsError.value = null;
+    const response = await axios.get('/api/validators');
+    validators.value = response.data.map((v: any) => ({
+      ...v,
+      registeredAt: new Date(v.registeredAt),
+      lastRunAt: v.lastRunAt ? new Date(v.lastRunAt) : null,
+      updatedAt: new Date(v.updatedAt),
+    }));
+  } catch (err: any) {
+    validatorsError.value = err.message || 'Failed to load validators';
+    console.error('Error loading validators:', err);
+  } finally {
+    loadingValidators.value = false;
+  }
+};
+
+const viewValidator = (validator: any) => {
+  selectedValidator.value = validator;
+  showValidatorDetailModal.value = true;
+};
+
+const toggleValidator = async (validator: any) => {
+  try {
+    if (validator.enabled) {
+      await axios.patch(`/api/validators/${validator.id}/disable`);
+    } else {
+      await axios.patch(`/api/validators/${validator.id}/enable`);
+    }
+    await loadValidators();
+  } catch (err: any) {
+    console.error('Error toggling validator:', err);
+    alert(err.response?.data?.message || 'Failed to toggle validator');
+  }
+};
+
+const testValidator = async (validator: any) => {
+  try {
+    const response = await axios.post(`/api/validators/${validator.id}/test`);
+    alert(response.data.message || 'Connection test successful');
+  } catch (err: any) {
+    console.error('Error testing validator:', err);
+    alert(err.response?.data?.message || 'Connection test failed');
+  }
+};
+
+const deleteValidator = async (validator: any) => {
+  if (!confirm(`Are you sure you want to delete validator "${validator.name}"?`)) {
+    return;
+  }
+  
+  try {
+    await axios.delete(`/api/validators/${validator.id}`);
+    await loadValidators();
+  } catch (err: any) {
+    console.error('Error deleting validator:', err);
+    alert(err.response?.data?.message || 'Failed to delete validator');
+  }
+};
+
+const handleValidatorSubmit = async (data: any) => {
+  try {
+    if (editingValidator.value) {
+      await axios.patch(`/api/validators/${editingValidator.value.id}`, {
+        name: data.name,
+        description: data.description,
+        config: data.config,
+        enabled: data.enabled,
+      });
+    } else {
+      await axios.post('/api/validators', data);
+    }
+    await loadValidators();
+    showAddValidatorModal.value = false;
+    editingValidator.value = null;
+  } catch (err: any) {
+    console.error('Error saving validator:', err);
+    alert(err.response?.data?.message || 'Failed to save validator');
+  }
+};
+
+const editValidator = (validator: any) => {
+  editingValidator.value = validator;
+  showAddValidatorModal.value = true;
+};
+
 onMounted(() => {
   loadApplications();
+  loadValidators();
 });
 
 const appTypeOptions = computed(() => [
@@ -2002,6 +2175,13 @@ const closeModal = () => {
 .btn-retry:hover {
   background: rgba(79, 172, 254, 0.2);
   border-color: rgba(79, 172, 254, 0.5);
+}
+
+/* Validators Styles */
+.validators-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
 }
 </style>
 

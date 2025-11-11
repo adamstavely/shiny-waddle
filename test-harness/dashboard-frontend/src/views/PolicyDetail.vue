@@ -32,6 +32,14 @@
               <History class="action-icon" />
               Versions
             </button>
+            <button @click="deployPolicy()" class="action-btn deploy-btn">
+              <Upload class="action-icon" />
+              Deploy
+            </button>
+            <button @click="showAuditLog = true; loadAuditLogs()" class="action-btn audit-btn">
+              <FileText class="action-icon" />
+              Audit Log
+            </button>
           </div>
         </div>
       </div>
@@ -98,6 +106,56 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Validator Information Section -->
+      <div class="content-section" v-if="validatorsUsingPolicy.length > 0">
+        <div class="section-header">
+          <h2 class="section-title">
+            <TestTube class="title-icon" />
+            Validators Using This Policy
+          </h2>
+          <span class="validator-count">{{ validatorsUsingPolicy.length }} validator{{ validatorsUsingPolicy.length !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="validators-list">
+          <div
+            v-for="validator in validatorsUsingPolicy"
+            :key="validator.id"
+            class="validator-item"
+            @click="viewValidator(validator.id)"
+          >
+            <div class="validator-info">
+              <h4 class="validator-name">{{ validator.name }}</h4>
+              <p class="validator-description">{{ validator.description }}</p>
+              <div class="validator-meta">
+                <span class="meta-item">
+                  <span class="meta-label">Type:</span>
+                  <span class="meta-value">{{ validator.testType }}</span>
+                </span>
+                <span class="meta-item">
+                  <span class="meta-label">Version:</span>
+                  <span class="meta-value">{{ validator.version }}</span>
+                </span>
+                <span class="meta-item">
+                  <span class="meta-label">Status:</span>
+                  <span class="meta-value" :class="validator.enabled ? 'status-enabled' : 'status-disabled'">
+                    {{ validator.enabled ? 'Enabled' : 'Disabled' }}
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="validator-actions">
+              <button @click.stop="viewValidator(validator.id)" class="action-btn view-btn">
+                <Eye class="action-icon" />
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+        <div v-if="validatorsUsingPolicy.length === 0" class="empty-validators">
+          <TestTube class="empty-icon" />
+          <p>No validators are currently using this policy</p>
         </div>
       </div>
 
@@ -346,6 +404,117 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Test Policy Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showTestModal" class="modal-overlay" @click="showTestModal = false">
+          <div class="modal-content test-modal" @click.stop>
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <TestTube class="modal-title-icon" />
+                <h2>Test Policy</h2>
+              </div>
+              <button @click="showTestModal = false" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Test Data (JSON)</label>
+                <textarea 
+                  :value="JSON.stringify(testData, null, 2)" 
+                  rows="10"
+                  @input="try { testData = JSON.parse(($event.target as HTMLTextAreaElement).value); } catch(e) {}"
+                ></textarea>
+              </div>
+              <button @click="runTest" class="btn-primary">Run Test</button>
+              <div v-if="testResult" class="test-result">
+                <h3>Test Result</h3>
+                <pre>{{ JSON.stringify(testResult, null, 2) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Audit Log Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showAuditLog" class="modal-overlay" @click="showAuditLog = false">
+          <div class="modal-content audit-modal" @click.stop>
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <FileText class="modal-title-icon" />
+                <h2>Audit Log</h2>
+              </div>
+              <button @click="showAuditLog = false" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="audit-log-list">
+                <div v-for="log in auditLogs" :key="log.id" class="audit-log-item">
+                  <div class="log-header">
+                    <span class="log-action">{{ log.action }}</span>
+                    <span class="log-date">{{ formatDateTime(log.timestamp) }}</span>
+                  </div>
+                  <div v-if="log.details" class="log-details">
+                    <pre>{{ JSON.stringify(log.details, null, 2) }}</pre>
+                  </div>
+                </div>
+                <div v-if="auditLogs.length === 0" class="empty-state">
+                  <p>No audit logs found</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Version Comparison Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showComparisonModal" class="modal-overlay" @click="showComparisonModal = false">
+          <div class="modal-content comparison-modal" @click.stop>
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <History class="modal-title-icon" />
+                <h2>Compare Versions</h2>
+              </div>
+              <button @click="showComparisonModal = false" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Version 1</label>
+                <Dropdown
+                  v-model="comparisonVersions.version1"
+                  :options="versionOptions"
+                  placeholder="Select version..."
+                />
+              </div>
+              <div class="form-group">
+                <label>Version 2</label>
+                <Dropdown
+                  v-model="comparisonVersions.version2"
+                  :options="versionOptions"
+                  placeholder="Select version..."
+                />
+              </div>
+              <button @click="compareVersions" class="btn-primary">Compare</button>
+              <div v-if="comparisonResult" class="comparison-result">
+                <h3>Differences</h3>
+                <pre>{{ JSON.stringify(comparisonResult.differences, null, 2) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -364,8 +533,12 @@ import {
   Info,
   BarChart3,
   FileCode,
-  Shield
+  Shield,
+  Eye,
+  Upload,
+  FileText
 } from 'lucide-vue-next';
+import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 
@@ -378,11 +551,37 @@ const error = ref<string | null>(null);
 const showVersionModal = ref(false);
 
 const policy = ref<any>(null);
+const validators = ref<any[]>([]);
 
 const breadcrumbItems = computed(() => [
   { label: 'Policies', to: '/policies', icon: Shield },
   { label: policy.value?.name || 'Policy', icon: Shield }
 ]);
+
+const validatorsUsingPolicy = computed(() => {
+  if (!policy.value || validators.value.length === 0) return [];
+  
+  // In a real implementation, this would check which validators reference this policy
+  // For now, we'll match validators that have the same test type as the policy type
+  // or validators that explicitly reference this policy in their config
+  return validators.value.filter(validator => {
+    // Match by test type (e.g., access-control validators use RBAC policies)
+    if (policy.value.type === 'rbac' && validator.testType === 'access-control') {
+      return true;
+    }
+    if (policy.value.type === 'abac' && validator.testType === 'access-control') {
+      return true;
+    }
+    // Check if validator config references this policy
+    if (validator.config?.policyId === policy.value.id) {
+      return true;
+    }
+    if (validator.config?.policies?.includes(policy.value.id)) {
+      return true;
+    }
+    return false;
+  });
+});
 
 const versionForm = ref({
   version: '',
@@ -405,82 +604,35 @@ const changeTypeOptions = computed(() => [
   { label: 'Deprecated', value: 'deprecated' }
 ]);
 
+const loadValidators = async () => {
+  try {
+    const response = await axios.get('/api/validators');
+    validators.value = response.data;
+  } catch (err) {
+    console.error('Error loading validators:', err);
+  }
+};
+
+const viewValidator = (validatorId: string) => {
+  router.push(`/admin?tab=validators&validator=${validatorId}`);
+};
+
 const loadPolicy = async () => {
   try {
     loading.value = true;
     error.value = null;
-    // In a real app, this would be: `/api/policies/${policyId.value}`
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Mock policy data
+    const response = await axios.get(`/api/policies/${policyId.value}`);
     policy.value = {
-      id: policyId.value,
-      name: 'Default Access Control Policy',
-      description: 'Standard RBAC policy for application access control',
-      type: 'rbac',
-      version: '1.0.0',
-      status: 'active',
-      effect: 'allow',
-      priority: 100,
-      ruleCount: 5,
-      testCoverage: '95%',
-      violationsDetected: 2,
-      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-      lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      rules: [
-        {
-          id: 'admin-full-access',
-          description: 'Admin users have full access to all resources',
-          effect: 'allow',
-          conditions: {
-            'subject.role': 'admin'
-          }
-        },
-        {
-          id: 'researcher-internal-access',
-          description: 'Researchers can access public and internal resources',
-          effect: 'allow',
-          conditions: {
-            'subject.role': 'researcher',
-            'resource.sensitivity': ['public', 'internal']
-          }
-        },
-        {
-          id: 'viewer-public-only',
-          description: 'Viewers can only access public resources',
-          effect: 'allow',
-          conditions: {
-            'subject.role': 'viewer',
-            'resource.sensitivity': 'public'
-          }
-        }
-      ],
-      conditions: [],
-      versions: [
-        {
-          version: '1.0.0',
-          status: 'active',
-          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          author: 'admin@example.com',
-          changes: [
-            { type: 'added', description: 'Initial policy creation' },
-            { type: 'added', description: 'Added admin full access rule' },
-            { type: 'added', description: 'Added researcher internal access rule' },
-            { type: 'added', description: 'Added viewer public-only rule' }
-          ],
-          notes: 'Initial release of the access control policy'
-        },
-        {
-          version: '0.9.0',
-          status: 'deprecated',
-          date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-          author: 'admin@example.com',
-          changes: [
-            { type: 'added', description: 'Beta version of policy' }
-          ],
-          notes: 'Beta version, replaced by 1.0.0'
-        }
-      ]
+      ...response.data,
+      createdAt: new Date(response.data.createdAt),
+      lastUpdated: new Date(response.data.updatedAt),
+      ruleCount: response.data.ruleCount || (response.data.type === 'rbac' 
+        ? (response.data.rules?.length || 0) 
+        : (response.data.conditions?.length || 0)),
+      versions: (response.data.versions || []).map((v: any) => ({
+        ...v,
+        date: new Date(v.date)
+      }))
     };
   } catch (err: any) {
     error.value = err.message || 'Failed to load policy';
@@ -514,9 +666,31 @@ const editPolicy = () => {
   router.push(`/policies/edit/${policyId.value}`);
 };
 
-const testPolicy = () => {
-  console.log('Test policy:', policyId.value);
+const testPolicy = async () => {
+  // Open test modal or navigate to test page
+  showTestModal.value = true;
 };
+
+const showTestModal = ref(false);
+const testData = ref({
+  subject: { role: 'admin', department: 'engineering' },
+  resource: { id: 'resource-1', sensitivity: 'internal' },
+  action: 'read'
+});
+
+const runTest = async () => {
+  try {
+    loading.value = true;
+    const response = await axios.post(`/api/policies/${policyId.value}/test`, testData.value);
+    testResult.value = response.data;
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to test policy';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const testResult = ref<any>(null);
 
 
 const addChange = () => {
@@ -527,24 +701,109 @@ const removeChange = (index: number) => {
   versionForm.value.changes.splice(index, 1);
 };
 
-const addVersion = () => {
+const addVersion = async () => {
   if (!policy.value) return;
   
-  const newVersion = {
-    version: versionForm.value.version,
-    status: versionForm.value.status,
-    date: new Date(),
-    author: 'current-user@example.com', // In real app, get from auth
-    changes: versionForm.value.changes.filter(c => c.description),
-    notes: versionForm.value.notes
-  };
+  try {
+    loading.value = true;
+    const newVersion = {
+      version: versionForm.value.version,
+      status: versionForm.value.status,
+      date: new Date(),
+      author: 'current-user@example.com', // In real app, get from auth
+      changes: versionForm.value.changes.filter(c => c.description),
+      notes: versionForm.value.notes
+    };
+    
+    await axios.post(`/api/policies/${policyId.value}/versions`, newVersion);
+    await loadPolicy();
+    closeVersionModal();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to add version';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const deployPolicy = async (version?: string) => {
+  if (!confirm(`Deploy version ${version || policy.value?.version}?`)) {
+    return;
+  }
   
-  policy.value.versions.unshift(newVersion);
-  policy.value.version = newVersion.version;
-  policy.value.status = newVersion.status;
-  policy.value.lastUpdated = newVersion.date;
+  try {
+    loading.value = true;
+    await axios.post(`/api/policies/${policyId.value}/deploy`, { version });
+    await loadPolicy();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to deploy policy';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const rollbackPolicy = async (targetVersion: string) => {
+  if (!confirm(`Rollback to version ${targetVersion}?`)) {
+    return;
+  }
   
-  closeVersionModal();
+  try {
+    loading.value = true;
+    await axios.post(`/api/policies/${policyId.value}/rollback`, { version: targetVersion });
+    await loadPolicy();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to rollback policy';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const showComparisonModal = ref(false);
+const comparisonVersions = ref({ version1: '', version2: '' });
+const comparisonResult = ref<any>(null);
+
+const viewVersions = () => {
+  showComparisonModal.value = true;
+};
+
+const versionOptions = computed(() => {
+  if (!policy.value) return [];
+  return policy.value.versions.map((v: any) => ({
+    label: `v${v.version} (${v.status})`,
+    value: v.version
+  }));
+});
+
+const compareVersions = async () => {
+  if (!comparisonVersions.value.version1 || !comparisonVersions.value.version2) {
+    return;
+  }
+  
+  try {
+    loading.value = true;
+    const response = await axios.get(
+      `/api/policies/${policyId.value}/compare/${comparisonVersions.value.version1}/${comparisonVersions.value.version2}`
+    );
+    comparisonResult.value = response.data;
+  } catch (err: any) {
+    error.value = err.response?.data?.message || err.message || 'Failed to compare versions';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const auditLogs = ref<any[]>([]);
+const showAuditLog = ref(false);
+
+const loadAuditLogs = async () => {
+  try {
+    const response = await axios.get(`/api/policies/${policyId.value}/audit`);
+    auditLogs.value = response.data.map((log: any) => ({
+      ...log,
+      timestamp: new Date(log.timestamp)
+    }));
+  } catch (err: any) {
+    console.error('Error loading audit logs:', err);
+  }
 };
 
 const closeVersionModal = () => {
@@ -587,6 +846,7 @@ const formatDateTime = (date: Date): string => {
 
 onMounted(() => {
   loadPolicy();
+  loadValidators();
 });
 </script>
 
@@ -1511,6 +1771,139 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Validator Section Styles */
+.validator-count {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.validators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.validator-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  background: rgba(15, 20, 25, 0.4);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.validator-item:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  background: rgba(15, 20, 25, 0.6);
+  transform: translateX(4px);
+}
+
+.validator-info {
+  flex: 1;
+}
+
+.validator-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.validator-description {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.validator-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.meta-label {
+  color: #718096;
+}
+
+.meta-value {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.meta-value.status-enabled {
+  color: #22c55e;
+}
+
+.meta-value.status-disabled {
+  color: #9ca3af;
+}
+
+.validator-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
+.view-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.empty-validators {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.empty-validators .empty-icon {
+  width: 48px;
+  height: 48px;
+  color: #4facfe;
+  margin: 0 auto 16px;
+  opacity: 0.5;
+}
+
+.empty-validators p {
+  color: #a0aec0;
+  font-size: 0.9rem;
 }
 </style>
 

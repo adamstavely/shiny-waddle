@@ -42,6 +42,12 @@
         placeholder="All Applications"
         class="filter-dropdown"
       />
+      <Dropdown
+        v-model="filterTeam"
+        :options="teamOptions"
+        placeholder="All Teams"
+        class="filter-dropdown"
+      />
       <input
         v-model="filterDateFrom"
         type="date"
@@ -56,8 +62,13 @@
       />
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state">
+      <p>Loading history...</p>
+    </div>
+
     <!-- Test Execution History -->
-    <div v-if="activeTab === 'executions'" class="tab-content">
+    <div v-else-if="activeTab === 'executions'" class="tab-content">
       <div class="history-timeline">
         <div
           v-for="execution in filteredExecutions"
@@ -75,7 +86,9 @@
               <span class="timeline-time">{{ formatDateTime(execution.timestamp) }}</span>
             </div>
             <p class="timeline-meta">
-              {{ execution.application }} • {{ execution.team }}
+              <span v-if="execution.application">{{ execution.application }}</span>
+              <span v-if="execution.application && execution.team"> • </span>
+              <span v-if="execution.team">{{ execution.team }}</span>
             </p>
             <div class="timeline-stats">
               <span class="stat">{{ execution.testCount }} tests</span>
@@ -84,15 +97,43 @@
               <span class="stat score" :class="getScoreClass(execution.score)">
                 {{ execution.score }}% compliance
               </span>
+              <span v-if="execution.duration" class="stat">
+                {{ formatDuration(execution.duration) }}
+              </span>
             </div>
-            <button @click="viewExecutionDetails(execution.id)" class="view-details-btn">
-              View Details
-            </button>
+            <div class="timeline-actions">
+              <button @click="viewExecutionDetails(execution.id)" class="view-details-btn">
+                View Details
+              </button>
+              <button 
+                v-if="selectedForCompare.includes(execution.id)"
+                @click="deselectForCompare(execution.id)"
+                class="compare-btn selected"
+              >
+                <X class="btn-icon" />
+                Deselect
+              </button>
+              <button 
+                v-else-if="selectedForCompare.length < 2"
+                @click="selectForCompare(execution.id)"
+                class="compare-btn"
+              >
+                <GitCompare class="btn-icon" />
+                Compare
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="filteredExecutions.length === 0" class="empty-state">
+      <div v-if="selectedForCompare.length === 2" class="compare-section">
+        <button @click="compareExecutions" class="compare-execute-btn">
+          <GitCompare class="btn-icon" />
+          Compare Selected Executions
+        </button>
+      </div>
+
+      <div v-if="!loading && filteredExecutions.length === 0" class="empty-state">
         <Clock class="empty-icon" />
         <h3>No test executions found</h3>
         <p>Test execution history will appear here</p>
@@ -100,7 +141,7 @@
     </div>
 
     <!-- Audit Logs -->
-    <div v-if="activeTab === 'audit'" class="tab-content">
+    <div v-else-if="activeTab === 'audit'" class="tab-content">
       <div class="audit-log">
         <div
           v-for="log in filteredAuditLogs"
@@ -120,12 +161,13 @@
             <div class="audit-meta">
               <span class="audit-user">{{ log.user }}</span>
               <span v-if="log.application" class="audit-app">{{ log.application }}</span>
+              <span v-if="log.team" class="audit-team">{{ log.team }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="filteredAuditLogs.length === 0" class="empty-state">
+      <div v-if="!loading && filteredAuditLogs.length === 0" class="empty-state">
         <FileText class="empty-icon" />
         <h3>No audit logs found</h3>
         <p>Audit logs will appear here</p>
@@ -133,7 +175,7 @@
     </div>
 
     <!-- Activity Feed -->
-    <div v-if="activeTab === 'activity'" class="tab-content">
+    <div v-else-if="activeTab === 'activity'" class="tab-content">
       <div class="activity-feed">
         <div
           v-for="activity in filteredActivities"
@@ -154,17 +196,31 @@
         </div>
       </div>
 
-      <div v-if="filteredActivities.length === 0" class="empty-state">
+      <div v-if="!loading && filteredActivities.length === 0" class="empty-state">
         <Activity class="empty-icon" />
         <h3>No recent activity</h3>
         <p>Recent activities will appear here</p>
       </div>
     </div>
+
+    <!-- Execution Details Modal -->
+    <ExecutionDetailsModal
+      :show="showExecutionModal"
+      :execution="selectedExecution"
+      @close="closeExecutionModal"
+    />
+
+    <!-- Comparison Modal -->
+    <ComparisonModal
+      :show="showComparisonModal"
+      :comparison="comparisonData"
+      @close="closeComparisonModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   History,
   Clock,
@@ -177,21 +233,44 @@ import {
   TestTube,
   FileCheck,
   AlertTriangle,
-  Activity
+  Activity,
+  GitCompare,
+  Settings,
+  User
 } from 'lucide-vue-next';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import ExecutionDetailsModal from '../components/ExecutionDetailsModal.vue';
+import ComparisonModal from '../components/ComparisonModal.vue';
+import type {
+  TestExecutionEntity,
+  AuditLogEntity,
+  ActivityEntity,
+} from '../types/history';
 
 const breadcrumbItems = [
   { label: 'History', icon: History }
 ];
 
+const API_BASE_URL = 'http://localhost:3000/api';
+
 const activeTab = ref<'executions' | 'audit' | 'activity'>('executions');
 const searchQuery = ref('');
 const filterType = ref('');
 const filterApplication = ref('');
+const filterTeam = ref('');
 const filterDateFrom = ref('');
 const filterDateTo = ref('');
+const loading = ref(true);
+const selectedForCompare = ref<string[]>([]);
+const showExecutionModal = ref(false);
+const showComparisonModal = ref(false);
+const selectedExecution = ref<TestExecutionEntity | null>(null);
+const comparisonData = ref<any>(null);
+
+const testExecutions = ref<TestExecutionEntity[]>([]);
+const auditLogs = ref<AuditLogEntity[]>([]);
+const activities = ref<ActivityEntity[]>([]);
 
 const tabs = [
   { id: 'executions', label: 'Test Executions', icon: Clock },
@@ -199,136 +278,49 @@ const tabs = [
   { id: 'activity', label: 'Activity Feed', icon: Activity }
 ];
 
-// Mock test executions
-const testExecutions = ref([
-  {
-    id: '1',
-    suiteName: 'Research Tracker API Compliance Tests',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    status: 'completed',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    testCount: 24,
-    passedCount: 23,
-    failedCount: 1,
-    score: 95
-  },
-  {
-    id: '2',
-    suiteName: 'User Service Compliance Tests',
-    application: 'user-service',
-    team: 'platform-team',
-    status: 'completed',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    testCount: 18,
-    passedCount: 13,
-    failedCount: 5,
-    score: 72
-  },
-  {
-    id: '3',
-    suiteName: 'Data Pipeline Compliance Tests',
-    application: 'data-pipeline',
-    team: 'data-engineering',
-    status: 'running',
-    timestamp: new Date(Date.now() - 10 * 60 * 1000),
-    testCount: 32,
-    passedCount: 0,
-    failedCount: 0,
-    score: 0
-  }
-]);
-
-// Mock audit logs
-const auditLogs = ref([
-  {
-    id: '1',
-    type: 'policy-change',
-    action: 'Policy Updated',
-    description: 'Default Access Control Policy v1.0.0 was updated to v1.1.0',
-    user: 'admin@example.com',
-    application: 'research-tracker-api',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    type: 'test-suite-change',
-    action: 'Test Suite Created',
-    description: 'New test suite "User Service Compliance Tests" was created',
-    user: 'jane.smith@example.com',
-    application: 'user-service',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    type: 'report-generation',
-    action: 'Report Generated',
-    description: 'Compliance Report - Q4 2024 was generated',
-    user: 'admin@example.com',
-    application: null,
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000)
-  },
-  {
-    id: '4',
-    type: 'violation-resolution',
-    action: 'Violation Resolved',
-    description: 'Violation "Unauthorized Access to Restricted Resource" was resolved',
-    user: 'john.doe@example.com',
-    application: 'research-tracker-api',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
-  }
-]);
-
-// Mock activities
-const activities = ref([
-  {
-    id: '1',
-    type: 'test-execution',
-    user: 'admin@example.com',
-    action: 'completed test suite',
-    details: 'Research Tracker API Compliance Tests (95% compliance)',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000)
-  },
-  {
-    id: '2',
-    type: 'policy-update',
-    user: 'jane.smith@example.com',
-    action: 'updated policy',
-    details: 'Default Access Control Policy v1.1.0',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  },
-  {
-    id: '3',
-    type: 'report-generation',
-    user: 'admin@example.com',
-    action: 'generated report',
-    details: 'Compliance Report - Q4 2024',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
-  },
-  {
-    id: '4',
-    type: 'violation-resolution',
-    user: 'john.doe@example.com',
-    action: 'resolved violation',
-    details: 'Unauthorized Access to Restricted Resource',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000)
-  }
-]);
-
 const applications = computed(() => {
-  const execApps = testExecutions.value.map(e => e.application);
+  const execApps = testExecutions.value.map(e => e.application).filter(Boolean);
   const auditApps = auditLogs.value.filter(l => l.application).map(l => l.application!);
   return [...new Set([...execApps, ...auditApps])];
 });
 
-const typeOptions = computed(() => [
-  { label: 'All Types', value: '' },
-  { label: 'Test Execution', value: 'test-execution' },
-  { label: 'Policy Change', value: 'policy-change' },
-  { label: 'Test Suite Change', value: 'test-suite-change' },
-  { label: 'Report Generation', value: 'report-generation' },
-  { label: 'Violation Resolution', value: 'violation-resolution' }
-]);
+const teams = computed(() => {
+  const execTeams = testExecutions.value.map(e => e.team).filter(Boolean);
+  const auditTeams = auditLogs.value.filter(l => l.team).map(l => l.team!);
+  return [...new Set([...execTeams, ...auditTeams])];
+});
+
+const typeOptions = computed(() => {
+  if (activeTab.value === 'executions') {
+    return [
+      { label: 'All Statuses', value: '' },
+      { label: 'Completed', value: 'completed' },
+      { label: 'Running', value: 'running' },
+      { label: 'Failed', value: 'failed' },
+      { label: 'Cancelled', value: 'cancelled' }
+    ];
+  } else if (activeTab.value === 'audit') {
+    return [
+      { label: 'All Types', value: '' },
+      { label: 'Policy Change', value: 'policy-change' },
+      { label: 'Test Suite Change', value: 'test-suite-change' },
+      { label: 'Report Generation', value: 'report-generation' },
+      { label: 'Violation Resolution', value: 'violation-resolution' },
+      { label: 'User Action', value: 'user-action' },
+      { label: 'System Event', value: 'system-event' }
+    ];
+  } else {
+    return [
+      { label: 'All Types', value: '' },
+      { label: 'Test Execution', value: 'test-execution' },
+      { label: 'Policy Update', value: 'policy-update' },
+      { label: 'Report Generation', value: 'report-generation' },
+      { label: 'Violation Resolution', value: 'violation-resolution' },
+      { label: 'Test Suite Created', value: 'test-suite-created' },
+      { label: 'Test Suite Updated', value: 'test-suite-updated' }
+    ];
+  }
+});
 
 const applicationOptions = computed(() => {
   return [
@@ -337,39 +329,186 @@ const applicationOptions = computed(() => {
   ];
 });
 
+const teamOptions = computed(() => {
+  return [
+    { label: 'All Teams', value: '' },
+    ...teams.value.map(team => ({ label: team, value: team }))
+  ];
+});
+
 const filteredExecutions = computed(() => {
   return testExecutions.value.filter(execution => {
-    const matchesSearch = execution.suiteName.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesSearch = !searchQuery.value ||
+      execution.suiteName.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesApp = !filterApplication.value || execution.application === filterApplication.value;
+    const matchesTeam = !filterTeam.value || execution.team === filterTeam.value;
+    const matchesStatus = !filterType.value || execution.status === filterType.value;
     const matchesDate = (!filterDateFrom.value || new Date(execution.timestamp) >= new Date(filterDateFrom.value)) &&
                        (!filterDateTo.value || new Date(execution.timestamp) <= new Date(filterDateTo.value));
-    return matchesSearch && matchesApp && matchesDate;
+    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesDate;
   });
 });
 
 const filteredAuditLogs = computed(() => {
   return auditLogs.value.filter(log => {
-    const matchesSearch = log.action.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                        log.description.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesSearch = !searchQuery.value ||
+      log.action.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      log.description.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesType = !filterType.value || log.type === filterType.value;
     const matchesApp = !filterApplication.value || log.application === filterApplication.value;
+    const matchesTeam = !filterTeam.value || log.team === filterTeam.value;
     const matchesDate = (!filterDateFrom.value || new Date(log.timestamp) >= new Date(filterDateFrom.value)) &&
                        (!filterDateTo.value || new Date(log.timestamp) <= new Date(filterDateTo.value));
-    return matchesSearch && matchesType && matchesApp && matchesDate;
+    return matchesSearch && matchesType && matchesApp && matchesTeam && matchesDate;
   });
 });
 
 const filteredActivities = computed(() => {
   return activities.value.filter(activity => {
-    const matchesSearch = activity.action.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                         activity.details.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesSearch = !searchQuery.value ||
+      activity.action.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      activity.details.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesType = !filterType.value || activity.type === filterType.value;
-    return matchesSearch && matchesType;
+    const matchesApp = !filterApplication.value || activity.application === filterApplication.value;
+    const matchesTeam = !filterTeam.value || activity.team === filterTeam.value;
+    const matchesDate = (!filterDateFrom.value || new Date(activity.timestamp) >= new Date(filterDateFrom.value)) &&
+                       (!filterDateTo.value || new Date(activity.timestamp) <= new Date(filterDateTo.value));
+    return matchesSearch && matchesType && matchesApp && matchesTeam && matchesDate;
   });
 });
 
-const viewExecutionDetails = (id: string) => {
-  console.log('View execution details:', id);
+const loadData = async () => {
+  loading.value = true;
+  try {
+    await Promise.all([
+      loadExecutions(),
+      loadAuditLogs(),
+      loadActivities(),
+    ]);
+  } catch (error) {
+    console.error('Error loading history data:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadExecutions = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (filterApplication.value) params.append('application', filterApplication.value);
+    if (filterTeam.value) params.append('team', filterTeam.value);
+    if (filterType.value && activeTab.value === 'executions') params.append('status', filterType.value);
+    if (filterDateFrom.value) params.append('dateFrom', filterDateFrom.value);
+    if (filterDateTo.value) params.append('dateTo', filterDateTo.value);
+
+    const response = await fetch(`${API_BASE_URL}/history/executions?${params.toString()}`);
+    if (response.ok) {
+      const data = await response.json();
+      testExecutions.value = data.map((e: any) => ({
+        ...e,
+        timestamp: new Date(e.timestamp),
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading test executions:', error);
+  }
+};
+
+const loadAuditLogs = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (filterType.value && activeTab.value === 'audit') params.append('type', filterType.value);
+    if (filterApplication.value) params.append('application', filterApplication.value);
+    if (filterTeam.value) params.append('team', filterTeam.value);
+    if (filterDateFrom.value) params.append('dateFrom', filterDateFrom.value);
+    if (filterDateTo.value) params.append('dateTo', filterDateTo.value);
+
+    const response = await fetch(`${API_BASE_URL}/history/audit-logs?${params.toString()}`);
+    if (response.ok) {
+      const data = await response.json();
+      auditLogs.value = data.map((l: any) => ({
+        ...l,
+        timestamp: new Date(l.timestamp),
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading audit logs:', error);
+  }
+};
+
+const loadActivities = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (filterType.value && activeTab.value === 'activity') params.append('type', filterType.value);
+    if (filterApplication.value) params.append('application', filterApplication.value);
+    if (filterTeam.value) params.append('team', filterTeam.value);
+    if (filterDateFrom.value) params.append('dateFrom', filterDateFrom.value);
+    if (filterDateTo.value) params.append('dateTo', filterDateTo.value);
+
+    const response = await fetch(`${API_BASE_URL}/history/activities?${params.toString()}`);
+    if (response.ok) {
+      const data = await response.json();
+      activities.value = data.map((a: any) => ({
+        ...a,
+        timestamp: new Date(a.timestamp),
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading activities:', error);
+  }
+};
+
+const viewExecutionDetails = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/history/executions/${id}`);
+    if (response.ok) {
+      const execution = await response.json();
+      selectedExecution.value = {
+        ...execution,
+        timestamp: new Date(execution.timestamp),
+      };
+      showExecutionModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error loading execution details:', error);
+  }
+};
+
+const closeExecutionModal = () => {
+  showExecutionModal.value = false;
+  selectedExecution.value = null;
+};
+
+const selectForCompare = (id: string) => {
+  if (selectedForCompare.value.length < 2) {
+    selectedForCompare.value.push(id);
+  }
+};
+
+const deselectForCompare = (id: string) => {
+  selectedForCompare.value = selectedForCompare.value.filter(i => i !== id);
+};
+
+const compareExecutions = async () => {
+  if (selectedForCompare.value.length !== 2) return;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/history/executions/${selectedForCompare.value[0]}/compare/${selectedForCompare.value[1]}`
+    );
+    if (response.ok) {
+      comparisonData.value = await response.json();
+      showComparisonModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error comparing executions:', error);
+  }
+};
+
+const closeComparisonModal = () => {
+  showComparisonModal.value = false;
+  comparisonData.value = null;
+  selectedForCompare.value = [];
 };
 
 const getLogIcon = (type: string) => {
@@ -377,7 +516,9 @@ const getLogIcon = (type: string) => {
     'policy-change': Edit,
     'test-suite-change': TestTube,
     'report-generation': FileCheck,
-    'violation-resolution': AlertTriangle
+    'violation-resolution': AlertTriangle,
+    'user-action': User,
+    'system-event': Settings
   };
   return icons[type] || FileText;
 };
@@ -387,18 +528,22 @@ const getActivityIcon = (type: string) => {
     'test-execution': Play,
     'policy-update': Shield,
     'report-generation': FileText,
-    'violation-resolution': AlertTriangle
+    'violation-resolution': AlertTriangle,
+    'test-suite-created': TestTube,
+    'test-suite-updated': TestTube
   };
   return icons[type] || Activity;
 };
 
-const formatDateTime = (date: Date): string => {
-  return date.toLocaleString();
+const formatDateTime = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleString();
 };
 
-const formatRelativeTime = (date: Date): string => {
+const formatRelativeTime = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return 'Just now';
   if (diffMins < 60) return `${diffMins}m ago`;
@@ -406,7 +551,16 @@ const formatRelativeTime = (date: Date): string => {
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  return d.toLocaleDateString();
+};
+
+const formatDuration = (ms: number): string => {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
 };
 
 const getScoreClass = (score: number): string => {
@@ -414,6 +568,20 @@ const getScoreClass = (score: number): string => {
   if (score >= 70) return 'score-medium';
   return 'score-low';
 };
+
+// Watch for tab changes and reload data
+watch(activeTab, () => {
+  loadData();
+});
+
+// Watch filters and reload data
+watch([filterApplication, filterTeam, filterType, filterDateFrom, filterDateTo], () => {
+  loadData();
+}, { deep: true });
+
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style scoped>
@@ -507,6 +675,12 @@ const getScoreClass = (score: number): string => {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.loading-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: #a0aec0;
 }
 
 .tab-content {
@@ -637,7 +811,13 @@ const getScoreClass = (score: number): string => {
   color: #fc8181;
 }
 
-.view-details-btn {
+.timeline-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.view-details-btn,
+.compare-btn {
   padding: 8px 16px;
   background: transparent;
   border: 1px solid rgba(79, 172, 254, 0.3);
@@ -647,11 +827,54 @@ const getScoreClass = (score: number): string => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.view-details-btn:hover {
+.view-details-btn:hover,
+.compare-btn:hover {
   background: rgba(79, 172, 254, 0.1);
   border-color: rgba(79, 172, 254, 0.5);
+}
+
+.compare-btn.selected {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.6);
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.compare-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(79, 172, 254, 0.05) 100%);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.compare-execute-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compare-execute-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
 }
 
 .audit-log {
@@ -702,6 +925,16 @@ const getScoreClass = (score: number): string => {
 .log-violation-resolution .audit-icon {
   background: rgba(252, 129, 129, 0.2);
   color: #fc8181;
+}
+
+.log-user-action .audit-icon {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.log-system-event .audit-icon {
+  background: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
 }
 
 .audit-content {

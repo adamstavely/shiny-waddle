@@ -90,7 +90,7 @@
 
         <!-- Settings Button -->
         <button
-          @click="showSettings = !showSettings"
+          @click="router.push('/settings')"
           class="nav-button"
           title="Settings"
           aria-label="Open settings"
