@@ -22,6 +22,14 @@ import {
   RiskAggregation,
 } from '../../../services/enhanced-risk-scorer';
 import { ApplicationsService } from '../applications/applications.service';
+import {
+  FindingCorrelationEngine,
+  CorrelationResult,
+} from '../../../services/finding-correlation-engine';
+import {
+  AttackPathAnalyzer,
+  AttackPathAnalysis,
+} from '../../../services/attack-path-analyzer';
 
 @Injectable()
 export class UnifiedFindingsService {
@@ -29,6 +37,8 @@ export class UnifiedFindingsService {
   private normalizationEngine: NormalizationEngine;
   private ecsAdapter: ECSAdapter;
   private riskScorer: EnhancedRiskScorer;
+  private correlationEngine: FindingCorrelationEngine;
+  private attackPathAnalyzer: AttackPathAnalyzer;
   private findings: UnifiedFinding[] = [];
 
   constructor(
@@ -54,6 +64,8 @@ export class UnifiedFindingsService {
     });
     this.ecsAdapter = new ECSAdapter();
     this.riskScorer = new EnhancedRiskScorer();
+    this.correlationEngine = new FindingCorrelationEngine();
+    this.attackPathAnalyzer = new AttackPathAnalyzer();
     this.loadFindings();
   }
 
@@ -327,6 +339,140 @@ export class UnifiedFindingsService {
   async getRiskTrends(periodDays: number = 30): Promise<Array<{ date: Date; riskScore: number; count: number }>> {
     const findings = await this.getAllFindings();
     return this.riskScorer.getRiskTrends(findings, periodDays);
+  }
+
+  /**
+   * Correlation & Deduplication methods
+   */
+
+  /**
+   * Correlate findings across scanners
+   */
+  async correlateFindings(filters?: {
+    source?: string;
+    scannerId?: string;
+    severity?: string;
+    status?: string;
+    applicationId?: string;
+  }): Promise<CorrelationResult> {
+    const findings = await this.getAllFindings(filters);
+    return this.correlationEngine.correlate(findings);
+  }
+
+  /**
+   * Get related findings for a specific finding
+   */
+  async getRelatedFindings(findingId: string): Promise<{
+    finding: UnifiedFinding | null;
+    related: UnifiedFinding[];
+    groups: any[];
+    rootCause: any | null;
+    impact: any | null;
+  }> {
+    const finding = await this.getFindingById(findingId);
+    if (!finding) {
+      throw new Error('Finding not found');
+    }
+
+    const correlation = await this.correlateFindings();
+    
+    const relatedIds = finding.relatedFindings || [];
+    const related = this.findings.filter(f => relatedIds.includes(f.id));
+
+    const groups = correlation.groups.filter(g => g.findings.includes(findingId));
+    const rootCause = correlation.rootCauses.get(findingId) || null;
+    const impact = correlation.impacts.get(findingId) || null;
+
+    return {
+      finding,
+      related,
+      groups,
+      rootCause,
+      impact,
+    };
+  }
+
+  /**
+   * Attack Path Analysis methods
+   */
+
+  /**
+   * Analyze attack paths from findings
+   */
+  async analyzeAttackPaths(filters?: {
+    source?: string;
+    scannerId?: string;
+    severity?: string;
+    status?: string;
+    applicationId?: string;
+  }): Promise<AttackPathAnalysis> {
+    const findings = await this.getAllFindings(filters);
+    return this.attackPathAnalyzer.analyze(findings);
+  }
+
+  /**
+   * Get attack paths for a specific application
+   */
+  async getApplicationAttackPaths(applicationId: string): Promise<{
+    applicationId: string;
+    attackSurface: any;
+    paths: any[];
+    criticalPaths: any[];
+  }> {
+    const analysis = await this.analyzeAttackPaths({ applicationId });
+    const attackSurface = analysis.attackSurfaces.get(applicationId);
+
+    if (!attackSurface) {
+      return {
+        applicationId,
+        attackSurface: null,
+        paths: [],
+        criticalPaths: [],
+      };
+    }
+
+    return {
+      applicationId,
+      attackSurface,
+      paths: attackSurface.paths,
+      criticalPaths: attackSurface.criticalPaths,
+    };
+  }
+
+  /**
+   * Get prioritized findings based on attack paths
+   */
+  async getAttackPathPrioritizedFindings(limit?: number): Promise<Array<{
+    finding: UnifiedFinding;
+    priority: number;
+    inCriticalPath: boolean;
+    attackPaths: any[];
+  }>> {
+    const analysis = await this.analyzeAttackPaths();
+    const findings = await this.getAllFindings();
+
+    const prioritized = findings.map(finding => {
+      const priority = analysis.prioritization.get(finding.id) || finding.riskScore || 0;
+      const inCriticalPath = analysis.criticalPaths.some(path =>
+        path.steps.some(step => step.findingId === finding.id)
+      );
+      const attackPaths = analysis.paths.filter(path =>
+        path.steps.some(step => step.findingId === finding.id)
+      );
+
+      return {
+        finding,
+        priority,
+        inCriticalPath,
+        attackPaths,
+      };
+    }).sort((a, b) => b.priority - a.priority);
+
+    if (limit) {
+      return prioritized.slice(0, limit);
+    }
+
+    return prioritized;
   }
 }
 

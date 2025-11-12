@@ -154,5 +154,63 @@ export class UnifiedFindingsController {
     const period = periodDays ? parseInt(periodDays, 10) : 30;
     return this.service.getRiskTrends(period);
   }
+
+  /**
+   * Correlation & Deduplication endpoints
+   */
+
+  @Post('correlate')
+  async correlateFindings(
+    @Query('source') source?: string,
+    @Query('scannerId') scannerId?: string,
+    @Query('severity') severity?: string,
+    @Query('status') status?: string,
+    @Query('applicationId') applicationId?: string,
+  ) {
+    return this.service.correlateFindings({
+      source,
+      scannerId,
+      severity,
+      status,
+      applicationId,
+    });
+  }
+
+  @Get(':id/related')
+  async getRelatedFindings(@Param('id') id: string) {
+    return this.service.getRelatedFindings(id);
+  }
+
+  /**
+   * Attack Path Analysis endpoints
+   */
+
+  @Post('attack-paths/analyze')
+  async analyzeAttackPaths(
+    @Query('source') source?: string,
+    @Query('scannerId') scannerId?: string,
+    @Query('severity') severity?: string,
+    @Query('status') status?: string,
+    @Query('applicationId') applicationId?: string,
+  ) {
+    return this.service.analyzeAttackPaths({
+      source,
+      scannerId,
+      severity,
+      status,
+      applicationId,
+    });
+  }
+
+  @Get('attack-paths/application/:applicationId')
+  async getApplicationAttackPaths(@Param('applicationId') applicationId: string) {
+    return this.service.getApplicationAttackPaths(applicationId);
+  }
+
+  @Get('attack-paths/prioritized')
+  async getAttackPathPrioritizedFindings(@Query('limit') limit?: string) {
+    const limitNum = limit ? parseInt(limit, 10) : undefined;
+    return this.service.getAttackPathPrioritizedFindings(limitNum);
+  }
 }
 
