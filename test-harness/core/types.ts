@@ -1,5 +1,5 @@
 /**
- * Type definitions for the Sentinel framework
+ * Type definitions for the Heimdall framework
  */
 
 export interface TestConfiguration {

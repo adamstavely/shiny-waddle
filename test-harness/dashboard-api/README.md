@@ -1,6 +1,6 @@
-# Sentinel Dashboard API
+# Heimdall Dashboard API
 
-NestJS backend API for the Sentinel compliance dashboard.
+NestJS backend API for the Heimdall compliance dashboard.
 
 ## Setup
 

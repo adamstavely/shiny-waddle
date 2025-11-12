@@ -1,5 +1,5 @@
 /**
- * Sentinel Framework - Main Export
+ * Heimdall Framework - Main Export
  */
 
 export { Sentinel } from './core/test-harness';

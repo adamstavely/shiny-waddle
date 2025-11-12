@@ -21,7 +21,7 @@
         <div class="drawer-header">
           <div class="drawer-logo">
             <Shield class="logo-icon" />
-            <span class="logo-text">Sentinel</span>
+            <span class="logo-text">Heimdall</span>
           </div>
           <button
             @click="close"

@@ -1,7 +1,7 @@
 {
-  "name": "@research-tracker/sentinel-dashboard-frontend",
+  "name": "@research-tracker/heimdall-dashboard-frontend",
   "version": "1.0.0",
-  "description": "Sentinel Dashboard Frontend - Vue.js",
+  "description": "Heimdall Dashboard Frontend - Vue.js",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -17,7 +17,7 @@
         </button>
         <router-link to="/" class="logo-link">
           <Shield class="logo-icon" />
-          <span class="logo-text">Sentinel</span>
+          <span class="logo-text">Heimdall</span>
         </router-link>
       </div>
       

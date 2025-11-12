@@ -34,7 +34,7 @@
         <div class="settings-grid">
           <div class="setting-item">
             <label>Application Name</label>
-            <input v-model="generalSettings.appName" type="text" placeholder="Sentinel Dashboard" />
+            <input v-model="generalSettings.appName" type="text" placeholder="Heimdall Dashboard" />
           </div>
           <div class="setting-item">
             <label>Default Timezone</label>
@@ -213,7 +213,7 @@
           </div>
           <div class="setting-item">
             <label>Username</label>
-            <input v-model="notificationSettings.slackUsername" type="text" placeholder="Sentinel Bot" />
+            <input v-model="notificationSettings.slackUsername" type="text" placeholder="Heimdall Bot" />
           </div>
           <div class="setting-item">
             <label>Enable Slack Notifications</label>
@@ -552,7 +552,7 @@ const tabs = [
 
 // General Settings
 const generalSettings = ref({
-  appName: 'Sentinel Dashboard',
+  appName: 'Heimdall Dashboard',
   timezone: 'UTC',
   dateFormat: 'MM/DD/YYYY',
   itemsPerPage: 25,
@@ -575,7 +575,7 @@ const notificationSettings = ref({
   enableTLS: true,
   slackWebhookUrl: '',
   slackChannel: '',
-  slackUsername: 'Sentinel Bot',
+  slackUsername: 'Heimdall Bot',
   slackEnabled: false,
   webhookUrl: '',
   webhookSecret: '',
@@ -698,7 +698,7 @@ const resetSettings = () => {
   }
   // Reset to defaults
   generalSettings.value = {
-    appName: 'Sentinel Dashboard',
+    appName: 'Heimdall Dashboard',
     timezone: 'UTC',
     dateFormat: 'MM/DD/YYYY',
     itemsPerPage: 25,
@@ -719,7 +719,7 @@ const resetSettings = () => {
     enableTLS: true,
     slackWebhookUrl: '',
     slackChannel: '',
-    slackUsername: 'Sentinel Bot',
+    slackUsername: 'Heimdall Bot',
     slackEnabled: false,
     webhookUrl: '',
     webhookSecret: '',

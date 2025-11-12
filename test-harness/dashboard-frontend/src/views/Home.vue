@@ -9,7 +9,7 @@
         <div class="hero-content">
           <div class="hero-text">
             <h1 class="hero-title">
-              Sentinel
+              Heimdall
               <span class="hero-subtitle">Application Security Posture Management</span>
             </h1>
             <p class="hero-description">
@@ -26,7 +26,7 @@
           <div class="hero-visual">
             <div class="svg-container">
               <svg viewBox="0 0 250 200" class="sentinel-svg" preserveAspectRatio="xMidYMid meet">
-                <defs>
+                  <defs>
                   <linearGradient id="sentinelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
                     <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />

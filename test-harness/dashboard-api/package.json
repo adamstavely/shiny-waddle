@@ -1,7 +1,7 @@
 {
-  "name": "@research-tracker/sentinel-dashboard-api",
+  "name": "@research-tracker/heimdall-dashboard-api",
   "version": "1.0.0",
-  "description": "Sentinel Dashboard API - NestJS backend",
+  "description": "Heimdall Dashboard API - NestJS backend",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",

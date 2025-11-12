@@ -3,7 +3,7 @@
     <div class="header-content">
       <Shield class="icon" />
       <div class="header-text">
-        <h1>Sentinel</h1>
+        <h1>Heimdall</h1>
         <p>Compliance Dashboard - Real-time access control monitoring</p>
       </div>
     </div>

@@ -1,6 +1,6 @@
-# Sentinel Dashboard Setup Guide
+# Heimdall Dashboard Setup Guide
 
-The Sentinel dashboard has been rewritten with:
+The Heimdall dashboard has been rewritten with:
 - **Backend**: NestJS (Node.js framework)
 - **Frontend**: Vue.js 3 with Composition API
 

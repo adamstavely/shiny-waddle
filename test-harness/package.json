@@ -1,7 +1,7 @@
 {
-  "name": "@research-tracker/sentinel",
+  "name": "@research-tracker/heimdall",
   "version": "1.0.0",
-  "description": "Sentinel - Data Access Testing Framework for compliance verification",
+  "description": "Heimdall - Data Access Testing Framework for compliance verification",
   "main": "dist/index.js",
   "scripts": {
     "test:compliance": "ts-node src/run-tests.ts",

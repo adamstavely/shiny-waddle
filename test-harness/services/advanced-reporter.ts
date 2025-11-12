@@ -395,8 +395,8 @@ export class AdvancedReporter {
       const pptx = new PptxGenJS();
 
       // Set presentation properties
-      pptx.author = 'Sentinel';
-      pptx.company = 'Sentinel';
+      pptx.author = 'Heimdall';
+      pptx.company = 'Heimdall';
       pptx.title = 'Compliance Report';
 
       // Title slide

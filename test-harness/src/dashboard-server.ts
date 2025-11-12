@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node
 
 /**
- * Sentinel Dashboard Server
+ * Heimdall Dashboard Server
  * 
  * Web server to display the compliance dashboard UI
  */
@@ -127,7 +127,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Sentinel Dashboard running on http://localhost:${PORT}`);
+  console.log(`🚀 Heimdall Dashboard running on http://localhost:${PORT}`);
   console.log(`📊 Open your browser to view the dashboard`);
 });
 

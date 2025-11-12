@@ -5,7 +5,7 @@ export class AppController {
   @Get()
   getRoot() {
     return {
-      message: 'Sentinel Dashboard API',
+      message: 'Heimdall Dashboard API',
       version: '1.0.0',
       endpoints: {
         dashboardData: '/api/dashboard-data',

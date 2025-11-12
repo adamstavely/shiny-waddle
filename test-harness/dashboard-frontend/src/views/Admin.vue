@@ -6,7 +6,7 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Admin</h1>
-          <p class="page-description">Manage Sentinel configuration and registered applications</p>
+          <p class="page-description">Manage Heimdall configuration and registered applications</p>
         </div>
       </div>
     </div>
@@ -411,7 +411,7 @@
             Registered Applications
           </h2>
           <p class="section-description">
-            Register and manage applications that Sentinel will test against
+            Register and manage applications that Heimdall will test against
           </p>
         </div>
         <button @click="showCreateModal = true" class="btn-primary">

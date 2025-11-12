@@ -1,6 +1,6 @@
-# Sentinel Dashboard Frontend
+# Heimdall Dashboard Frontend
 
-Vue.js frontend for the Sentinel compliance dashboard.
+Vue.js frontend for the Heimdall compliance dashboard.
 
 ## Setup
 

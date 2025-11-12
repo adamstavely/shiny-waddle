@@ -1,5 +1,5 @@
 /**
- * Sentinel Framework
+ * Heimdall Framework
  * 
  * Main orchestrator for running compliance tests against applications
  */

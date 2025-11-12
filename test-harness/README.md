@@ -1,6 +1,6 @@
-# Sentinel
+# Heimdall
 
-Sentinel is an automated testing framework that validates applications are adhering to access control requirements for data.
+Heimdall is an automated testing framework that validates applications are adhering to access control requirements for data.
 
 ## Features
 
@@ -20,9 +20,9 @@ Sentinel is an automated testing framework that validates applications are adher
 ## Architecture
 
 ```
-sentinel/
+heimdall/
 ├── core/                    # Core framework components
-│   ├── sentinel.ts          # Main orchestrator
+│   ├── test-harness.ts      # Main orchestrator
 │   └── types.ts             # Type definitions
 ├── services/                # Test service implementations
 │   ├── user-simulator.ts    # User role/attribute simulation
@@ -188,7 +188,7 @@ This will:
 1. Create isolated database
 2. Seed with masked/synthetic data
 3. Deploy application
-4. Run full Sentinel test suite
+4. Run full Heimdall test suite
 5. Clean up environment
 
 ## Compliance Dashboard
@@ -292,7 +292,7 @@ Define attribute-based policies in `policies/abac-policies.json`:
 
 ### Hybrid Mode
 
-Sentinel supports both RBAC and ABAC simultaneously:
+Heimdall supports both RBAC and ABAC simultaneously:
 
 ```typescript
 const config: TestConfiguration = {

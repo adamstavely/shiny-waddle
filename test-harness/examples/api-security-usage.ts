@@ -23,7 +23,7 @@ async function main() {
       strategy: 'fixed',
     },
     headers: {
-      'User-Agent': 'Sentinel/1.0',
+      'User-Agent': 'Heimdall/1.0',
     },
     timeout: 5000,
   });
