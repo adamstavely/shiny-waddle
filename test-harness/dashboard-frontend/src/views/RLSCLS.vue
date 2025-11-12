@@ -140,7 +140,13 @@ const testCrossTenant = async () => {
     const response = await axios.post('/api/rls-cls/test-cross-tenant-isolation', {
       tenant1: 'tenant1',
       tenant2: 'tenant2',
-      testQueries: [],
+      testQueries: [
+        {
+          name: 'test-cross-tenant-query',
+          sql: 'SELECT * FROM users WHERE tenant_id = ?',
+          expectedResult: [],
+        },
+      ],
     });
     isolationTest.value = response.data;
   } catch (error) {

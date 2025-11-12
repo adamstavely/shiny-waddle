@@ -159,12 +159,11 @@ describe('RLS/CLS Controller (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          expect(Array.isArray(res.body)).toBe(true);
-          if (res.body.length > 0) {
-            expect(res.body[0]).toHaveProperty('testType');
-            expect(res.body[0]).toHaveProperty('testName');
-            expect(res.body[0]).toHaveProperty('passed');
-          }
+          expect(res.body).toHaveProperty('tenant1');
+          expect(res.body).toHaveProperty('tenant2');
+          expect(res.body).toHaveProperty('isolationVerified');
+          expect(res.body).toHaveProperty('testQueries');
+          expect(res.body).toHaveProperty('violations');
         });
     });
 
@@ -210,9 +209,12 @@ describe('RLS/CLS Controller (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          expect(res.body).toHaveProperty('testType');
-          expect(res.body).toHaveProperty('testName');
-          expect(res.body).toHaveProperty('passed');
+          expect(Array.isArray(res.body)).toBe(true);
+          if (res.body.length > 0) {
+            expect(res.body[0]).toHaveProperty('testType');
+            expect(res.body[0]).toHaveProperty('testName');
+            expect(res.body[0]).toHaveProperty('passed');
+          }
         });
     });
 

@@ -219,14 +219,14 @@
 
     <!-- Modals -->
     <RoleModal
-      :show="showRoleModal || editingRole"
+      :show="!!(showRoleModal || editingRole)"
       :role="editingRoleData"
       @close="closeRoleModal"
       @save="saveRole"
     />
 
     <AttributeTemplateModal
-      :show="showAttributeTemplateModal || editingTemplate"
+      :show="!!(showAttributeTemplateModal || editingTemplate)"
       :template="editingTemplateData"
       @close="closeTemplateModal"
       @save="saveTemplate"

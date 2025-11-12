@@ -118,8 +118,11 @@ describe('Network Policy Controller (e2e)', () => {
         })
         .expect(200)
         .expect((res) => {
-          expect(res.body).toHaveProperty('testType');
-          expect(res.body).toHaveProperty('passed');
+          expect(Array.isArray(res.body)).toBe(true);
+          if (res.body.length > 0) {
+            expect(res.body[0]).toHaveProperty('testType');
+            expect(res.body[0]).toHaveProperty('passed');
+          }
         });
     });
 

@@ -110,9 +110,20 @@ const testFirewall = async () => {
   loading.value = true;
   try {
     const response = await axios.post('/api/network-policy/test-firewall-rules', {
-      rules: [],
+      rules: [
+        {
+          id: 'rule-1',
+          name: 'Allow Frontend to Backend',
+          source: '10.0.1.0/24',
+          destination: '10.0.2.0/24',
+          protocol: 'tcp',
+          port: 8080,
+          action: 'allow',
+          enabled: true,
+        },
+      ],
     });
-    firewallResults.value = response.data;
+    firewallResults.value = Array.isArray(response.data) ? response.data : [response.data];
   } catch (error) {
     console.error('Error testing firewall:', error);
   } finally {
@@ -139,9 +150,18 @@ const testSegmentation = async () => {
   loading.value = true;
   try {
     const response = await axios.post('/api/network-policy/validate-segmentation', {
-      segments: [],
+      segments: [
+        {
+          id: 'segment-1',
+          name: 'Frontend Segment',
+          cidr: '10.0.1.0/24',
+          services: ['frontend'],
+          allowedConnections: ['backend'],
+          deniedConnections: ['database'],
+        },
+      ],
     });
-    segmentationResults.value = response.data;
+    segmentationResults.value = Array.isArray(response.data) ? response.data : [response.data];
   } catch (error) {
     console.error('Error testing segmentation:', error);
   } finally {

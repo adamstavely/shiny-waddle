@@ -313,11 +313,18 @@ export class NIST800207Compliance {
    * Generate compliance report
    */
   async generateComplianceReport(assessment: ComplianceAssessment): Promise<string> {
+    // Handle timestamp as either Date or string
+    const timestamp = assessment.assessment.timestamp instanceof Date
+      ? assessment.assessment.timestamp.toISOString()
+      : typeof assessment.assessment.timestamp === 'string'
+      ? assessment.assessment.timestamp
+      : new Date().toISOString();
+    
     const report = `
 # NIST 800-207 Compliance Report
 
 **Framework:** ${assessment.framework}
-**Assessment Date:** ${assessment.assessment.timestamp.toISOString()}
+**Assessment Date:** ${timestamp}
 **Overall Score:** ${assessment.compliancePercentage.toFixed(1)}%
 **Compliant:** ${assessment.compliant ? 'Yes' : 'No'}
 
