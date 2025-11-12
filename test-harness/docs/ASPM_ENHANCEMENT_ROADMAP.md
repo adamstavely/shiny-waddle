@@ -518,35 +518,76 @@ Findings need to be assigned, tracked, and remediated efficiently.
 
 ## 8. Advanced Analytics & Reporting
 
+### Status: ✅ **MOSTLY COMPLETED** (8.1, 8.2, 8.4 implemented; 8.3 placeholder created)
+
 ### Problem
 Need deeper insights beyond basic dashboards.
 
 ### Required Components
 
-#### 8.1 Executive Dashboards
-- Security posture overview
-- Risk trends
-- Compliance status
-- Remediation velocity
-- ROI metrics
+#### 8.1 Executive Dashboards ✅ **IMPLEMENTED**
+- ✅ Security posture overview
+- ✅ Risk trends
+- ✅ Compliance status
+- ✅ Remediation velocity
+- ✅ ROI metrics
 
-#### 8.2 Trend Analysis
-- Finding trends over time
-- Risk trend analysis
-- Compliance trend analysis
-- Remediation velocity trends
+**Implementation Details:**
+- Location: `dashboard-frontend/src/views/insights/OverviewTab.vue`
+- Executive components: `dashboard-frontend/src/components/insights/`
+  - `ExecutiveSummary.vue` - Security posture, risk level, remediation velocity, ROI
+  - `RemediationVelocity.vue` - Issues fixed per week, MTTR, open issues tracking
+  - `ROIMetrics.vue` - Cost savings, time saved, risk reduction, compliance gain
+- Backend API: `dashboard-api/src/dashboard/dashboard.controller.ts` - `/api/executive-metrics` endpoint
+- Unified Insights Hub: Consolidated Dashboard, Analytics, and Reports into single `/insights` route with tabbed interface
+- Route migration: Old routes (`/dashboard`, `/analytics`, `/reports`) redirect to `/insights` with appropriate tabs
 
-#### 8.3 Predictive Analytics
-- Risk prediction models
-- Vulnerability prediction
-- Compliance drift prediction
-- Resource needs prediction
+#### 8.2 Trend Analysis ✅ **IMPLEMENTED**
+- ✅ Finding trends over time
+- ✅ Risk trend analysis
+- ✅ Compliance trend analysis
+- ✅ Remediation velocity trends
 
-#### 8.4 Custom Reports
-- Configurable report builder
-- Scheduled reports
-- Export formats (PDF, Excel, JSON)
-- Report templates
+**Implementation Details:**
+- Location: `dashboard-frontend/src/views/insights/AnalyticsTab.vue`
+- Risk trends component: `dashboard-frontend/src/components/insights/RiskTrends.vue`
+- Backend API: `dashboard-api/src/dashboard/dashboard.controller.ts` - `/api/risk-metrics` endpoint
+- Comprehensive trend analysis:
+  - Compliance trends (overall, by application, by team, by category)
+  - Risk trends with distribution and top risks
+  - Violation patterns (most common, frequency, correlation)
+  - Performance metrics (execution time, test suite performance, resource usage)
+- Integration with existing `ComplianceTrendAnalyzer` service
+
+#### 8.3 Predictive Analytics ⏳ **PLACEHOLDER CREATED**
+- ⏳ Risk prediction models (placeholder created)
+- ⏳ Vulnerability prediction (placeholder created)
+- ⏳ Compliance drift prediction (placeholder created)
+- ⏳ Resource needs prediction (placeholder created)
+
+**Implementation Details:**
+- Location: `dashboard-frontend/src/views/insights/PredictionsTab.vue`
+- Placeholder UI created with feature roadmap
+- Framework ready for ML model integration
+- Will use existing `ComplianceTrendAnalyzer.generatePredictions()` as foundation
+
+#### 8.4 Custom Reports ✅ **IMPLEMENTED**
+- ✅ Configurable report builder (basic structure exists)
+- ⏳ Scheduled reports (structure exists, automation pending)
+- ✅ Export formats (PDF, Excel, JSON, HTML, XML, PowerPoint)
+- ✅ Report templates (executive, regulatory, technical, custom)
+
+**Implementation Details:**
+- Location: `dashboard-frontend/src/views/insights/ReportsTab.vue`
+- Report generation: `dashboard-frontend/src/components/GenerateReportModal.vue`
+- Advanced reporter: `test-harness/services/advanced-reporter.ts`
+  - Executive reports with key metrics, trends, top risks, recommendations
+  - Regulatory reports (GDPR, HIPAA, SOC2, PCI-DSS, custom frameworks)
+  - Custom reports with configurable sections
+  - Export formats: PDF (Puppeteer/PDFKit), Excel (ExcelJS), PowerPoint (PptxGenJS), HTML, JSON
+- Report viewer with charts and detailed content
+- Report templates for different use cases
+- Backend API: `dashboard-api/src/reports/` - Full CRUD operations, generation, download
 
 ---
 
@@ -795,7 +836,7 @@ Complex security data needs intuitive interfaces.
 2. ✅ Advanced risk scoring **COMPLETED**
 3. Finding correlation & deduplication
 4. ✅ Compliance framework mapping **PARTIALLY COMPLETED** (NIST 800-53 Rev 4 & 5)
-5. Advanced analytics
+5. ✅ Advanced analytics **MOSTLY COMPLETED** (Executive dashboards, trend analysis, custom reports implemented; predictive analytics placeholder created)
 
 ### Phase 3: Automation (Months 7-9)
 1. ✅ Remediation workflows **PARTIALLY COMPLETED** (SLA management, assignment rules)
@@ -839,6 +880,7 @@ Complex security data needs intuitive interfaces.
 10. ✅ **Remediation & Workflows**: Ticketing integration, SLA management, remediation tracking **COMPLETED**
 11. ✅ **Compliance Frameworks**: NIST 800-53 Rev 4 & 5 implementation **COMPLETED**
 12. **Additional Compliance Frameworks**: Implement SOC 2, PCI-DSS, HIPAA, GDPR, ISO 27001 controls
+13. ✅ **Advanced Analytics & Reporting**: Insights Hub with executive dashboards, trend analysis, custom reports **MOSTLY COMPLETED** (predictive analytics placeholder created)
 
 ## Recent Completions
 
@@ -977,4 +1019,31 @@ Complex security data needs intuitive interfaces.
 - Utility functions for common security checks
 - Full security scan capability
 - Category-based test execution
+
+### Advanced Analytics & Reporting (✅ Mostly Completed)
+- **Insights Hub**: `dashboard-frontend/src/views/insights/Insights.vue` - Unified hub consolidating Dashboard, Analytics, and Reports
+- **Overview Tab**: `dashboard-frontend/src/views/insights/OverviewTab.vue` - Executive dashboard with security posture, risk trends, compliance status, remediation velocity, ROI metrics
+- **Analytics Tab**: `dashboard-frontend/src/views/insights/AnalyticsTab.vue` - Deep analytics with compliance trends, risk analysis, violation patterns, performance metrics
+- **Reports Tab**: `dashboard-frontend/src/views/insights/ReportsTab.vue` - Report management with generation, viewing, and export
+- **Predictions Tab**: `dashboard-frontend/src/views/insights/PredictionsTab.vue` - Placeholder for predictive analytics
+- **Executive Components**: 
+  - `dashboard-frontend/src/components/insights/ExecutiveSummary.vue` - Security posture, risk level, remediation velocity, ROI
+  - `dashboard-frontend/src/components/insights/RemediationVelocity.vue` - Issues fixed per week, MTTR, open issues
+  - `dashboard-frontend/src/components/insights/ROIMetrics.vue` - Cost savings, time saved, risk reduction
+  - `dashboard-frontend/src/components/insights/RiskTrends.vue` - Risk score trends, distribution, top risks
+- **Backend APIs**: 
+  - `dashboard-api/src/dashboard/dashboard.controller.ts` - `/api/executive-metrics`, `/api/risk-metrics` endpoints
+  - `dashboard-api/src/dashboard/dashboard.service.ts` - Executive metrics and risk metrics calculation
+- **Advanced Reporter**: `test-harness/services/advanced-reporter.ts` - Executive, regulatory, and custom reports with multiple export formats
+
+**Key Features:**
+- Unified Insights Hub with tabbed interface (Overview, Analytics, Reports, Predictions)
+- Executive dashboard with security posture overview, risk trends, compliance status, remediation velocity, ROI metrics
+- Comprehensive trend analysis (compliance, risk, violation patterns, performance)
+- Risk trend analysis with distribution and top risks identification
+- Custom report generation with multiple templates (executive, regulatory, technical, custom)
+- Export formats: PDF, Excel, PowerPoint, HTML, JSON, XML
+- Backward-compatible route migration (old routes redirect to `/insights`)
+- Shared filters across tabs for consistent data analysis
+- URL-based tab navigation with query parameters for bookmarking
 
