@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional, Inject } from '@nestjs/common';
 import * as crypto from 'crypto';
 
 export interface EncryptionConfig {
@@ -21,7 +21,7 @@ export class EncryptionService {
   private readonly ivLength: number;
   private encryptionKey: Buffer;
 
-  constructor(config?: EncryptionConfig) {
+  constructor(@Optional() @Inject('ENCRYPTION_CONFIG') config?: EncryptionConfig) {
     this.algorithm = config?.algorithm || 'aes-256-gcm';
     this.keyLength = config?.keyLength || 32; // 256 bits
     this.ivLength = config?.ivLength || 16; // 128 bits

@@ -3,7 +3,10 @@
     <div class="page-header">
       <div class="header-content">
         <div>
-          <h2 class="section-title">Predictive Analytics</h2>
+          <h2 class="section-title">
+            <TrendingUp class="section-icon" />
+            Predictive Analytics
+          </h2>
           <p class="page-description">Forecast future risks, vulnerabilities, and compliance trends</p>
         </div>
       </div>
@@ -84,6 +87,16 @@ defineProps<{
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  width: 28px;
+  height: 28px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .page-description {

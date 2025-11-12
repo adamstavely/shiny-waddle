@@ -1,6 +1,9 @@
 <template>
   <div class="table-container">
-    <h2>Recent Test Results</h2>
+    <h2>
+      <FileText class="title-icon" />
+      Recent Test Results
+    </h2>
     <table v-if="results.length > 0">
       <thead>
         <tr>
@@ -30,6 +33,8 @@
 </template>
 
 <script setup lang="ts">
+import { FileText } from 'lucide-vue-next';
+
 defineProps<{
   results: any[];
 }>();
@@ -48,12 +53,24 @@ const formatDate = (timestamp: string | Date): string => {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(79, 172, 254, 0.2);
   overflow-x: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .table-container h2 {
   margin-bottom: 20px;
   color: #ffffff;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 table {
@@ -61,8 +78,14 @@ table {
   border-collapse: collapse;
 }
 
-th {
+thead tr {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+th {
+  background: transparent;
   color: #0f1419;
   padding: 15px;
   text-align: left;

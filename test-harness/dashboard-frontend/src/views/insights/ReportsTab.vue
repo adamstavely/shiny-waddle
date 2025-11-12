@@ -3,7 +3,10 @@
     <div class="page-header">
       <div class="header-content">
         <div>
-          <h2 class="section-title">Reports</h2>
+          <h2 class="section-title">
+            <FileText class="section-icon" />
+            Reports
+          </h2>
           <p class="page-description">View and download compliance reports</p>
         </div>
         <button @click="openGenerateModal" class="btn-primary">
@@ -462,6 +465,16 @@ onMounted(async () => {
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  width: 28px;
+  height: 28px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .page-description {

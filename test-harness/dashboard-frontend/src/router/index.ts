@@ -8,7 +8,6 @@ import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
 import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
-import Analytics from '../views/Analytics.vue';
 import Insights from '../views/insights/Insights.vue';
 import Violations from '../views/Violations.vue';
 import History from '../views/History.vue';
@@ -101,8 +100,8 @@ const router = createRouter({
     {
       path: '/analytics',
       redirect: (to) => {
-        console.warn('Route /analytics is deprecated. Use /insights?tab=analytics instead.');
-        return { path: '/insights', query: { ...to.query, tab: 'analytics' } };
+        console.warn('Route /analytics is deprecated. Use /insights instead.');
+        return { path: '/insights', query: { ...to.query } };
       }
     },
     {

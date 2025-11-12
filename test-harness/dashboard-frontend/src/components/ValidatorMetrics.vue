@@ -1,6 +1,9 @@
 <template>
   <div class="validator-metrics">
-    <h3 class="metrics-title">Validator Metrics</h3>
+    <h3 class="metrics-title">
+      <Activity class="title-icon" />
+      Validator Metrics
+    </h3>
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-header">
@@ -129,7 +132,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Shield, TestTube, CheckCircle2 } from 'lucide-vue-next';
+import { Shield, TestTube, CheckCircle2, Activity } from 'lucide-vue-next';
 
 interface Validator {
   id: string;
@@ -247,6 +250,8 @@ const pieChartData = computed(() => {
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 16px;
   padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .metrics-title {
@@ -254,6 +259,16 @@ const pieChartData = computed(() => {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .metrics-grid {

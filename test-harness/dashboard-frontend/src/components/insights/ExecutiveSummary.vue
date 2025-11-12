@@ -1,21 +1,40 @@
 <template>
   <div class="executive-summary">
     <div class="summary-card">
-      <h3>Security Posture</h3>
+      <h3>
+        <Shield class="card-icon" />
+        Overall Compliance
+      </h3>
+      <div class="compliance-value">
+        {{ overallScore.toFixed(1) }}%
+      </div>
+      <div class="compliance-label">Compliance Score</div>
+    </div>
+    <div class="summary-card">
+      <h3>
+        <ShieldCheck class="card-icon" />
+        Security Posture
+      </h3>
       <div class="posture-level" :class="postureClass">
         {{ securityPosture }}
       </div>
       <div class="posture-score">{{ overallScore }}%</div>
     </div>
     <div class="summary-card">
-      <h3>Risk Level</h3>
+      <h3>
+        <AlertTriangle class="card-icon" />
+        Risk Level
+      </h3>
       <div class="risk-level" :class="riskClass">
         {{ riskLevel }}
       </div>
       <div class="risk-score">{{ riskScore }}/100</div>
     </div>
     <div class="summary-card">
-      <h3>Remediation Velocity</h3>
+      <h3>
+        <TrendingUp class="card-icon" />
+        Remediation Velocity
+      </h3>
       <div class="velocity-value">
         {{ remediationVelocity }} issues/week
       </div>
@@ -25,19 +44,12 @@
         {{ Math.abs(velocityTrend) }}% vs last period
       </div>
     </div>
-    <div class="summary-card">
-      <h3>ROI</h3>
-      <div class="roi-value">
-        ${{ roiSavings.toLocaleString() }} saved
-      </div>
-      <div class="roi-period">Last {{ timeRange }} days</div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { TrendingUp, TrendingDown } from 'lucide-vue-next';
+import { TrendingUp, TrendingDown, Shield, ShieldCheck, AlertTriangle } from 'lucide-vue-next';
 
 const props = defineProps<{
   overallScore: number;
@@ -110,6 +122,17 @@ const velocityTrendClass = computed(() => {
   margin: 0 0 12px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.card-icon {
+  width: 16px;
+  height: 16px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .posture-level,
@@ -175,14 +198,17 @@ const velocityTrendClass = computed(() => {
   height: 14px;
 }
 
-.roi-value {
-  font-size: 1.75rem;
+.compliance-value {
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #22c55e;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 8px;
 }
 
-.roi-period {
+.compliance-label {
   font-size: 0.875rem;
   color: #a0aec0;
   margin-top: 4px;

@@ -1,6 +1,9 @@
 <template>
   <div class="card">
-    <h2>By Category</h2>
+    <h2>
+      <BarChart3 class="title-icon" />
+      By Category
+    </h2>
     <div v-if="Object.keys(categories).length === 0" class="empty">
       No category data available
     </div>
@@ -26,6 +29,8 @@
 </template>
 
 <script setup lang="ts">
+import { BarChart3 } from 'lucide-vue-next';
+
 defineProps<{
   categories: Record<string, number>;
 }>();
@@ -54,6 +59,16 @@ const formatCategory = (category: string): string => {
   border-bottom: 2px solid #4facfe;
   padding-bottom: 10px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .metric {

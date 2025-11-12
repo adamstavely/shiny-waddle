@@ -199,5 +199,11 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   min-height: 0;
 }
+
+/* Prevent scrolling on home page */
+.content-wrapper > :deep(.home) {
+  overflow: hidden;
+  padding: 0;
+}
 </style>
 

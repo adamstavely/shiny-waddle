@@ -9,7 +9,11 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": "..",
+    "paths": {
+      "../../core/*": ["core/*"],
+      "../../services/*": ["services/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,
@@ -17,6 +21,8 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": ["src/**/*", "../core/**/*", "../services/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
 

@@ -1,6 +1,9 @@
 <template>
   <div class="card">
-    <h2>{{ title }}</h2>
+    <h2>
+      <component v-if="icon" :is="icon" class="title-icon" />
+      {{ title }}
+    </h2>
     <div v-if="Object.keys(scores).length === 0" class="empty">
       No data available
     </div>
@@ -23,12 +26,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ChevronRight } from 'lucide-vue-next';
+import { ChevronRight, type LucideIcon } from 'lucide-vue-next';
 
 const props = defineProps<{
   title: string;
   scores: Record<string, any>;
   type?: 'application' | 'team';
+  icon?: LucideIcon;
 }>();
 
 const router = useRouter();
@@ -67,6 +71,16 @@ const handleClick = (key: string) => {
   border-bottom: 2px solid #4facfe;
   padding-bottom: 10px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .metric {

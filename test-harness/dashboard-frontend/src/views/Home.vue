@@ -148,14 +148,22 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 <style scoped>
 .home {
   width: 100%;
-  min-height: calc(100vh - 60px);
+  height: 100%;
+  max-height: 100vh;
   background: transparent;
   padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-section {
   max-width: 1400px;
-  margin: 48px auto 80px;
+  width: 100%;
+  margin: 48px auto 0;
+  padding: 0 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .hero-card {
@@ -289,7 +297,11 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 
 .features-section {
   max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 48px auto 48px;
+  padding: 0 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .section-title {
@@ -302,8 +314,20 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .feature-card {

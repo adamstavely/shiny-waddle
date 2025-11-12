@@ -28,11 +28,6 @@
         :shared-filters="sharedFilters"
         @update-filters="updateSharedFilters"
       />
-      <AnalyticsTab 
-        v-if="activeTab === 'analytics'" 
-        :shared-filters="sharedFilters"
-        @update-filters="updateSharedFilters"
-      />
       <ReportsTab 
         v-if="activeTab === 'reports'" 
         :shared-filters="sharedFilters"
@@ -50,10 +45,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { LayoutDashboard, BarChart3, FileText, TrendingUp } from 'lucide-vue-next';
+import { LayoutDashboard, FileText, TrendingUp } from 'lucide-vue-next';
 import Breadcrumb from '../../components/Breadcrumb.vue';
 import OverviewTab from './OverviewTab.vue';
-import AnalyticsTab from './AnalyticsTab.vue';
 import ReportsTab from './ReportsTab.vue';
 import PredictionsTab from './PredictionsTab.vue';
 
@@ -70,7 +64,6 @@ const sharedFilters = ref({
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'predictions', label: 'Predictions', icon: TrendingUp }
 ];

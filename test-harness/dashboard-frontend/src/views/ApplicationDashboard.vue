@@ -65,19 +65,28 @@
 
       <!-- Category Scores -->
       <div class="section">
-        <h2 class="section-title">Compliance by Category</h2>
+        <h2 class="section-title">
+          <BarChart3 class="section-icon" />
+          Compliance by Category
+        </h2>
         <CategoryScores :categories="dashboardData.scoresByCategory" />
       </div>
 
       <!-- Test Results -->
       <div class="section">
-        <h2 class="section-title">Recent Test Results</h2>
+        <h2 class="section-title">
+          <FileText class="section-icon" />
+          Recent Test Results
+        </h2>
         <TestResultsTable :results="dashboardData.recentTestResults" />
       </div>
 
       <!-- Trends -->
       <div class="trends-section">
-        <h2 class="section-title">Compliance Trends</h2>
+        <h2 class="section-title">
+          <TrendingUp class="section-icon" />
+          Compliance Trends
+        </h2>
         <div class="trends-grid">
           <div class="trend-card">
             <h3 class="trend-title">Overall Compliance</h3>
@@ -133,7 +142,10 @@
 
       <!-- Test Suites -->
       <div class="section">
-        <h2 class="section-title">Test Suites</h2>
+        <h2 class="section-title">
+          <FolderOpen class="section-icon" />
+          Test Suites
+        </h2>
         <div class="test-suites-list">
           <div
             v-for="suite in dashboardData.testSuites"
@@ -162,7 +174,10 @@
 
       <!-- Violations Summary -->
       <div v-if="dashboardData.recentViolations && dashboardData.recentViolations.length > 0" class="section">
-        <h2 class="section-title">Recent Violations</h2>
+        <h2 class="section-title">
+          <Shield class="section-icon" />
+          Recent Violations
+        </h2>
         <div class="violations-list">
           <div
             v-for="violation in dashboardData.recentViolations"
@@ -194,13 +209,17 @@ import {
   TestTube,
   CheckCircle2,
   X,
-  AlertTriangle
+  AlertTriangle,
+  BarChart3,
+  FileText,
+  TrendingUp,
+  FolderOpen,
+  Shield
 } from 'lucide-vue-next';
 import OverallScore from '../components/OverallScore.vue';
 import CategoryScores from '../components/CategoryScores.vue';
 import TestResultsTable from '../components/TestResultsTable.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
-import { LayoutDashboard } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -512,6 +531,8 @@ onBeforeUnmount(() => {
 
 .section {
   margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
 }
 
 .section-title {
@@ -519,16 +540,30 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .trends-section {
   margin-top: 40px;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
 }
 
 .trends-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 24px;
+  position: relative;
 }
 
 .trend-card {
@@ -590,6 +625,8 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .suite-card {

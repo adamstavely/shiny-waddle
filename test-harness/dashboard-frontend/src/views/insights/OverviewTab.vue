@@ -13,20 +13,19 @@
         :time-range="parseInt(sharedFilters.timeRange)"
       />
 
-      <!-- Overall Score -->
-      <OverallScore :score="dashboardData.overallCompliance" />
-
       <!-- Score Cards -->
       <div class="grid">
         <ScoreCard
           title="By Application"
           :scores="dashboardData.scoresByApplication"
           type="application"
+          :icon="Building2"
         />
         <ScoreCard
           title="By Team"
           :scores="dashboardData.scoresByTeam"
           type="team"
+          :icon="Users"
         />
         <CategoryScores
           :categories="getCategoryScores(dashboardData.scoresByApplication)"
@@ -34,14 +33,21 @@
       </div>
 
       <!-- Test Results -->
-      <TestResultsTable :results="dashboardData.recentTestResults" />
+      <div class="section">
+        <TestResultsTable :results="dashboardData.recentTestResults" />
+      </div>
       
       <!-- Validator Metrics -->
-      <ValidatorMetrics :validators="validators" />
+      <div class="section">
+        <ValidatorMetrics :validators="validators" />
+      </div>
       
       <!-- Trends Section -->
       <div class="trends-section">
-        <h2 class="section-title">Compliance Trends</h2>
+        <h2 class="section-title">
+          <TrendingUp class="section-icon" />
+          Compliance Trends
+        </h2>
         <div class="trends-grid">
           <div class="trend-card">
             <h3 class="trend-title">Overall Compliance</h3>
@@ -78,7 +84,10 @@
 
       <!-- Compliance Heatmap -->
       <div class="heatmap-section">
-        <h2 class="section-title">Compliance Heatmap</h2>
+        <h2 class="section-title">
+          <Grid3x3 class="section-icon" />
+          Compliance Heatmap
+        </h2>
         <div class="heatmap-container">
           <div class="heatmap-card">
             <div class="heatmap-header">
@@ -129,7 +138,10 @@
 
       <!-- Quick Actions -->
       <div class="quick-actions-section">
-        <h2 class="section-title">Quick Actions</h2>
+        <h2 class="section-title">
+          <Zap class="section-icon" />
+          Quick Actions
+        </h2>
         <div class="actions-grid">
           <button @click="navigateTo('/tests/builder')" class="action-card">
             <TestTube class="action-icon" />
@@ -143,9 +155,9 @@
             <Shield class="action-icon" />
             <span class="action-label">Manage Policies</span>
           </button>
-          <button @click="navigateTo('/insights?tab=analytics')" class="action-card">
-            <BarChart3 class="action-icon" />
-            <span class="action-label">View Analytics</span>
+          <button @click="navigateTo('/insights?tab=reports')" class="action-card">
+            <FileText class="action-icon" />
+            <span class="action-label">View Reports</span>
           </button>
         </div>
       </div>
@@ -157,8 +169,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import { TestTube, FileText, Shield, BarChart3 } from 'lucide-vue-next';
-import OverallScore from '../../components/OverallScore.vue';
+import { TestTube, FileText, Shield, BarChart3, TrendingUp, Grid3x3, Zap, Building2, Users } from 'lucide-vue-next';
 import ScoreCard from '../../components/ScoreCard.vue';
 import CategoryScores from '../../components/CategoryScores.vue';
 import TestResultsTable from '../../components/TestResultsTable.vue';
@@ -379,8 +390,17 @@ onBeforeUnmount(() => {
   max-width: 600px;
 }
 
+.section {
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
+
 .trends-section {
   margin-top: 40px;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
 }
 
 .section-title {
@@ -388,6 +408,16 @@ onBeforeUnmount(() => {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .trends-grid {
