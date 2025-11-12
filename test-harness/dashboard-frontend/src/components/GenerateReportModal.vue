@@ -150,7 +150,7 @@
                 </div>
               </div>
 
-              <!-- Schedule (Future Feature) -->
+              <!-- Schedule -->
               <div class="form-group">
                 <label class="checkbox-option">
                   <input
@@ -161,11 +161,71 @@
                   <span>Schedule Automated Reports</span>
                 </label>
                 <div v-if="form.scheduleEnabled" class="schedule-options">
-                  <select v-model="form.scheduleFrequency" class="form-input">
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
+                  <div class="schedule-row">
+                    <label>Frequency</label>
+                    <select v-model="form.scheduleFrequency" class="form-input">
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                  <div v-if="form.scheduleFrequency === 'weekly'" class="schedule-row">
+                    <label>Day of Week</label>
+                    <select v-model="form.scheduleDayOfWeek" class="form-input">
+                      <option :value="0">Sunday</option>
+                      <option :value="1">Monday</option>
+                      <option :value="2">Tuesday</option>
+                      <option :value="3">Wednesday</option>
+                      <option :value="4">Thursday</option>
+                      <option :value="5">Friday</option>
+                      <option :value="6">Saturday</option>
+                    </select>
+                  </div>
+                  <div v-if="form.scheduleFrequency === 'monthly'" class="schedule-row">
+                    <label>Day of Month</label>
+                    <input
+                      v-model.number="form.scheduleDayOfMonth"
+                      type="number"
+                      min="1"
+                      max="31"
+                      class="form-input"
+                      placeholder="1-31"
+                    />
+                  </div>
+                  <div class="schedule-row">
+                    <label>Time</label>
+                    <input
+                      v-model="form.scheduleTime"
+                      type="time"
+                      class="form-input"
+                    />
+                  </div>
+                  <div class="schedule-row">
+                    <label>Delivery Method</label>
+                    <select v-model="form.deliveryMethod" class="form-input">
+                      <option value="storage">Store in Reports</option>
+                      <option value="email">Email</option>
+                      <option value="webhook">Webhook</option>
+                    </select>
+                  </div>
+                  <div v-if="form.deliveryMethod === 'email'" class="schedule-row">
+                    <label>Recipients (comma-separated)</label>
+                    <input
+                      v-model="form.recipients"
+                      type="text"
+                      class="form-input"
+                      placeholder="email1@example.com, email2@example.com"
+                    />
+                  </div>
+                  <div v-if="form.deliveryMethod === 'webhook'" class="schedule-row">
+                    <label>Webhook URL</label>
+                    <input
+                      v-model="form.webhookUrl"
+                      type="url"
+                      class="form-input"
+                      placeholder="https://example.com/webhook"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -220,6 +280,12 @@ const form = ref({
   includeDetails: true,
   scheduleEnabled: false,
   scheduleFrequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
+  scheduleDayOfWeek: 1 as number,
+  scheduleDayOfMonth: 1 as number,
+  scheduleTime: '09:00' as string,
+  deliveryMethod: 'storage' as 'email' | 'webhook' | 'storage',
+  recipients: '' as string,
+  webhookUrl: '' as string,
 });
 
 const formatOptions = [
@@ -236,25 +302,70 @@ const close = () => {
 const handleGenerate = async () => {
   isGenerating.value = true;
   try {
-    const response = await axios.post('/api/reports/generate', {
-      name: form.value.name || undefined,
-      format: form.value.format,
-      dateFrom: form.value.dateFrom || undefined,
-      dateTo: form.value.dateTo || undefined,
-      applicationIds: form.value.selectedApplications.length > 0
-        ? form.value.selectedApplications
-        : undefined,
-      teamIds: form.value.selectedTeams.length > 0
-        ? form.value.selectedTeams
-        : undefined,
-      validatorIds: form.value.selectedValidators.length > 0
-        ? form.value.selectedValidators
-        : undefined,
-      includeCharts: form.value.includeCharts,
-      includeDetails: form.value.includeDetails,
-    });
+    // If scheduling is enabled, create a scheduled report instead
+    if (form.value.scheduleEnabled) {
+      const scheduleData = {
+        name: form.value.name || `Scheduled Report - ${form.value.scheduleFrequency}`,
+        enabled: true,
+        frequency: form.value.scheduleFrequency,
+        time: form.value.scheduleTime,
+        dayOfWeek: form.value.scheduleFrequency === 'weekly' ? form.value.scheduleDayOfWeek : undefined,
+        dayOfMonth: form.value.scheduleFrequency === 'monthly' ? form.value.scheduleDayOfMonth : undefined,
+        format: form.value.format,
+        applicationIds: form.value.selectedApplications.length > 0
+          ? form.value.selectedApplications
+          : undefined,
+        teamIds: form.value.selectedTeams.length > 0
+          ? form.value.selectedTeams
+          : undefined,
+        validatorIds: form.value.selectedValidators.length > 0
+          ? form.value.selectedValidators
+          : undefined,
+        dateRange: form.value.dateFrom || form.value.dateTo
+          ? {
+              type: 'absolute' as const,
+              from: form.value.dateFrom || undefined,
+              to: form.value.dateTo || undefined,
+            }
+          : {
+              type: 'relative' as const,
+              days: 30,
+            },
+        includeCharts: form.value.includeCharts,
+        includeDetails: form.value.includeDetails,
+        deliveryMethod: form.value.deliveryMethod,
+        recipients: form.value.deliveryMethod === 'email' && form.value.recipients
+          ? form.value.recipients.split(',').map((e: string) => e.trim())
+          : undefined,
+        webhookUrl: form.value.deliveryMethod === 'webhook' ? form.value.webhookUrl : undefined,
+      };
 
-    emit('generated', response.data);
+      const response = await axios.post('/api/scheduled-reports', scheduleData);
+      emit('generated', response.data);
+      alert('Scheduled report created successfully!');
+    } else {
+      // Generate report immediately
+      const response = await axios.post('/api/reports/generate', {
+        name: form.value.name || undefined,
+        format: form.value.format,
+        dateFrom: form.value.dateFrom || undefined,
+        dateTo: form.value.dateTo || undefined,
+        applicationIds: form.value.selectedApplications.length > 0
+          ? form.value.selectedApplications
+          : undefined,
+        teamIds: form.value.selectedTeams.length > 0
+          ? form.value.selectedTeams
+          : undefined,
+        validatorIds: form.value.selectedValidators.length > 0
+          ? form.value.selectedValidators
+          : undefined,
+        includeCharts: form.value.includeCharts,
+        includeDetails: form.value.includeDetails,
+      });
+
+      emit('generated', response.data);
+    }
+
     close();
     
     // Reset form
@@ -270,10 +381,16 @@ const handleGenerate = async () => {
       includeDetails: true,
       scheduleEnabled: false,
       scheduleFrequency: 'weekly',
+      scheduleDayOfWeek: 1,
+      scheduleDayOfMonth: 1,
+      scheduleTime: '09:00',
+      deliveryMethod: 'storage',
+      recipients: '',
+      webhookUrl: '',
     };
-  } catch (error) {
-    console.error('Failed to generate report:', error);
-    alert('Failed to generate report. Please try again.');
+  } catch (error: any) {
+    console.error('Failed to generate/schedule report:', error);
+    alert(error.response?.data?.message || 'Failed to generate/schedule report. Please try again.');
   } finally {
     isGenerating.value = false;
   }
@@ -466,6 +583,25 @@ watch(() => props.isOpen, (newVal) => {
 
 .schedule-options {
   margin-top: 12px;
+  padding: 16px;
+  background: rgba(15, 20, 25, 0.4);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.schedule-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-row label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin-bottom: 0;
 }
 
 .modal-actions {

@@ -13,6 +13,9 @@
       </div>
     </div>
 
+    <!-- Scheduled Reports Section -->
+    <ScheduledReports />
+
     <!-- Filters -->
     <div class="filters">
       <input
@@ -253,6 +256,7 @@ import {
 import axios from 'axios';
 import Dropdown from '../../components/Dropdown.vue';
 import GenerateReportModal from '../../components/GenerateReportModal.vue';
+import ScheduledReports from '../../components/insights/ScheduledReports.vue';
 
 const props = defineProps<{
   sharedFilters: {
