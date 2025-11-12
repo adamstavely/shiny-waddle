@@ -48,6 +48,11 @@
               </div>
             </div>
 
+            <!-- Enhanced Risk Score -->
+            <div v-if="finding.enhancedRiskScore" class="section">
+              <EnhancedRiskScore :riskScore="finding.enhancedRiskScore" />
+            </div>
+
             <!-- Description -->
             <div class="section">
               <h3>Description</h3>
@@ -233,6 +238,7 @@
 import { Teleport } from 'vue';
 import { ShieldAlert, X, Download } from 'lucide-vue-next';
 import axios from 'axios';
+import EnhancedRiskScore from './EnhancedRiskScore.vue';
 
 const props = defineProps<{
   isOpen: boolean;

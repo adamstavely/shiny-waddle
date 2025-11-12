@@ -1,18 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { UnifiedFinding } from '../../../core/unified-finding-schema';
 import { NormalizationEngine, ScannerResult } from '../../../services/normalization-engine';
 import { ECSAdapter } from '../../../services/ecs-adapter';
+import {
+  normalizeToCurrentVersion,
+  detectSchemaVersion,
+  needsMigration,
+  migrateFindings,
+  CURRENT_SCHEMA_VERSION,
+  getSchemaVersion,
+  getAvailableVersions,
+  validateSchemaVersion,
+} from '../../../core/schema-versioning';
+// Import migrations to register them
+import '../../../core/schema-migrations';
+import {
+  EnhancedRiskScorer,
+  EnhancedRiskScore,
+  RiskAggregation,
+} from '../../../services/enhanced-risk-scorer';
+import { ApplicationsService } from '../applications/applications.service';
 
 @Injectable()
 export class UnifiedFindingsService {
   private readonly findingsPath = path.join(process.cwd(), '..', '..', 'unified-findings.json');
   private normalizationEngine: NormalizationEngine;
   private ecsAdapter: ECSAdapter;
+  private riskScorer: EnhancedRiskScorer;
   private findings: UnifiedFinding[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService
+  ) {
     this.normalizationEngine = new NormalizationEngine({
       deduplication: {
         enabled: true,
@@ -31,6 +53,7 @@ export class UnifiedFindingsService {
       },
     });
     this.ecsAdapter = new ECSAdapter();
+    this.riskScorer = new EnhancedRiskScorer();
     this.loadFindings();
   }
 
@@ -38,7 +61,11 @@ export class UnifiedFindingsService {
     try {
       const data = await fs.readFile(this.findingsPath, 'utf-8');
       const parsed = JSON.parse(data);
-      this.findings = parsed.map((f: any) => ({
+      
+      // Migrate findings to current schema version
+      const migrated = migrateFindings(parsed);
+      
+      this.findings = migrated.map((f: any) => ({
         ...f,
         createdAt: new Date(f.createdAt),
         updatedAt: new Date(f.updatedAt),
@@ -168,6 +195,138 @@ export class UnifiedFindingsService {
     }
 
     return stats;
+  }
+
+  /**
+   * Schema versioning methods
+   */
+  async getSchemaVersionInfo(version?: string) {
+    if (version) {
+      return getSchemaVersion(version);
+    }
+    return {
+      current: CURRENT_SCHEMA_VERSION,
+      available: getAvailableVersions(),
+    };
+  }
+
+  async detectFindingVersion(finding: any) {
+    return {
+      version: detectSchemaVersion(finding),
+      needsMigration: needsMigration(finding),
+    };
+  }
+
+  async migrateFinding(finding: any, fromVersion?: string, toVersion?: string) {
+    if (fromVersion && toVersion) {
+      const { migrateFinding: migrate } = await import('../../../core/schema-versioning');
+      return migrate(finding, fromVersion, toVersion);
+    }
+    return normalizeToCurrentVersion(finding);
+  }
+
+  async validateFinding(finding: any, version?: string) {
+    return validateSchemaVersion(finding, version);
+  }
+
+  /**
+   * Risk Scoring & Prioritization methods
+   */
+  
+  /**
+   * Calculate enhanced risk score for a finding
+   */
+  async calculateRiskScore(findingId: string): Promise<EnhancedRiskScore> {
+    const finding = await this.getFindingById(findingId);
+    if (!finding) {
+      throw new Error('Finding not found');
+    }
+    
+    const riskScore = this.riskScorer.calculateRiskScore(finding);
+    
+    // Update finding with enhanced risk score
+    finding.enhancedRiskScore = {
+      ...riskScore,
+      calculatedAt: riskScore.calculatedAt,
+    };
+    await this.updateFinding(findingId, { enhancedRiskScore: finding.enhancedRiskScore });
+    
+    return riskScore;
+  }
+
+  /**
+   * Calculate risk scores for all findings
+   */
+  async calculateAllRiskScores(): Promise<EnhancedRiskScore[]> {
+    const findings = await this.getAllFindings();
+    const riskScores = this.riskScorer.calculateRiskScores(findings);
+    
+    // Update findings with enhanced risk scores
+    for (let i = 0; i < findings.length; i++) {
+      const finding = findings[i];
+      const riskScore = riskScores[i];
+      finding.enhancedRiskScore = {
+        ...riskScore,
+        calculatedAt: riskScore.calculatedAt,
+      };
+      await this.updateFinding(finding.id, { enhancedRiskScore: finding.enhancedRiskScore });
+    }
+    
+    return riskScores;
+  }
+
+  /**
+   * Get prioritized findings
+   */
+  async getPrioritizedFindings(limit?: number): Promise<Array<{ finding: UnifiedFinding; riskScore: EnhancedRiskScore }>> {
+    const findings = await this.getAllFindings();
+    const prioritized = this.riskScorer.prioritizeFindings(findings);
+    
+    if (limit) {
+      return prioritized.slice(0, limit);
+    }
+    
+    return prioritized;
+  }
+
+  /**
+   * Aggregate risk by application
+   */
+  async aggregateRiskByApplication(applicationId: string): Promise<RiskAggregation> {
+    const findings = await this.getAllFindings({ applicationId });
+    return this.riskScorer.aggregateByApplication(findings, applicationId);
+  }
+
+  /**
+   * Aggregate risk by team
+   */
+  async aggregateRiskByTeam(teamName: string): Promise<RiskAggregation> {
+    const findings = await this.getAllFindings();
+    
+    return this.riskScorer.aggregateByTeam(
+      findings,
+      teamName,
+      async (team: string) => {
+        const apps = await this.applicationsService.findByTeam(team);
+        return apps.map(app => ({ id: app.id }));
+      }
+    );
+  }
+
+  /**
+   * Aggregate risk at organization level
+   */
+  async aggregateRiskByOrganization(): Promise<RiskAggregation> {
+    const findings = await this.getAllFindings();
+    return this.riskScorer.aggregateByOrganization(findings);
+  }
+
+  /**
+   * Get risk trends
+   */
+  async getRiskTrends(periodDays: number = 30): Promise<Array<{ date: Date; riskScore: number; count: number }>> {
+    const findings = await this.getAllFindings();
+    return this.riskScorer.getRiskTrends(findings, periodDays);
   }
 }
 

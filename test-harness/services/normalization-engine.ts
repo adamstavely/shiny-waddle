@@ -14,6 +14,13 @@ import { CheckovAdapter } from './scanner-adapters/checkov-adapter';
 import { TrivyAdapter } from './scanner-adapters/trivy-adapter';
 import { AWSSecurityHubAdapter } from './scanner-adapters/aws-security-hub-adapter';
 import { ECSAdapter } from './ecs-adapter';
+import {
+  normalizeToCurrentVersion,
+  validateSchemaVersion,
+  needsMigration,
+  VersionedUnifiedFinding,
+  CURRENT_SCHEMA_VERSION,
+} from '../core/schema-versioning';
 
 export interface NormalizationConfig {
   deduplication: {
@@ -121,7 +128,10 @@ export class NormalizationEngine {
 
       try {
         const normalized = adapter.batchNormalize(result.findings, result.metadata);
-        allFindings.push(...normalized);
+        
+        // Migrate findings to current schema version
+        const migrated = normalized.map(f => normalizeToCurrentVersion(f));
+        allFindings.push(...migrated);
       } catch (error) {
         console.error(`Error normalizing findings from ${result.scannerId}:`, error);
       }
@@ -155,16 +165,19 @@ export class NormalizationEngine {
     }
 
     const normalized = adapter.batchNormalize(findings, metadata);
+    
+    // Migrate findings to current schema version
+    const migrated = normalized.map(f => normalizeToCurrentVersion(f));
 
     if (this.config.enrichment.enabled) {
-      await this.enrichFindings(normalized);
+      await this.enrichFindings(migrated);
     }
 
     if (this.config.validation.enabled) {
-      this.validateFindings(normalized);
+      this.validateFindings(migrated);
     }
 
-    return normalized;
+    return migrated;
   }
 
   /**
@@ -250,22 +263,14 @@ export class NormalizationEngine {
    */
   private validateFindings(findings: UnifiedFinding[]): void {
     for (const finding of findings) {
-      const errors: string[] = [];
-
-      if (!finding.id) errors.push('Missing id');
-      if (!finding.title) errors.push('Missing title');
-      if (!finding.severity) errors.push('Missing severity');
-      if (!finding.source) errors.push('Missing source');
-      if (!finding.scannerId) errors.push('Missing scannerId');
-      if (finding.riskScore < 0 || finding.riskScore > 100) {
-        errors.push('Invalid riskScore (must be 0-100)');
-      }
-
-      if (errors.length > 0) {
+      // Use schema versioning validation
+      const validation = validateSchemaVersion(finding, CURRENT_SCHEMA_VERSION);
+      
+      if (!validation.valid) {
         if (this.config.validation.strictMode) {
-          throw new Error(`Invalid finding ${finding.id}: ${errors.join(', ')}`);
+          throw new Error(`Invalid finding ${finding.id}: ${validation.errors.join(', ')}`);
         } else {
-          console.warn(`Invalid finding ${finding.id}: ${errors.join(', ')}`);
+          console.warn(`Invalid finding ${finding.id}: ${validation.errors.join(', ')}`);
         }
       }
     }

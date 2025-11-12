@@ -145,7 +145,7 @@ interface UnifiedFinding {
 - ✅ Batch normalization support
 - ✅ Configurable deduplication strategies
 - ✅ Automatic compliance framework mapping
-- ⏳ Schema versioning and migration (planned)
+- ✅ Schema versioning and migration (completed)
 
 **Implementation Details:**
 - Location: `services/normalization-engine.ts`
@@ -153,6 +153,9 @@ interface UnifiedFinding {
 - Enrichment: CVE/CWE data, compliance framework mapping
 - Validation: Strict and non-strict modes
 - ECS Integration: Full bidirectional conversion via `ECSAdapter`
+- Schema Versioning: `core/schema-versioning.ts` - Version detection, migration, and validation
+- Schema Migrations: `core/schema-migrations.ts` - Migration functions between schema versions
+- API Endpoints: `/api/unified-findings/schema/*` - Version info, detection, migration, validation
 
 ---
 
@@ -688,4 +691,23 @@ Complex security data needs intuitive interfaces.
 - Compliance framework mapping (SOC2, PCI-DSS, OWASP, etc.)
 - ECS export functionality
 - Real-time finding import and management
+- Schema versioning and migration support
+
+### Schema Versioning & Migration (✅ Completed)
+- **Schema Versioning**: `core/schema-versioning.ts` - Version detection, migration path calculation, validation
+- **Schema Migrations**: `core/schema-migrations.ts` - Migration functions between schema versions
+- **Integration**: Automatic migration in normalization engine and backend service
+- **API Endpoints**: 
+  - `GET /api/unified-findings/schema/version` - Get current/available schema versions
+  - `POST /api/unified-findings/schema/detect` - Detect schema version of a finding
+  - `POST /api/unified-findings/schema/migrate` - Migrate finding to target version
+  - `POST /api/unified-findings/schema/validate` - Validate finding against schema version
+
+**Key Features:**
+- Automatic version detection from finding structure
+- Chain migration support (migrate through multiple versions)
+- Schema validation with detailed error reporting
+- Backward compatibility with legacy schema versions
+- Version metadata tracking (`_schema` field)
+- Automatic migration on data load and normalization
 

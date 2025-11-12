@@ -8,6 +8,14 @@
           <p class="page-description">Unified view of security findings from all scanners</p>
         </div>
         <div class="header-actions">
+          <button @click="calculateAllRiskScores" class="btn-secondary" :disabled="isCalculatingRisk">
+            <ShieldAlert class="btn-icon" />
+            {{ isCalculatingRisk ? 'Calculating...' : 'Calculate Risk Scores' }}
+          </button>
+          <button @click="showPrioritized = !showPrioritized" class="btn-secondary">
+            <TrendingUp class="btn-icon" />
+            {{ showPrioritized ? 'Show All' : 'Show Prioritized' }}
+          </button>
           <button @click="showImportModal = true" class="btn-secondary">
             <Upload class="btn-icon" />
             Import Findings
@@ -74,10 +82,24 @@
       />
     </div>
 
+    <!-- Risk Aggregation Cards -->
+    <div v-if="riskAggregation" class="risk-aggregation-grid">
+      <div class="aggregation-card">
+        <h3>Organization Risk</h3>
+        <div class="aggregation-score" :class="getRiskScoreClass(riskAggregation.organization.riskScore)">
+          {{ riskAggregation.organization.riskScore.toFixed(1) }}
+        </div>
+        <div class="aggregation-details">
+          <span>Total: {{ riskAggregation.organization.totalFindings }}</span>
+          <span>Critical: {{ riskAggregation.organization.criticalCount }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Findings List -->
     <div class="findings-list">
       <div
-        v-for="finding in filteredFindings"
+        v-for="finding in (showPrioritized ? prioritizedFindings : filteredFindings)"
         :key="finding.id"
         class="finding-card"
         :class="`severity-${finding.severity}`"
@@ -119,8 +141,11 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">Risk Score:</span>
-            <span class="detail-value risk-score" :class="getRiskScoreClass(finding.riskScore)">
-              {{ finding.riskScore }}
+            <span class="detail-value risk-score" :class="getRiskScoreClass(finding.riskScore || finding.enhancedRiskScore?.adjustedScore || 0)">
+              {{ finding.enhancedRiskScore?.adjustedScore?.toFixed(1) || finding.riskScore || 'N/A' }}
+            </span>
+            <span v-if="finding.enhancedRiskScore?.priority" class="priority-badge" :class="getRiskScoreClass(finding.enhancedRiskScore.priority)">
+              Priority: {{ finding.enhancedRiskScore.priority.toFixed(0) }}
             </span>
           </div>
           <div class="detail-item" v-if="finding.compliance?.frameworks">
@@ -190,7 +215,8 @@ import {
   Download,
   Eye,
   CheckCircle2,
-  Trash2
+  Trash2,
+  TrendingUp
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -210,7 +236,11 @@ const filterStatus = ref('');
 const isLoading = ref(false);
 const showImportModal = ref(false);
 const showDetailModal = ref(false);
+const showPrioritized = ref(false);
+const isCalculatingRisk = ref(false);
 const selectedFinding = ref<any>(null);
+const prioritizedFindings = ref<any[]>([]);
+const riskAggregation = ref<any>(null);
 
 const findings = ref<any[]>([]);
 const statistics = ref({
@@ -290,11 +320,26 @@ const loadFindings = async () => {
 const viewFinding = async (id: string) => {
   try {
     const response = await axios.get(`/api/unified-findings/${id}`);
-    selectedFinding.value = {
+    let finding = {
       ...response.data,
       createdAt: new Date(response.data.createdAt),
       updatedAt: new Date(response.data.updatedAt),
     };
+    
+    // Calculate risk score if not present
+    if (!finding.enhancedRiskScore) {
+      try {
+        const riskScoreRes = await axios.post(`/api/unified-findings/${id}/risk-score`);
+        finding.enhancedRiskScore = {
+          ...riskScoreRes.data,
+          calculatedAt: new Date(riskScoreRes.data.calculatedAt),
+        };
+      } catch (error) {
+        console.error('Failed to calculate risk score:', error);
+      }
+    }
+    
+    selectedFinding.value = finding;
     showDetailModal.value = true;
   } catch (error) {
     console.error('Failed to load finding:', error);
@@ -372,8 +417,54 @@ const getRiskScoreClass = (score: number): string => {
   return 'risk-low';
 };
 
+const calculateAllRiskScores = async () => {
+  isCalculatingRisk.value = true;
+  try {
+    await axios.post('/api/unified-findings/risk-scores/calculate-all');
+    await loadFindings();
+    await loadPrioritizedFindings();
+    await loadRiskAggregation();
+  } catch (error) {
+    console.error('Failed to calculate risk scores:', error);
+    alert('Failed to calculate risk scores. Please try again.');
+  } finally {
+    isCalculatingRisk.value = false;
+  }
+};
+
+const loadPrioritizedFindings = async () => {
+  try {
+    const response = await axios.get('/api/unified-findings/prioritized', {
+      params: { limit: 50 }
+    });
+    prioritizedFindings.value = response.data.map((item: any) => ({
+      ...item.finding,
+      enhancedRiskScore: item.riskScore,
+      createdAt: new Date(item.finding.createdAt),
+      updatedAt: new Date(item.finding.updatedAt),
+    }));
+  } catch (error) {
+    console.error('Failed to load prioritized findings:', error);
+  }
+};
+
+const loadRiskAggregation = async () => {
+  try {
+    const [orgRes] = await Promise.all([
+      axios.get('/api/unified-findings/risk-aggregation/organization'),
+    ]);
+    riskAggregation.value = {
+      organization: orgRes.data,
+    };
+  } catch (error) {
+    console.error('Failed to load risk aggregation:', error);
+  }
+};
+
 onMounted(async () => {
   await loadFindings();
+  await loadPrioritizedFindings();
+  await loadRiskAggregation();
 });
 </script>
 
@@ -785,6 +876,77 @@ onMounted(async () => {
   font-size: 1rem;
   color: #a0aec0;
   margin-bottom: 24px;
+}
+
+.risk-aggregation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.aggregation-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.aggregation-card h3 {
+  font-size: 1rem;
+  color: #a0aec0;
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.aggregation-score {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.aggregation-score.risk-high {
+  color: #fc8181;
+}
+
+.aggregation-score.risk-medium {
+  color: #fbbf24;
+}
+
+.aggregation-score.risk-low {
+  color: #22c55e;
+}
+
+.aggregation-details {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin-top: 12px;
+}
+
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.priority-badge.risk-high {
+  background: rgba(252, 129, 129, 0.2);
+  color: #fc8181;
+}
+
+.priority-badge.risk-medium {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.priority-badge.risk-low {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
 }
 </style>
 

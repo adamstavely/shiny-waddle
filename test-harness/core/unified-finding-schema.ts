@@ -210,6 +210,34 @@ export interface UnifiedFinding {
   riskScore: number; // 0-100, calculated based on severity, exploitability, asset criticality
   businessImpact?: number; // 0-100
   
+  // Enhanced risk scoring (from enhanced-risk-scorer)
+  enhancedRiskScore?: {
+    baseScore: number;
+    adjustedScore: number;
+    factors: {
+      severity: number;
+      exploitability: number;
+      assetCriticality: number;
+      exposure: number;
+      dataSensitivity: number;
+      complianceImpact: number;
+      businessImpact: number;
+      remediationComplexity: number;
+    };
+    age: number; // Days since detection
+    trend: 'increasing' | 'stable' | 'decreasing';
+    threatIntelligence?: {
+      activeExploits: boolean;
+      exploitInWild: boolean;
+      ransomware: boolean;
+      threatActorInterest: 'high' | 'medium' | 'low';
+    };
+    priority: number; // 0-100
+    priorityReason: string;
+    calculatedAt: Date;
+    version: string;
+  };
+  
   // Correlation
   relatedFindings?: string[]; // IDs of related findings
   duplicateOf?: string; // If this is a duplicate
@@ -243,7 +271,16 @@ export interface UnifiedFinding {
     transport?: 'tcp' | 'udp';
   };
   
-  // Custom fields for Sentinel-specific data
+  // Custom fields for Heimdall-specific data
+  heimdall?: {
+    testSuiteId?: string;
+    testResultId?: string;
+    policyId?: string;
+    policyName?: string;
+    violationId?: string;
+  };
+  
+  // Legacy: Keep sentinel for backward compatibility
   sentinel?: {
     testSuiteId?: string;
     testResultId?: string;
@@ -324,7 +361,22 @@ export interface ECSDocument {
   'organization.id'?: string;
   'organization.name'?: string;
   
-  // Custom fields (prefixed with sentinel.*)
+  // Custom fields (prefixed with heimdall.*)
+  'heimdall.finding.id'?: string;
+  'heimdall.scanner.source'?: string;
+  'heimdall.scanner.id'?: string;
+  'heimdall.scanner.finding_id'?: string;
+  'heimdall.asset.type'?: string;
+  'heimdall.asset.application_id'?: string;
+  'heimdall.asset.component'?: string;
+  'heimdall.status'?: string;
+  'heimdall.risk_score'?: number;
+  'heimdall.business_impact'?: number;
+  'heimdall.remediation.automated'?: boolean;
+  'heimdall.compliance.frameworks'?: string[];
+  'heimdall.compliance.controls'?: string[];
+  
+  // Legacy: Keep sentinel.* for backward compatibility
   'sentinel.finding.id'?: string;
   'sentinel.scanner.source'?: string;
   'sentinel.scanner.id'?: string;

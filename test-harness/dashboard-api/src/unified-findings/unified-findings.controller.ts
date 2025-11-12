@@ -82,5 +82,77 @@ export class UnifiedFindingsController {
     await this.service.deleteFinding(id);
     return { success: true };
   }
+
+  /**
+   * Schema versioning endpoints
+   */
+  @Get('schema/version')
+  async getSchemaVersion(@Query('version') version?: string) {
+    return this.service.getSchemaVersionInfo(version);
+  }
+
+  @Post('schema/detect')
+  async detectVersion(@Body() finding: any) {
+    return this.service.detectFindingVersion(finding);
+  }
+
+  @Post('schema/migrate')
+  async migrateFinding(
+    @Body() body: { finding: any; fromVersion?: string; toVersion?: string }
+  ) {
+    return this.service.migrateFinding(
+      body.finding,
+      body.fromVersion,
+      body.toVersion
+    );
+  }
+
+  @Post('schema/validate')
+  async validateFinding(
+    @Body() body: { finding: any; version?: string }
+  ) {
+    return this.service.validateFinding(body.finding, body.version);
+  }
+
+  /**
+   * Risk Scoring & Prioritization endpoints
+   */
+  
+  @Post(':id/risk-score')
+  async calculateRiskScore(@Param('id') id: string) {
+    return this.service.calculateRiskScore(id);
+  }
+
+  @Post('risk-scores/calculate-all')
+  async calculateAllRiskScores() {
+    return this.service.calculateAllRiskScores();
+  }
+
+  @Get('prioritized')
+  async getPrioritizedFindings(@Query('limit') limit?: string) {
+    const limitNum = limit ? parseInt(limit, 10) : undefined;
+    return this.service.getPrioritizedFindings(limitNum);
+  }
+
+  @Get('risk-aggregation/application/:applicationId')
+  async getApplicationRisk(@Param('applicationId') applicationId: string) {
+    return this.service.aggregateRiskByApplication(applicationId);
+  }
+
+  @Get('risk-aggregation/team/:teamName')
+  async getTeamRisk(@Param('teamName') teamName: string) {
+    return this.service.aggregateRiskByTeam(teamName);
+  }
+
+  @Get('risk-aggregation/organization')
+  async getOrganizationRisk() {
+    return this.service.aggregateRiskByOrganization();
+  }
+
+  @Get('risk-trends')
+  async getRiskTrends(@Query('periodDays') periodDays?: string) {
+    const period = periodDays ? parseInt(periodDays, 10) : 30;
+    return this.service.getRiskTrends(period);
+  }
 }
 
