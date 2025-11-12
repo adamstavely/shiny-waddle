@@ -1,0 +1,713 @@
+[
+  {
+    "id": "27e6c9bd-f53a-43f7-b935-164f8f3b5f67",
+    "framework": "nist_800_53_rev_4",
+    "name": "Roadmap - 11/11/2025",
+    "description": "Remediation roadmap for compliance gaps",
+    "gaps": [
+      {
+        "controlId": "AC-2",
+        "controlTitle": "Account Management",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement automated account management processes with approval workflows.",
+          "Review and update AC-2 implementation",
+          "Document evidence of compliance for AC-2",
+          "Re-assess AC-2 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AC-3",
+        "controlTitle": "Access Enforcement",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement role-based access control (RBAC) or attribute-based access control (ABAC).",
+          "Review and update AC-3 implementation",
+          "Document evidence of compliance for AC-3",
+          "Re-assess AC-3 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AC-6",
+        "controlTitle": "Least Privilege",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Grant minimum necessary permissions and review regularly.",
+          "Review and update AC-6 implementation",
+          "Document evidence of compliance for AC-6",
+          "Re-assess AC-6 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AC-17",
+        "controlTitle": "Remote Access",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Require VPN, multi-factor authentication, and monitor remote access sessions.",
+          "Review and update AC-17 implementation",
+          "Document evidence of compliance for AC-17",
+          "Re-assess AC-17 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SI-2",
+        "controlTitle": "Flaw Remediation",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Establish vulnerability management process with patching timelines.",
+          "Review and update SI-2 implementation",
+          "Document evidence of compliance for SI-2",
+          "Re-assess SI-2 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SI-3",
+        "controlTitle": "Malicious Code Protection",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Deploy antivirus/anti-malware solutions and keep signatures updated.",
+          "Review and update SI-3 implementation",
+          "Document evidence of compliance for SI-3",
+          "Re-assess SI-3 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SI-4",
+        "controlTitle": "Information System Monitoring",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement security information and event management (SIEM) system.",
+          "Review and update SI-4 implementation",
+          "Document evidence of compliance for SI-4",
+          "Re-assess SI-4 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AU-2",
+        "controlTitle": "Audit Events",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Enable audit logging for authentication, authorization, and data access events.",
+          "Review and update AU-2 implementation",
+          "Document evidence of compliance for AU-2",
+          "Re-assess AU-2 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AU-3",
+        "controlTitle": "Content of Audit Records",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Ensure audit logs include timestamp, user, action, resource, and result.",
+          "Review and update AU-3 implementation",
+          "Document evidence of compliance for AU-3",
+          "Re-assess AU-3 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AU-6",
+        "controlTitle": "Audit Review, Analysis, and Reporting",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Establish regular audit review schedule and automated analysis.",
+          "Review and update AU-6 implementation",
+          "Document evidence of compliance for AU-6",
+          "Re-assess AU-6 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AU-9",
+        "controlTitle": "Protection of Audit Information",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Restrict access to audit logs and implement log integrity protection.",
+          "Review and update AU-9 implementation",
+          "Document evidence of compliance for AU-9",
+          "Re-assess AU-9 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "IA-2",
+        "controlTitle": "Identification and Authentication (Organizational Users)",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement unique user IDs and strong authentication mechanisms.",
+          "Review and update IA-2 implementation",
+          "Document evidence of compliance for IA-2",
+          "Re-assess IA-2 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "IA-5",
+        "controlTitle": "Authenticator Management",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement password policies, MFA, and secure authenticator distribution.",
+          "Review and update IA-5 implementation",
+          "Document evidence of compliance for IA-5",
+          "Re-assess IA-5 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "IR-4",
+        "controlTitle": "Incident Handling",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Establish incident response team and procedures.",
+          "Review and update IR-4 implementation",
+          "Document evidence of compliance for IR-4",
+          "Re-assess IR-4 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "IR-5",
+        "controlTitle": "Incident Monitoring",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Maintain incident tracking system and monitor for security events.",
+          "Review and update IR-5 implementation",
+          "Document evidence of compliance for IR-5",
+          "Re-assess IR-5 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "IR-6",
+        "controlTitle": "Incident Reporting",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Establish reporting procedures and communication channels.",
+          "Review and update IR-6 implementation",
+          "Document evidence of compliance for IR-6",
+          "Re-assess IR-6 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "RA-3",
+        "controlTitle": "Risk Assessment",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Conduct regular risk assessments and document findings.",
+          "Review and update RA-3 implementation",
+          "Document evidence of compliance for RA-3",
+          "Re-assess RA-3 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "RA-5",
+        "controlTitle": "Vulnerability Scanning",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Conduct regular vulnerability scans and remediate findings.",
+          "Review and update RA-5 implementation",
+          "Document evidence of compliance for RA-5",
+          "Re-assess RA-5 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SC-7",
+        "controlTitle": "Boundary Protection",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement firewalls, network segmentation, and traffic filtering.",
+          "Review and update SC-7 implementation",
+          "Document evidence of compliance for SC-7",
+          "Re-assess SC-7 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SC-8",
+        "controlTitle": "Transmission Confidentiality and Integrity",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Use TLS/SSL for data in transit and verify certificates.",
+          "Review and update SC-8 implementation",
+          "Document evidence of compliance for SC-8",
+          "Re-assess SC-8 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SC-12",
+        "controlTitle": "Cryptographic Key Establishment and Management",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Implement key management system with key rotation policies.",
+          "Review and update SC-12 implementation",
+          "Document evidence of compliance for SC-12",
+          "Re-assess SC-12 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "SC-28",
+        "controlTitle": "Protection of Information at Rest",
+        "status": "not_assessed",
+        "priority": "high",
+        "violations": [],
+        "remediationSteps": [
+          "Encrypt sensitive data at rest using approved algorithms.",
+          "Review and update SC-28 implementation",
+          "Document evidence of compliance for SC-28",
+          "Re-assess SC-28 compliance status"
+        ],
+        "estimatedEffort": "medium"
+      },
+      {
+        "controlId": "AC-1",
+        "controlTitle": "Access Control Policy and Procedures",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Establish and maintain access control policies that define roles, responsibilities, and procedures.",
+          "Review and update AC-1 implementation",
+          "Document evidence of compliance for AC-1",
+          "Re-assess AC-1 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AC-4",
+        "controlTitle": "Information Flow Enforcement",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement data loss prevention (DLP) and network segmentation.",
+          "Review and update AC-4 implementation",
+          "Document evidence of compliance for AC-4",
+          "Re-assess AC-4 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AC-5",
+        "controlTitle": "Separation of Duties",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Ensure no single individual has conflicting responsibilities.",
+          "Review and update AC-5 implementation",
+          "Document evidence of compliance for AC-5",
+          "Re-assess AC-5 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AC-7",
+        "controlTitle": "Unsuccessful Logon Attempts",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement account lockout after failed attempts (e.g., 5 attempts in 15 minutes).",
+          "Review and update AC-7 implementation",
+          "Document evidence of compliance for AC-7",
+          "Re-assess AC-7 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AC-11",
+        "controlTitle": "Session Lock",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Configure automatic session lock after 15 minutes of inactivity.",
+          "Review and update AC-11 implementation",
+          "Document evidence of compliance for AC-11",
+          "Re-assess AC-11 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "SI-7",
+        "controlTitle": "Software, Firmware, and Information Integrity",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement file integrity monitoring (FIM) and code signing.",
+          "Review and update SI-7 implementation",
+          "Document evidence of compliance for SI-7",
+          "Re-assess SI-7 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AU-4",
+        "controlTitle": "Audit Storage Capacity",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Configure log rotation and retention policies.",
+          "Review and update AU-4 implementation",
+          "Document evidence of compliance for AU-4",
+          "Re-assess AU-4 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AU-5",
+        "controlTitle": "Response to Audit Processing Failures",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Configure alerts for audit log failures and storage capacity issues.",
+          "Review and update AU-5 implementation",
+          "Document evidence of compliance for AU-5",
+          "Re-assess AU-5 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AU-7",
+        "controlTitle": "Audit Reduction and Report Generation",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement SIEM or log analysis tools for report generation.",
+          "Review and update AU-7 implementation",
+          "Document evidence of compliance for AU-7",
+          "Re-assess AU-7 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AU-8",
+        "controlTitle": "Time Stamps",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Synchronize system clocks using NTP.",
+          "Review and update AU-8 implementation",
+          "Document evidence of compliance for AU-8",
+          "Re-assess AU-8 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "IA-3",
+        "controlTitle": "Device Identification and Authentication",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement device certificates or MAC address filtering.",
+          "Review and update IA-3 implementation",
+          "Document evidence of compliance for IA-3",
+          "Re-assess IA-3 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "IA-4",
+        "controlTitle": "Identifier Management",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Establish identifier assignment and management procedures.",
+          "Review and update IA-4 implementation",
+          "Document evidence of compliance for IA-4",
+          "Re-assess IA-4 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "IA-7",
+        "controlTitle": "Cryptographic Module Authentication",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Use FIPS 140-2 validated cryptographic modules.",
+          "Review and update IA-7 implementation",
+          "Document evidence of compliance for IA-7",
+          "Re-assess IA-7 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-2",
+        "controlTitle": "Baseline Configuration",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Document and version control system configurations.",
+          "Review and update CM-2 implementation",
+          "Document evidence of compliance for CM-2",
+          "Re-assess CM-2 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-3",
+        "controlTitle": "Configuration Change Control",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Establish change management process with approval workflows.",
+          "Review and update CM-3 implementation",
+          "Document evidence of compliance for CM-3",
+          "Re-assess CM-3 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-4",
+        "controlTitle": "Security Impact Analysis",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Perform security impact analysis for all configuration changes.",
+          "Review and update CM-4 implementation",
+          "Document evidence of compliance for CM-4",
+          "Re-assess CM-4 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-5",
+        "controlTitle": "Access Restrictions for Change",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Restrict configuration change access to authorized personnel.",
+          "Review and update CM-5 implementation",
+          "Document evidence of compliance for CM-5",
+          "Re-assess CM-5 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-6",
+        "controlTitle": "Configuration Settings",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Use security configuration guides (e.g., DISA STIGs, CIS Benchmarks).",
+          "Review and update CM-6 implementation",
+          "Document evidence of compliance for CM-6",
+          "Re-assess CM-6 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-7",
+        "controlTitle": "Least Functionality",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Disable unnecessary services and ports.",
+          "Review and update CM-7 implementation",
+          "Document evidence of compliance for CM-7",
+          "Re-assess CM-7 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CM-8",
+        "controlTitle": "Information System Component Inventory",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Maintain asset inventory with automated discovery where possible.",
+          "Review and update CM-8 implementation",
+          "Document evidence of compliance for CM-8",
+          "Re-assess CM-8 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CP-2",
+        "controlTitle": "Contingency Plan",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Document recovery procedures and test regularly.",
+          "Review and update CP-2 implementation",
+          "Document evidence of compliance for CP-2",
+          "Re-assess CP-2 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CP-4",
+        "controlTitle": "Contingency Plan Testing",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Conduct tabletop exercises and full recovery tests.",
+          "Review and update CP-4 implementation",
+          "Document evidence of compliance for CP-4",
+          "Re-assess CP-4 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "RA-2",
+        "controlTitle": "Security Categorization",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Categorize systems according to FIPS 199.",
+          "Review and update RA-2 implementation",
+          "Document evidence of compliance for RA-2",
+          "Re-assess RA-2 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "SC-5",
+        "controlTitle": "Denial of Service Protection",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Implement rate limiting, DDoS protection, and resource quotas.",
+          "Review and update SC-5 implementation",
+          "Document evidence of compliance for SC-5",
+          "Re-assess SC-5 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "SC-13",
+        "controlTitle": "Cryptographic Protection",
+        "status": "not_assessed",
+        "priority": "moderate",
+        "violations": [],
+        "remediationSteps": [
+          "Use approved cryptographic algorithms and key lengths.",
+          "Review and update SC-13 implementation",
+          "Document evidence of compliance for SC-13",
+          "Re-assess SC-13 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "AC-8",
+        "controlTitle": "System Use Notification",
+        "status": "not_assessed",
+        "priority": "low",
+        "violations": [],
+        "remediationSteps": [
+          "Display banner warning about authorized use only.",
+          "Review and update AC-8 implementation",
+          "Document evidence of compliance for AC-8",
+          "Re-assess AC-8 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "IA-6",
+        "controlTitle": "Authenticator Feedback",
+        "status": "not_assessed",
+        "priority": "low",
+        "violations": [],
+        "remediationSteps": [
+          "Mask passwords and sensitive input during authentication.",
+          "Review and update IA-6 implementation",
+          "Document evidence of compliance for IA-6",
+          "Re-assess IA-6 compliance status"
+        ],
+        "estimatedEffort": "low"
+      },
+      {
+        "controlId": "CP-3",
+        "controlTitle": "Contingency Training",
+        "status": "not_assessed",
+        "priority": "low",
+        "violations": [],
+        "remediationSteps": [
+          "Conduct regular training on contingency procedures.",
+          "Review and update CP-3 implementation",
+          "Document evidence of compliance for CP-3",
+          "Re-assess CP-3 compliance status"
+        ],
+        "estimatedEffort": "low"
+      }
+    ],
+    "milestones": [],
+    "createdAt": "2025-11-12T00:18:10.555Z",
+    "updatedAt": "2025-11-12T00:18:10.555Z"
+  }
+]

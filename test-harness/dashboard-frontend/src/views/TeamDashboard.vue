@@ -229,8 +229,9 @@ const teamName = computed(() => {
 });
 
 const breadcrumbItems = computed(() => [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-  { label: teamName.value, icon: LayoutDashboard }
+  { label: 'Home', to: '/' },
+  { label: 'Dashboard', to: '/dashboard' },
+  { label: teamName.value }
 ]);
 
 const loading = ref(true);

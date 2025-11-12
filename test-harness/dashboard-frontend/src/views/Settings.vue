@@ -536,7 +536,8 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
-  { label: 'Settings', icon: Settings }
+  { label: 'Home', to: '/' },
+  { label: 'Settings' }
 ];
 
 const activeTab = ref<'general' | 'notifications' | 'security'>('general');

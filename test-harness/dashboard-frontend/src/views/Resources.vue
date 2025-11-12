@@ -130,7 +130,8 @@ import ResourceModal from '../components/ResourceModal.vue';
 import ResourceDetailModal from '../components/ResourceDetailModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Resources', icon: Database }
+  { label: 'Home', to: '/' },
+  { label: 'Resources' }
 ];
 
 const searchQuery = ref('');

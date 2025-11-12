@@ -227,7 +227,8 @@ import type {
 } from '../types/api-security';
 
 const breadcrumbItems = [
-  { label: 'API Security', icon: Shield }
+  { label: 'Home', to: '/' },
+  { label: 'API Security' }
 ];
 
 const API_BASE_URL = '/api';

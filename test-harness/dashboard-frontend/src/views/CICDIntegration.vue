@@ -382,7 +382,9 @@ import CICDConfigModal from '../components/CICDConfigModal.vue';
 import RunDetailsModal from '../components/RunDetailsModal.vue';
 
 const breadcrumbItems = [
-  { label: 'CI/CD Integration', icon: Settings }
+  { label: 'Home', to: '/' },
+  { label: 'Admin', to: '/admin' },
+  { label: 'CI/CD Integration' }
 ];
 
 const activeTab = ref('github');

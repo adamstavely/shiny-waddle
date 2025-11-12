@@ -10,10 +10,16 @@ import { ApiSecurityModule } from './api-security/api-security.module';
 import { ReportsModule } from './reports/reports.module';
 import { DistributedSystemsModule } from './distributed-systems/distributed-systems.module';
 import { CICDModule } from './cicd/cicd.module';
+import { TicketingModule } from './ticketing/ticketing.module';
+import { SLAModule } from './sla/sla.module';
+import { RemediationModule } from './remediation/remediation.module';
+import { RemediationTrackingModule } from './remediation-tracking/remediation-tracking.module';
+import { ComplianceModule } from './compliance/compliance.module';
+import { UnifiedFindingsModule } from './unified-findings/unified-findings.module';
 import { AppController } from './app.controller';
 
 @Module({
-  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule],
+  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule],
   controllers: [AppController],
 })
 export class AppModule {}

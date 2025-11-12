@@ -39,45 +39,66 @@ import {
   TestTube, 
   BarChart3, 
   AlertTriangle,
-  History,
   Settings,
   Globe,
   Database,
   Cloud,
   Lock,
   Plug,
-  GitBranch
+  GitBranch,
+  Users,
+  Folder,
+  FileCheck,
+  CheckCircle2
 } from 'lucide-vue-next';
 
 const route = useRoute();
 const currentPath = ref(route.path);
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
-  { path: '/reports', label: 'Reports', icon: FileText, divider: false },
-  { path: '/policies', label: 'Policies', icon: Shield, divider: false },
-  { path: '/configuration-validation', label: 'Config Validation', icon: Shield, divider: true },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3, divider: false },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, divider: false },
   { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
-  { path: '/history', label: 'History', icon: History, divider: false },
-  { path: '/api-security', label: 'API Security', icon: Lock, divider: false },
-  { path: '/pipelines', label: 'Data Pipelines', icon: Database, divider: false },
-  { path: '/distributed-systems', label: 'Distributed Systems', icon: Globe, divider: false },
-  { path: '/environments', label: 'Environments', icon: Cloud, divider: false },
-  { path: '/integrations', label: 'Integrations', icon: Plug, divider: false },
-  { path: '/ci-cd', label: 'CI/CD', icon: GitBranch, divider: true },
-  { path: '/admin', label: 'Admin', icon: Settings, divider: false },
+  { path: '/reports', label: 'Reports', icon: FileText, divider: false },
+  { path: '/compliance', label: 'Compliance', icon: CheckCircle2, divider: true },
+  { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
+  { path: '/app-security', label: 'App Security', icon: Lock, divider: false },
+  { path: '/platform-config', label: 'Platform Config', icon: Settings, divider: false },
+  { path: '/data-security', label: 'Data Security', icon: Database, divider: false },
 ];
 
 const isActive = (path: string): boolean => {
   if (path === '/dashboard') {
     return currentPath.value === '/dashboard';
   }
+  if (path === '/compliance') {
+    return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/');
+  }
+  if (path === '/access-control') {
+    return currentPath.value === '/policies' || currentPath.value === '/resources' || 
+           currentPath.value.startsWith('/policies/') || currentPath.value.startsWith('/resources/');
+  }
+  if (path === '/platform-config') {
+    return currentPath.value === '/configuration-validation' || currentPath.value === '/distributed-systems' ||
+           currentPath.value.startsWith('/configuration-validation/') || currentPath.value.startsWith('/distributed-systems/');
+  }
+  if (path === '/app-security') {
+    return currentPath.value === '/api-security' || currentPath.value === '/users' ||
+           currentPath.value.startsWith('/api-security/') || currentPath.value.startsWith('/users/');
+  }
+  if (path === '/data-security') {
+    return currentPath.value === '/datasets' || currentPath.value === '/contracts' ||
+           currentPath.value.startsWith('/datasets/') || currentPath.value.startsWith('/contracts/');
+  }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };
 
 const handleNavClick = (path: string) => {
+  // For category items, open the drawer with that category's content
+  if (['/access-control', '/platform-config', '/app-security', '/data-security'].includes(path)) {
+    // Emit event to open drawer with specific category
+    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
+    return;
+  }
   // Router will handle navigation
   window.location.href = path;
 };

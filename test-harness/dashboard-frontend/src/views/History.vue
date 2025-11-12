@@ -249,7 +249,9 @@ import type {
 } from '../types/history';
 
 const breadcrumbItems = [
-  { label: 'History', icon: History }
+  { label: 'Home', to: '/' },
+  { label: 'Admin', to: '/admin' },
+  { label: 'History' }
 ];
 
 const API_BASE_URL = 'http://localhost:3000/api';

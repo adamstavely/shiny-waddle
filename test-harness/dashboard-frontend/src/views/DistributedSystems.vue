@@ -295,7 +295,8 @@ import DistributedTestModal from '../components/DistributedTestModal.vue';
 import TestResultModal from '../components/TestResultModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Distributed Systems', icon: Globe }
+  { label: 'Home', to: '/' },
+  { label: 'Distributed Systems' }
 ];
 
 const activeTab = ref('results');

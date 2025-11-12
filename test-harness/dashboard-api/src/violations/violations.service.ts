@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { CreateViolationDto, ViolationStatus } from './dto/create-violation.dto';
 import { UpdateViolationDto } from './dto/update-violation.dto';
 import { ViolationEntity, ViolationComment, RemediationEvent } from './entities/violation.entity';
@@ -98,6 +98,9 @@ export class ViolationsService {
 
     this.violations.push(violation);
     await this.saveViolations();
+
+    // Trigger automated remediation (if remediation service is available)
+    // This will be handled via event or direct call if module is imported
 
     return violation;
   }

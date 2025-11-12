@@ -386,7 +386,9 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import { Teleport, Transition } from 'vue';
 
 const breadcrumbItems = [
-  { label: 'Integrations', icon: Plug }
+  { label: 'Home', to: '/' },
+  { label: 'Admin', to: '/admin' },
+  { label: 'Integrations' }
 ];
 
 interface Integration {

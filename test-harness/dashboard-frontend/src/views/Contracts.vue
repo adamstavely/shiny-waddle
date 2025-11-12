@@ -158,7 +158,8 @@ import ContractDetailModal from '../components/ContractDetailModal.vue';
 import ContractVersionsModal from '../components/ContractVersionsModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Contracts', icon: FileText }
+  { label: 'Home', to: '/' },
+  { label: 'Contracts' }
 ];
 
 const searchQuery = ref('');

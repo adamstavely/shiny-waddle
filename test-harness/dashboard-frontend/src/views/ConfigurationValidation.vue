@@ -133,7 +133,8 @@ import ValidationRulesModal from '../components/ValidationRulesModal.vue';
 import ValidationResultsModal from '../components/ValidationResultsModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Configuration Validation', icon: Shield }
+  { label: 'Home', to: '/' },
+  { label: 'Configuration Validation' }
 ];
 
 const loading = ref(false);

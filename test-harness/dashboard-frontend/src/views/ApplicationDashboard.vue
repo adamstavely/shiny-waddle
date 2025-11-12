@@ -217,8 +217,9 @@ const applicationName = computed(() => {
 });
 
 const breadcrumbItems = computed(() => [
-  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-  { label: applicationName.value, icon: LayoutDashboard }
+  { label: 'Home', to: '/' },
+  { label: 'Dashboard', to: '/dashboard' },
+  { label: applicationName.value }
 ]);
 
 const loading = ref(true);

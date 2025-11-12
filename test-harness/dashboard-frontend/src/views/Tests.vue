@@ -324,7 +324,8 @@ import TestSuiteBuilderModal from '../components/TestSuiteBuilderModal.vue';
 import TestResultDetailModal from '../components/TestResultDetailModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Tests', icon: TestTube }
+  { label: 'Home', to: '/' },
+  { label: 'Tests' }
 ];
 
 const router = useRouter();

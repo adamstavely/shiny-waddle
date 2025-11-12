@@ -258,7 +258,8 @@ import CorrelationChart from '../components/charts/CorrelationChart.vue';
 import ResourceUsageChart from '../components/charts/ResourceUsageChart.vue';
 
 const breadcrumbItems = [
-  { label: 'Analytics', icon: BarChart3 }
+  { label: 'Home', to: '/' },
+  { label: 'Analytics' }
 ];
 
 const loading = ref(true);

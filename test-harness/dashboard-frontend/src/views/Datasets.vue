@@ -215,7 +215,8 @@ import DatasetModal from '../components/DatasetModal.vue';
 import DatasetDetailModal from '../components/DatasetDetailModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Datasets', icon: Database }
+  { label: 'Home', to: '/' },
+  { label: 'Datasets' }
 ];
 
 const activeTab = ref<'datasets' | 'health'>('datasets');

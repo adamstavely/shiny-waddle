@@ -3,8 +3,9 @@
     <TopNav />
     <div class="app-layout">
       <Sidebar class="desktop-sidebar" />
+      <Drawer class="desktop-drawer" />
       <MobileDrawer :is-open="drawerOpen" @close="closeDrawer" @navigate="handleNavigate" />
-      <div class="content-wrapper">
+      <div class="content-wrapper" :class="{ 'drawer-open': drawerIsOpen }">
         <Banner
           v-for="banner in activeBanners"
           :key="banner.id"
@@ -21,11 +22,36 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import TopNav from './components/TopNav.vue';
 import Sidebar from './components/Sidebar.vue';
+import Drawer from './components/Drawer.vue';
 import MobileDrawer from './components/MobileDrawer.vue';
 import Banner, { type Banner as BannerType } from './components/Banner.vue';
 
 const drawerOpen = ref(false);
-const dismissedBanners = ref<Set<string>>(new Set());
+const drawerIsOpen = ref(false);
+
+// Load dismissed banners from localStorage
+const loadDismissedBanners = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem('dismissedBanners');
+    if (stored) {
+      return new Set(JSON.parse(stored));
+    }
+  } catch (e) {
+    console.error('Failed to load dismissed banners from localStorage', e);
+  }
+  return new Set<string>();
+};
+
+const dismissedBanners = ref<Set<string>>(loadDismissedBanners());
+
+// Save dismissed banners to localStorage
+const saveDismissedBanners = (bannerIds: Set<string>) => {
+  try {
+    localStorage.setItem('dismissedBanners', JSON.stringify(Array.from(bannerIds)));
+  } catch (e) {
+    console.error('Failed to save dismissed banners to localStorage', e);
+  }
+};
 
 // Mock banners - in real app, this would come from API/Admin
 const banners = ref<BannerType[]>([
@@ -59,6 +85,7 @@ const activeBanners = computed(() => {
 
 const handleBannerDismiss = (bannerId: string) => {
   dismissedBanners.value.add(bannerId);
+  saveDismissedBanners(dismissedBanners.value);
 };
 
 const closeDrawer = () => {
@@ -74,13 +101,20 @@ const handleToggleDrawer = (event: CustomEvent) => {
   drawerOpen.value = event.detail.open;
 };
 
+const handleDrawerStateChange = (event: CustomEvent) => {
+  drawerIsOpen.value = event.detail.isOpen;
+};
+
 onMounted(() => {
-  // Listen for drawer toggle
+  // Listen for drawer toggle (mobile)
   window.addEventListener('toggle-drawer', handleToggleDrawer as EventListener);
+  // Listen for drawer state changes (desktop)
+  window.addEventListener('drawer-state-change', handleDrawerStateChange as EventListener);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('toggle-drawer', handleToggleDrawer as EventListener);
+  window.removeEventListener('drawer-state-change', handleDrawerStateChange as EventListener);
 });
 </script>
 
@@ -103,13 +137,37 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+.desktop-drawer {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .desktop-sidebar {
     display: block;
   }
   
+  .desktop-drawer {
+    display: block;
+  }
+  
   .content-wrapper {
-    margin-left: 80px;
+    margin-left: 80px; /* Only sidebar width, drawer is collapsible */
+    transition: margin-left 0.3s ease;
+  }
+  
+  .content-wrapper.drawer-open {
+    margin-left: 340px !important; /* 80px sidebar + 240px drawer + 20px gap */
+  }
+  
+  /* When drawer is collapsed, ensure toggle button is still visible */
+  .desktop-drawer.drawer-collapsed {
+    width: 0;
+    overflow: visible;
+  }
+  
+  .desktop-drawer.drawer-collapsed .drawer-toggle {
+    position: fixed;
+    left: 88px; /* 80px sidebar + 8px offset */
   }
 }
 

@@ -7,6 +7,18 @@
 
 import { User, Resource } from '../core/types';
 import { TestResult } from '../core/types';
+import { AuthenticationTestSuite } from './test-suites/authentication-test-suite';
+import { AuthorizationTestSuite } from './test-suites/authorization-test-suite';
+import { InjectionTestSuite } from './test-suites/injection-test-suite';
+import { RateLimitingTestSuite } from './test-suites/rate-limiting-test-suite';
+import { SecurityHeadersTestSuite } from './test-suites/security-headers-test-suite';
+import { GraphQLTestSuite } from './test-suites/graphql-test-suite';
+import { SensitiveDataTestSuite } from './test-suites/sensitive-data-test-suite';
+import { CryptographyTestSuite } from './test-suites/cryptography-test-suite';
+import { APIDesignTestSuite } from './test-suites/api-design-test-suite';
+import { BusinessLogicTestSuite } from './test-suites/business-logic-test-suite';
+import { ThirdPartyIntegrationTestSuite } from './test-suites/third-party-integration-test-suite';
+import { LoggingTestSuite } from './test-suites/logging-test-suite';
 
 export interface APISecurityTestConfig {
   baseUrl: string;
@@ -713,6 +725,184 @@ export class APISecurityTester {
     }
 
     return true;
+  }
+
+  /**
+   * Run a specific test suite
+   */
+  async runTestSuite(
+    suiteName: string,
+    endpoint: string,
+    method: string = 'GET',
+    test?: Partial<APISecurityTest>
+  ): Promise<APISecurityTestResult[]> {
+    let suite: any;
+
+    switch (suiteName.toLowerCase()) {
+      case 'authentication':
+        suite = new AuthenticationTestSuite(this.config);
+        break;
+      case 'authorization':
+        suite = new AuthorizationTestSuite(this.config);
+        break;
+      case 'injection':
+        suite = new InjectionTestSuite(this.config);
+        break;
+      case 'rate-limiting':
+      case 'ratelimiting':
+        suite = new RateLimitingTestSuite(this.config);
+        break;
+      case 'security-headers':
+      case 'securityheaders':
+        suite = new SecurityHeadersTestSuite(this.config);
+        break;
+      case 'graphql':
+        suite = new GraphQLTestSuite(this.config);
+        break;
+      case 'sensitive-data':
+      case 'sensitivedata':
+        suite = new SensitiveDataTestSuite(this.config);
+        break;
+      case 'cryptography':
+        suite = new CryptographyTestSuite(this.config);
+        break;
+      case 'api-design':
+      case 'apidesign':
+        suite = new APIDesignTestSuite(this.config);
+        break;
+      case 'business-logic':
+      case 'businesslogic':
+        suite = new BusinessLogicTestSuite(this.config);
+        break;
+      case 'third-party':
+      case 'thirdparty':
+        suite = new ThirdPartyIntegrationTestSuite(this.config);
+        break;
+      case 'logging':
+        suite = new LoggingTestSuite(this.config);
+        break;
+      default:
+        throw new Error(`Unknown test suite: ${suiteName}`);
+    }
+
+    return suite.runAllTests(endpoint, method, test);
+  }
+
+  /**
+   * Run full security scan (all test suites)
+   */
+  async runFullSecurityScan(
+    endpoint: string,
+    method: string = 'GET',
+    test?: Partial<APISecurityTest>
+  ): Promise<APISecurityTestResult[]> {
+    const allResults: APISecurityTestResult[] = [];
+
+    const suites = [
+      'authentication',
+      'authorization',
+      'injection',
+      'rate-limiting',
+      'security-headers',
+      'graphql',
+      'sensitive-data',
+      'cryptography',
+      'api-design',
+      'business-logic',
+      'third-party',
+      'logging',
+    ];
+
+    for (const suiteName of suites) {
+      try {
+        const results = await this.runTestSuite(suiteName, endpoint, method, test);
+        allResults.push(...results);
+      } catch (error: any) {
+        // Create error result
+        const errorResult: APISecurityTestResult = {
+          testName: `${suiteName} Suite Error`,
+          endpoint,
+          method,
+          testType: 'api-security',
+          passed: false,
+          timestamp: new Date(),
+          error: error.message,
+          details: { suite: suiteName, error: error.message },
+        };
+        allResults.push(errorResult);
+      }
+    }
+
+    return allResults;
+  }
+
+  /**
+   * Run tests by category
+   */
+  async runTestByCategory(
+    category: string,
+    endpoint: string,
+    method: string = 'GET',
+    test?: Partial<APISecurityTest>
+  ): Promise<APISecurityTestResult[]> {
+    const categoryMap: Record<string, string[]> = {
+      'authentication': ['authentication'],
+      'authorization': ['authorization'],
+      'injection': ['injection'],
+      'rate-limiting': ['rate-limiting'],
+      'headers': ['security-headers'],
+      'graphql': ['graphql'],
+      'data-exposure': ['sensitive-data'],
+      'cryptography': ['cryptography'],
+      'design': ['api-design'],
+      'business-logic': ['business-logic'],
+      'integration': ['third-party'],
+      'logging': ['logging'],
+    };
+
+    const suites = categoryMap[category.toLowerCase()] || [];
+    const allResults: APISecurityTestResult[] = [];
+
+    for (const suiteName of suites) {
+      try {
+        const results = await this.runTestSuite(suiteName, endpoint, method, test);
+        allResults.push(...results);
+      } catch (error: any) {
+        const errorResult: APISecurityTestResult = {
+          testName: `${suiteName} Suite Error`,
+          endpoint,
+          method,
+          testType: 'api-security',
+          passed: false,
+          timestamp: new Date(),
+          error: error.message,
+          details: { suite: suiteName, error: error.message },
+        };
+        allResults.push(errorResult);
+      }
+    }
+
+    return allResults;
+  }
+
+  /**
+   * Get available test suites
+   */
+  getAvailableTestSuites(): string[] {
+    return [
+      'authentication',
+      'authorization',
+      'injection',
+      'rate-limiting',
+      'security-headers',
+      'graphql',
+      'sensitive-data',
+      'cryptography',
+      'api-design',
+      'business-logic',
+      'third-party',
+      'logging',
+    ];
   }
 }
 

@@ -328,7 +328,8 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import TestResultDetailModal from '../components/TestResultDetailModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Data Pipelines', icon: Database }
+  { label: 'Home', to: '/' },
+  { label: 'Data Pipelines' }
 ];
 
 const activeTab = ref<'results' | 'configurations'>('results');

@@ -401,13 +401,16 @@ import {
   FileText,
   Trash2,
   Play,
-  AlertTriangle
+  AlertTriangle,
+  Settings
 } from 'lucide-vue-next';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 
 const breadcrumbItems = [
-  { label: 'Ephemeral Environments', icon: Server }
+  { label: 'Home', to: '/' },
+  { label: 'Admin', to: '/admin' },
+  { label: 'Ephemeral Environments' }
 ];
 
 const searchQuery = ref('');

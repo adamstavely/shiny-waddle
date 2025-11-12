@@ -274,7 +274,8 @@ import GenerateUsersModal from '../components/GenerateUsersModal.vue';
 import UserDetailModal from '../components/UserDetailModal.vue';
 
 const breadcrumbItems = [
-  { label: 'User Simulation', icon: User }
+  { label: 'Home', to: '/' },
+  { label: 'User Simulation' }
 ];
 
 const activeTab = ref<'roles' | 'attributes' | 'users'>('roles');

@@ -185,6 +185,120 @@
           </button>
         </div>
       </div>
+
+      <!-- Integration Management -->
+      <div class="section-card">
+        <div class="section-header-inline">
+          <h2 class="section-title">Integrations & CI/CD</h2>
+          <p class="section-description">Manage external integrations and CI/CD pipeline configurations</p>
+        </div>
+        <div class="integration-cards-grid">
+          <router-link to="/admin/ci-cd" class="integration-card">
+            <div class="integration-card-header">
+              <GitBranch class="integration-icon" />
+              <h3 class="integration-title">CI/CD Integration</h3>
+            </div>
+            <p class="integration-description">
+              Configure and monitor compliance testing in GitHub Actions and Jenkins pipelines
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">Configure →</span>
+            </div>
+          </router-link>
+
+          <router-link to="/admin/integrations" class="integration-card">
+            <div class="integration-card-header">
+              <Plug class="integration-icon" />
+              <h3 class="integration-title">External Integrations</h3>
+            </div>
+            <p class="integration-description">
+              Connect and manage SAST, DAST, DBT, and Great Expectations integrations
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">Manage →</span>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- History & Audit -->
+      <div class="section-card">
+        <div class="section-header-inline">
+          <h2 class="section-title">History & Audit</h2>
+          <p class="section-description">View test execution history, audit logs, and activity feed</p>
+        </div>
+        <div class="integration-cards-grid">
+          <router-link to="/admin/history" class="integration-card">
+            <div class="integration-card-header">
+              <Clock class="integration-icon" />
+              <h3 class="integration-title">History</h3>
+            </div>
+            <p class="integration-description">
+              View test execution history, audit logs, and system activity feed with comprehensive filtering
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">View History →</span>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Environments -->
+      <div class="section-card">
+        <div class="section-header-inline">
+          <h2 class="section-title">Environments</h2>
+          <p class="section-description">Manage ephemeral environments for testing and validation</p>
+        </div>
+        <div class="integration-cards-grid">
+          <router-link to="/admin/environments" class="integration-card">
+            <div class="integration-card-header">
+              <Cloud class="integration-icon" />
+              <h3 class="integration-title">Ephemeral Environments</h3>
+            </div>
+            <p class="integration-description">
+              Create, monitor, and manage ephemeral environments for PR testing and validation
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">Manage →</span>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Remediation & Workflows -->
+      <div class="section-card">
+        <div class="section-header-inline">
+          <h2 class="section-title">Remediation & Workflows</h2>
+          <p class="section-description">Configure ticketing integrations, SLA policies, and automated remediation</p>
+        </div>
+        <div class="integration-cards-grid">
+          <router-link to="/admin/ticketing" class="integration-card">
+            <div class="integration-card-header">
+              <Ticket class="integration-icon" />
+              <h3 class="integration-title">Ticketing Integrations</h3>
+            </div>
+            <p class="integration-description">
+              Connect Jira, ServiceNow, or GitHub to automatically create tickets for violations
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">Configure →</span>
+            </div>
+          </router-link>
+
+          <router-link to="/admin/sla" class="integration-card">
+            <div class="integration-card-header">
+              <Clock class="integration-icon" />
+              <h3 class="integration-title">SLA Management</h3>
+            </div>
+            <p class="integration-description">
+              Define service level agreements and escalation workflows for violation remediation
+            </p>
+            <div class="integration-footer">
+              <span class="integration-link">Manage →</span>
+            </div>
+          </router-link>
+        </div>
+      </div>
     </div>
 
     <!-- Banner Management Tab -->
@@ -684,7 +798,11 @@ import {
   Info,
   AlertTriangle,
   CheckCircle2,
-  Megaphone
+  Megaphone,
+  GitBranch,
+  Plug,
+  Cloud,
+  Ticket
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
@@ -708,7 +826,8 @@ const selectedValidator = ref<any>(null);
 const editingValidator = ref<any>(null);
 
 const breadcrumbItems = [
-  { label: 'Admin', icon: Settings }
+  { label: 'Home', to: '/' },
+  { label: 'Admin' }
 ];
 
 const tabs = [
@@ -2159,6 +2278,80 @@ const closeModal = () => {
   color: #fc8181;
   font-size: 1.1rem;
   margin-bottom: 16px;
+}
+
+.integration-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.integration-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.integration-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(79, 172, 254, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.integration-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.integration-icon {
+  width: 32px;
+  height: 32px;
+  color: #4facfe;
+  flex-shrink: 0;
+}
+
+.integration-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.integration-description {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.integration-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.integration-link {
+  color: #4facfe;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.integration-card:hover .integration-link {
+  color: #00f2fe;
 }
 
 .btn-retry {

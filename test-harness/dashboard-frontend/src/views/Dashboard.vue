@@ -151,7 +151,8 @@ import ValidatorMetrics from '../components/ValidatorMetrics.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 
 const breadcrumbItems = [
-  { label: 'Dashboard', icon: LayoutDashboard }
+  { label: 'Home', to: '/' },
+  { label: 'Dashboard' }
 ];
 
 interface DashboardData {

@@ -186,7 +186,8 @@ import ViolationDetailModal from '../components/ViolationDetailModal.vue';
 import type { ViolationEntity } from '../types/violation';
 
 const breadcrumbItems = [
-  { label: 'Violations', icon: AlertTriangle }
+  { label: 'Home', to: '/' },
+  { label: 'Violations' }
 ];
 
 const API_BASE_URL = 'http://localhost:3000/api';

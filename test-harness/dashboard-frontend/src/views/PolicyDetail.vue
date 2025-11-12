@@ -554,8 +554,9 @@ const policy = ref<any>(null);
 const validators = ref<any[]>([]);
 
 const breadcrumbItems = computed(() => [
-  { label: 'Policies', to: '/policies', icon: Shield },
-  { label: policy.value?.name || 'Policy', icon: Shield }
+  { label: 'Home', to: '/' },
+  { label: 'Policies', to: '/policies' },
+  { label: policy.value?.name || 'Policy' }
 ]);
 
 const validatorsUsingPolicy = computed(() => {

@@ -12,11 +12,9 @@
           :to="item.to"
           class="breadcrumb-link"
         >
-          <component v-if="item.icon" :is="item.icon" class="breadcrumb-icon" />
           <span>{{ item.label }}</span>
         </router-link>
         <span v-else class="breadcrumb-current">
-          <component v-if="item.icon" :is="item.icon" class="breadcrumb-icon" />
           <span>{{ item.label }}</span>
         </span>
         <ChevronRight
@@ -34,7 +32,6 @@ import { ChevronRight } from 'lucide-vue-next';
 export interface BreadcrumbItem {
   label: string;
   to?: string;
-  icon?: any;
 }
 
 defineProps<{
@@ -44,6 +41,7 @@ defineProps<{
 
 <style scoped>
 .breadcrumb {
+  margin-top: 16px;
   margin-bottom: 24px;
 }
 
@@ -65,9 +63,6 @@ defineProps<{
 }
 
 .breadcrumb-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   color: #4facfe;
   text-decoration: none;
   transition: color 0.2s;
@@ -80,17 +75,8 @@ defineProps<{
 }
 
 .breadcrumb-current {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   color: #a0aec0;
   font-weight: 500;
-}
-
-.breadcrumb-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
 }
 
 .breadcrumb-separator {

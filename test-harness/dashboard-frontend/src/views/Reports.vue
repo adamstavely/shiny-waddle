@@ -272,7 +272,8 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import GenerateReportModal from '../components/GenerateReportModal.vue';
 
 const breadcrumbItems = [
-  { label: 'Reports', icon: FileText }
+  { label: 'Home', to: '/' },
+  { label: 'Reports' }
 ];
 
 const searchQuery = ref('');

@@ -596,8 +596,9 @@ const router = useRouter();
 const route = useRoute();
 
 const breadcrumbItems = [
-  { label: 'Tests', icon: TestTube },
-  { label: 'Builder', icon: Settings }
+  { label: 'Home', to: '/' },
+  { label: 'Tests', to: '/tests' },
+  { label: 'Builder' }
 ];
 
 const currentStep = ref(0);

@@ -164,8 +164,34 @@
               </div>
             </div>
 
+            <!-- Tickets -->
+            <div class="detail-section" v-if="tickets.length > 0">
+              <h3 class="section-title">Related Tickets</h3>
+              <div class="tickets-list">
+                <a
+                  v-for="ticket in tickets"
+                  :key="ticket.id"
+                  :href="ticket.externalUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="ticket-link"
+                >
+                  <Ticket class="ticket-icon" />
+                  <div class="ticket-info">
+                    <span class="ticket-id">{{ ticket.externalId }}</span>
+                    <span class="ticket-status" :class="`status-${ticket.status}`">{{ formatTicketStatus(ticket.status) }}</span>
+                  </div>
+                  <ExternalLink class="external-icon" />
+                </a>
+              </div>
+            </div>
+
             <!-- Actions -->
             <div class="modal-actions">
+              <button @click="createTicket" class="action-btn ticket-btn" :disabled="creatingTicket || !hasEnabledIntegration">
+                <Ticket class="action-icon" />
+                {{ creatingTicket ? 'Creating...' : 'Create Ticket' }}
+              </button>
               <button @click="assignViolation" class="action-btn assign-btn">
                 <User class="action-icon" />
                 {{ violation.assignedTo ? 'Reassign' : 'Assign' }}
@@ -187,9 +213,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { AlertTriangle, X, User, CheckCircle2 } from 'lucide-vue-next';
+import { ref, watch, onMounted } from 'vue';
+import { AlertTriangle, X, User, CheckCircle2, Ticket, ExternalLink } from 'lucide-vue-next';
 import type { ViolationEntity } from '../types/violation';
+import type { Ticket as TicketType, TicketingIntegration } from '../types/ticketing';
 
 interface Props {
   show: boolean;
@@ -205,6 +232,10 @@ const emit = defineEmits<{
 
 const newComment = ref('');
 const currentUser = ref('current-user@example.com'); // TODO: Get from auth context
+const tickets = ref<TicketType[]>([]);
+const integrations = ref<TicketingIntegration[]>([]);
+const creatingTicket = ref(false);
+const hasEnabledIntegration = ref(false);
 
 const formatType = (type: string): string => {
   return type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -360,9 +391,126 @@ const viewRelatedViolation = (id: string) => {
   emit('viewRelated', id);
 };
 
+const loadTickets = async () => {
+  if (!props.violation) return;
+  
+  try {
+    const response = await fetch(`/api/ticketing/tickets?violationId=${props.violation.id}`);
+    if (response.ok) {
+      tickets.value = await response.json();
+    }
+  } catch (error) {
+    console.error('Error loading tickets:', error);
+  }
+};
+
+const loadIntegrations = async () => {
+  try {
+    const response = await fetch('/api/ticketing/integrations');
+    if (response.ok) {
+      integrations.value = await response.json();
+      hasEnabledIntegration.value = integrations.value.some(i => i.enabled);
+    }
+  } catch (error) {
+    console.error('Error loading integrations:', error);
+  }
+};
+
+const createTicket = async () => {
+  if (!props.violation || !hasEnabledIntegration.value) return;
+  
+  const enabledIntegration = integrations.value.find(i => i.enabled);
+  if (!enabledIntegration) {
+    alert('No enabled ticketing integration found. Please configure one in Admin > Ticketing Integrations.');
+    return;
+  }
+
+  creatingTicket.value = true;
+  try {
+    const priority = mapSeverityToPriority(props.violation.severity);
+    const description = buildTicketDescription(props.violation);
+
+    const response = await fetch(`/api/ticketing/integrations/${enabledIntegration.id}/tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        violationId: props.violation.id,
+        title: props.violation.title,
+        description,
+        priority,
+        assignee: props.violation.assignedTo,
+      }),
+    });
+
+    if (response.ok) {
+      const ticket = await response.json();
+      tickets.value.push(ticket);
+      alert(`Ticket created: ${ticket.externalId}`);
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Failed to create ticket');
+    }
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    alert('Failed to create ticket');
+  } finally {
+    creatingTicket.value = false;
+  }
+};
+
+const mapSeverityToPriority = (severity: string): string => {
+  const mapping: Record<string, string> = {
+    critical: 'highest',
+    high: 'high',
+    medium: 'medium',
+    low: 'low',
+  };
+  return mapping[severity] || 'medium';
+};
+
+const buildTicketDescription = (violation: ViolationEntity): string => {
+  let description = violation.description || '';
+
+  if (violation.policyName) {
+    description += `\n\nPolicy: ${violation.policyName}`;
+  }
+
+  if (violation.remediationSuggestions && violation.remediationSuggestions.length > 0) {
+    description += '\n\nRemediation Suggestions:';
+    violation.remediationSuggestions.forEach((suggestion, index) => {
+      description += `\n${index + 1}. ${suggestion}`;
+    });
+  }
+
+  if (violation.resource) {
+    description += `\n\nAffected Resource: ${violation.resource}`;
+  }
+
+  return description;
+};
+
+const formatTicketStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    open: 'Open',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+    closed: 'Closed',
+  };
+  return statusMap[status] || status;
+};
+
 watch(() => props.show, (newVal) => {
   if (newVal) {
     newComment.value = '';
+    loadTickets();
+    loadIntegrations();
+  }
+});
+
+onMounted(() => {
+  if (props.show) {
+    loadTickets();
+    loadIntegrations();
   }
 });
 </script>
@@ -833,6 +981,99 @@ watch(() => props.show, (newVal) => {
 .action-icon {
   width: 18px;
   height: 18px;
+}
+
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(79, 172, 254, 0.05);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.ticket-link:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.ticket-icon {
+  width: 20px;
+  height: 20px;
+  color: #4facfe;
+  flex-shrink: 0;
+}
+
+.ticket-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ticket-id {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.ticket-status {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.status-open {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.status-in_progress {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+.status-resolved {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.status-closed {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.external-icon {
+  width: 16px;
+  height: 16px;
+  color: #718096;
+  flex-shrink: 0;
+}
+
+.ticket-btn {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+.ticket-btn:hover:not(:disabled) {
+  background: rgba(79, 172, 254, 0.2);
+}
+
+.ticket-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .fade-enter-active,

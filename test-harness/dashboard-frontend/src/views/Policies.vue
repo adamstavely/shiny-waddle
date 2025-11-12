@@ -450,7 +450,8 @@ import axios from 'axios';
 const router = useRouter();
 
 const breadcrumbItems = [
-  { label: 'Policies', icon: Shield }
+  { label: 'Home', to: '/' },
+  { label: 'Policies' }
 ];
 
 const activeTab = ref<'all' | 'rbac' | 'abac'>('all');

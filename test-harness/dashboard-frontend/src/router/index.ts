@@ -20,6 +20,14 @@ import ApiSecurity from '../views/ApiSecurity.vue';
 import Settings from '../views/Settings.vue';
 import Integrations from '../views/Integrations.vue';
 import CICDIntegration from '../views/CICDIntegration.vue';
+import UserSimulation from '../views/UserSimulation.vue';
+import Resources from '../views/Resources.vue';
+import Contracts from '../views/Contracts.vue';
+import Datasets from '../views/Datasets.vue';
+import TicketingIntegrations from '../views/TicketingIntegrations.vue';
+import SLAManagement from '../views/SLAManagement.vue';
+import Compliance from '../views/Compliance.vue';
+import UnifiedFindings from '../views/UnifiedFindings.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -85,7 +93,12 @@ const router = createRouter({
       component: Violations,
     },
     {
-      path: '/history',
+      path: '/findings',
+      name: 'UnifiedFindings',
+      component: UnifiedFindings,
+    },
+    {
+      path: '/admin/history',
       name: 'History',
       component: History,
     },
@@ -110,9 +123,19 @@ const router = createRouter({
       component: DataPipelines,
     },
     {
-      path: '/environments',
+      path: '/admin/environments',
       name: 'EphemeralEnvironments',
       component: EphemeralEnvironments,
+    },
+    {
+      path: '/admin/ticketing',
+      name: 'TicketingIntegrations',
+      component: TicketingIntegrations,
+    },
+    {
+      path: '/admin/sla',
+      name: 'SLAManagement',
+      component: SLAManagement,
     },
     {
       path: '/api-security',
@@ -125,14 +148,39 @@ const router = createRouter({
       component: Settings,
     },
     {
-      path: '/integrations',
+      path: '/admin/integrations',
       name: 'Integrations',
       component: Integrations,
     },
     {
-      path: '/ci-cd',
+      path: '/admin/ci-cd',
       name: 'CICDIntegration',
       component: CICDIntegration,
+    },
+    {
+      path: '/users',
+      name: 'UserSimulation',
+      component: UserSimulation,
+    },
+    {
+      path: '/resources',
+      name: 'Resources',
+      component: Resources,
+    },
+    {
+      path: '/contracts',
+      name: 'Contracts',
+      component: Contracts,
+    },
+    {
+      path: '/datasets',
+      name: 'Datasets',
+      component: Datasets,
+    },
+    {
+      path: '/compliance',
+      name: 'Compliance',
+      component: Compliance,
     },
   ],
 });
