@@ -64,6 +64,23 @@ export interface IdentityLifecycleTesterConfig {
       deviceRegistered: boolean;
     };
   };
+  
+  /**
+   * Optional workflow steps configuration
+   */
+  workflowSteps?: Array<{
+    name: string;
+    required: boolean;
+    description?: string;
+  }>;
+  
+  /**
+   * Optional test logic configuration
+   */
+  testLogic?: {
+    validateWorkflow?: boolean;
+    checkMFA?: boolean;
+  };
 }
 
 export class IdentityLifecycleTester {
@@ -100,21 +117,60 @@ export class IdentityLifecycleTester {
         mfaEnabled = this.config.mockData?.mfaEnabled ?? false;
       }
 
-      // Simulate onboarding steps
-      const steps = [
-        { name: 'Create Identity', completed: true },
-        { name: 'Assign Default Role', completed: user.role !== undefined },
-        { name: 'Set Initial Permissions', completed: user.attributes !== undefined },
-        { name: 'Enable MFA', completed: mfaEnabled },
-        { name: 'Send Welcome Email', completed: true },
-      ];
+      // Use configured workflow steps if provided, otherwise use defaults
+      const configuredSteps = this.config.workflowSteps;
+      let steps: Array<{ name: string; completed: boolean }>;
+      
+      if (configuredSteps && configuredSteps.length > 0) {
+        // Map configured steps to completion status
+        steps = configuredSteps.map(step => {
+          let completed = false;
+          // Map step names to completion logic
+          switch (step.name.toLowerCase()) {
+            case 'create identity':
+              completed = true;
+              break;
+            case 'assign default role':
+            case 'assign role':
+              completed = user.role !== undefined;
+              break;
+            case 'set initial permissions':
+            case 'set permissions':
+              completed = user.attributes !== undefined;
+              break;
+            case 'enable mfa':
+            case 'enable multi-factor authentication':
+              completed = mfaEnabled;
+              break;
+            case 'send welcome email':
+            case 'send email':
+              completed = true;
+              break;
+            default:
+              // For unknown steps, assume completed (can be customized)
+              completed = true;
+          }
+          return { name: step.name, completed };
+        });
+      } else {
+        // Default workflow steps
+        steps = [
+          { name: 'Create Identity', completed: true },
+          { name: 'Assign Default Role', completed: user.role !== undefined },
+          { name: 'Set Initial Permissions', completed: user.attributes !== undefined },
+          { name: 'Enable MFA', completed: mfaEnabled },
+          { name: 'Send Welcome Email', completed: true },
+        ];
+      }
 
       const allCompleted = steps.every(step => step.completed);
+      const completedSteps = steps.filter(step => step.completed).map(step => step.name);
       
       result.passed = allCompleted;
       result.details = {
         steps,
         allCompleted,
+        completedSteps,
         event: {
           type: 'onboarding' as const,
           userId: user.id,
@@ -122,6 +178,9 @@ export class IdentityLifecycleTester {
           details: { steps },
         } as IdentityLifecycleEvent,
       };
+      
+      // Add completedSteps to result for service layer access
+      (result as any).completedSteps = completedSteps;
     } catch (error: any) {
       result.error = error.message;
     }

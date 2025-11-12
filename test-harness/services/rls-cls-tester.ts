@@ -68,6 +68,14 @@ export interface RLSCLSTesterConfig {
       applicable: boolean;
     }>;
   };
+  
+  /**
+   * Optional test logic configuration
+   */
+  testLogic?: {
+    skipDisabledPolicies?: boolean;
+    validateCrossTenant?: boolean;
+  };
 }
 
 export class RLSCLSTester {
@@ -88,7 +96,12 @@ export class RLSCLSTester {
     // In a real implementation, this would query the database metadata
     // to get actual table and policy information
     const tables = await this.getDatabaseTables(database);
-    const policies = await this.getRLSPolicies(database);
+    let policies = await this.getRLSPolicies(database);
+
+    // Filter disabled policies if configured
+    if (this.config.testLogic?.skipDisabledPolicies) {
+      policies = policies.filter(p => p.applicable);
+    }
 
     const tablesWithRLS = new Set(policies.map(p => p.table));
     const tablesWithoutRLS = tables.filter(t => !tablesWithRLS.has(t));
@@ -115,7 +128,12 @@ export class RLSCLSTester {
    */
   async testCLSCoverage(database: DatabaseConfig): Promise<CLSCoverage> {
     const tables = await this.getDatabaseTables(database);
-    const policies = await this.getCLSPolicies(database);
+    let policies = await this.getCLSPolicies(database);
+
+    // Filter disabled policies if configured
+    if (this.config.testLogic?.skipDisabledPolicies) {
+      policies = policies.filter(p => p.applicable);
+    }
 
     const tablesWithCLS = new Set(policies.map(p => p.table));
     const tablesWithoutCLS = tables.filter(t => !tablesWithCLS.has(t));
