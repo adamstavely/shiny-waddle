@@ -9,6 +9,7 @@ import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
 import Analytics from '../views/Analytics.vue';
+import Insights from '../views/insights/Insights.vue';
 import Violations from '../views/Violations.vue';
 import History from '../views/History.vue';
 import Admin from '../views/Admin.vue';
@@ -38,9 +39,19 @@ const router = createRouter({
       component: Home,
     },
     {
+      path: '/insights',
+      name: 'Insights',
+      component: Insights,
+      props: (route) => ({ 
+        defaultTab: route.query.tab || 'overview' 
+      })
+    },
+    {
       path: '/dashboard',
-      name: 'Dashboard',
-      component: Dashboard,
+      redirect: (to) => {
+        console.warn('Route /dashboard is deprecated. Use /insights?tab=overview instead.');
+        return { path: '/insights', query: { ...to.query, tab: 'overview' } };
+      }
     },
     {
       path: '/dashboard/app/:id',
@@ -69,8 +80,10 @@ const router = createRouter({
     },
     {
       path: '/reports',
-      name: 'Reports',
-      component: Reports,
+      redirect: (to) => {
+        console.warn('Route /reports is deprecated. Use /insights?tab=reports instead.');
+        return { path: '/insights', query: { ...to.query, tab: 'reports' } };
+      }
     },
     {
       path: '/policies',
@@ -84,8 +97,10 @@ const router = createRouter({
     },
     {
       path: '/analytics',
-      name: 'Analytics',
-      component: Analytics,
+      redirect: (to) => {
+        console.warn('Route /analytics is deprecated. Use /insights?tab=analytics instead.');
+        return { path: '/insights', query: { ...to.query, tab: 'analytics' } };
+      }
     },
     {
       path: '/violations',

@@ -20,5 +20,17 @@ export class DashboardController {
     const range = timeRange ? parseInt(timeRange, 10) : 30;
     return this.dashboardService.getAnalytics(range);
   }
+
+  @Get('executive-metrics')
+  async getExecutiveMetrics(@Query('timeRange') timeRange?: string) {
+    const range = timeRange ? parseInt(timeRange, 10) : 30;
+    return this.dashboardService.getExecutiveMetrics(range);
+  }
+
+  @Get('risk-metrics')
+  async getRiskMetrics(@Query('timeRange') timeRange?: string) {
+    const range = timeRange ? parseInt(timeRange, 10) : 30;
+    return this.dashboardService.getRiskMetrics(range);
+  }
 }
 

@@ -89,6 +89,7 @@ export class NormalizationEngine {
     // SCA adapters
     this.adapters.set('snyk', new SnykAdapter({}, 'sca'));
     this.adapters.set('snyk-container', new SnykAdapter({}, 'container'));
+    this.adapters.set('sonatype-iq', new (require('./scanner-adapters/sonatype-iq-adapter').SonatypeIQAdapter)({}));
     
     // DAST adapters
     this.adapters.set('owasp-zap', new OWASPZAPAdapter({}));
@@ -98,6 +99,7 @@ export class NormalizationEngine {
     
     // Container adapters
     this.adapters.set('trivy', new TrivyAdapter({}));
+    this.adapters.set('clair', new (require('./scanner-adapters/clair-adapter').ClairAdapter)({}));
     
     // CSPM adapters
     this.adapters.set('aws-security-hub', new AWSSecurityHubAdapter({}));

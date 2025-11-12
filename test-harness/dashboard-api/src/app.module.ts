@@ -16,10 +16,11 @@ import { RemediationModule } from './remediation/remediation.module';
 import { RemediationTrackingModule } from './remediation-tracking/remediation-tracking.module';
 import { ComplianceModule } from './compliance/compliance.module';
 import { UnifiedFindingsModule } from './unified-findings/unified-findings.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { AppController } from './app.controller';
 
 @Module({
-  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule],
+  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule, IntegrationsModule],
   controllers: [AppController],
 })
 export class AppModule {}

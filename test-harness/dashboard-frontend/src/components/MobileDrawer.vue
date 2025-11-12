@@ -90,19 +90,17 @@ const route = useRoute();
 const currentPath = ref(route.path);
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/insights', label: 'Insights', icon: LayoutDashboard },
   { path: '/tests', label: 'Tests', icon: TestTube },
-  { path: '/reports', label: 'Reports', icon: FileText },
   { path: '/policies', label: 'Policies', icon: Shield },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/violations', label: 'Violations', icon: AlertTriangle },
   { path: '/history', label: 'History', icon: History },
   { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
 const isActive = (path: string): boolean => {
-  if (path === '/dashboard') {
-    return currentPath.value === '/dashboard';
+  if (path === '/insights') {
+    return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
   }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };

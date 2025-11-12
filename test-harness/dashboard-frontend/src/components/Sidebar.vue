@@ -56,9 +56,8 @@ const route = useRoute();
 const currentPath = ref(route.path);
 
 const menuItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, divider: false },
+  { path: '/insights', label: 'Insights', icon: LayoutDashboard, divider: false },
   { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
-  { path: '/reports', label: 'Reports', icon: FileText, divider: false },
   { path: '/compliance', label: 'Compliance', icon: CheckCircle2, divider: true },
   { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
   { path: '/app-security', label: 'App Security', icon: Lock, divider: false },
@@ -67,8 +66,8 @@ const menuItems = [
 ];
 
 const isActive = (path: string): boolean => {
-  if (path === '/dashboard') {
-    return currentPath.value === '/dashboard';
+  if (path === '/insights') {
+    return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
   }
   if (path === '/compliance') {
     return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/');

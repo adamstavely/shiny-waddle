@@ -28,7 +28,7 @@ export type ScannerId =
   // DAST
   | 'owasp-zap' | 'burp-suite' | 'acunetix' | 'nessus'
   // SCA
-  | 'snyk' | 'whitesource' | 'mend' | 'dependabot' | 'github-security'
+  | 'snyk' | 'whitesource' | 'mend' | 'dependabot' | 'github-security' | 'sonatype-iq'
   // IaC
   | 'checkov' | 'terrascan' | 'snyk-iac' | 'bridgecrew'
   // Container
