@@ -31,6 +31,7 @@ import UnifiedFindings from '../views/UnifiedFindings.vue';
 import HowItWorks from '../views/HowItWorks.vue';
 import Repos from '../views/Repos.vue';
 import NotFound from '../views/NotFound.vue';
+import AccessDenied from '../views/AccessDenied.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -208,6 +209,11 @@ const router = createRouter({
       path: '/repos',
       name: 'Repos',
       component: Repos,
+    },
+    {
+      path: '/access-denied',
+      name: 'AccessDenied',
+      component: AccessDenied,
     },
     {
       path: '/:pathMatch(.*)*',

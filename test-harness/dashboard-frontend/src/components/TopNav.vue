@@ -558,13 +558,18 @@ onBeforeUnmount(() => {
 
 .search-input {
   width: 100%;
-  padding: 10px 40px 10px 40px;
+  padding-top: 10px !important;
+  padding-right: 40px !important;
+  padding-bottom: 10px !important;
+  padding-left: 50px !important;
+  text-indent: 0;
   background: rgba(15, 20, 25, 0.6);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 8px;
   color: #ffffff;
   font-size: 0.9rem;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .search-input:focus {
@@ -587,6 +592,7 @@ onBeforeUnmount(() => {
   height: 18px;
   color: #718096;
   pointer-events: none;
+  z-index: 2;
 }
 
 .clear-button {
@@ -1053,7 +1059,7 @@ onBeforeUnmount(() => {
   
   .search-input {
     font-size: 0.85rem;
-    padding: 8px 36px 8px 36px;
+    padding: 8px 36px 8px 44px !important;
   }
 }
 </style>

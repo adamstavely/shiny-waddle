@@ -10,6 +10,9 @@
 
       <!-- Main content -->
       <div class="not-found-content">
+        <!-- Background texture/grain effect -->
+        <div class="hero-background"></div>
+        
         <!-- Large 404 number -->
         <div class="error-code" aria-label="Error 404">
           <span class="code-digit" aria-hidden="true">4</span>
@@ -17,9 +20,67 @@
           <span class="code-digit" aria-hidden="true">4</span>
         </div>
 
-        <!-- Icon -->
+        <!-- Custom SVG Icon -->
         <div class="error-icon" aria-hidden="true">
-          <FileQuestion class="icon" />
+          <svg viewBox="0 0 250 200" class="not-found-svg" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="compassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            
+            <!-- Compass outer ring -->
+            <circle 
+              cx="125" 
+              cy="100" 
+              r="70" 
+              fill="none" 
+              stroke="url(#compassGradient)" 
+              stroke-width="3" 
+              opacity="0.4"
+            />
+            
+            <!-- Compass inner ring -->
+            <circle 
+              cx="125" 
+              cy="100" 
+              r="55" 
+              fill="none" 
+              stroke="url(#compassGradient)" 
+              stroke-width="2" 
+              opacity="0.5"
+            />
+            
+            <!-- Compass needle pointing up (North) -->
+            <path 
+              d="M 125 30 L 135 60 L 125 50 L 115 60 Z" 
+              fill="url(#compassGradient)" 
+              opacity="0.9"
+            />
+            
+            <!-- Compass needle pointing down (South) -->
+            <path 
+              d="M 125 170 L 115 140 L 125 150 L 135 140 Z" 
+              fill="url(#compassGradient)" 
+              opacity="0.6"
+            />
+            
+            <!-- Compass center circle -->
+            <circle 
+              cx="125" 
+              cy="100" 
+              r="20" 
+              fill="url(#compassGradient)" 
+              opacity="0.8"
+            />
+            
+            <!-- Direction markers -->
+            <text x="125" y="25" text-anchor="middle" fill="url(#compassGradient)" font-size="16" font-weight="600" opacity="0.8">N</text>
+            <text x="125" y="185" text-anchor="middle" fill="url(#compassGradient)" font-size="16" font-weight="600" opacity="0.6">S</text>
+            <text x="200" y="105" text-anchor="middle" fill="url(#compassGradient)" font-size="16" font-weight="600" opacity="0.7">E</text>
+            <text x="50" y="105" text-anchor="middle" fill="url(#compassGradient)" font-size="16" font-weight="600" opacity="0.7">W</text>
+          </svg>
         </div>
 
         <!-- Title and message -->
@@ -80,7 +141,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { 
-  FileQuestion, 
   Home, 
   ArrowLeft, 
   BarChart3, 
@@ -175,12 +235,30 @@ const goBack = () => {
   position: relative;
   z-index: 10;
   text-align: center;
-  background: linear-gradient(135deg, rgba(26, 31, 46, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%);
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 24px;
-  padding: 64px 48px;
+  padding: 48px 64px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+.error-code,
+.error-icon,
+.error-title,
+.error-message,
+.error-actions,
+.quick-links {
+  position: relative;
+  z-index: 10;
 }
 
 .error-code {
@@ -229,22 +307,12 @@ const goBack = () => {
   margin-bottom: 24px;
 }
 
-.icon {
-  width: 120px;
-  height: 120px;
-  color: #4facfe;
-  opacity: 0.6;
-  animation: float-icon 3s ease-in-out infinite;
+.not-found-svg {
+  width: 250px;
+  height: 200px;
+  filter: drop-shadow(0 8px 24px rgba(79, 172, 254, 0.3));
 }
 
-@keyframes float-icon {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
 
 .error-title {
   font-size: 2.5rem;
@@ -413,9 +481,9 @@ const goBack = () => {
     font-size: 4rem;
   }
 
-  .icon {
-    width: 80px;
-    height: 80px;
+  .not-found-svg {
+    width: 150px;
+    height: 150px;
   }
 
   .error-title {

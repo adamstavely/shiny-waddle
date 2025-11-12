@@ -10,11 +10,11 @@
           <div class="hero-text">
             <h1 class="hero-title">
               Heimdall
-              <span class="hero-subtitle">Application Security Posture Management</span>
+              <span class="hero-subtitle">Data Access Security Posture Management</span>
             </h1>
             <p class="hero-description">
-              Comprehensive security posture management platform for modern applications. 
-              Continuously assess, monitor, and improve your application security across 
+              Comprehensive data access security posture management platform for modern applications. 
+              Continuously assess, monitor, and improve your data access security across 
               access controls, API security, data protection, and compliance requirements 
               with automated testing and real-time visibility.
             </p>
