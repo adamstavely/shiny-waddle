@@ -106,19 +106,29 @@ const isActive = (path: string): boolean => {
   }
   if (path === '/access-control') {
     return currentPath.value === '/policies' || currentPath.value === '/resources' || 
-           currentPath.value.startsWith('/policies/') || currentPath.value.startsWith('/resources/');
+           currentPath.value === '/policy-validation' || currentPath.value === '/identity-lifecycle' ||
+           currentPath.value === '/identity-providers' ||
+           currentPath.value.startsWith('/policies/') || currentPath.value.startsWith('/resources/') ||
+           currentPath.value.startsWith('/policy-validation/') || currentPath.value.startsWith('/identity-lifecycle/') ||
+           currentPath.value.startsWith('/identity-providers/');
   }
   if (path === '/platform-config') {
     return currentPath.value === '/configuration-validation' || currentPath.value === '/distributed-systems' ||
-           currentPath.value.startsWith('/configuration-validation/') || currentPath.value.startsWith('/distributed-systems/');
+           currentPath.value === '/network-policies' ||
+           currentPath.value.startsWith('/configuration-validation/') || currentPath.value.startsWith('/distributed-systems/') ||
+           currentPath.value.startsWith('/network-policies/');
   }
   if (path === '/app-security') {
     return currentPath.value === '/api-security' || currentPath.value === '/users' ||
-           currentPath.value.startsWith('/api-security/') || currentPath.value.startsWith('/users/');
+           currentPath.value === '/api-gateway' || currentPath.value === '/dlp' ||
+           currentPath.value.startsWith('/api-security/') || currentPath.value.startsWith('/users/') ||
+           currentPath.value.startsWith('/api-gateway/') || currentPath.value.startsWith('/dlp/');
   }
   if (path === '/data-security') {
     return currentPath.value === '/datasets' || currentPath.value === '/contracts' ||
-           currentPath.value.startsWith('/datasets/') || currentPath.value.startsWith('/contracts/');
+           currentPath.value === '/rls-cls' ||
+           currentPath.value.startsWith('/datasets/') || currentPath.value.startsWith('/contracts/') ||
+           currentPath.value.startsWith('/rls-cls/');
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');

@@ -32,6 +32,15 @@ import HowItWorks from '../views/HowItWorks.vue';
 import Repos from '../views/Repos.vue';
 import NotFound from '../views/NotFound.vue';
 import AccessDenied from '../views/AccessDenied.vue';
+import RLSCLS from '../views/RLSCLS.vue';
+import PolicyValidation from '../views/PolicyValidation.vue';
+import IdentityLifecycle from '../views/IdentityLifecycle.vue';
+import IdentityProviders from '../views/IdentityProviders.vue';
+import NetworkPolicies from '../views/NetworkPolicies.vue';
+import APIGateway from '../views/APIGateway.vue';
+import DLP from '../views/DLP.vue';
+import NIST800207 from '../views/NIST800207.vue';
+import CICDSecurityGates from '../views/CICDSecurityGates.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -214,6 +223,51 @@ const router = createRouter({
       path: '/access-denied',
       name: 'AccessDenied',
       component: AccessDenied,
+    },
+    {
+      path: '/rls-cls',
+      name: 'RLSCLS',
+      component: RLSCLS,
+    },
+    {
+      path: '/policy-validation',
+      name: 'PolicyValidation',
+      component: PolicyValidation,
+    },
+    {
+      path: '/identity-lifecycle',
+      name: 'IdentityLifecycle',
+      component: IdentityLifecycle,
+    },
+    {
+      path: '/identity-providers',
+      name: 'IdentityProviders',
+      component: IdentityProviders,
+    },
+    {
+      path: '/network-policies',
+      name: 'NetworkPolicies',
+      component: NetworkPolicies,
+    },
+    {
+      path: '/api-gateway',
+      name: 'APIGateway',
+      component: APIGateway,
+    },
+    {
+      path: '/dlp',
+      name: 'DLP',
+      component: DLP,
+    },
+    {
+      path: '/compliance/nist-800-207',
+      name: 'NIST800207',
+      component: NIST800207,
+    },
+    {
+      path: '/admin/ci-cd/security-gates',
+      name: 'CICDSecurityGates',
+      component: CICDSecurityGates,
     },
     {
       path: '/:pathMatch(.*)*',

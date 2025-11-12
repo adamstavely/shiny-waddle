@@ -40,6 +40,30 @@
             <Folder class="item-icon" />
             <span>Resources</span>
           </a>
+          <a
+            href="/policy-validation"
+            @click.prevent="handleNavClick('/policy-validation')"
+            :class="['drawer-item', isActive('/policy-validation') ? 'drawer-item-active' : '']"
+          >
+            <FileSearch class="item-icon" />
+            <span>Policy Validation</span>
+          </a>
+          <a
+            href="/identity-lifecycle"
+            @click.prevent="handleNavClick('/identity-lifecycle')"
+            :class="['drawer-item', isActive('/identity-lifecycle') ? 'drawer-item-active' : '']"
+          >
+            <UserCog class="item-icon" />
+            <span>Identity Lifecycle</span>
+          </a>
+          <a
+            href="/identity-providers"
+            @click.prevent="handleNavClick('/identity-providers')"
+            :class="['drawer-item', isActive('/identity-providers') ? 'drawer-item-active' : '']"
+          >
+            <UserCog class="item-icon" />
+            <span>Identity Providers</span>
+          </a>
         </div>
       </div>
 
@@ -65,6 +89,14 @@
           >
             <Globe class="item-icon" />
             <span>Distributed Systems</span>
+          </a>
+          <a
+            href="/network-policies"
+            @click.prevent="handleNavClick('/network-policies')"
+            :class="['drawer-item', isActive('/network-policies') ? 'drawer-item-active' : '']"
+          >
+            <Network class="item-icon" />
+            <span>Network Policies</span>
           </a>
         </div>
       </div>
@@ -92,6 +124,22 @@
             <Users class="item-icon" />
             <span>User Simulation</span>
           </a>
+          <a
+            href="/api-gateway"
+            @click.prevent="handleNavClick('/api-gateway')"
+            :class="['drawer-item', isActive('/api-gateway') ? 'drawer-item-active' : '']"
+          >
+            <Server class="item-icon" />
+            <span>API Gateway</span>
+          </a>
+          <a
+            href="/dlp"
+            @click.prevent="handleNavClick('/dlp')"
+            :class="['drawer-item', isActive('/dlp') ? 'drawer-item-active' : '']"
+          >
+            <FileX class="item-icon" />
+            <span>DLP</span>
+          </a>
         </div>
       </div>
 
@@ -118,6 +166,14 @@
             <FileCheck class="item-icon" />
             <span>Contracts</span>
           </a>
+          <a
+            href="/rls-cls"
+            @click.prevent="handleNavClick('/rls-cls')"
+            :class="['drawer-item', isActive('/rls-cls') ? 'drawer-item-active' : '']"
+          >
+            <ShieldCheck class="item-icon" />
+            <span>RLS/CLS</span>
+          </a>
         </div>
       </div>
     </nav>
@@ -137,7 +193,13 @@ import {
   Database,
   FileCheck,
   ChevronLeft,
-  Menu
+  Menu,
+  FileSearch,
+  UserCog,
+  Network,
+  ShieldCheck,
+  FileX,
+  Server
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -149,19 +211,26 @@ const activeCategory = ref<string | null>(null);
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
   if (path === '/policies' || path.startsWith('/policies/') || 
-      path === '/resources' || path.startsWith('/resources/')) {
+      path === '/resources' || path.startsWith('/resources/') ||
+      path === '/policy-validation' || path.startsWith('/policy-validation/') ||
+      path === '/identity-lifecycle' || path.startsWith('/identity-lifecycle/') ||
+      path === '/identity-providers' || path.startsWith('/identity-providers/')) {
     return 'access-control';
   }
   if (path === '/configuration-validation' || path.startsWith('/configuration-validation/') ||
-      path === '/distributed-systems' || path.startsWith('/distributed-systems/')) {
+      path === '/distributed-systems' || path.startsWith('/distributed-systems/') ||
+      path === '/network-policies' || path.startsWith('/network-policies/')) {
     return 'platform-config';
   }
   if (path === '/api-security' || path.startsWith('/api-security/') ||
-      path === '/users' || path.startsWith('/users/')) {
+      path === '/users' || path.startsWith('/users/') ||
+      path === '/api-gateway' || path.startsWith('/api-gateway/') ||
+      path === '/dlp' || path.startsWith('/dlp/')) {
     return 'app-security';
   }
   if (path === '/datasets' || path.startsWith('/datasets/') ||
-      path === '/contracts' || path.startsWith('/contracts/')) {
+      path === '/contracts' || path.startsWith('/contracts/') ||
+      path === '/rls-cls' || path.startsWith('/rls-cls/')) {
     return 'data-security';
   }
   return null;

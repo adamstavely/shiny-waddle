@@ -19,10 +19,45 @@ import { UnifiedFindingsModule } from './unified-findings/unified-findings.modul
 import { IntegrationsModule } from './integrations/integrations.module';
 import { ScheduledReportsModule } from './scheduled-reports/scheduled-reports.module';
 import { SecurityModule } from './security/security.module';
+import { RLSCLSModule } from './rls-cls/rls-cls.module';
+import { PolicyValidationModule } from './policy-validation/policy-validation.module';
+import { IdentityLifecycleModule } from './identity-lifecycle/identity-lifecycle.module';
+import { IdentityProviderModule } from './identity-providers/identity-provider.module';
+import { NetworkPolicyModule } from './network-policy/network-policy.module';
+import { APIGatewayModule } from './api-gateway/api-gateway.module';
+import { DLPModule } from './dlp/dlp.module';
 import { AppController } from './app.controller';
 
 @Module({
-  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule, IntegrationsModule, ScheduledReportsModule, SecurityModule],
+  imports: [
+    DashboardModule,
+    ApplicationsModule,
+    ValidatorsModule,
+    ValidationTargetsModule,
+    PoliciesModule,
+    ViolationsModule,
+    HistoryModule,
+    ApiSecurityModule,
+    ReportsModule,
+    DistributedSystemsModule,
+    CICDModule,
+    TicketingModule,
+    SLAModule,
+    RemediationModule,
+    RemediationTrackingModule,
+    ComplianceModule,
+    UnifiedFindingsModule,
+    IntegrationsModule,
+    ScheduledReportsModule,
+    SecurityModule,
+    RLSCLSModule,
+    PolicyValidationModule,
+    IdentityLifecycleModule,
+    IdentityProviderModule,
+    NetworkPolicyModule,
+    APIGatewayModule,
+    DLPModule,
+  ],
   controllers: [AppController],
 })
 export class AppModule {}

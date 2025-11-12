@@ -1,0 +1,24 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^../../core/(.*)$": "<rootDir>/../core/$1",
+    "^../../services/(.*)$": "<rootDir>/../services/$1"
+  },
+  "globals": {
+    "ts-jest": {
+      "tsconfig": {
+        "paths": {
+          "../../core/*": ["../core/*"],
+          "../../services/*": ["../services/*"]
+        }
+      }
+    }
+  }
+}
+

@@ -4,6 +4,8 @@ Heimdall is an automated testing framework that validates applications are adher
 
 ## Features
 
+### Core Testing Capabilities
+
 - **User Simulation**: Simulate users with different roles/attributes
 - **Access Control Tests**: Evaluate Policy Decision Point (PDP) decisions for representative identities, attributes, resources, and contexts
 - **Data Behavior Tests**: Verify queries only use permitted fields, apply required filters/aggregations, and block disallowed joins
@@ -16,6 +18,30 @@ Heimdall is an automated testing framework that validates applications are adher
 - **API Security Testing**: Comprehensive REST/GraphQL API security testing including authentication, authorization, rate limiting, and vulnerability detection
 - **Data Pipeline Testing**: Test ETL pipelines, streaming data, data transformations, and pipeline security controls
 - **Distributed Systems Testing**: Test access control across multiple regions, verify policy consistency, test synchronization, and distributed transactions
+
+### Zero Trust Architecture (ZTA) Features
+
+#### Access Control
+- **Policy Validation**: Detect policy conflicts, analyze coverage, test performance, run regression tests, and simulate policy changes
+- **Identity Lifecycle**: Test onboarding, role changes, offboarding, credential rotation, MFA enforcement, JIT access, and break-glass procedures
+- **Identity Providers**: Test AD group membership, Okta/Auth0/Azure AD policy synchronization, GCP IAM bindings, and cross-system policy validation
+
+#### Data Security
+- **RLS/CLS Testing**: Test Row-Level Security and Column-Level Security coverage, dynamic masking, cross-tenant isolation, and policy bypass attempts
+- **DLP (Data Loss Prevention)**: Test data exfiltration detection, API response validation, query validation, and bulk export controls
+
+#### Application Security
+- **API Gateway**: Test gateway policies, rate limiting, API versioning, and service-to-service authentication
+- **DLP**: Comprehensive data loss prevention testing
+
+#### Platform Security
+- **Network Policies**: Test firewall rules, service-to-service connectivity, network segmentation, and service mesh policies
+
+#### Compliance
+- **NIST 800-207**: Zero Trust Architecture compliance assessment and reporting
+
+#### CI/CD Security
+- **Security Gates**: Pre-merge policy validation, IAC scanning, container scanning, K8s RBAC validation, and configurable security gates
 
 ## Architecture
 
@@ -81,23 +107,49 @@ npm run test:compliance:watch
 
 ## Documentation
 
+### Core Documentation
 - **[Policy Creation Guide](./docs/POLICY_CREATION_GUIDE.md)**: Comprehensive guide for creating RBAC and ABAC policies
 - **[Test Creation Guide](./docs/TEST_CREATION_GUIDE.md)**: Step-by-step guide for creating test suites
 - **[Quick Reference](./docs/QUICK_REFERENCE.md)**: Quick reference for common tasks and patterns
 - **[Feature Roadmap](./docs/FEATURE_ROADMAP.md)**: Recommended enhancements and future features
 - **[Examples](./examples/)**: Complete working examples
 
+### API & Implementation Documentation
+- **[API Documentation](./docs/API.md)**: Complete API endpoint documentation with request/response examples
+- **[Testing Guide](./docs/TESTING.md)**: Comprehensive guide for writing and running tests (unit, integration, E2E)
+- **[Service Implementation Guide](./docs/SERVICES.md)**: Guide for implementing and extending services
+- **[Implementation Progress](./docs/IMPLEMENTATION_PROGRESS.md)**: Current implementation status and progress tracking
+
 ### Documentation Overview
 
-The documentation is organized into three main guides:
+The documentation is organized into several guides:
 
-1. **Policy Creation Guide**: Detailed instructions for creating both RBAC and ABAC policies
+1. **API Documentation**: Complete API reference for all endpoints
+   - Request/response formats
+   - Error handling
+   - Authentication (when implemented)
+   - Examples for all endpoints
+
+2. **Testing Guide**: Comprehensive testing documentation
+   - Unit test patterns
+   - E2E test patterns
+   - Test utilities and helpers
+   - Best practices
+
+3. **Service Implementation Guide**: Guide for implementing services
+   - Service architecture
+   - Provider interfaces
+   - Configuration patterns
+   - Error handling
+   - Adding new services
+
+4. **Policy Creation Guide**: Detailed instructions for creating both RBAC and ABAC policies
    - Policy structure and syntax
    - Available operators and conditions
    - Best practices and examples
    - Troubleshooting
 
-2. **Test Creation Guide**: Step-by-step instructions for creating test suites
+5. **Test Creation Guide**: Step-by-step instructions for creating test suites
    - Test suite structure
    - All four test types (access control, data behavior, contracts, dataset health)
    - Configuration options
