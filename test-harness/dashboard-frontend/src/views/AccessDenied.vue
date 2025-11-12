@@ -10,6 +10,9 @@
 
       <!-- Main content -->
       <div class="access-denied-content">
+        <!-- Background texture/grain effect -->
+        <div class="hero-background"></div>
+        
         <!-- Custom SVG Icon -->
         <div class="error-icon" aria-hidden="true">
           <svg viewBox="0 0 200 200" class="access-denied-svg" preserveAspectRatio="xMidYMid meet">
@@ -222,12 +225,29 @@ const goBack = () => {
   position: relative;
   z-index: 10;
   text-align: center;
-  background: linear-gradient(135deg, rgba(26, 31, 46, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%);
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
   border: 1px solid rgba(252, 129, 129, 0.2);
   border-radius: 24px;
   padding: 64px 48px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+.error-icon,
+.error-title,
+.error-message,
+.error-actions,
+.help-section {
+  position: relative;
+  z-index: 10;
 }
 
 .error-icon {
@@ -240,16 +260,6 @@ const goBack = () => {
   width: 200px;
   height: 200px;
   filter: drop-shadow(0 8px 24px rgba(252, 129, 129, 0.3));
-  animation: float-icon 3s ease-in-out infinite;
-}
-
-@keyframes float-icon {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
 }
 
 .error-title {
