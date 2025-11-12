@@ -98,6 +98,14 @@
             <Network class="item-icon" />
             <span>Network Policies</span>
           </a>
+          <a
+            href="/test-configurations"
+            @click.prevent="handleNavClick('/test-configurations')"
+            :class="['drawer-item', isActive('/test-configurations') ? 'drawer-item-active' : '']"
+          >
+            <Settings class="item-icon" />
+            <span>Test Configurations</span>
+          </a>
         </div>
       </div>
 
@@ -219,7 +227,8 @@ const getCategoryFromRoute = (path: string): string | null => {
   }
   if (path === '/configuration-validation' || path.startsWith('/configuration-validation/') ||
       path === '/distributed-systems' || path.startsWith('/distributed-systems/') ||
-      path === '/network-policies' || path.startsWith('/network-policies/')) {
+      path === '/network-policies' || path.startsWith('/network-policies/') ||
+      path === '/test-configurations' || path.startsWith('/test-configurations/')) {
     return 'platform-config';
   }
   if (path === '/api-security' || path.startsWith('/api-security/') ||

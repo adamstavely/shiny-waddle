@@ -41,6 +41,7 @@ import APIGateway from '../views/APIGateway.vue';
 import DLP from '../views/DLP.vue';
 import NIST800207 from '../views/NIST800207.vue';
 import CICDSecurityGates from '../views/CICDSecurityGates.vue';
+import TestConfigurations from '../views/TestConfigurations.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -268,6 +269,11 @@ const router = createRouter({
       path: '/admin/ci-cd/security-gates',
       name: 'CICDSecurityGates',
       component: CICDSecurityGates,
+    },
+    {
+      path: '/test-configurations',
+      name: 'TestConfigurations',
+      component: TestConfigurations,
     },
     {
       path: '/:pathMatch(.*)*',

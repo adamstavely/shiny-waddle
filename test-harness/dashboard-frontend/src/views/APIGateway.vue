@@ -7,6 +7,35 @@
           <h1 class="page-title">API Gateway Security</h1>
           <p class="page-description">Test API gateway policies, rate limiting, and service authentication</p>
         </div>
+        <div class="header-actions">
+          <button @click="navigateToConfig" class="btn-secondary">
+            <Settings class="btn-icon" />
+            Configure
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Selector -->
+    <div class="config-selector">
+      <div class="selector-group">
+        <label>Use Configuration:</label>
+        <select v-model="selectedConfigId" @change="loadConfiguration">
+          <option value="">None (Use Defaults)</option>
+          <option v-for="config in configurations" :key="config.id" :value="config.id">
+            {{ config.name }}
+          </option>
+        </select>
+      </div>
+      <div class="selector-actions">
+        <button @click="saveCurrentAsConfig" class="btn-secondary" :disabled="!hasTestData">
+          <Save class="btn-icon" />
+          Save as Configuration
+        </button>
+      </div>
+      <div v-if="selectedConfigId" class="active-config">
+        <CheckCircle2 class="icon" />
+        <span>Using: {{ getConfigName(selectedConfigId) }}</span>
       </div>
     </div>
 
@@ -90,8 +119,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Server, Shield, Zap, Lock, CheckCircle2, XCircle } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { Server, Shield, Zap, Lock, CheckCircle2, XCircle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import axios from 'axios';
 
@@ -100,18 +130,79 @@ const breadcrumbItems = [
   { label: 'API Gateway', to: '/api-gateway' },
 ];
 
+const router = useRouter();
 const loading = ref(false);
 const policyResult = ref<any>(null);
 const rateLimitResult = ref<any>(null);
 const authResult = ref<any>(null);
+const selectedConfigId = ref<string>('');
+const configurations = ref<any[]>([]);
+const currentPolicies = ref<any[]>([]);
+
+const hasTestData = computed(() => {
+  return currentPolicies.value.length > 0;
+});
+
+const getConfigName = (id: string) => {
+  const config = configurations.value.find(c => c.id === id);
+  return config?.name || id;
+};
+
+const loadConfigurations = async () => {
+  try {
+    const response = await axios.get('/api/test-configurations?type=api-gateway');
+    configurations.value = response.data;
+  } catch (error) {
+    console.error('Error loading configurations:', error);
+  }
+};
+
+const loadConfiguration = async () => {
+  if (!selectedConfigId.value) {
+    return;
+  }
+  try {
+    const response = await axios.get(`/api/test-configurations/${selectedConfigId.value}`);
+    const config = response.data;
+    if (config.gatewayPolicies) {
+      currentPolicies.value = config.gatewayPolicies;
+    }
+  } catch (error) {
+    console.error('Error loading configuration:', error);
+  }
+};
+
+const saveCurrentAsConfig = async () => {
+  const name = prompt('Enter configuration name:');
+  if (!name) return;
+  try {
+    await axios.post('/api/test-configurations', {
+      name,
+      type: 'api-gateway',
+      gatewayPolicies: currentPolicies.value,
+    });
+    await loadConfigurations();
+    alert('Configuration saved successfully!');
+  } catch (error: any) {
+    alert('Error saving configuration: ' + (error.response?.data?.message || error.message));
+  }
+};
+
+const navigateToConfig = () => {
+  router.push('/test-configurations');
+};
 
 const testPolicy = async () => {
   loading.value = true;
   try {
-    const response = await axios.post('/api/api-gateway/test-gateway-policy', {
+    const payload: any = {
       policy: { id: 'test', name: 'Test Policy', endpoint: '/api/test', method: 'GET', rules: [] },
       request: { endpoint: '/api/test', method: 'GET', headers: {}, user: {} },
-    });
+    };
+    if (selectedConfigId.value) {
+      payload.configId = selectedConfigId.value;
+    }
+    const response = await axios.post('/api/api-gateway/test-gateway-policy', payload);
     policyResult.value = response.data;
   } catch (error) {
     console.error('Error testing policy:', error);
@@ -123,10 +214,14 @@ const testPolicy = async () => {
 const testRateLimit = async () => {
   loading.value = true;
   try {
-    const response = await axios.post('/api/api-gateway/test-rate-limiting', {
+    const payload: any = {
       endpoint: '/api/test',
       requests: 150,
-    });
+    };
+    if (selectedConfigId.value) {
+      payload.configId = selectedConfigId.value;
+    }
+    const response = await axios.post('/api/api-gateway/test-rate-limiting', payload);
     rateLimitResult.value = response.data;
   } catch (error) {
     console.error('Error testing rate limit:', error);
@@ -138,10 +233,14 @@ const testRateLimit = async () => {
 const testServiceAuth = async () => {
   loading.value = true;
   try {
-    const response = await axios.post('/api/api-gateway/test-service-auth', {
+    const payload: any = {
       source: 'frontend',
       target: 'backend',
-    });
+    };
+    if (selectedConfigId.value) {
+      payload.configId = selectedConfigId.value;
+    }
+    const response = await axios.post('/api/api-gateway/test-service-auth', payload);
     authResult.value = response.data;
   } catch (error) {
     console.error('Error testing service auth:', error);
@@ -149,6 +248,10 @@ const testServiceAuth = async () => {
     loading.value = false;
   }
 };
+
+onMounted(() => {
+  loadConfigurations();
+});
 </script>
 
 <style scoped>
@@ -363,5 +466,95 @@ const testServiceAuth = async () => {
   font-size: 0.9rem;
   color: #ffffff;
   font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.config-selector {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.selector-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selector-group label {
+  color: #a0aec0;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.selector-group select {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  min-width: 200px;
+}
+
+.selector-group select:focus {
+  outline: none;
+  border-color: #4facfe;
+}
+
+.selector-actions {
+  margin-left: auto;
+}
+
+.active-config {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 6px;
+  color: #22c55e;
+  font-size: 0.875rem;
+}
+
+.active-config .icon {
+  width: 16px;
+  height: 16px;
 }
 </style>
