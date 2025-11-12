@@ -767,10 +767,12 @@ export class FindingCorrelationEngine {
     allFindings: UnifiedFinding[],
     groups: RelatedFindingGroup[]
   ): ImpactAnalysis {
+    // Map 'info' severity to 'low' for ImpactAnalysis compatibility
+    const severity = finding.severity === 'info' ? 'low' : finding.severity;
     const directImpact = {
       affectedAssets: [this.getAssetKey(finding)].filter(Boolean) as string[],
       affectedApplications: finding.asset.applicationId ? [finding.asset.applicationId] : [],
-      severity: finding.severity,
+      severity: severity as 'critical' | 'high' | 'medium' | 'low',
       businessImpact: finding.businessImpact || this.estimateBusinessImpact(finding),
     };
 
@@ -1086,4 +1088,5 @@ export class FindingCorrelationEngine {
     return 0;
   }
 }
+
 

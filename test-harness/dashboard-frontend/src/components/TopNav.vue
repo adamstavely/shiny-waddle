@@ -293,7 +293,7 @@
           title="Switch App"
           aria-label="Switch application"
         >
-          <span class="material-symbols-outlined app-picker-icon">apps</span>
+          <span class="material-symbols-outlined app-picker-icon" aria-hidden="true">apps</span>
         </button>
       </div>
     </div>
@@ -726,7 +726,7 @@ onBeforeUnmount(() => {
 }
 
 .app-picker {
-  color: #a0aec0;
+  color: #e3e3e3;
 }
 
 .app-picker:hover {
@@ -741,6 +741,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  color: #e3e3e3;
 }
 
 .nav-icon.spinning {

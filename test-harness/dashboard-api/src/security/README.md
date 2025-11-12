@@ -230,3 +230,4 @@ This security module helps meet requirements for:
 - **GDPR:** Data protection and audit trails
 - **NIST 800-53:** Security controls (AC-3, SC-8, SC-12, SC-28, AU-2, AU-3)
 
+

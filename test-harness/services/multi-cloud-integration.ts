@@ -52,13 +52,13 @@ export class MultiCloudIntegration {
 
       switch (config.provider) {
         case 'aws':
-          adapter = new AWSSecurityHubAdapter(config.config);
+          adapter = new AWSSecurityHubAdapter(config.config) as BaseScannerAdapter;
           break;
         case 'azure':
-          adapter = new AzureSecurityCenterAdapter(config.config);
+          adapter = new AzureSecurityCenterAdapter(config.config) as BaseScannerAdapter;
           break;
         case 'gcp':
-          adapter = new GCPSecurityCommandCenterAdapter(config.config);
+          adapter = new GCPSecurityCommandCenterAdapter(config.config) as BaseScannerAdapter;
           break;
         default:
           throw new Error(`Unsupported cloud provider: ${config.provider}`);
@@ -86,7 +86,12 @@ export class MultiCloudIntegration {
       try {
         if (adapter.validate(rawFinding)) {
           const normalizedFinding = adapter.normalize(rawFinding);
-          normalized.push(normalizedFinding);
+          // normalize() can return a single finding or an array
+          if (Array.isArray(normalizedFinding)) {
+            normalized.push(...normalizedFinding);
+          } else {
+            normalized.push(normalizedFinding);
+          }
         }
       } catch (error: any) {
         console.error(`Failed to normalize finding from ${provider}:`, error.message);
@@ -290,8 +295,8 @@ export class MultiCloudIntegration {
       f.title,
       f.severity,
       f.asset?.component,
-      f.vulnerability?.cveId,
-      f.vulnerability?.cweId,
+      f.vulnerability?.cve?.id,
+      f.vulnerability?.classification,
     ].filter(Boolean);
 
     return parts.join('|');

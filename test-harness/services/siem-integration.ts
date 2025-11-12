@@ -207,8 +207,8 @@ export class SplunkAdapter extends BaseSIEMAdapter {
         asset_type: finding.asset?.type,
         asset_component: finding.asset?.component,
         compliance_frameworks: finding.compliance?.frameworks || [],
-        vulnerability_cve: finding.vulnerability?.cveId,
-        vulnerability_cwe: finding.vulnerability?.cweId,
+        vulnerability_cve: finding.vulnerability?.cve?.id || finding.vulnerability?.id,
+        vulnerability_cwe: finding.vulnerability?.classification,
         raw: finding.raw,
       },
     };
@@ -340,7 +340,7 @@ export class QRadarAdapter extends BaseSIEMAdapter {
       category: 1000,
       severity: severityMap[finding.severity] || 5,
       magnitude: finding.riskScore || 0,
-      sourceIP: finding.asset?.location?.endpoint || '0.0.0.0',
+      sourceIP: finding.asset?.location?.url?.original || finding.asset?.location?.resource || '0.0.0.0',
       destinationIP: '0.0.0.0',
       username: finding.assignedTo || 'system',
       logSourceId: this.config.options?.logSourceId || 1,
@@ -523,8 +523,8 @@ export class SentinelAdapter extends BaseSIEMAdapter {
       AssetType: finding.asset?.type,
       AssetComponent: finding.asset?.component,
       ComplianceFrameworks: finding.compliance?.frameworks || [],
-      VulnerabilityCVE: finding.vulnerability?.cveId,
-      VulnerabilityCWE: finding.vulnerability?.cweId,
+      VulnerabilityCVE: finding.vulnerability?.cve?.id || finding.vulnerability?.id,
+      VulnerabilityCWE: finding.vulnerability?.classification,
     };
   }
 

@@ -14,7 +14,7 @@
           :banner="banner"
           @dismiss="handleBannerDismiss"
         />
-        <router-view />
+        <router-view :key="route.fullPath" />
       </main>
     </div>
   </div>
@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
 import TopNav from './components/TopNav.vue';
 import Sidebar from './components/Sidebar.vue';
 import Drawer from './components/Drawer.vue';
@@ -29,6 +30,8 @@ import MobileDrawer from './components/MobileDrawer.vue';
 import Banner, { type Banner as BannerType } from './components/Banner.vue';
 import SkipLink from './components/SkipLink.vue';
 import AccessibilityAnnouncer from './components/AccessibilityAnnouncer.vue';
+
+const route = useRoute();
 
 const drawerOpen = ref(false);
 const drawerIsOpen = ref(false);

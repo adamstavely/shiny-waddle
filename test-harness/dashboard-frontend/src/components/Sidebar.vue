@@ -5,33 +5,63 @@
   >
     <!-- Navigation Items -->
     <nav class="sidebar-nav" role="navigation">
-      <template v-for="(item, index) in menuItems" :key="item.path">
-        <a
-          :href="item.path"
-          @click.prevent="handleNavClick(item.path)"
-          :class="[
-            'nav-item',
-            isActive(item.path) ? 'nav-item-active' : ''
-          ]"
-          :title="item.label"
-        >
-          <component :is="item.icon" class="nav-icon" />
-          <span class="nav-label">{{ item.label }}</span>
-        </a>
-        <!-- Divider after certain items -->
-        <div 
-          v-if="item.divider"
-          class="nav-divider"
-          aria-hidden="true"
-        ></div>
-      </template>
+      <div class="nav-items-container">
+        <template v-for="(item, index) in menuItems" :key="item.path">
+          <router-link
+            v-if="!['/access-control', '/platform-config', '/app-security', '/data-security'].includes(item.path)"
+            :to="item.path"
+            :class="[
+              'nav-item',
+              isActive(item.path) ? 'nav-item-active' : ''
+            ]"
+            :title="item.label"
+          >
+            <component :is="item.icon" class="nav-icon" />
+            <span class="nav-label">{{ item.label }}</span>
+          </router-link>
+          <button
+            v-else
+            @click="handleNavClick(item.path)"
+            :class="[
+              'nav-item',
+              isActive(item.path) ? 'nav-item-active' : ''
+            ]"
+            :title="item.label"
+          >
+            <component :is="item.icon" class="nav-icon" />
+            <span class="nav-label">{{ item.label }}</span>
+          </button>
+          <!-- Divider after certain items -->
+          <div 
+            v-if="item.divider"
+            class="nav-divider"
+            aria-hidden="true"
+          ></div>
+        </template>
+      </div>
     </nav>
+    
+    <!-- Admin Item - Pinned at Bottom -->
+    <div class="nav-admin-section">
+      <div class="nav-divider" aria-hidden="true"></div>
+      <router-link
+        to="/admin"
+        :class="[
+          'nav-item',
+          isActive('/admin') ? 'nav-item-active' : ''
+        ]"
+        title="Admin"
+      >
+        <component :is="UserCog" class="nav-icon" />
+        <span class="nav-label">Admin</span>
+      </router-link>
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { 
   LayoutDashboard, 
   Shield, 
@@ -49,10 +79,12 @@ import {
   Users,
   Folder,
   FileCheck,
-  CheckCircle2
+  CheckCircle2,
+  UserCog
 } from 'lucide-vue-next';
 
 const route = useRoute();
+const router = useRouter();
 const currentPath = ref(route.path);
 
 const menuItems = [
@@ -88,6 +120,9 @@ const isActive = (path: string): boolean => {
     return currentPath.value === '/datasets' || currentPath.value === '/contracts' ||
            currentPath.value.startsWith('/datasets/') || currentPath.value.startsWith('/contracts/');
   }
+  if (path === '/admin') {
+    return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
+  }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };
 
@@ -98,8 +133,8 @@ const handleNavClick = (path: string) => {
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
     return;
   }
-  // Router will handle navigation
-  window.location.href = path;
+  // Use Vue Router for navigation
+  router.push(path);
 };
 
 // Watch for route changes to update active state
@@ -121,8 +156,7 @@ watch(() => route.path, (newPath) => {
   flex-direction: column;
   flex-shrink: 0;
   z-index: 30;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .sidebar-nav {
@@ -133,6 +167,29 @@ watch(() => route.path, (newPath) => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-height: 0;
+  padding-bottom: 80px; /* Space for admin section */
+}
+
+.nav-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-admin-section {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: linear-gradient(180deg, transparent 0%, #0f1419 20%);
+  padding-top: 8px;
+  padding-bottom: 16px;
+  z-index: 10;
 }
 
 .nav-item {
@@ -149,6 +206,9 @@ watch(() => route.path, (newPath) => {
   cursor: pointer;
   border: 1px solid transparent;
   position: relative;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 .nav-item:hover {

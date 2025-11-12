@@ -59,7 +59,7 @@ export class EncryptionService {
       // For GCM mode, get authentication tag
       let tag: Buffer | undefined;
       if (this.algorithm.includes('gcm')) {
-        tag = cipher.getAuthTag();
+        tag = (cipher as crypto.CipherGCM).getAuthTag();
       }
       
       return {
@@ -89,7 +89,7 @@ export class EncryptionService {
       
       // Set authentication tag for GCM mode
       if (encryptedData.tag && encryptedData.algorithm.includes('gcm')) {
-        decipher.setAuthTag(Buffer.from(encryptedData.tag, 'base64'));
+        (decipher as crypto.DecipherGCM).setAuthTag(Buffer.from(encryptedData.tag, 'base64'));
       }
       
       let decrypted = decipher.update(encrypted);
@@ -163,4 +163,5 @@ export class EncryptionService {
     return password;
   }
 }
+
 

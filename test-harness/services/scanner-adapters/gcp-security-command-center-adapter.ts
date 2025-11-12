@@ -87,7 +87,7 @@ export class GCPSecurityCommandCenterAdapter extends BaseScannerAdapter {
       event: {
         kind: 'event',
         category: 'security',
-        type: props.FindingClass === 'THREAT' ? 'threat' : 'vulnerability',
+        type: props.FindingClass === 'THREAT' ? 'alert' : 'vulnerability',
         action: 'detected',
         severity: this.mapSeverityToECS(severity),
       },
@@ -118,10 +118,12 @@ export class GCPSecurityCommandCenterAdapter extends BaseScannerAdapter {
       compliance: this.extractCompliance(gcpFinding),
       vulnerability: {
         severity,
-        cveId: props.FindingSourceCVE,
-        cweId: props.FindingSourceCWE,
-        cvssScore: props.FindingSourceCVSS,
-        exploitability: this.mapExploitability(props.FindingSourceExploitability),
+        id: props.FindingSourceCVE,
+        cve: props.FindingSourceCVE ? { 
+          id: props.FindingSourceCVE,
+          score: props.FindingSourceCVSS ? { base: props.FindingSourceCVSS } : undefined
+        } : undefined,
+        classification: props.FindingSourceCWE,
         scanner: {
           vendor: 'Google',
           name: 'Security Command Center',
@@ -140,7 +142,7 @@ export class GCPSecurityCommandCenterAdapter extends BaseScannerAdapter {
                  (props.FindingSourceCreateTime ? new Date(props.FindingSourceCreateTime) : new Date()),
       updatedAt: gcpFinding.updateTime ? new Date(gcpFinding.updateTime) : 
                  (props.FindingSourceUpdateTime ? new Date(props.FindingSourceUpdateTime) : new Date()),
-      riskScore: this.calculateRiskScore(severity, props.FindingSourceConfidence),
+      riskScore: this.calculateRiskScore(severity, props.FindingSourceExploitability, props.FindingSourceAssetType),
       raw: gcpFinding,
     };
   }
@@ -247,27 +249,7 @@ export class GCPSecurityCommandCenterAdapter extends BaseScannerAdapter {
     return 'not-exploitable';
   }
 
-  private calculateRiskScore(severity: string, confidence?: number): number {
-    const baseScore = this.calculateBaseRiskScore(severity);
-    
-    if (confidence !== undefined) {
-      // Adjust score based on confidence
-      return Math.round(baseScore * (0.7 + confidence * 0.3));
-    }
-    
-    return baseScore;
-  }
-
-  private calculateBaseRiskScore(severity: string): number {
-    const mapping: Record<string, number> = {
-      'critical': 90,
-      'high': 70,
-      'medium': 50,
-      'low': 30,
-      'info': 10,
-    };
-    return mapping[severity] || 50;
-  }
+  // Use the base class calculateRiskScore method instead of overriding
 
   private mapSeverityToECS(severity: string): number {
     const mapping: Record<string, number> = {

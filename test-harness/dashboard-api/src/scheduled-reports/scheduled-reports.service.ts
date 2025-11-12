@@ -97,9 +97,14 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Generate report using ReportsService
+      // Convert pdf/excel formats to html for now (can be enhanced later)
+      const reportFormat = (report.format === 'pdf' || report.format === 'excel') 
+        ? 'html' 
+        : report.format as 'json' | 'html' | 'xml';
+      
       const generateRequest = {
         name: `${report.name} - ${new Date().toLocaleDateString()}`,
-        format: report.format,
+        format: reportFormat,
         applicationIds: report.applicationIds,
         teamIds: report.teamIds,
         validatorIds: report.validatorIds,

@@ -84,7 +84,7 @@ export class AzureSecurityCenterAdapter extends BaseScannerAdapter {
       event: {
         kind: 'event',
         category: 'security',
-        type: azureFinding.properties.isIncident ? 'incident' : 'vulnerability',
+        type: azureFinding.properties.isIncident ? 'alert' : 'vulnerability',
         action: 'detected',
         severity: this.mapSeverityToECS(severity),
       },
@@ -118,7 +118,6 @@ export class AzureSecurityCenterAdapter extends BaseScannerAdapter {
           vendor: 'Microsoft',
           name: 'Azure Security Center',
         },
-        exploitability: azureFinding.properties.canBeInvestigated ? 'potentially-exploitable' : 'not-exploitable',
       },
       remediation: {
         description: azureFinding.properties.remediationDescription || 
@@ -131,7 +130,7 @@ export class AzureSecurityCenterAdapter extends BaseScannerAdapter {
       status: this.mapStatus(azureFinding.properties.state),
       createdAt: new Date(azureFinding.properties.timeGeneratedUtc),
       updatedAt: new Date(azureFinding.properties.timeGeneratedUtc),
-      riskScore: this.calculateRiskScore(severity, azureFinding.properties.confidenceScore),
+      riskScore: this.calculateRiskScore(severity, azureFinding.properties.canBeInvestigated ? 'potentially-exploitable' : 'not-exploitable'),
       relatedFindings: azureFinding.properties.sourceSystemIds?.map(id => this.generateFindingId(id)),
       raw: azureFinding,
     };
@@ -227,27 +226,7 @@ export class AzureSecurityCenterAdapter extends BaseScannerAdapter {
     return mapping[state] || 'open';
   }
 
-  private calculateRiskScore(severity: string, confidenceScore?: number): number {
-    const baseScore = this.calculateBaseRiskScore(severity);
-    
-    if (confidenceScore !== undefined) {
-      // Adjust score based on confidence
-      return Math.round(baseScore * (0.7 + confidenceScore * 0.3));
-    }
-    
-    return baseScore;
-  }
-
-  private calculateBaseRiskScore(severity: string): number {
-    const mapping: Record<string, number> = {
-      'critical': 90,
-      'high': 70,
-      'medium': 50,
-      'low': 30,
-      'info': 10,
-    };
-    return mapping[severity] || 50;
-  }
+  // Use the base class calculateRiskScore method instead of overriding
 
   private mapSeverityToECS(severity: string): number {
     const mapping: Record<string, number> = {

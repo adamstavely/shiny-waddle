@@ -29,6 +29,8 @@ import TicketingIntegrations from '../views/TicketingIntegrations.vue';
 import SLAManagement from '../views/SLAManagement.vue';
 import Compliance from '../views/Compliance.vue';
 import UnifiedFindings from '../views/UnifiedFindings.vue';
+import HowItWorks from '../views/HowItWorks.vue';
+import Repos from '../views/Repos.vue';
 import NotFound from '../views/NotFound.vue';
 
 const router = createRouter({
@@ -197,6 +199,16 @@ const router = createRouter({
       path: '/compliance',
       name: 'Compliance',
       component: Compliance,
+    },
+    {
+      path: '/how-it-works',
+      name: 'HowItWorks',
+      component: HowItWorks,
+    },
+    {
+      path: '/repos',
+      name: 'Repos',
+      component: Repos,
     },
     {
       path: '/:pathMatch(.*)*',

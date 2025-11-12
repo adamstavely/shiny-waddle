@@ -1017,3 +1017,4 @@ interface MitreTechnique {
   tactic: string;
 }
 
+
