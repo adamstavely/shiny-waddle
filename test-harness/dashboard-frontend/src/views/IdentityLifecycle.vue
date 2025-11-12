@@ -130,6 +130,13 @@
         </div>
       </div>
     </div>
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -138,6 +145,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { UserPlus, Key, AlertTriangle, CheckCircle2, XCircle, Circle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -153,6 +161,9 @@ const pamResult = ref<any>(null);
 const selectedConfigId = ref<string>('');
 const configurations = ref<any[]>([]);
 const currentUser = ref<any>(null);
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
 
 const hasTestData = computed(() => {
   return currentUser.value !== null;
@@ -214,6 +225,8 @@ const tabs = [
 
 const testOnboarding = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {};
     if (selectedConfigId.value) {
@@ -223,7 +236,11 @@ const testOnboarding = async () => {
     }
     const response = await axios.post('/api/identity-lifecycle/test-onboarding', payload);
     onboardingResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test onboarding';
+    showResultsModal.value = true;
     console.error('Error testing onboarding:', error);
   } finally {
     loading.value = false;
@@ -232,6 +249,8 @@ const testOnboarding = async () => {
 
 const testJIT = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       request: { userId: 'test-user', resource: 'test-resource', reason: 'Testing', duration: 60 },
@@ -241,7 +260,11 @@ const testJIT = async () => {
     }
     const response = await axios.post('/api/identity-lifecycle/test-jit-access', payload);
     pamResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test JIT access';
+    showResultsModal.value = true;
     console.error('Error testing JIT:', error);
   } finally {
     loading.value = false;
@@ -250,6 +273,8 @@ const testJIT = async () => {
 
 const testBreakGlass = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       request: { userId: 'test-user', resource: 'test-resource', reason: 'Emergency', duration: 60, emergency: true },
@@ -259,11 +284,21 @@ const testBreakGlass = async () => {
     }
     const response = await axios.post('/api/identity-lifecycle/test-break-glass', payload);
     pamResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test break-glass access';
+    showResultsModal.value = true;
     console.error('Error testing break-glass:', error);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 onMounted(() => {

@@ -6,6 +6,7 @@ import { User, PAMRequest } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
 import { IdentityLifecycleConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { validateIdentityLifecycleConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
 export class IdentityLifecycleService {
@@ -31,6 +32,16 @@ export class IdentityLifecycleService {
           throw new ValidationException(`Configuration ${dto.configId} is not an identity lifecycle configuration`);
         }
         ilConfig = config as IdentityLifecycleConfigurationEntity;
+        
+        // Validate configuration completeness (warnings only for identity lifecycle as workflow is optional)
+        const validationErrors = validateIdentityLifecycleConfig(ilConfig);
+        if (validationErrors.length > 0 && validationErrors.some(e => !e.message.includes('recommended'))) {
+          const errorMessage = formatValidationErrors(validationErrors, ilConfig.name);
+          throw new ValidationException(
+            `Configuration '${ilConfig.name}' has validation issues for onboarding test:\n${errorMessage}`
+          );
+        }
+        
         user = dto.user || { id: 'test-user', email: 'test@example.com', role: 'viewer', attributes: {} };
       } else {
         user = dto.user!;

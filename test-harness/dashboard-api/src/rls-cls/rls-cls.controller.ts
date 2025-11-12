@@ -14,20 +14,26 @@ import {
   TestDynamicMaskingDto,
   TestCrossTenantIsolationDto,
 } from './dto/rls-cls.dto';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, ValidateIf } from 'class-validator';
 
 class TestPolicyBypassDto {
+  @IsOptional()
   @IsString()
+  @ValidateIf((o) => !o.configId)
   @IsNotEmpty()
-  userId: string;
+  userId?: string;
 
+  @IsOptional()
   @IsString()
+  @ValidateIf((o) => !o.configId)
   @IsNotEmpty()
-  resourceId: string;
+  resourceId?: string;
 
+  @IsOptional()
   @IsString()
+  @ValidateIf((o) => !o.configId)
   @IsNotEmpty()
-  resourceType: string;
+  resourceType?: string;
 }
 
 @Controller('api/rls-cls')
@@ -52,8 +58,10 @@ export class RLSCLSController {
 
   @Post('test-dynamic-masking')
   @HttpCode(HttpStatus.OK)
-  async testDynamicMasking(@Body(ValidationPipe) dto: TestDynamicMaskingDto) {
-    this.logger.log(`Testing dynamic masking for query: ${dto.query?.name || 'unknown'}`);
+  async testDynamicMasking(@Body(ValidationPipe) dto: TestDynamicMaskingDto & { configId?: string }) {
+    this.logger.log(dto.configId
+      ? `Testing dynamic masking with config: ${dto.configId}`
+      : `Testing dynamic masking for query: ${dto.query?.name || 'unknown'}`);
     return this.rlsClsService.testDynamicMasking(dto);
   }
 
@@ -70,10 +78,10 @@ export class RLSCLSController {
 
   @Post('test-policy-bypass')
   @HttpCode(HttpStatus.OK)
-  async testPolicyBypass(@Body(ValidationPipe) dto: TestPolicyBypassDto) {
-    this.logger.log(
-      `Testing policy bypass for user: ${dto.userId}, resource: ${dto.resourceId}`,
-    );
+  async testPolicyBypass(@Body(ValidationPipe) dto: TestPolicyBypassDto & { configId?: string }) {
+    this.logger.log(dto.configId
+      ? `Testing policy bypass with config: ${dto.configId}`
+      : `Testing policy bypass for user: ${dto.userId}, resource: ${dto.resourceId}`);
     return this.rlsClsService.testPolicyBypass(dto);
   }
 }

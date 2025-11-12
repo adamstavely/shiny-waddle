@@ -84,6 +84,55 @@
     </div>
 
     <div class="form-section">
+      <h3>Default Masking Rules</h3>
+      <div v-for="(rule, index) in localData.maskingRules" :key="index" class="rule-item">
+        <div class="form-group">
+          <label>Table *</label>
+          <input v-model="rule.table" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Column *</label>
+          <input v-model="rule.column" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Masking Type *</label>
+          <select v-model="rule.maskingType" required>
+            <option value="partial">Partial</option>
+            <option value="full">Full</option>
+            <option value="hash">Hash</option>
+            <option value="redact">Redact</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condition (optional)</label>
+          <input v-model="rule.condition" type="text" />
+        </div>
+        <button @click="removeMaskingRule(index)" class="btn-danger">Remove</button>
+      </div>
+      <button @click="addMaskingRule" class="btn-secondary">Add Masking Rule</button>
+    </div>
+
+    <div class="form-section">
+      <h3>Default Test Resources</h3>
+      <div v-for="(resource, index) in localData.testResources" :key="index" class="resource-item">
+        <div class="form-group">
+          <label>Resource ID *</label>
+          <input v-model="resource.resourceId" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Resource Type *</label>
+          <input v-model="resource.resourceType" type="text" required />
+        </div>
+        <div class="form-group">
+          <label>Description (optional)</label>
+          <input v-model="resource.description" type="text" />
+        </div>
+        <button @click="removeTestResource(index)" class="btn-danger">Remove</button>
+      </div>
+      <button @click="addTestResource" class="btn-secondary">Add Test Resource</button>
+    </div>
+
+    <div class="form-section">
       <h3>Test Logic</h3>
       <div class="form-group">
         <label>
@@ -124,6 +173,8 @@ const localData = ref({
     connectionString: '',
   },
   testQueries: [] as any[],
+  maskingRules: [] as any[],
+  testResources: [] as any[],
   validationRules: {
     minRLSCoverage: 80,
     minCLSCoverage: 80,
@@ -157,6 +208,37 @@ const addQuery = () => {
 
 const removeQuery = (index: number) => {
   localData.value.testQueries.splice(index, 1);
+};
+
+const addMaskingRule = () => {
+  if (!localData.value.maskingRules) {
+    localData.value.maskingRules = [];
+  }
+  localData.value.maskingRules.push({
+    table: '',
+    column: '',
+    maskingType: 'partial',
+    condition: '',
+  });
+};
+
+const removeMaskingRule = (index: number) => {
+  localData.value.maskingRules.splice(index, 1);
+};
+
+const addTestResource = () => {
+  if (!localData.value.testResources) {
+    localData.value.testResources = [];
+  }
+  localData.value.testResources.push({
+    resourceId: '',
+    resourceType: '',
+    description: '',
+  });
+};
+
+const removeTestResource = (index: number) => {
+  localData.value.testResources.splice(index, 1);
 };
 </script>
 
@@ -219,7 +301,9 @@ const removeQuery = (index: number) => {
   color: #ffffff;
 }
 
-.query-item {
+.query-item,
+.rule-item,
+.resource-item {
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 8px;
   padding: 1rem;

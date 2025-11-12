@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString, IsObject, IsArray, ValidateNested, IsOptional, Is
 import { Type } from 'class-transformer';
 import { DatabaseConfig, TestQuery, User, DynamicMaskingRule } from '../../../../core/types';
 
-class DatabaseConfigDto {
+export class DatabaseConfigDto {
   @IsNotEmpty()
   @IsString()
   @IsIn(['postgresql', 'mysql', 'mssql', 'oracle', 'sqlite'])
@@ -34,19 +34,27 @@ class DatabaseConfigDto {
 }
 
 export class TestRLSCoverageDto {
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  configId?: string;
+
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => DatabaseConfigDto)
-  database: DatabaseConfigDto;
+  database?: DatabaseConfigDto;
 }
 
 export class TestCLSCoverageDto {
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  configId?: string;
+
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => DatabaseConfigDto)
-  database: DatabaseConfigDto;
+  database?: DatabaseConfigDto;
 }
 
 export class TestDynamicMaskingDto {
@@ -69,7 +77,7 @@ export class TestDynamicMaskingDto {
   maskingRules: DynamicMaskingRule[];
 }
 
-class TestQueryDto {
+export class TestQueryDto {
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -91,19 +99,23 @@ class TestQueryDto {
 }
 
 export class TestCrossTenantIsolationDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  tenant1: string;
+  configId?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  tenant2: string;
+  tenant1?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  tenant2?: string;
+
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1, { message: 'At least one test query is required' })
   @ValidateNested({ each: true })
   @Type(() => TestQueryDto)
-  testQueries: TestQueryDto[];
+  testQueries?: TestQueryDto[];
 }
 

@@ -120,6 +120,13 @@
         </div>
       </div>
     </div>
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -128,6 +135,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { FileX, Shield, CheckCircle2, XCircle, AlertTriangle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -143,6 +151,9 @@ const bulkExportResult = ref<any>(null);
 const selectedConfigId = ref<string>('');
 const configurations = ref<any[]>([]);
 const currentPatterns = ref<any[]>([]);
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
 
 const hasTestData = computed(() => {
   return currentPatterns.value.length > 0;
@@ -199,6 +210,8 @@ const navigateToConfig = () => {
 
 const testExfiltration = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       user: { id: 'test', email: 'test@example.com', role: 'viewer', attributes: {} },
@@ -209,7 +222,11 @@ const testExfiltration = async () => {
     }
     const response = await axios.post('/api/dlp/test-exfiltration', payload);
     exfiltrationResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test exfiltration';
+    showResultsModal.value = true;
     console.error('Error testing exfiltration:', error);
   } finally {
     loading.value = false;
@@ -218,14 +235,24 @@ const testExfiltration = async () => {
 
 const validateAPI = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
-    const response = await axios.post('/api/dlp/validate-api-response', {
+    const payload: any = {
       apiResponse: {},
       allowedFields: ['id', 'name'],
       piiFields: ['email', 'ssn'],
-    });
+    };
+    if (selectedConfigId.value) {
+      payload.configId = selectedConfigId.value;
+    }
+    const response = await axios.post('/api/dlp/validate-api-response', payload);
     apiValidationResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to validate API response';
+    showResultsModal.value = true;
     console.error('Error validating API:', error);
   } finally {
     loading.value = false;
@@ -234,6 +261,8 @@ const validateAPI = async () => {
 
 const testBulkExport = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       user: { id: 'test', email: 'test@example.com', role: 'viewer', attributes: {} },
@@ -244,11 +273,21 @@ const testBulkExport = async () => {
     }
     const response = await axios.post('/api/dlp/test-bulk-export', payload);
     bulkExportResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test bulk export';
+    showResultsModal.value = true;
     console.error('Error testing bulk export:', error);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 onMounted(() => {

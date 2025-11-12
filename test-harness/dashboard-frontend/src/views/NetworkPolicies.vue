@@ -116,6 +116,13 @@
         </div>
       </div>
     </div>
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -124,6 +131,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Network, Shield, CheckCircle2, XCircle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -140,6 +148,9 @@ const selectedConfigId = ref<string>('');
 const configurations = ref<any[]>([]);
 const currentFirewallRules = ref<any[]>([]);
 const currentSegments = ref<any[]>([]);
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
 
 const hasTestData = computed(() => {
   return currentFirewallRules.value.length > 0 || currentSegments.value.length > 0;
@@ -200,6 +211,8 @@ const navigateToConfig = () => {
 
 const testFirewall = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {};
     if (selectedConfigId.value) {
@@ -222,7 +235,11 @@ const testFirewall = async () => {
     }
     const response = await axios.post('/api/network-policy/test-firewall-rules', payload);
     firewallResults.value = Array.isArray(response.data) ? response.data : [response.data];
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test firewall rules';
+    showResultsModal.value = true;
     console.error('Error testing firewall:', error);
   } finally {
     loading.value = false;
@@ -231,13 +248,23 @@ const testFirewall = async () => {
 
 const testServiceToService = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
-    const response = await axios.post('/api/network-policy/test-service-to-service', {
+    const payload: any = {
       source: 'frontend',
       target: 'backend',
-    });
+    };
+    if (selectedConfigId.value) {
+      payload.configId = selectedConfigId.value;
+    }
+    const response = await axios.post('/api/network-policy/test-service-to-service', payload);
     serviceResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test service-to-service';
+    showResultsModal.value = true;
     console.error('Error testing service-to-service:', error);
   } finally {
     loading.value = false;
@@ -246,6 +273,8 @@ const testServiceToService = async () => {
 
 const testSegmentation = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {};
     if (selectedConfigId.value) {
@@ -266,11 +295,21 @@ const testSegmentation = async () => {
     }
     const response = await axios.post('/api/network-policy/validate-segmentation', payload);
     segmentationResults.value = Array.isArray(response.data) ? response.data : [response.data];
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test segmentation';
+    showResultsModal.value = true;
     console.error('Error testing segmentation:', error);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 onMounted(() => {

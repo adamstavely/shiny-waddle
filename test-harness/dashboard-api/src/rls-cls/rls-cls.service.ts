@@ -4,6 +4,7 @@ import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '.
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
 import { RLSCLSConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { validateRLSCLSConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
 export class RLSCLSService {
@@ -25,6 +26,16 @@ export class RLSCLSService {
           throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
         }
         rlsConfig = config as RLSCLSConfigurationEntity;
+        
+        // Validate configuration completeness
+        const validationErrors = validateRLSCLSConfig(rlsConfig);
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, rlsConfig.name);
+          throw new ValidationException(
+            `Configuration '${rlsConfig.name}' is missing required fields for RLS coverage test:\n${errorMessage}`
+          );
+        }
+        
         database = rlsConfig.database;
         // Merge with inline database if provided (inline takes precedence)
         if (dto.database) {
@@ -33,7 +44,9 @@ export class RLSCLSService {
       } else if (dto.database) {
         database = dto.database;
       } else {
-        throw new ValidationException('Either configId or database must be provided');
+        throw new ValidationException(
+          'Either configId or database must be provided. If using configId, ensure the configuration includes a database field.'
+        );
       }
 
       this.validateDatabaseConfig(database);
@@ -102,6 +115,16 @@ export class RLSCLSService {
           throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
         }
         rlsConfig = config as RLSCLSConfigurationEntity;
+        
+        // Validate configuration completeness
+        const validationErrors = validateRLSCLSConfig(rlsConfig);
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, rlsConfig.name);
+          throw new ValidationException(
+            `Configuration '${rlsConfig.name}' is missing required fields for CLS coverage test:\n${errorMessage}`
+          );
+        }
+        
         database = rlsConfig.database;
         // Merge with inline database if provided (inline takes precedence)
         if (dto.database) {
@@ -110,7 +133,9 @@ export class RLSCLSService {
       } else if (dto.database) {
         database = dto.database;
       } else {
-        throw new ValidationException('Either configId or database must be provided');
+        throw new ValidationException(
+          'Either configId or database must be provided. If using configId, ensure the configuration includes a database field.'
+        );
       }
 
       this.validateDatabaseConfig(database);
@@ -178,8 +203,20 @@ export class RLSCLSService {
         // Use testQueries from config if query not provided
         query = dto.query || (rlsConfig.testQueries && rlsConfig.testQueries.length > 0 ? rlsConfig.testQueries[0] : { name: 'default-query', sql: 'SELECT * FROM users' });
         user = dto.user || { id: 'test-user', email: 'test@example.com', role: 'viewer', attributes: {} };
-        // Masking rules would need to be provided or come from config
-        maskingRules = dto.maskingRules || [];
+        // Use masking rules from config if not provided inline
+        if (dto.maskingRules && dto.maskingRules.length > 0) {
+          maskingRules = dto.maskingRules;
+        } else if (rlsConfig.maskingRules && rlsConfig.maskingRules.length > 0) {
+          // Convert config masking rules to DynamicMaskingRule format
+          maskingRules = rlsConfig.maskingRules.map(rule => ({
+            table: rule.table,
+            column: rule.column,
+            maskingType: rule.maskingType,
+            condition: rule.condition,
+          })) as DynamicMaskingRule[];
+        } else {
+          maskingRules = [];
+        }
       } else {
         query = dto.query!;
         user = dto.user!;
@@ -189,7 +226,9 @@ export class RLSCLSService {
       this.validateTestQuery(query);
       this.validateUser(user);
       if (!maskingRules || maskingRules.length === 0) {
-        throw new ValidationException('At least one masking rule is required');
+        throw new ValidationException(
+          'At least one masking rule is required. Please provide masking rules inline or configure them in the test configuration.'
+        );
       }
 
       const result = await this.tester.testDynamicMasking(query, user, maskingRules);
@@ -297,12 +336,15 @@ export class RLSCLSService {
 
   async testPolicyBypass(dto: {
     configId?: string;
-    userId: string;
-    resourceId: string;
-    resourceType: string;
+    userId?: string;
+    resourceId?: string;
+    resourceType?: string;
   }) {
     try {
       let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let userId: string;
+      let resourceId: string;
+      let resourceType: string;
 
       if (dto.configId) {
         const config = await this.configService.findOne(dto.configId);
@@ -310,28 +352,48 @@ export class RLSCLSService {
           throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
         }
         rlsConfig = config as RLSCLSConfigurationEntity;
-      }
-
-      if (!dto.userId) {
-        throw new ValidationException('userId is required');
-      }
-      if (!dto.resourceId) {
-        throw new ValidationException('resourceId is required');
-      }
-      if (!dto.resourceType) {
-        throw new ValidationException('resourceType is required');
+        
+        // Use test resources from config if not provided inline
+        if (dto.resourceId && dto.resourceType) {
+          resourceId = dto.resourceId;
+          resourceType = dto.resourceType;
+        } else if (rlsConfig.testResources && rlsConfig.testResources.length > 0) {
+          // Use first test resource from config
+          const testResource = rlsConfig.testResources[0];
+          resourceId = testResource.resourceId;
+          resourceType = testResource.resourceType;
+        } else {
+          throw new ValidationException(
+            'Resource information is required. Please provide resourceId and resourceType inline or configure test resources in the test configuration.'
+          );
+        }
+        
+        userId = dto.userId || 'test-user';
+      } else {
+        if (!dto.userId) {
+          throw new ValidationException('userId is required when configId is not provided');
+        }
+        if (!dto.resourceId) {
+          throw new ValidationException('resourceId is required when configId is not provided');
+        }
+        if (!dto.resourceType) {
+          throw new ValidationException('resourceType is required when configId is not provided');
+        }
+        userId = dto.userId;
+        resourceId = dto.resourceId;
+        resourceType = dto.resourceType;
       }
 
       const user: User = {
-        id: dto.userId,
-        email: `${dto.userId}@example.com`,
+        id: userId,
+        email: `${userId}@example.com`,
         role: 'viewer',
         attributes: {},
       };
 
       const resource: Resource = {
-        id: dto.resourceId,
-        type: dto.resourceType,
+        id: resourceId,
+        type: resourceType,
         attributes: {},
       };
 

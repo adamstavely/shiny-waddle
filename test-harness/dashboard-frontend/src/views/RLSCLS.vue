@@ -116,6 +116,13 @@
         </div>
       </div>
     </div>
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -124,6 +131,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ShieldCheck, Shield, Play, AlertTriangle, CheckCircle2, XCircle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -140,6 +148,9 @@ const selectedConfigId = ref<string>('');
 const configurations = ref<any[]>([]);
 const currentDatabase = ref<any>({ type: 'postgresql', database: 'test' });
 const currentTestQueries = ref<any[]>([]);
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
 
 const hasTestData = computed(() => {
   return currentDatabase.value.type || currentTestQueries.value.length > 0;
@@ -200,6 +211,8 @@ const navigateToConfig = () => {
 
 const testRLSCoverage = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {};
     if (selectedConfigId.value) {
@@ -209,7 +222,11 @@ const testRLSCoverage = async () => {
     }
     const response = await axios.post('/api/rls-cls/test-rls-coverage', payload);
     rlsCoverage.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test RLS coverage';
+    showResultsModal.value = true;
     console.error('Error testing RLS coverage:', error);
   } finally {
     loading.value = false;
@@ -218,6 +235,8 @@ const testRLSCoverage = async () => {
 
 const testCLSCoverage = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {};
     if (selectedConfigId.value) {
@@ -227,7 +246,11 @@ const testCLSCoverage = async () => {
     }
     const response = await axios.post('/api/rls-cls/test-cls-coverage', payload);
     clsCoverage.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test CLS coverage';
+    showResultsModal.value = true;
     console.error('Error testing CLS coverage:', error);
   } finally {
     loading.value = false;
@@ -236,6 +259,8 @@ const testCLSCoverage = async () => {
 
 const testCrossTenant = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       tenant1: 'tenant1',
@@ -256,11 +281,21 @@ const testCrossTenant = async () => {
     }
     const response = await axios.post('/api/rls-cls/test-cross-tenant-isolation', payload);
     isolationTest.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test cross-tenant isolation';
+    showResultsModal.value = true;
     console.error('Error testing cross-tenant isolation:', error);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 onMounted(() => {

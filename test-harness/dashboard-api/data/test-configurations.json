@@ -1,0 +1,164 @@
+[
+  {
+    "id": "760886ec-a9e6-4214-8507-3c78cfe30e44",
+    "name": "Default PostgreSQL RLS/CLS",
+    "type": "rls-cls",
+    "description": "Default configuration for PostgreSQL RLS/CLS testing",
+    "database": {
+      "type": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "database": "test",
+      "username": "postgres"
+    },
+    "testQueries": [
+      {
+        "name": "test-user-query",
+        "sql": "SELECT * FROM users WHERE tenant_id = ?"
+      }
+    ],
+    "validationRules": {
+      "minRLSCoverage": 80,
+      "minCLSCoverage": 80
+    },
+    "testLogic": {
+      "skipDisabledPolicies": true,
+      "validateCrossTenant": true
+    },
+    "createdAt": "2025-11-12T21:03:20.672Z",
+    "updatedAt": "2025-11-12T21:03:20.672Z"
+  },
+  {
+    "id": "65f2ec8f-3b3a-4faf-ae04-71329737adbc",
+    "name": "Default Network Segmentation",
+    "type": "network-policy",
+    "description": "Default configuration for network policy testing",
+    "firewallRules": [
+      {
+        "id": "default-allow-frontend-backend",
+        "name": "Allow Frontend to Backend",
+        "source": "10.0.1.0/24",
+        "destination": "10.0.2.0/24",
+        "protocol": "tcp",
+        "port": 8080,
+        "action": "allow",
+        "enabled": true
+      }
+    ],
+    "networkSegments": [
+      {
+        "id": "default-frontend-segment",
+        "name": "Frontend Segment",
+        "cidr": "10.0.1.0/24",
+        "services": [
+          "frontend"
+        ],
+        "allowedConnections": [
+          "backend"
+        ],
+        "deniedConnections": [
+          "database"
+        ]
+      }
+    ],
+    "testLogic": {
+      "validateConnectivity": true,
+      "checkSegmentation": true
+    },
+    "createdAt": "2025-11-12T21:03:20.672Z",
+    "updatedAt": "2025-11-12T21:03:20.672Z"
+  },
+  {
+    "id": "a5d17008-cb21-4b50-86ba-2d3c761c0842",
+    "name": "Default DLP Patterns",
+    "type": "dlp",
+    "description": "Default configuration for DLP testing",
+    "patterns": [
+      {
+        "name": "SSN Pattern",
+        "pattern": "\\d{3}-\\d{2}-\\d{4}",
+        "type": "ssn"
+      },
+      {
+        "name": "Credit Card Pattern",
+        "pattern": "\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}",
+        "type": "credit-card"
+      }
+    ],
+    "bulkExportLimits": {
+      "csv": 10000,
+      "json": 10000,
+      "excel": 10000,
+      "api": 1000
+    },
+    "testLogic": {
+      "requireEncryption": true,
+      "blockExfiltration": true
+    },
+    "createdAt": "2025-11-12T21:03:20.672Z",
+    "updatedAt": "2025-11-12T21:03:20.672Z"
+  },
+  {
+    "id": "ca99d0ee-5154-4124-ad69-8231947f80c2",
+    "name": "Default Identity Lifecycle",
+    "type": "identity-lifecycle",
+    "description": "Default configuration for identity lifecycle testing",
+    "onboardingWorkflow": {
+      "steps": [
+        {
+          "name": "create-account",
+          "required": true
+        },
+        {
+          "name": "assign-role",
+          "required": true
+        },
+        {
+          "name": "enable-mfa",
+          "required": true
+        }
+      ]
+    },
+    "pamConfig": {
+      "maxJITDuration": 60,
+      "requireApproval": true,
+      "emergencyAccessEnabled": true
+    },
+    "credentialRotationRules": {
+      "passwordMaxAge": 90,
+      "apiKeyMaxAge": 365,
+      "requireMFA": true
+    },
+    "createdAt": "2025-11-12T21:03:20.672Z",
+    "updatedAt": "2025-11-12T21:03:20.672Z"
+  },
+  {
+    "id": "af08da64-2bc9-4362-b4c8-8fe9f0144336",
+    "name": "Default API Gateway",
+    "type": "api-gateway",
+    "description": "Default configuration for API gateway testing",
+    "gatewayPolicies": [
+      {
+        "id": "default-api-policy",
+        "name": "Default API Policy",
+        "endpoint": "/api/*",
+        "method": "GET",
+        "rules": []
+      }
+    ],
+    "rateLimitConfig": {
+      "defaultLimit": 100,
+      "defaultTimeWindow": 60,
+      "perEndpointLimits": {}
+    },
+    "serviceAuthConfig": {
+      "methods": [
+        "api-key",
+        "mtls"
+      ],
+      "requiredForEndpoints": []
+    },
+    "createdAt": "2025-11-12T21:03:20.672Z",
+    "updatedAt": "2025-11-12T21:03:20.672Z"
+  }
+]

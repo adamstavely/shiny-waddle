@@ -102,6 +102,13 @@
       @close="closeModal"
       @save="saveConfiguration"
     />
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -110,6 +117,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -202,86 +210,32 @@ const duplicateConfiguration = async (config: TestConfiguration) => {
   }
 };
 
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
+
 const testConfiguration = async (config: TestConfiguration) => {
   loading.value = true;
   error.value = null;
+  testError.value = null;
+  testResults.value = null;
   try {
     const response = await axios.post(`/api/test-configurations/${config.id}/test`);
-    
-    // Format test results for display
-    let resultMessage = `Test completed for: ${config.name}\n\n`;
-    
-    // Display basic test results
-    if (response.data.passed !== undefined) {
-      resultMessage += `Status: ${response.data.passed ? 'PASSED' : 'FAILED'}\n`;
-    }
-    
-    // Display coverage results for RLS/CLS
-    if (response.data.coveragePercentage !== undefined) {
-      resultMessage += `Coverage: ${response.data.coveragePercentage.toFixed(2)}%\n`;
-      if (response.data.validationResults) {
-        resultMessage += `Min Coverage Required: ${response.data.validationResults.minRLSCoverage || response.data.validationResults.minCLSCoverage || 'N/A'}%\n`;
-        resultMessage += `Coverage Met: ${response.data.validationResults.minRLSCoverageMet || response.data.validationResults.minCLSCoverageMet ? 'Yes' : 'No'}\n`;
-      }
-    }
-    
-    // Display workflow validation for Identity Lifecycle
-    if (response.data.workflowValidation) {
-      resultMessage += `\nWorkflow Validation:\n`;
-      resultMessage += `  Required Steps: ${response.data.workflowValidation.requiredSteps?.join(', ') || 'N/A'}\n`;
-      resultMessage += `  Completed Steps: ${response.data.workflowValidation.completedSteps?.join(', ') || 'N/A'}\n`;
-      resultMessage += `  All Required Completed: ${response.data.workflowValidation.allRequiredStepsCompleted ? 'Yes' : 'No'}\n`;
-      if (response.data.workflowValidation.missingSteps?.length > 0) {
-        resultMessage += `  Missing Steps: ${response.data.workflowValidation.missingSteps.join(', ')}\n`;
-      }
-    }
-    
-    // Display custom validation results
-    if (response.data.customValidationResults && response.data.customValidationResults.length > 0) {
-      resultMessage += `\nCustom Validations:\n`;
-      response.data.customValidationResults.forEach((val: any) => {
-        resultMessage += `  ${val.name}: ${val.passed ? 'PASSED' : 'FAILED'}\n`;
-        if (val.description) {
-          resultMessage += `    ${val.description}\n`;
-        }
-      });
-    }
-    
-    // Display custom check results
-    if (response.data.customCheckResults && response.data.customCheckResults.length > 0) {
-      resultMessage += `\nCustom Checks:\n`;
-      response.data.customCheckResults.forEach((check: any) => {
-        resultMessage += `  ${check.name}: ${check.passed ? 'PASSED' : 'FAILED'}\n`;
-        if (check.description) {
-          resultMessage += `    ${check.description}\n`;
-        }
-      });
-    }
-    
-    // Display custom rule results
-    if (response.data.customRuleResults && response.data.customRuleResults.length > 0) {
-      resultMessage += `\nCustom Rules:\n`;
-      response.data.customRuleResults.forEach((rule: any) => {
-        resultMessage += `  ${rule.source} -> ${rule.target}: ${rule.passed ? 'PASSED' : 'FAILED'}\n`;
-        if (rule.description) {
-          resultMessage += `    ${rule.description}\n`;
-        }
-      });
-    }
-    
-    // If result is too complex, show JSON
-    if (resultMessage.length > 500 || !response.data.passed && response.data.coveragePercentage === undefined) {
-      resultMessage += `\n\nFull Results:\n${JSON.stringify(response.data, null, 2)}`;
-    }
-    
-    alert(resultMessage);
+    testResults.value = response.data;
+    showResultsModal.value = true;
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to test configuration';
-    alert(`Error testing configuration: ${error.value}`);
+    testError.value = err.response?.data?.message || 'Failed to test configuration';
+    showResultsModal.value = true;
     console.error('Error testing configuration:', err);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 const deleteConfiguration = async (id: string) => {

@@ -115,6 +115,13 @@
         </div>
       </div>
     </div>
+    
+    <TestResultsModal
+      :show="showResultsModal"
+      :results="testResults"
+      :error="testError"
+      @close="closeResultsModal"
+    />
   </div>
 </template>
 
@@ -123,6 +130,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Server, Shield, Zap, Lock, CheckCircle2, XCircle, Settings, Save } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
 
 const breadcrumbItems = [
@@ -138,6 +146,9 @@ const authResult = ref<any>(null);
 const selectedConfigId = ref<string>('');
 const configurations = ref<any[]>([]);
 const currentPolicies = ref<any[]>([]);
+const testResults = ref<any>(null);
+const testError = ref<string | null>(null);
+const showResultsModal = ref(false);
 
 const hasTestData = computed(() => {
   return currentPolicies.value.length > 0;
@@ -194,6 +205,8 @@ const navigateToConfig = () => {
 
 const testPolicy = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       policy: { id: 'test', name: 'Test Policy', endpoint: '/api/test', method: 'GET', rules: [] },
@@ -204,7 +217,11 @@ const testPolicy = async () => {
     }
     const response = await axios.post('/api/api-gateway/test-gateway-policy', payload);
     policyResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test gateway policy';
+    showResultsModal.value = true;
     console.error('Error testing policy:', error);
   } finally {
     loading.value = false;
@@ -213,6 +230,8 @@ const testPolicy = async () => {
 
 const testRateLimit = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       endpoint: '/api/test',
@@ -223,7 +242,11 @@ const testRateLimit = async () => {
     }
     const response = await axios.post('/api/api-gateway/test-rate-limiting', payload);
     rateLimitResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test rate limiting';
+    showResultsModal.value = true;
     console.error('Error testing rate limit:', error);
   } finally {
     loading.value = false;
@@ -232,6 +255,8 @@ const testRateLimit = async () => {
 
 const testServiceAuth = async () => {
   loading.value = true;
+  testError.value = null;
+  testResults.value = null;
   try {
     const payload: any = {
       source: 'frontend',
@@ -242,11 +267,21 @@ const testServiceAuth = async () => {
     }
     const response = await axios.post('/api/api-gateway/test-service-auth', payload);
     authResult.value = response.data;
-  } catch (error) {
+    testResults.value = response.data;
+    showResultsModal.value = true;
+  } catch (error: any) {
+    testError.value = error.response?.data?.message || 'Failed to test service auth';
+    showResultsModal.value = true;
     console.error('Error testing service auth:', error);
   } finally {
     loading.value = false;
   }
+};
+
+const closeResultsModal = () => {
+  showResultsModal.value = false;
+  testResults.value = null;
+  testError.value = null;
 };
 
 onMounted(() => {
