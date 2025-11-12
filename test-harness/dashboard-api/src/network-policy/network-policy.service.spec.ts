@@ -40,8 +40,11 @@ describe('NetworkPolicyService', () => {
     it('should successfully test firewall rules', async () => {
       const mockResult = [
         {
-          rule: { id: 'rule-1', source: '10.0.0.0/8', destination: '20.0.0.0/8', port: 80 },
+          testType: 'access-control' as const,
+          testName: 'Firewall Rule Test',
           passed: true,
+          details: {},
+          timestamp: new Date(),
         },
       ];
 
@@ -49,7 +52,7 @@ describe('NetworkPolicyService', () => {
 
       const result = await service.testFirewallRules({
         rules: [
-          { id: 'rule-1', source: '10.0.0.0/8', destination: '20.0.0.0/8', port: 80 },
+          { id: 'rule-1', name: 'Rule 1', source: '10.0.0.0/8', destination: '20.0.0.0/8', protocol: 'tcp' as const, port: 80, action: 'allow' as const, enabled: true },
         ],
       });
 
@@ -72,11 +75,14 @@ describe('NetworkPolicyService', () => {
   describe('testServiceToService', () => {
     it('should successfully test service-to-service traffic', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Service-to-Service Traffic Test',
         passed: true,
         details: {
           source: 'frontend',
           target: 'backend',
         },
+        timestamp: new Date(),
       };
 
       mockTester.testServiceToServiceTraffic.mockResolvedValue(mockResult);
@@ -119,16 +125,21 @@ describe('NetworkPolicyService', () => {
 
   describe('validateSegmentation', () => {
     it('should successfully validate network segmentation', async () => {
-      const mockResult = {
-        validated: true,
-        violations: [],
-      };
+      const mockResult = [
+        {
+          testType: 'access-control' as const,
+          testName: 'Network Segmentation Validation',
+          passed: true,
+          details: {},
+          timestamp: new Date(),
+        },
+      ];
 
       mockTester.validateNetworkSegmentation.mockResolvedValue(mockResult);
 
       const result = await service.validateSegmentation({
         segments: [
-          { id: 'segment-1', name: 'Segment 1', cidr: '10.0.0.0/8' },
+          { id: 'segment-1', name: 'Segment 1', cidr: '10.0.0.0/8', services: [], allowedConnections: [], deniedConnections: [] },
         ],
       });
 
@@ -150,17 +161,22 @@ describe('NetworkPolicyService', () => {
 
   describe('testServiceMeshPolicies', () => {
     it('should successfully test service mesh policies', async () => {
-      const mockResult = {
-        passed: true,
-        details: {},
-      };
+      const mockResult = [
+        {
+          testType: 'access-control' as const,
+          testName: 'Service Mesh Policy Test',
+          passed: true,
+          details: {},
+          timestamp: new Date(),
+        },
+      ];
 
       mockTester.testServiceMeshPolicies.mockResolvedValue(mockResult);
 
       const result = await service.testServiceMeshPolicies({
         config: {
-          name: 'istio-mesh',
-          policies: [],
+          type: 'istio' as const,
+          controlPlaneEndpoint: 'https://istio-control-plane:8080',
         },
       });
 
@@ -173,11 +189,11 @@ describe('NetworkPolicyService', () => {
       );
     });
 
-    it('should throw ValidationException for missing config name', async () => {
+    it('should throw ValidationException for missing config type', async () => {
       await expect(
         service.testServiceMeshPolicies({
           config: {
-            policies: [],
+            controlPlaneEndpoint: 'https://istio-control-plane:8080',
           } as any,
         }),
       ).rejects.toThrow(ValidationException);

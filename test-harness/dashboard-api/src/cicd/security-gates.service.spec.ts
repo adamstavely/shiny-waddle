@@ -56,7 +56,7 @@ describe('SecurityGatesService', () => {
           author: 'test-user',
         },
         policies: [
-          { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
+          { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] },
         ],
       });
 

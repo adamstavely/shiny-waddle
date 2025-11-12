@@ -41,8 +41,11 @@ describe('IdentityProviderService', () => {
   describe('testADGroup', () => {
     it('should successfully test AD group membership', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'AD Group Membership Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testADGroupMembership.mockResolvedValue(mockResult);
@@ -77,8 +80,11 @@ describe('IdentityProviderService', () => {
   describe('testOktaPolicy', () => {
     it('should successfully test Okta policy sync', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Okta Policy Sync Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testOktaPolicySync.mockResolvedValue(mockResult);
@@ -117,8 +123,11 @@ describe('IdentityProviderService', () => {
   describe('testAzureADConditionalAccess', () => {
     it('should successfully test Azure AD conditional access', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Azure AD Conditional Access Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testAzureADConditionalAccess.mockResolvedValue(mockResult);
@@ -150,8 +159,11 @@ describe('IdentityProviderService', () => {
   describe('testGCPIAMBinding', () => {
     it('should successfully test GCP IAM binding', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'GCP IAM Binding Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testGCPIAMBindings.mockResolvedValue(mockResult);
@@ -199,8 +211,14 @@ describe('IdentityProviderService', () => {
   describe('validatePolicySync', () => {
     it('should successfully validate policy synchronization', async () => {
       const mockResult = {
-        synchronized: true,
-        differences: [],
+        testType: 'access-control' as const,
+        testName: 'Policy Synchronization Validation',
+        passed: true,
+        details: {
+          synchronized: true,
+          differences: [],
+        },
+        timestamp: new Date(),
       };
 
       mockTester.validatePolicySynchronization.mockResolvedValue(mockResult);

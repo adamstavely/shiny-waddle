@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PolicyValidationTester } from '../../../services/policy-validation-tester';
 import { PolicyDecisionPoint } from '../../../services/policy-decision-point';
-import { ABACPolicy, Resource, PolicyTestCase } from '../../../core/types';
+import { ABACPolicy, Resource, AccessControlConfig } from '../../../core/types';
+import { PolicyTestCase } from '../../../services/policy-as-code';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 @Injectable()
@@ -12,7 +13,11 @@ export class PolicyValidationService {
 
   constructor() {
     // Initialize PDP (would be injected in real implementation)
-    this.pdp = new PolicyDecisionPoint([]);
+    const config: AccessControlConfig = {
+      policyMode: 'abac',
+      cacheDecisions: false,
+    };
+    this.pdp = new PolicyDecisionPoint(config);
     this.tester = new PolicyValidationTester(this.pdp);
   }
 
@@ -63,10 +68,12 @@ export class PolicyValidationService {
       if (!dto.policy.id) {
         throw new ValidationException('Policy id is required');
       }
-      const iterations = dto.iterations || 1000;
-      if (iterations < 1 || iterations > 100000) {
-        throw new ValidationException('Iterations must be between 1 and 100000');
+      if (dto.iterations !== undefined) {
+        if (dto.iterations < 1 || dto.iterations > 100000) {
+          throw new ValidationException('Iterations must be between 1 and 100000');
+        }
       }
+      const iterations = dto.iterations || 1000;
       return await this.tester.testPolicyPerformance(dto.policy, iterations);
     } catch (error: any) {
       this.logger.error(`Error testing policy performance: ${error.message}`, error.stack);

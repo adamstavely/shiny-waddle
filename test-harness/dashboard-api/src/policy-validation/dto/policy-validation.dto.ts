@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsArray, IsObject, IsOptional, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ABACPolicy, Resource, PolicyTestCase } from '../../../../core/types';
+import { ABACPolicy, Resource } from '../../../../core/types';
+import { PolicyTestCase } from '../../../../services/policy-as-code';
 
 export class DetectConflictsDto {
   @IsNotEmpty()

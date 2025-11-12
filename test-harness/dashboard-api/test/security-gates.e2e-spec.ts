@@ -20,7 +20,7 @@ describe('Security Gates Controller (e2e)', () => {
 
   const validPR: PullRequest = {
     id: 'pr-123',
-    title: 'Test PR',
+    number: 123,
     author: 'test-user',
     files: ['file1.ts', 'file2.ts'],
     branch: 'feature/test',

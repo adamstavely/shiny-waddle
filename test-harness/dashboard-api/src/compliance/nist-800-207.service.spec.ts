@@ -38,7 +38,7 @@ describe('NIST800207Service', () => {
   describe('assessZTAPillars', () => {
     it('should successfully assess ZTA pillars', async () => {
       const mockAssessment = {
-        framework: 'NIST-800-207',
+        framework: 'NIST-800-207' as const,
         assessment: {
           id: 'assessment-1',
           timestamp: new Date(),
@@ -60,7 +60,7 @@ describe('NIST800207Service', () => {
 
     it('should accept optional assessment parameter', async () => {
       const mockAssessment = {
-        framework: 'NIST-800-207',
+        framework: 'NIST-800-207' as const,
         assessment: {
           id: 'assessment-1',
           timestamp: new Date(),

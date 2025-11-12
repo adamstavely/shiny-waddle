@@ -7,12 +7,18 @@ import { RLSCLSService } from './rls-cls.service';
 import { RLSCLSTester } from '../../../services/rls-cls-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
+// Mock the dependencies
+jest.mock('../../../services/rls-cls-tester');
+
 describe('RLSCLSService', () => {
   let service: RLSCLSService;
   let tester: jest.Mocked<RLSCLSTester>;
 
   beforeEach(async () => {
-    // Create mock tester
+    // Reset mocks
+    jest.clearAllMocks();
+
+    // Create mock instance
     tester = {
       testRLSCoverage: jest.fn(),
       testCLSCoverage: jest.fn(),
@@ -21,14 +27,11 @@ describe('RLSCLSService', () => {
       testPolicyBypassAttempts: jest.fn(),
     } as any;
 
+    // Mock the constructor
+    (RLSCLSTester as jest.Mock).mockImplementation(() => tester);
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RLSCLSService,
-        {
-          provide: RLSCLSTester,
-          useValue: tester,
-        },
-      ],
+      providers: [RLSCLSService],
     }).compile();
 
     service = module.get<RLSCLSService>(RLSCLSService);
@@ -115,7 +118,7 @@ describe('RLSCLSService', () => {
   describe('testDynamicMasking', () => {
     it('should successfully test dynamic masking', async () => {
       const mockResult = {
-        testType: 'data-behavior',
+        testType: 'data-behavior' as const,
         testName: 'Dynamic Data Masking Test',
         passed: true,
         details: {},
@@ -127,7 +130,7 @@ describe('RLSCLSService', () => {
       const result = await service.testDynamicMasking({
         query: { name: 'test', sql: 'SELECT * FROM users' },
         user: { id: 'user-1', email: 'test@example.com', role: 'viewer', attributes: {} },
-        maskingRules: [{ column: 'email', rule: 'mask' }],
+        maskingRules: [{ table: 'users', column: 'email', maskingType: 'partial' as const, applicableRoles: ['viewer'] }],
       });
 
       expect(result).toEqual(mockResult);
@@ -148,7 +151,7 @@ describe('RLSCLSService', () => {
         service.testDynamicMasking({
           query: null as any,
           user: { id: 'user-1', email: 'test@example.com', role: 'viewer', attributes: {} },
-          maskingRules: [{ column: 'email', rule: 'mask' }],
+          maskingRules: [{ table: 'users', column: 'email', maskingType: 'partial' as const, applicableRoles: ['viewer'] }],
         }),
       ).rejects.toThrow(ValidationException);
     });
@@ -159,6 +162,7 @@ describe('RLSCLSService', () => {
       const mockResult = {
         tenant1: 'tenant1',
         tenant2: 'tenant2',
+        testQueries: [{ name: 'test', sql: 'SELECT * FROM data' }],
         isolationVerified: true,
         violations: [],
       };
@@ -209,7 +213,7 @@ describe('RLSCLSService', () => {
     it('should successfully test policy bypass', async () => {
       const mockResult = [
         {
-          testType: 'access-control',
+          testType: 'access-control' as const,
           testName: 'Policy Bypass Test',
           passed: true,
           details: {},

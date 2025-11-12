@@ -64,7 +64,7 @@
         <div class="resource-attributes" v-if="resource.abacAttributes">
           <div class="attributes-preview">
             <div
-              v-for="(value, key) in Object.entries(resource.abacAttributes).slice(0, 3)"
+              v-for="[key, value] in Object.entries(resource.abacAttributes).slice(0, 3)"
               :key="key"
               class="attribute-preview"
             >
@@ -101,7 +101,7 @@
 
     <!-- Resource Modal -->
     <ResourceModal
-      :show="showCreateModal || editingResource"
+      :show="showCreateModal || !!editingResource"
       :resource="editingResourceData"
       @close="closeModal"
       @save="saveResource"

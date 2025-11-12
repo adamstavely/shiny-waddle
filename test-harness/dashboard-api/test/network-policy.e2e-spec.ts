@@ -19,12 +19,13 @@ describe('Network Policy Controller (e2e)', () => {
   });
 
   const validFirewallRule: FirewallRule = {
+    id: 'rule-1',
     name: 'test-rule',
     source: '10.0.0.0/8',
     destination: '192.168.1.0/24',
-    protocol: 'tcp',
+    protocol: 'tcp' as const,
     port: 443,
-    action: 'allow',
+    action: 'allow' as const,
     enabled: true,
   };
 
@@ -111,9 +112,8 @@ describe('Network Policy Controller (e2e)', () => {
         .post('/api/network-policy/test-service-mesh-policies')
         .send({
           config: {
-            name: 'test-mesh',
             type: 'istio',
-            policies: [],
+            controlPlaneEndpoint: 'https://istio-control-plane:8080',
           },
         })
         .expect(200)

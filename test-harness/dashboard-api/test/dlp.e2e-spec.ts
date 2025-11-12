@@ -27,13 +27,13 @@ describe('DLP Controller (e2e)', () => {
 
   const validDataOperation: DataOperation = {
     type: 'export',
+    resource: { id: 'resource-1', type: 'dataset', attributes: {} },
     data: { test: 'data' },
   };
 
   const validQuery: TestQuery = {
     name: 'test-query',
     sql: 'SELECT * FROM users',
-    expectedResult: [],
   };
 
   describe('POST /api/dlp/test-exfiltration', () => {

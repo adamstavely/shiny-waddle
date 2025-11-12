@@ -39,8 +39,11 @@ describe('APIGatewayService', () => {
   describe('testGatewayPolicy', () => {
     it('should successfully test gateway policy', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Gateway Policy Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testGatewayPolicy.mockResolvedValue(mockResult);
@@ -57,7 +60,7 @@ describe('APIGatewayService', () => {
           endpoint: '/api/test',
           method: 'GET',
           headers: {},
-          user: {},
+          user: { id: 'user-1', email: 'test@example.com', role: 'viewer', attributes: {} },
         },
       });
 
@@ -72,7 +75,7 @@ describe('APIGatewayService', () => {
             endpoint: '/api/test',
             method: 'GET',
             headers: {},
-            user: {},
+            user: { id: 'user-1', email: 'test@example.com', role: 'viewer', attributes: {} },
           },
         }),
       ).rejects.toThrow(ValidationException);
@@ -91,7 +94,7 @@ describe('APIGatewayService', () => {
             endpoint: '/api/test',
             method: 'GET',
             headers: {},
-            user: {},
+            user: { id: 'user-1', email: 'test@example.com', role: 'viewer', attributes: {} },
           },
         }),
       ).rejects.toThrow(ValidationException);
@@ -135,6 +138,8 @@ describe('APIGatewayService', () => {
   describe('testRateLimiting', () => {
     it('should successfully test rate limiting', async () => {
       const mockResult = {
+        endpoint: '/api/test',
+        requests: 50,
         blocked: false,
         actualRequests: 50,
         limit: 100,
@@ -182,8 +187,11 @@ describe('APIGatewayService', () => {
   describe('testAPIVersioning', () => {
     it('should successfully test API versioning', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'API Versioning Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockTester.testAPIVersioning.mockResolvedValue(mockResult);
@@ -215,7 +223,13 @@ describe('APIGatewayService', () => {
     });
 
     it('should accept valid version formats', async () => {
-      const mockResult = { passed: true, details: {} };
+      const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'API Versioning Test',
+        passed: true,
+        details: {},
+        timestamp: new Date(),
+      };
       mockTester.testAPIVersioning.mockResolvedValue(mockResult);
 
       await expect(
@@ -237,8 +251,10 @@ describe('APIGatewayService', () => {
   describe('testServiceAuth', () => {
     it('should successfully test service authentication', async () => {
       const mockResult = {
+        source: 'frontend',
+        target: 'backend',
         authenticated: true,
-        authMethod: 'jwt',
+        authMethod: 'jwt' as const,
       };
 
       mockTester.testServiceToServiceAuth.mockResolvedValue(mockResult);

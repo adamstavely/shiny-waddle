@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NetworkMicrosegmentationTester } from '../../../services/network-microsegmentation-tester';
-import { ServiceMeshConfig, FirewallRule, NetworkSegment } from '../../../core/types';
+import { ServiceMeshConfig } from '../../../services/service-mesh-integration';
+import { FirewallRule, NetworkSegment } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 @Injectable()
@@ -83,8 +84,11 @@ export class NetworkPolicyService {
       if (!dto.config) {
         throw new ValidationException('Service mesh configuration is required');
       }
-      if (!dto.config.name) {
-        throw new ValidationException('Service mesh name is required');
+      if (!dto.config.type) {
+        throw new ValidationException('Service mesh type is required');
+      }
+      if (!dto.config.controlPlaneEndpoint) {
+        throw new ValidationException('Service mesh control plane endpoint is required');
       }
       return await this.tester.testServiceMeshPolicies(dto.config);
     } catch (error: any) {

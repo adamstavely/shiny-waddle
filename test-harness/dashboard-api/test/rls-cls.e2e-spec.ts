@@ -37,7 +37,6 @@ describe('RLS/CLS Controller (e2e)', () => {
   const validQuery: TestQuery = {
     name: 'test-query',
     sql: 'SELECT * FROM users',
-    expectedResult: [],
   };
 
   describe('POST /api/rls-cls/test-rls-coverage', () => {
@@ -94,10 +93,10 @@ describe('RLS/CLS Controller (e2e)', () => {
   describe('POST /api/rls-cls/test-dynamic-masking', () => {
     const validMaskingRules: DynamicMaskingRule[] = [
       {
+        table: 'users',
         column: 'email',
-        condition: 'role != "admin"',
-        maskingType: 'partial',
-        maskChar: '*',
+        maskingType: 'partial' as const,
+        applicableRoles: ['viewer'],
       },
     ];
 

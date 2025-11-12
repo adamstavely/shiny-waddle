@@ -55,7 +55,7 @@ describe('IdentityLifecycleService', () => {
   describe('testOnboarding', () => {
     it('should successfully test onboarding workflow', async () => {
       const mockResult = {
-        testType: 'access-control',
+        testType: 'access-control' as const,
         testName: 'Identity Onboarding Workflow',
         passed: true,
         details: {},
@@ -89,7 +89,7 @@ describe('IdentityLifecycleService', () => {
   describe('testRoleChange', () => {
     it('should successfully test role change workflow', async () => {
       const mockResult = {
-        testType: 'access-control',
+        testType: 'access-control' as const,
         testName: 'Role Change Workflow',
         passed: true,
         details: {},
@@ -128,7 +128,7 @@ describe('IdentityLifecycleService', () => {
   describe('testOffboarding', () => {
     it('should successfully test offboarding workflow', async () => {
       const mockResult = {
-        testType: 'access-control',
+        testType: 'access-control' as const,
         testName: 'Identity Offboarding Workflow',
         passed: true,
         details: {},
@@ -148,8 +148,11 @@ describe('IdentityLifecycleService', () => {
   describe('testJITAccess', () => {
     it('should successfully test JIT access', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Just-In-Time Access Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockPamTester.testJITAccess.mockResolvedValue(mockResult);
@@ -157,7 +160,7 @@ describe('IdentityLifecycleService', () => {
       const result = await service.testJITAccess({
         request: {
           userId: 'user-1',
-          resource: { id: 'resource-1', type: 'dataset', attributes: {} },
+          resource: 'resource-1',
           reason: 'Testing',
           duration: 60,
         },
@@ -200,8 +203,11 @@ describe('IdentityLifecycleService', () => {
   describe('testBreakGlass', () => {
     it('should successfully test break-glass access', async () => {
       const mockResult = {
+        testType: 'access-control' as const,
+        testName: 'Break-Glass Access Test',
         passed: true,
         details: {},
+        timestamp: new Date(),
       };
 
       mockPamTester.testBreakGlassAccess.mockResolvedValue(mockResult);
@@ -209,7 +215,7 @@ describe('IdentityLifecycleService', () => {
       const result = await service.testBreakGlass({
         request: {
           userId: 'user-1',
-          resource: { id: 'resource-1', type: 'dataset', attributes: {} },
+          resource: 'resource-1',
           reason: 'Emergency',
           duration: 60,
           emergency: true,

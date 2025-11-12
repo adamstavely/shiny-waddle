@@ -51,7 +51,7 @@ describe('PolicyValidationService', () => {
         {
           policy1: 'policy-1',
           policy2: 'policy-2',
-          conflictType: 'contradiction',
+          conflictType: 'contradiction' as const,
           description: 'Conflicting policies',
           affectedResources: ['resource-1'],
         },
@@ -61,8 +61,8 @@ describe('PolicyValidationService', () => {
 
       const result = await service.detectConflicts({
         policies: [
-          { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
-          { id: 'policy-2', name: 'Policy 2', effect: 'deny', conditions: [] },
+          { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] },
+          { id: 'policy-2', name: 'Policy 2', description: 'Test policy description', effect: 'deny', conditions: [] },
         ],
       });
 
@@ -87,7 +87,7 @@ describe('PolicyValidationService', () => {
 
       await expect(
         service.detectConflicts({
-          policies: [{ id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] }],
+          policies: [{ id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] }],
         }),
       ).rejects.toThrow(InternalServerException);
     });
@@ -96,6 +96,7 @@ describe('PolicyValidationService', () => {
   describe('analyzeCoverage', () => {
     it('should successfully analyze policy coverage', async () => {
       const mockCoverage = {
+        totalResources: 7,
         resourcesWithPolicies: 5,
         resourcesWithoutPolicies: ['resource-1', 'resource-2'],
         coveragePercentage: 71.4,
@@ -109,7 +110,7 @@ describe('PolicyValidationService', () => {
           { id: 'resource-1', type: 'dataset', attributes: {} },
           { id: 'resource-2', type: 'dataset', attributes: {} },
         ],
-        policies: [{ id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] }],
+        policies: [{ id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] }],
       });
 
       expect(result).toEqual(mockCoverage);
@@ -137,17 +138,21 @@ describe('PolicyValidationService', () => {
   describe('testPerformance', () => {
     it('should successfully test policy performance', async () => {
       const mockPerformance = {
+        policyId: 'policy-1',
+        evaluationCount: 1000,
+        totalTime: 10500,
         averageTime: 10.5,
-        p95: 15.2,
-        p99: 20.1,
         minTime: 5.0,
         maxTime: 25.0,
+        p50: 10.0,
+        p95: 15.2,
+        p99: 20.1,
       };
 
       mockTester.testPolicyPerformance.mockResolvedValue(mockPerformance);
 
       const result = await service.testPerformance({
-        policy: { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
+        policy: { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] },
         iterations: 1000,
       });
 
@@ -175,7 +180,7 @@ describe('PolicyValidationService', () => {
     it('should throw ValidationException for invalid iterations', async () => {
       await expect(
         service.testPerformance({
-          policy: { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
+          policy: { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] },
           iterations: 0,
         }),
       ).rejects.toThrow(ValidationException);
@@ -184,7 +189,7 @@ describe('PolicyValidationService', () => {
     it('should throw ValidationException for iterations exceeding limit', async () => {
       await expect(
         service.testPerformance({
-          policy: { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
+          policy: { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] },
           iterations: 100001,
         }),
       ).rejects.toThrow(ValidationException);
@@ -194,16 +199,17 @@ describe('PolicyValidationService', () => {
   describe('runRegression', () => {
     it('should successfully run regression tests', async () => {
       const mockResults = {
-        passed: true,
-        failed: false,
-        changes: [],
+        policyId: 'policy-1',
+        baselineResults: new Map<string, boolean>([['test-case-1', true]]),
+        currentResults: new Map<string, boolean>([['test-case-1', true]]),
+        regressions: [],
       };
 
       mockTester.runRegressionTests.mockResolvedValue(mockResults);
 
       const result = await service.runRegression({
-        baselinePolicies: [{ id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] }],
-        currentPolicies: [{ id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] }],
+        baselinePolicies: [{ id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] }],
+        currentPolicies: [{ id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow', conditions: [] }],
         testCases: [],
       });
 
@@ -243,16 +249,33 @@ describe('PolicyValidationService', () => {
 
   describe('simulatePolicy', () => {
     it('should successfully simulate policy change', async () => {
+      const testPolicy = { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow' as const, conditions: [] };
       const mockSimulation = {
-        impact: 'low',
-        affectedResources: [],
+        policy: testPolicy,
+        testCases: [
+          {
+            name: 'test-case-1',
+            request: { subject: { id: 'user-1' }, resource: { id: 'resource-1' }, action: 'read' },
+            expectedResult: true,
+            simulatedResult: true,
+            match: true,
+          },
+        ],
+        overallMatch: true,
       };
 
       mockTester.simulatePolicyChange.mockResolvedValue(mockSimulation);
 
       const result = await service.simulatePolicy({
-        policy: { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
-        testCases: [{ user: { id: 'user-1' }, resource: { id: 'resource-1' } }],
+        policy: testPolicy,
+        testCases: [
+          {
+            name: 'test-case-1',
+            request: { subject: { id: 'user-1' }, resource: { id: 'resource-1' }, action: 'read' },
+            expected: { allowed: true },
+            passed: true,
+          },
+        ],
       });
 
       expect(result).toEqual(mockSimulation);
@@ -270,7 +293,7 @@ describe('PolicyValidationService', () => {
     it('should throw ValidationException for empty test cases', async () => {
       await expect(
         service.simulatePolicy({
-          policy: { id: 'policy-1', name: 'Policy 1', effect: 'allow', conditions: [] },
+          policy: { id: 'policy-1', name: 'Policy 1', description: 'Test policy description', effect: 'allow' as const, conditions: [] },
           testCases: [],
         }),
       ).rejects.toThrow(ValidationException);

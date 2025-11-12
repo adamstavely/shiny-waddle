@@ -256,7 +256,7 @@ const addComment = async () => {
   if (!props.violation || !newComment.value.trim()) return;
 
   try {
-    const response = await fetch(`http://localhost:3000/api/violations/${props.violation.id}/comments`, {
+    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -268,7 +268,7 @@ const addComment = async () => {
     if (response.ok) {
       const comment = await response.json();
       // Reload violation to get updated comments
-      const violationResponse = await fetch(`http://localhost:3000/api/violations/${props.violation!.id}`);
+      const violationResponse = await fetch(`http://localhost:3001/api/violations/${props.violation!.id}`);
       if (violationResponse.ok) {
         const updatedViolation = await violationResponse.json();
         // Convert date strings to Date objects
@@ -296,7 +296,7 @@ const assignViolation = async () => {
   if (assignee === null) return;
 
   try {
-    const response = await fetch(`http://localhost:3000/api/violations/${props.violation.id}`, {
+    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -327,7 +327,7 @@ const resolveViolation = async () => {
   if (!props.violation || !confirm('Mark this violation as resolved?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3000/api/violations/${props.violation.id}`, {
+    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -359,7 +359,7 @@ const ignoreViolation = async () => {
   if (!props.violation || !confirm('Ignore this violation?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3000/api/violations/${props.violation.id}`, {
+    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
