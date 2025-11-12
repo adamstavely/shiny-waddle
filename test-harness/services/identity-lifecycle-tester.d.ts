@@ -31,6 +31,15 @@ export interface IdentityLifecycleTesterConfig {
             deviceRegistered: boolean;
         };
     };
+    workflowSteps?: Array<{
+        name: string;
+        required: boolean;
+        description?: string;
+    }>;
+    testLogic?: {
+        validateWorkflow?: boolean;
+        checkMFA?: boolean;
+    };
 }
 export declare class IdentityLifecycleTester {
     private config;

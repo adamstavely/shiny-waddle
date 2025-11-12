@@ -20,23 +20,25 @@
     <div class="filters-section">
       <div class="filter-group">
         <label>Type</label>
-        <select v-model="filterType" @change="loadConfigurations">
-          <option value="">All Types</option>
-          <option value="rls-cls">RLS/CLS</option>
-          <option value="network-policy">Network Policy</option>
-          <option value="dlp">DLP</option>
-          <option value="identity-lifecycle">Identity Lifecycle</option>
-          <option value="api-gateway">API Gateway</option>
-        </select>
+        <Dropdown
+          v-model="filterType"
+          :options="typeOptions"
+          placeholder="All Types"
+          @change="loadConfigurations"
+        />
       </div>
       <div class="filter-group">
         <label>Search</label>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search configurations..."
-          @input="loadConfigurations"
-        />
+        <div class="search-input-wrapper">
+          <Search class="search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search configurations..."
+            @input="loadConfigurations"
+            class="search-input"
+          />
+        </div>
       </div>
     </div>
 
@@ -89,6 +91,7 @@
         <Settings class="empty-icon" />
         <p>No configurations found</p>
         <button @click="showCreateModal = true" class="btn-primary">
+          <Plus class="btn-icon" />
           Create your first configuration
         </button>
       </div>
@@ -114,8 +117,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings } from 'lucide-vue-next';
+import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings, Search } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import Dropdown from '../components/Dropdown.vue';
 import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
 import TestResultsModal from '../components/configurations/TestResultsModal.vue';
 import axios from 'axios';
@@ -128,7 +132,7 @@ const breadcrumbItems = [
 interface TestConfiguration {
   id: string;
   name: string;
-  type: 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway';
+  type: 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway' | 'distributed-systems';
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -143,6 +147,16 @@ const searchQuery = ref('');
 const showCreateModal = ref(false);
 const editingConfig = ref<TestConfiguration | null>(null);
 const selectedType = ref<string>('');
+
+const typeOptions = [
+  { label: 'All Types', value: '' },
+  { label: 'RLS/CLS', value: 'rls-cls' },
+  { label: 'Network Policy', value: 'network-policy' },
+  { label: 'DLP', value: 'dlp' },
+  { label: 'Identity Lifecycle', value: 'identity-lifecycle' },
+  { label: 'API Gateway', value: 'api-gateway' },
+  { label: 'Distributed Systems', value: 'distributed-systems' },
+];
 
 const filteredConfigurations = computed(() => {
   let filtered = configurations.value;
@@ -168,7 +182,8 @@ const getTypeLabel = (type: string) => {
     'network-policy': 'Network Policy',
     'dlp': 'DLP',
     'identity-lifecycle': 'Identity Lifecycle',
-    'api-gateway': 'API Gateway'
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems'
   };
   return labels[type] || type;
 };
@@ -328,6 +343,12 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1;
+}
+
+.filter-group:first-child {
+  min-width: 250px;
+  flex: 0 0 auto;
 }
 
 .filter-group label {
@@ -352,6 +373,27 @@ onMounted(() => {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  color: #718096;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input-wrapper .search-input {
+  padding: 0.75rem 0.75rem 0.75rem calc(1.75rem + 10px) !important;
+  width: 100%;
 }
 
 .filter-group select option {
@@ -437,6 +479,12 @@ onMounted(() => {
   border: 1px solid rgba(194, 24, 91, 0.3);
 }
 
+.type-distributed-systems {
+  background: rgba(0, 151, 167, 0.2);
+  color: #4dd0e1;
+  border: 1px solid rgba(0, 151, 167, 0.3);
+}
+
 .card-actions {
   display: flex;
   gap: 0.5rem;
@@ -449,7 +497,7 @@ onMounted(() => {
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s;
-  color: #a0aec0;
+  color: #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -460,6 +508,10 @@ onMounted(() => {
   color: #4facfe;
 }
 
+.btn-icon.btn-danger {
+  color: #e2e8f0;
+}
+
 .btn-icon.btn-danger:hover {
   background: rgba(252, 129, 129, 0.1);
   color: #fc8181;
@@ -468,6 +520,24 @@ onMounted(() => {
 .btn-icon .icon {
   width: 1rem;
   height: 1rem;
+  color: #e2e8f0;
+  stroke: #e2e8f0;
+  stroke-width: 2;
+}
+
+.btn-icon:hover .icon {
+  color: #4facfe;
+  stroke: #4facfe;
+}
+
+.btn-icon.btn-danger .icon {
+  color: #e2e8f0;
+  stroke: #e2e8f0;
+}
+
+.btn-icon.btn-danger:hover .icon {
+  color: #fc8181;
+  stroke: #fc8181;
 }
 
 .card-body {
@@ -539,6 +609,8 @@ onMounted(() => {
   font-weight: 600;
   transition: all 0.2s;
   font-size: 0.9rem;
+  min-height: auto;
+  height: auto;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -552,8 +624,18 @@ onMounted(() => {
 }
 
 .btn-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  display: block;
+  color: inherit;
+}
+
+.btn-primary .btn-icon {
+  color: #0f1419;
+  width: 2rem;
+  height: 2rem;
+  stroke-width: 2.5;
 }
 </style>
 

@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/access-control', '/platform-config', '/app-security', '/data-security'].includes(item.path)"
+            v-if="!['/tests', '/configuration'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -90,45 +90,39 @@ const currentPath = ref(route.path);
 const menuItems = [
   { path: '/insights', label: 'Insights', icon: LayoutDashboard, divider: false },
   { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
+  { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
+  { path: '/configuration', label: 'Configuration', icon: Settings, divider: false },
   { path: '/compliance', label: 'Compliance', icon: CheckCircle2, divider: true },
-  { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
-  { path: '/app-security', label: 'App Security', icon: Lock, divider: false },
-  { path: '/platform-config', label: 'Platform Config', icon: Settings, divider: false },
-  { path: '/data-security', label: 'Data Security', icon: Database, divider: false },
+];
+
+// Test pages
+const testPages = [
+  '/policy-validation', '/identity-lifecycle',
+  '/api-security', '/users', '/api-gateway', '/dlp',
+  '/distributed-systems', '/network-policies',
+  '/rls-cls'
+];
+
+// Configuration pages
+const configPages = [
+  '/policies', '/resources', '/identity-providers',
+  '/configuration-validation', '/test-configurations',
+  '/datasets', '/contracts'
 ];
 
 const isActive = (path: string): boolean => {
   if (path === '/insights') {
     return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
   }
+  if (path === '/tests') {
+    return currentPath.value === '/tests' || currentPath.value.startsWith('/tests/') ||
+           testPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
+  if (path === '/configuration') {
+    return configPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
   if (path === '/compliance') {
     return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/');
-  }
-  if (path === '/access-control') {
-    return currentPath.value === '/policies' || currentPath.value === '/resources' || 
-           currentPath.value === '/policy-validation' || currentPath.value === '/identity-lifecycle' ||
-           currentPath.value === '/identity-providers' ||
-           currentPath.value.startsWith('/policies/') || currentPath.value.startsWith('/resources/') ||
-           currentPath.value.startsWith('/policy-validation/') || currentPath.value.startsWith('/identity-lifecycle/') ||
-           currentPath.value.startsWith('/identity-providers/');
-  }
-  if (path === '/platform-config') {
-    return currentPath.value === '/configuration-validation' || currentPath.value === '/distributed-systems' ||
-           currentPath.value === '/network-policies' ||
-           currentPath.value.startsWith('/configuration-validation/') || currentPath.value.startsWith('/distributed-systems/') ||
-           currentPath.value.startsWith('/network-policies/');
-  }
-  if (path === '/app-security') {
-    return currentPath.value === '/api-security' || currentPath.value === '/users' ||
-           currentPath.value === '/api-gateway' || currentPath.value === '/dlp' ||
-           currentPath.value.startsWith('/api-security/') || currentPath.value.startsWith('/users/') ||
-           currentPath.value.startsWith('/api-gateway/') || currentPath.value.startsWith('/dlp/');
-  }
-  if (path === '/data-security') {
-    return currentPath.value === '/datasets' || currentPath.value === '/contracts' ||
-           currentPath.value === '/rls-cls' ||
-           currentPath.value.startsWith('/datasets/') || currentPath.value.startsWith('/contracts/') ||
-           currentPath.value.startsWith('/rls-cls/');
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
@@ -137,8 +131,8 @@ const isActive = (path: string): boolean => {
 };
 
 const handleNavClick = (path: string) => {
-  // For category items, open the drawer with that category's content
-  if (['/access-control', '/platform-config', '/app-security', '/data-security'].includes(path)) {
+  // For Tests and Configuration, open the drawer with that category's content
+  if (['/tests', '/configuration'].includes(path)) {
     // Emit event to open drawer with specific category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
     return;

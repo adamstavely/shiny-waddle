@@ -1,6 +1,6 @@
 import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, User, ServiceMeshConfig } from '../../../../core/types';
 
-export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway';
+export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway' | 'distributed-systems';
 
 export interface BaseTestConfigurationEntity {
   id: string;
@@ -145,10 +145,44 @@ export interface APIGatewayConfigurationEntity extends BaseTestConfigurationEnti
   };
 }
 
+export interface RegionConfig {
+  id: string;
+  name: string;
+  endpoint: string;
+  pdpEndpoint?: string;
+  timezone?: string;
+  latency?: number;
+  credentials?: Record<string, string>;
+}
+
+export interface DistributedSystemsConfigurationEntity extends BaseTestConfigurationEntity {
+  type: 'distributed-systems';
+  regions: RegionConfig[];
+  policySync?: {
+    enabled: boolean;
+    syncInterval?: number;
+    consistencyLevel?: 'strong' | 'eventual' | 'weak';
+  };
+  coordination?: {
+    type: 'consul' | 'etcd' | 'zookeeper' | 'custom';
+    endpoint?: string;
+  };
+  testLogic?: {
+    validateConsistency?: boolean;
+    checkSynchronization?: boolean;
+    customValidations?: Array<{
+      name: string;
+      condition: string;
+      description?: string;
+    }>;
+  };
+}
+
 export type TestConfigurationEntity =
   | RLSCLSConfigurationEntity
   | NetworkPolicyConfigurationEntity
   | DLPConfigurationEntity
   | IdentityLifecycleConfigurationEntity
-  | APIGatewayConfigurationEntity;
+  | APIGatewayConfigurationEntity
+  | DistributedSystemsConfigurationEntity;
 

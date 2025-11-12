@@ -1,16 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-
-export interface RegionConfig {
-  id: string;
-  name: string;
-  endpoint: string;
-  pdpEndpoint?: string;
-  timezone?: string;
-  latency?: number;
-  credentials?: Record<string, string>;
-}
+import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
+import { DistributedSystemsConfigurationEntity, RegionConfig } from '../test-configurations/entities/test-configuration.entity';
 
 export interface DistributedTestRequest {
   name: string;
@@ -20,6 +12,7 @@ export interface DistributedTestRequest {
   action?: string;
   regions?: string[];
   timeout?: number;
+  configId?: string;
 }
 
 @Injectable()
@@ -28,7 +21,10 @@ export class DistributedSystemsService {
   private regions: RegionConfig[] = [];
   private testResults: any[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly testConfigurationsService: TestConfigurationsService,
+  ) {
     this.loadConfig();
   }
 
@@ -99,6 +95,25 @@ export class DistributedSystemsService {
   }
 
   async runTest(request: DistributedTestRequest): Promise<any> {
+    // Load regions from config if configId is provided
+    let regionsToUse = this.regions;
+    if (request.configId) {
+      try {
+        const config = await this.testConfigurationsService.findOne(request.configId);
+        if (config.type === 'distributed-systems') {
+          const dsConfig = config as DistributedSystemsConfigurationEntity;
+          regionsToUse = dsConfig.regions || [];
+        }
+      } catch (error) {
+        // If config not found, fall back to default regions
+        console.warn(`Config ${request.configId} not found, using default regions`);
+      }
+    }
+
+    if (regionsToUse.length === 0) {
+      throw new Error('No regions configured. Please configure regions in the test configuration.');
+    }
+
     // In a real implementation, this would use the DistributedSystemsTester
     // For now, create a mock result
     const result = {
@@ -108,7 +123,7 @@ export class DistributedSystemsService {
       testType: 'distributed-systems',
       passed: Math.random() > 0.3, // 70% pass rate for demo
       timestamp: new Date(),
-      regionResults: this.regions.map(region => ({
+      regionResults: regionsToUse.map(region => ({
         regionId: region.id,
         regionName: region.name,
         allowed: Math.random() > 0.2,
@@ -120,8 +135,8 @@ export class DistributedSystemsService {
         consistent: Math.random() > 0.2,
         inconsistencies: Math.random() > 0.5 ? [] : [
           {
-            region1: this.regions[0]?.id || 'region-1',
-            region2: this.regions[1]?.id || 'region-2',
+            region1: regionsToUse[0]?.id || 'region-1',
+            region2: regionsToUse[1]?.id || 'region-2',
             difference: 'Policy evaluation differs',
             severity: 'high',
           },
@@ -130,8 +145,8 @@ export class DistributedSystemsService {
       performanceMetrics: {
         totalTime: Math.floor(Math.random() * 500) + 200,
         averageLatency: Math.floor(Math.random() * 100) + 50,
-        slowestRegion: this.regions[this.regions.length - 1]?.name || 'Unknown',
-        fastestRegion: this.regions[0]?.name || 'Unknown',
+        slowestRegion: regionsToUse[regionsToUse.length - 1]?.name || 'Unknown',
+        fastestRegion: regionsToUse[0]?.name || 'Unknown',
       },
     };
 

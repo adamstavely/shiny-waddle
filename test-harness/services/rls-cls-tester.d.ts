@@ -33,6 +33,10 @@ export interface RLSCLSTesterConfig {
             applicable: boolean;
         }>;
     };
+    testLogic?: {
+        skipDisabledPolicies?: boolean;
+        validateCrossTenant?: boolean;
+    };
 }
 export declare class RLSCLSTester {
     private analyzer;

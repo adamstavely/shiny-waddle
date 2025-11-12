@@ -6,6 +6,7 @@ import { DLPModule } from '../dlp/dlp.module';
 import { IdentityLifecycleModule } from '../identity-lifecycle/identity-lifecycle.module';
 import { APIGatewayModule } from '../api-gateway/api-gateway.module';
 import { NetworkPolicyModule } from '../network-policy/network-policy.module';
+import { DistributedSystemsModule } from '../distributed-systems/distributed-systems.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { NetworkPolicyModule } from '../network-policy/network-policy.module';
     forwardRef(() => IdentityLifecycleModule),
     forwardRef(() => APIGatewayModule),
     forwardRef(() => NetworkPolicyModule),
+    forwardRef(() => DistributedSystemsModule),
   ],
   controllers: [TestConfigurationsController],
   providers: [TestConfigurationsService],

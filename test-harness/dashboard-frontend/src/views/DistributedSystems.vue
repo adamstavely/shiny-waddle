@@ -8,9 +8,9 @@
           <p class="page-description">Test and monitor compliance across multi-region deployments</p>
         </div>
         <div class="header-actions">
-          <button @click="showConfigModal = true" class="btn-secondary">
+          <button @click="navigateToConfig" class="btn-secondary">
             <Settings class="btn-icon" />
-            Configure Regions
+            Configure
           </button>
           <button @click="showTestModal = true" class="btn-primary">
             <Play class="btn-icon" />
@@ -20,23 +20,31 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        @click="activeTab = tab.id"
-        class="tab-button"
-        :class="{ active: activeTab === tab.id }"
-      >
-        <component :is="tab.icon" class="tab-icon" />
-        {{ tab.label }}
-        <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
-      </button>
+    <!-- Configuration Selector -->
+    <div class="config-selector">
+      <div class="selector-group">
+        <label>Use Configuration:</label>
+        <select v-model="selectedConfigId" @change="loadConfiguration">
+          <option value="">None (Use Defaults)</option>
+          <option v-for="config in configurations" :key="config.id" :value="config.id">
+            {{ config.name }}
+          </option>
+        </select>
+      </div>
+      <div class="selector-actions">
+        <button @click="saveCurrentAsConfig" class="btn-secondary" :disabled="!hasTestData">
+          <Save class="btn-icon" />
+          Save as Configuration
+        </button>
+      </div>
+      <div v-if="selectedConfigId" class="active-config">
+        <CheckCircle2 class="icon" />
+        <span>Using: {{ getConfigName(selectedConfigId) }}</span>
+      </div>
     </div>
 
-    <!-- Test Results Tab -->
-    <div v-if="activeTab === 'results'" class="tab-content">
+    <!-- Test Results -->
+    <div class="tab-content">
       <div class="filters">
         <input
           v-model="searchQuery"
@@ -150,117 +158,12 @@
       </div>
     </div>
 
-    <!-- Configuration Tab -->
-    <div v-if="activeTab === 'config'" class="tab-content">
-      <div class="config-section">
-        <div class="section-header">
-          <h2>Region Configuration</h2>
-          <button @click="showConfigModal = true" class="btn-secondary">
-            <Plus class="btn-icon" />
-            Add Region
-          </button>
-        </div>
-
-        <div class="regions-list">
-          <div
-            v-for="region in regions"
-            :key="region.id"
-            class="region-card"
-          >
-            <div class="region-header">
-              <div>
-                <h3 class="region-name">{{ region.name }}</h3>
-                <p class="region-id">{{ region.id }}</p>
-              </div>
-              <div class="region-actions">
-                <button @click="editRegion(region)" class="icon-btn">
-                  <Edit class="icon" />
-                </button>
-                <button @click="deleteRegion(region.id)" class="icon-btn delete">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-            </div>
-            <div class="region-details">
-              <div class="detail-item">
-                <span class="detail-label">Endpoint:</span>
-                <span class="detail-value">{{ region.endpoint }}</span>
-              </div>
-              <div class="detail-item" v-if="region.pdpEndpoint">
-                <span class="detail-label">PDP Endpoint:</span>
-                <span class="detail-value">{{ region.pdpEndpoint }}</span>
-              </div>
-              <div class="detail-item" v-if="region.timezone">
-                <span class="detail-label">Timezone:</span>
-                <span class="detail-value">{{ region.timezone }}</span>
-              </div>
-              <div class="detail-item" v-if="region.latency !== undefined">
-                <span class="detail-label">Latency:</span>
-                <span class="detail-value">{{ region.latency }}ms</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="regions.length === 0" class="empty-state">
-          <Globe class="empty-icon" />
-          <h3>No regions configured</h3>
-          <p>Add regions to start testing distributed systems</p>
-          <button @click="showConfigModal = true" class="btn-primary">
-            Add Region
-          </button>
-        </div>
-      </div>
-
-      <!-- Policy Sync Configuration -->
-      <div class="config-section">
-        <div class="section-header">
-          <h2>Policy Synchronization</h2>
-        </div>
-        <div class="sync-config">
-          <label class="checkbox-option">
-            <input
-              v-model="policySync.enabled"
-              type="checkbox"
-              class="checkbox-input"
-            />
-            <span>Enable Policy Synchronization</span>
-          </label>
-          <div v-if="policySync.enabled" class="sync-options">
-            <div class="form-group">
-              <label>Sync Interval (ms)</label>
-              <input
-                v-model.number="policySync.syncInterval"
-                type="number"
-                class="form-input"
-                min="100"
-              />
-            </div>
-            <div class="form-group">
-              <label>Consistency Level</label>
-              <Dropdown
-                v-model="policySync.consistencyLevel"
-                :options="consistencyLevelOptions"
-                placeholder="Select consistency level"
-                class="form-dropdown"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Region Configuration Modal -->
-    <RegionConfigModal
-      v-model:isOpen="showConfigModal"
-      :region="editingRegion"
-      @saved="handleRegionSaved"
-    />
 
     <!-- Test Execution Modal -->
     <DistributedTestModal
       v-model:isOpen="showTestModal"
-      :regions="regions"
+      :regions="regionsFromConfig"
+      :configId="selectedConfigId"
       @test-executed="handleTestExecuted"
     />
 
@@ -284,45 +187,34 @@ import {
   Trash2,
   Clock,
   AlertTriangle,
-  Plus,
-  Edit
+  Save
 } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
-import RegionConfigModal from '../components/RegionConfigModal.vue';
 import DistributedTestModal from '../components/DistributedTestModal.vue';
 import TestResultModal from '../components/TestResultModal.vue';
 
+const router = useRouter();
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
   { label: 'Distributed Systems' }
 ];
 
-const activeTab = ref('results');
 const searchQuery = ref('');
 const filterTestType = ref('');
 const filterRegion = ref('');
 const filterStatus = ref('');
 const isLoading = ref(false);
-const showConfigModal = ref(false);
 const showTestModal = ref(false);
 const showResultModal = ref(false);
-const editingRegion = ref<any>(null);
 const selectedResult = ref<any>(null);
 
-const tabs = [
-  { id: 'results', label: 'Test Results', icon: Globe, badge: null },
-  { id: 'config', label: 'Configuration', icon: Settings, badge: null },
-];
-
 const testResults = ref<any[]>([]);
-const regions = ref<any[]>([]);
-const policySync = ref({
-  enabled: false,
-  syncInterval: 1000,
-  consistencyLevel: 'eventual',
-});
+const selectedConfigId = ref<string>('');
+const configurations = ref<any[]>([]);
+const regionsFromConfig = ref<any[]>([]);
 
 const testTypeOptions = computed(() => [
   { label: 'All Test Types', value: '' },
@@ -335,7 +227,7 @@ const testTypeOptions = computed(() => [
 
 const regionOptions = computed(() => [
   { label: 'All Regions', value: '' },
-  ...regions.value.map(r => ({ label: r.name, value: r.id })),
+  ...regionsFromConfig.value.map(r => ({ label: r.name, value: r.id })),
 ]);
 
 const statusOptions = computed(() => [
@@ -344,11 +236,14 @@ const statusOptions = computed(() => [
   { label: 'Failed', value: 'failed' },
 ]);
 
-const consistencyLevelOptions = [
-  { label: 'Strong', value: 'strong' },
-  { label: 'Eventual', value: 'eventual' },
-  { label: 'Weak', value: 'weak' },
-];
+const hasTestData = computed(() => {
+  return regionsFromConfig.value.length > 0;
+});
+
+const getConfigName = (id: string) => {
+  const config = configurations.value.find(c => c.id === id);
+  return config?.name || id;
+};
 
 const filteredResults = computed(() => {
   return testResults.value.filter(result => {
@@ -395,13 +290,56 @@ const loadTestResults = async () => {
   }
 };
 
-const loadRegions = async () => {
+const loadConfigurations = async () => {
   try {
-    const response = await axios.get('/api/distributed-systems/regions');
-    regions.value = response.data;
+    const response = await axios.get('/api/test-configurations?type=distributed-systems');
+    configurations.value = response.data;
   } catch (error) {
-    console.error('Failed to load regions:', error);
+    console.error('Error loading configurations:', error);
   }
+};
+
+const loadConfiguration = async () => {
+  if (!selectedConfigId.value) {
+    regionsFromConfig.value = [];
+    return;
+  }
+  try {
+    const response = await axios.get(`/api/test-configurations/${selectedConfigId.value}`);
+    const config = response.data;
+    if (config.regions) {
+      regionsFromConfig.value = config.regions;
+    } else {
+      regionsFromConfig.value = [];
+    }
+  } catch (error) {
+    console.error('Error loading configuration:', error);
+    regionsFromConfig.value = [];
+  }
+};
+
+const saveCurrentAsConfig = async () => {
+  if (regionsFromConfig.value.length === 0) {
+    alert('No regions configured. Please configure regions in the test configuration first.');
+    return;
+  }
+  const name = prompt('Enter configuration name:');
+  if (!name) return;
+  try {
+    await axios.post('/api/test-configurations', {
+      name,
+      type: 'distributed-systems',
+      regions: regionsFromConfig.value,
+    });
+    await loadConfigurations();
+    alert('Configuration saved successfully!');
+  } catch (error: any) {
+    alert('Error saving configuration: ' + (error.response?.data?.message || error.message));
+  }
+};
+
+const navigateToConfig = () => {
+  router.push('/test-configurations');
 };
 
 const viewTestResult = async (id: string) => {
@@ -428,33 +366,12 @@ const deleteTestResult = async (id: string) => {
   }
 };
 
-const editRegion = (region: any) => {
-  editingRegion.value = region;
-  showConfigModal.value = true;
-};
-
-const deleteRegion = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this region?')) return;
-  try {
-    await axios.delete(`/api/distributed-systems/regions/${id}`);
-    await loadRegions();
-  } catch (error) {
-    console.error('Failed to delete region:', error);
-    alert('Failed to delete region. Please try again.');
-  }
-};
-
-const handleRegionSaved = async () => {
-  editingRegion.value = null;
-  await loadRegions();
-};
-
 const handleTestExecuted = async () => {
   await loadTestResults();
 };
 
 onMounted(async () => {
-  await Promise.all([loadTestResults(), loadRegions()]);
+  await Promise.all([loadTestResults(), loadConfigurations()]);
 });
 </script>
 
@@ -532,48 +449,65 @@ onMounted(async () => {
   height: 18px;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
+.config-selector {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 20px;
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
-}
-
-.tab-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.selector-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selector-group label {
   color: #a0aec0;
-  font-size: 0.9rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-size: 0.9rem;
 }
 
-.tab-button:hover {
-  color: #4facfe;
+.selector-group select {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  min-width: 200px;
 }
 
-.tab-button.active {
-  color: #4facfe;
-  border-bottom-color: #4facfe;
+.selector-group select:focus {
+  outline: none;
+  border-color: #4facfe;
 }
 
-.tab-icon {
-  width: 18px;
-  height: 18px;
+.selector-actions {
+  margin-left: auto;
 }
 
-.tab-badge {
-  padding: 2px 8px;
-  background: rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  font-size: 0.75rem;
-  color: #4facfe;
+.active-config {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 6px;
+  color: #22c55e;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.active-config .icon {
+  width: 16px;
+  height: 16px;
 }
 
 .filters {

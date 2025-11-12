@@ -2,7 +2,10 @@
   <div v-if="show" class="modal-overlay" @click.self="close">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ editingConfig ? 'Edit Configuration' : 'Create Configuration' }}</h2>
+        <div class="modal-header-title">
+          <Settings class="modal-header-icon" />
+          <h2>{{ editingConfig ? 'Edit Configuration' : 'Create Configuration' }}</h2>
+        </div>
         <button @click="close" class="close-btn">×</button>
       </div>
       <div class="modal-body">
@@ -15,6 +18,7 @@
             <option value="dlp">DLP</option>
             <option value="identity-lifecycle">Identity Lifecycle</option>
             <option value="api-gateway">API Gateway</option>
+            <option value="distributed-systems">Distributed Systems</option>
           </select>
         </div>
 
@@ -46,11 +50,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { Settings } from 'lucide-vue-next';
 import RLSCLSConfigForm from './RLSCLSConfigForm.vue';
 import NetworkPolicyConfigForm from './NetworkPolicyConfigForm.vue';
 import DLPConfigForm from './DLPConfigForm.vue';
 import IdentityLifecycleConfigForm from './IdentityLifecycleConfigForm.vue';
 import APIGatewayConfigForm from './APIGatewayConfigForm.vue';
+import DistributedSystemsConfigForm from './DistributedSystemsConfigForm.vue';
 
 const props = defineProps<{
   show: boolean;
@@ -79,6 +85,7 @@ const configFormComponent = computed(() => {
     'dlp': DLPConfigForm,
     'identity-lifecycle': IdentityLifecycleConfigForm,
     'api-gateway': APIGatewayConfigForm,
+    'distributed-systems': DistributedSystemsConfigForm,
   };
   return components[type || ''];
 });
@@ -148,6 +155,19 @@ watch(() => props.config, (newConfig) => {
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-header-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {

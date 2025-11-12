@@ -18,6 +18,8 @@ import {
   DLPConfigurationEntity,
   IdentityLifecycleConfigurationEntity,
   APIGatewayConfigurationEntity,
+  DistributedSystemsConfigurationEntity,
+  RegionConfig,
 } from '../entities/test-configuration.entity';
 import { DatabaseConfigDto } from '../../rls-cls/dto/rls-cls.dto';
 import { TestQueryDto } from '../../rls-cls/dto/rls-cls.dto';
@@ -409,10 +411,116 @@ export class CreateAPIGatewayConfigurationDto extends BaseConfigurationDto {
   testLogic?: APIGatewayTestLogicDto;
 }
 
+class RegionConfigDto {
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  endpoint: string;
+
+  @IsOptional()
+  @IsString()
+  pdpEndpoint?: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @IsOptional()
+  @IsNumber()
+  latency?: number;
+
+  @IsOptional()
+  @IsObject()
+  credentials?: Record<string, string>;
+}
+
+class PolicySyncDto {
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  syncInterval?: number;
+
+  @IsOptional()
+  @IsEnum(['strong', 'eventual', 'weak'])
+  consistencyLevel?: 'strong' | 'eventual' | 'weak';
+}
+
+class CoordinationDto {
+  @IsOptional()
+  @IsEnum(['consul', 'etcd', 'zookeeper', 'custom'])
+  type?: 'consul' | 'etcd' | 'zookeeper' | 'custom';
+
+  @IsOptional()
+  @IsString()
+  endpoint?: string;
+}
+
+class DistributedSystemsTestLogicDto {
+  @IsOptional()
+  @IsBoolean()
+  validateConsistency?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  checkSynchronization?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  customValidations?: Array<{
+    name: string;
+    condition: string;
+    description?: string;
+  }>;
+}
+
+export class CreateDistributedSystemsConfigurationDto extends BaseConfigurationDto {
+  @IsNotEmpty()
+  @IsEnum(['distributed-systems'])
+  type: 'distributed-systems';
+
+  @IsNotEmpty()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => RegionConfigDto)
+  regions: RegionConfigDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => PolicySyncDto)
+  policySync?: PolicySyncDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CoordinationDto)
+  coordination?: CoordinationDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => DistributedSystemsTestLogicDto)
+  testLogic?: DistributedSystemsTestLogicDto;
+}
+
 export type CreateTestConfigurationDto =
   | CreateRLSCLSConfigurationDto
   | CreateNetworkPolicyConfigurationDto
   | CreateDLPConfigurationDto
   | CreateIdentityLifecycleConfigurationDto
-  | CreateAPIGatewayConfigurationDto;
+  | CreateAPIGatewayConfigurationDto
+  | CreateDistributedSystemsConfigurationDto;
 

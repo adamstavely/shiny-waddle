@@ -124,6 +124,7 @@ import Dropdown from './Dropdown.vue';
 const props = defineProps<{
   isOpen: boolean;
   regions?: any[];
+  configId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -192,6 +193,10 @@ const handleRunTest = async () => {
 
     if (form.value.action) {
       payload.action = form.value.action;
+    }
+
+    if (props.configId) {
+      payload.configId = props.configId;
     }
 
     await axios.post('/api/distributed-systems/tests/run', payload);

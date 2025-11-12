@@ -17,171 +17,219 @@
       />
     </button>
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
-      <!-- Access Control -->
-      <div v-if="activeCategory === 'access-control'" class="drawer-category" data-category="access-control">
-        <div class="category-header">
-          <Shield class="category-icon" />
-          <h3 class="category-title">Access Control</h3>
+      <!-- Tests Category -->
+      <div v-if="activeCategory === 'tests'" class="drawer-category" data-category="tests">
+        <!-- Main Tests Page -->
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/tests"
+            @click.prevent="handleNavClick('/tests')"
+            :class="['drawer-item', isActive('/tests') ? 'drawer-item-active' : '']"
+          >
+            <TestTube class="item-icon" />
+            <span>Test Suites</span>
+          </a>
         </div>
-        <div class="category-items">
-          <a
-            href="/policies"
-            @click.prevent="handleNavClick('/policies')"
-            :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
-          >
-            <Shield class="item-icon" />
-            <span>Policies</span>
-          </a>
-          <a
-            href="/resources"
-            @click.prevent="handleNavClick('/resources')"
-            :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-          >
-            <Folder class="item-icon" />
-            <span>Resources</span>
-          </a>
-          <a
-            href="/policy-validation"
-            @click.prevent="handleNavClick('/policy-validation')"
-            :class="['drawer-item', isActive('/policy-validation') ? 'drawer-item-active' : '']"
-          >
-            <FileSearch class="item-icon" />
-            <span>Policy Validation</span>
-          </a>
-          <a
-            href="/identity-lifecycle"
-            @click.prevent="handleNavClick('/identity-lifecycle')"
-            :class="['drawer-item', isActive('/identity-lifecycle') ? 'drawer-item-active' : '']"
-          >
-            <UserCog class="item-icon" />
-            <span>Identity Lifecycle</span>
-          </a>
-          <a
-            href="/identity-providers"
-            @click.prevent="handleNavClick('/identity-providers')"
-            :class="['drawer-item', isActive('/identity-providers') ? 'drawer-item-active' : '']"
-          >
-            <UserCog class="item-icon" />
-            <span>Identity Providers</span>
-          </a>
+
+        <!-- Access Control Tests -->
+        <div class="category-section">
+          <div class="section-header">
+            <Shield class="section-icon" />
+            <h3 class="section-title">Access Control</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/policy-validation"
+              @click.prevent="handleNavClick('/policy-validation')"
+              :class="['drawer-item', isActive('/policy-validation') ? 'drawer-item-active' : '']"
+            >
+              <FileSearch class="item-icon" />
+              <span>Policy Validation</span>
+            </a>
+            <a
+              href="/identity-lifecycle"
+              @click.prevent="handleNavClick('/identity-lifecycle')"
+              :class="['drawer-item', isActive('/identity-lifecycle') ? 'drawer-item-active' : '']"
+            >
+              <UserCog class="item-icon" />
+              <span>Identity Lifecycle</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- App Security Tests -->
+        <div class="category-section">
+          <div class="section-header">
+            <Lock class="section-icon" />
+            <h3 class="section-title">App Security</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/api-security"
+              @click.prevent="handleNavClick('/api-security')"
+              :class="['drawer-item', isActive('/api-security') ? 'drawer-item-active' : '']"
+            >
+              <Lock class="item-icon" />
+              <span>API Security</span>
+            </a>
+            <a
+              href="/users"
+              @click.prevent="handleNavClick('/users')"
+              :class="['drawer-item', isActive('/users') ? 'drawer-item-active' : '']"
+            >
+              <Users class="item-icon" />
+              <span>User Simulation</span>
+            </a>
+            <a
+              href="/api-gateway"
+              @click.prevent="handleNavClick('/api-gateway')"
+              :class="['drawer-item', isActive('/api-gateway') ? 'drawer-item-active' : '']"
+            >
+              <Server class="item-icon" />
+              <span>API Gateway</span>
+            </a>
+            <a
+              href="/dlp"
+              @click.prevent="handleNavClick('/dlp')"
+              :class="['drawer-item', isActive('/dlp') ? 'drawer-item-active' : '']"
+            >
+              <FileX class="item-icon" />
+              <span>DLP</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Platform Config Tests -->
+        <div class="category-section">
+          <div class="section-header">
+            <Settings class="section-icon" />
+            <h3 class="section-title">Platform Config</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/distributed-systems"
+              @click.prevent="handleNavClick('/distributed-systems')"
+              :class="['drawer-item', isActive('/distributed-systems') ? 'drawer-item-active' : '']"
+            >
+              <Globe class="item-icon" />
+              <span>Distributed Systems</span>
+            </a>
+            <a
+              href="/network-policies"
+              @click.prevent="handleNavClick('/network-policies')"
+              :class="['drawer-item', isActive('/network-policies') ? 'drawer-item-active' : '']"
+            >
+              <Network class="item-icon" />
+              <span>Network Policies</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Data Security Tests -->
+        <div class="category-section">
+          <div class="section-header">
+            <Database class="section-icon" />
+            <h3 class="section-title">Data Security</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/rls-cls"
+              @click.prevent="handleNavClick('/rls-cls')"
+              :class="['drawer-item', isActive('/rls-cls') ? 'drawer-item-active' : '']"
+            >
+              <ShieldCheck class="item-icon" />
+              <span>RLS/CLS</span>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Platform Config -->
-      <div v-if="activeCategory === 'platform-config'" class="drawer-category" data-category="platform-config">
-        <div class="category-header">
-          <Settings class="category-icon" />
-          <h3 class="category-title">Platform Config</h3>
+      <!-- Configuration Category -->
+      <div v-if="activeCategory === 'configuration'" class="drawer-category" data-category="configuration">
+        <!-- Access Control Configuration -->
+        <div class="category-section">
+          <div class="section-header">
+            <Shield class="section-icon" />
+            <h3 class="section-title">Access Control</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/policies"
+              @click.prevent="handleNavClick('/policies')"
+              :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
+            >
+              <Shield class="item-icon" />
+              <span>Policies</span>
+            </a>
+            <a
+              href="/resources"
+              @click.prevent="handleNavClick('/resources')"
+              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
+            >
+              <Folder class="item-icon" />
+              <span>Resources</span>
+            </a>
+            <a
+              href="/identity-providers"
+              @click.prevent="handleNavClick('/identity-providers')"
+              :class="['drawer-item', isActive('/identity-providers') ? 'drawer-item-active' : '']"
+            >
+              <UserCog class="item-icon" />
+              <span>Identity Providers</span>
+            </a>
+          </div>
         </div>
-        <div class="category-items">
-          <a
-            href="/configuration-validation"
-            @click.prevent="handleNavClick('/configuration-validation')"
-            :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
-          >
-            <Shield class="item-icon" />
-            <span>Config Validator</span>
-          </a>
-          <a
-            href="/distributed-systems"
-            @click.prevent="handleNavClick('/distributed-systems')"
-            :class="['drawer-item', isActive('/distributed-systems') ? 'drawer-item-active' : '']"
-          >
-            <Globe class="item-icon" />
-            <span>Distributed Systems</span>
-          </a>
-          <a
-            href="/network-policies"
-            @click.prevent="handleNavClick('/network-policies')"
-            :class="['drawer-item', isActive('/network-policies') ? 'drawer-item-active' : '']"
-          >
-            <Network class="item-icon" />
-            <span>Network Policies</span>
-          </a>
-          <a
-            href="/test-configurations"
-            @click.prevent="handleNavClick('/test-configurations')"
-            :class="['drawer-item', isActive('/test-configurations') ? 'drawer-item-active' : '']"
-          >
-            <Settings class="item-icon" />
-            <span>Test Configurations</span>
-          </a>
-        </div>
-      </div>
 
-      <!-- App Security -->
-      <div v-if="activeCategory === 'app-security'" class="drawer-category" data-category="app-security">
-        <div class="category-header">
-          <Lock class="category-icon" />
-          <h3 class="category-title">App Security</h3>
+        <!-- Platform Config Configuration -->
+        <div class="category-section">
+          <div class="section-header">
+            <Settings class="section-icon" />
+            <h3 class="section-title">Platform Config</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/configuration-validation"
+              @click.prevent="handleNavClick('/configuration-validation')"
+              :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
+            >
+              <Shield class="item-icon" />
+              <span>Config Validator</span>
+            </a>
+            <a
+              href="/test-configurations"
+              @click.prevent="handleNavClick('/test-configurations')"
+              :class="['drawer-item', isActive('/test-configurations') ? 'drawer-item-active' : '']"
+            >
+              <Settings class="item-icon" />
+              <span>Test Configurations</span>
+            </a>
+          </div>
         </div>
-        <div class="category-items">
-          <a
-            href="/api-security"
-            @click.prevent="handleNavClick('/api-security')"
-            :class="['drawer-item', isActive('/api-security') ? 'drawer-item-active' : '']"
-          >
-            <Lock class="item-icon" />
-            <span>API Security</span>
-          </a>
-          <a
-            href="/users"
-            @click.prevent="handleNavClick('/users')"
-            :class="['drawer-item', isActive('/users') ? 'drawer-item-active' : '']"
-          >
-            <Users class="item-icon" />
-            <span>User Simulation</span>
-          </a>
-          <a
-            href="/api-gateway"
-            @click.prevent="handleNavClick('/api-gateway')"
-            :class="['drawer-item', isActive('/api-gateway') ? 'drawer-item-active' : '']"
-          >
-            <Server class="item-icon" />
-            <span>API Gateway</span>
-          </a>
-          <a
-            href="/dlp"
-            @click.prevent="handleNavClick('/dlp')"
-            :class="['drawer-item', isActive('/dlp') ? 'drawer-item-active' : '']"
-          >
-            <FileX class="item-icon" />
-            <span>DLP</span>
-          </a>
-        </div>
-      </div>
 
-      <!-- Data Security -->
-      <div v-if="activeCategory === 'data-security'" class="drawer-category" data-category="data-security">
-        <div class="category-header">
-          <Database class="category-icon" />
-          <h3 class="category-title">Data Security</h3>
-        </div>
-        <div class="category-items">
-          <a
-            href="/datasets"
-            @click.prevent="handleNavClick('/datasets')"
-            :class="['drawer-item', isActive('/datasets') ? 'drawer-item-active' : '']"
-          >
-            <Database class="item-icon" />
-            <span>Datasets</span>
-          </a>
-          <a
-            href="/contracts"
-            @click.prevent="handleNavClick('/contracts')"
-            :class="['drawer-item', isActive('/contracts') ? 'drawer-item-active' : '']"
-          >
-            <FileCheck class="item-icon" />
-            <span>Contracts</span>
-          </a>
-          <a
-            href="/rls-cls"
-            @click.prevent="handleNavClick('/rls-cls')"
-            :class="['drawer-item', isActive('/rls-cls') ? 'drawer-item-active' : '']"
-          >
-            <ShieldCheck class="item-icon" />
-            <span>RLS/CLS</span>
-          </a>
+        <!-- Data Security Configuration -->
+        <div class="category-section">
+          <div class="section-header">
+            <Database class="section-icon" />
+            <h3 class="section-title">Data Security</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/datasets"
+              @click.prevent="handleNavClick('/datasets')"
+              :class="['drawer-item', isActive('/datasets') ? 'drawer-item-active' : '']"
+            >
+              <Database class="item-icon" />
+              <span>Datasets</span>
+            </a>
+            <a
+              href="/contracts"
+              @click.prevent="handleNavClick('/contracts')"
+              :class="['drawer-item', isActive('/contracts') ? 'drawer-item-active' : '']"
+            >
+              <FileCheck class="item-icon" />
+              <span>Contracts</span>
+            </a>
+          </div>
         </div>
       </div>
     </nav>
@@ -207,7 +255,8 @@ import {
   Network,
   ShieldCheck,
   FileX,
-  Server
+  Server,
+  TestTube
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -216,31 +265,31 @@ const currentPath = ref(route.path);
 const isCollapsed = ref(true);
 const activeCategory = ref<string | null>(null);
 
+// Test pages
+const testPages = [
+  '/policy-validation', '/identity-lifecycle',
+  '/api-security', '/users', '/api-gateway', '/dlp',
+  '/distributed-systems', '/network-policies',
+  '/rls-cls'
+];
+
+// Configuration pages
+const configPages = [
+  '/policies', '/resources', '/identity-providers',
+  '/configuration-validation', '/test-configurations',
+  '/datasets', '/contracts'
+];
+
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
-  if (path === '/policies' || path.startsWith('/policies/') || 
-      path === '/resources' || path.startsWith('/resources/') ||
-      path === '/policy-validation' || path.startsWith('/policy-validation/') ||
-      path === '/identity-lifecycle' || path.startsWith('/identity-lifecycle/') ||
-      path === '/identity-providers' || path.startsWith('/identity-providers/')) {
-    return 'access-control';
+  // Check if it's a test page
+  if (path === '/tests' || path.startsWith('/tests/') ||
+      testPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'tests';
   }
-  if (path === '/configuration-validation' || path.startsWith('/configuration-validation/') ||
-      path === '/distributed-systems' || path.startsWith('/distributed-systems/') ||
-      path === '/network-policies' || path.startsWith('/network-policies/') ||
-      path === '/test-configurations' || path.startsWith('/test-configurations/')) {
-    return 'platform-config';
-  }
-  if (path === '/api-security' || path.startsWith('/api-security/') ||
-      path === '/users' || path.startsWith('/users/') ||
-      path === '/api-gateway' || path.startsWith('/api-gateway/') ||
-      path === '/dlp' || path.startsWith('/dlp/')) {
-    return 'app-security';
-  }
-  if (path === '/datasets' || path.startsWith('/datasets/') ||
-      path === '/contracts' || path.startsWith('/contracts/') ||
-      path === '/rls-cls' || path.startsWith('/rls-cls/')) {
-    return 'data-security';
+  // Check if it's a configuration page
+  if (configPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'configuration';
   }
   return null;
 };
@@ -476,6 +525,48 @@ watch(() => route.path, (newPath) => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
+}
+
+.category-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.category-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px 6px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.08);
+  margin-top: 8px;
+}
+
+.section-header:first-child {
+  margin-top: 0;
+}
+
+.section-icon {
+  width: 16px;
+  height: 16px;
+  color: #4facfe;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  opacity: 0.9;
 }
 
 .category-items {

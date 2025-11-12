@@ -27,18 +27,53 @@ class IdentityLifecycleTester {
             else {
                 mfaEnabled = this.config.mockData?.mfaEnabled ?? false;
             }
-            const steps = [
-                { name: 'Create Identity', completed: true },
-                { name: 'Assign Default Role', completed: user.role !== undefined },
-                { name: 'Set Initial Permissions', completed: user.attributes !== undefined },
-                { name: 'Enable MFA', completed: mfaEnabled },
-                { name: 'Send Welcome Email', completed: true },
-            ];
+            const configuredSteps = this.config.workflowSteps;
+            let steps;
+            if (configuredSteps && configuredSteps.length > 0) {
+                steps = configuredSteps.map(step => {
+                    let completed = false;
+                    switch (step.name.toLowerCase()) {
+                        case 'create identity':
+                            completed = true;
+                            break;
+                        case 'assign default role':
+                        case 'assign role':
+                            completed = user.role !== undefined;
+                            break;
+                        case 'set initial permissions':
+                        case 'set permissions':
+                            completed = user.attributes !== undefined;
+                            break;
+                        case 'enable mfa':
+                        case 'enable multi-factor authentication':
+                            completed = mfaEnabled;
+                            break;
+                        case 'send welcome email':
+                        case 'send email':
+                            completed = true;
+                            break;
+                        default:
+                            completed = true;
+                    }
+                    return { name: step.name, completed };
+                });
+            }
+            else {
+                steps = [
+                    { name: 'Create Identity', completed: true },
+                    { name: 'Assign Default Role', completed: user.role !== undefined },
+                    { name: 'Set Initial Permissions', completed: user.attributes !== undefined },
+                    { name: 'Enable MFA', completed: mfaEnabled },
+                    { name: 'Send Welcome Email', completed: true },
+                ];
+            }
             const allCompleted = steps.every(step => step.completed);
+            const completedSteps = steps.filter(step => step.completed).map(step => step.name);
             result.passed = allCompleted;
             result.details = {
                 steps,
                 allCompleted,
+                completedSteps,
                 event: {
                     type: 'onboarding',
                     userId: user.id,
@@ -46,6 +81,7 @@ class IdentityLifecycleTester {
                     details: { steps },
                 },
             };
+            result.completedSteps = completedSteps;
         }
         catch (error) {
             result.error = error.message;

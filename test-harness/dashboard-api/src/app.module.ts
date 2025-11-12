@@ -26,6 +26,7 @@ import { IdentityProviderModule } from './identity-providers/identity-provider.m
 import { NetworkPolicyModule } from './network-policy/network-policy.module';
 import { APIGatewayModule } from './api-gateway/api-gateway.module';
 import { DLPModule } from './dlp/dlp.module';
+import { TestConfigurationsModule } from './test-configurations/test-configurations.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -57,6 +58,7 @@ import { AppController } from './app.controller';
     NetworkPolicyModule,
     APIGatewayModule,
     DLPModule,
+    TestConfigurationsModule,
   ],
   controllers: [AppController],
 })

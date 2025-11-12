@@ -10,7 +10,10 @@ class RLSCLSTester {
     }
     async testRLSCoverage(database) {
         const tables = await this.getDatabaseTables(database);
-        const policies = await this.getRLSPolicies(database);
+        let policies = await this.getRLSPolicies(database);
+        if (this.config.testLogic?.skipDisabledPolicies) {
+            policies = policies.filter(p => p.applicable);
+        }
         const tablesWithRLS = new Set(policies.map(p => p.table));
         const tablesWithoutRLS = tables.filter(t => !tablesWithRLS.has(t));
         return {
@@ -31,7 +34,10 @@ class RLSCLSTester {
     }
     async testCLSCoverage(database) {
         const tables = await this.getDatabaseTables(database);
-        const policies = await this.getCLSPolicies(database);
+        let policies = await this.getCLSPolicies(database);
+        if (this.config.testLogic?.skipDisabledPolicies) {
+            policies = policies.filter(p => p.applicable);
+        }
         const tablesWithCLS = new Set(policies.map(p => p.table));
         const tablesWithoutCLS = tables.filter(t => !tablesWithCLS.has(t));
         return {

@@ -10,6 +10,7 @@ import {
   DLPConfigurationEntity,
   IdentityLifecycleConfigurationEntity,
   APIGatewayConfigurationEntity,
+  DistributedSystemsConfigurationEntity,
 } from './entities/test-configuration.entity';
 import {
   CreateTestConfigurationDto,
@@ -18,12 +19,14 @@ import {
   CreateDLPConfigurationDto,
   CreateIdentityLifecycleConfigurationDto,
   CreateAPIGatewayConfigurationDto,
+  CreateDistributedSystemsConfigurationDto,
 } from './dto/create-test-configuration.dto';
 import { RLSCLSService } from '../rls-cls/rls-cls.service';
 import { DLPService } from '../dlp/dlp.service';
 import { IdentityLifecycleService } from '../identity-lifecycle/identity-lifecycle.service';
 import { APIGatewayService } from '../api-gateway/api-gateway.service';
 import { NetworkPolicyService } from '../network-policy/network-policy.service';
+import { DistributedSystemsService } from '../distributed-systems/distributed-systems.service';
 
 @Injectable()
 export class TestConfigurationsService {
@@ -42,6 +45,8 @@ export class TestConfigurationsService {
     private readonly apiGatewayService: APIGatewayService,
     @Inject(forwardRef(() => NetworkPolicyService))
     private readonly networkPolicyService: NetworkPolicyService,
+    @Inject(forwardRef(() => DistributedSystemsService))
+    private readonly distributedSystemsService: DistributedSystemsService,
   ) {
     this.loadConfigurations().catch(err => {
       this.logger.error('Error loading test configurations on startup:', err);
@@ -373,6 +378,23 @@ export class TestConfigurationsService {
         } as APIGatewayConfigurationEntity;
         break;
       }
+      case 'distributed-systems': {
+        const dsDto = dto as CreateDistributedSystemsConfigurationDto;
+        newConfig = {
+          id: uuidv4(),
+          name: dsDto.name,
+          type: 'distributed-systems',
+          description: dsDto.description,
+          tags: dsDto.tags || [],
+          regions: dsDto.regions,
+          policySync: dsDto.policySync,
+          coordination: dsDto.coordination,
+          testLogic: dsDto.testLogic,
+          createdAt: now,
+          updatedAt: now,
+        } as DistributedSystemsConfigurationEntity;
+        break;
+      }
       default:
         throw new BadRequestException(`Unknown configuration type: ${(dto as any).type}`);
     }
@@ -478,6 +500,15 @@ export class TestConfigurationsService {
           const agConfig = config as APIGatewayConfigurationEntity;
           // Run rate limiting test as the primary test
           return await this.apiGatewayService.testRateLimiting({ configId: id });
+        }
+        case 'distributed-systems': {
+          const dsConfig = config as DistributedSystemsConfigurationEntity;
+          // Run a multi-region test as the primary test
+          return await this.distributedSystemsService.runTest({
+            name: `Test: ${dsConfig.name}`,
+            testType: 'multi-region',
+            configId: id,
+          });
         }
         default:
           throw new BadRequestException(`Unknown configuration type: ${(config as any).type}`);
