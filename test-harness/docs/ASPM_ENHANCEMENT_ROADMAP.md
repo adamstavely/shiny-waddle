@@ -573,21 +573,29 @@ Need deeper insights beyond basic dashboards.
 
 #### 8.4 Custom Reports ✅ **IMPLEMENTED**
 - ✅ Configurable report builder (basic structure exists)
-- ⏳ Scheduled reports (structure exists, automation pending)
+- ✅ Scheduled reports (fully automated with scheduler service)
 - ✅ Export formats (PDF, Excel, JSON, HTML, XML, PowerPoint)
 - ✅ Report templates (executive, regulatory, technical, custom)
 
 **Implementation Details:**
 - Location: `dashboard-frontend/src/views/insights/ReportsTab.vue`
 - Report generation: `dashboard-frontend/src/components/GenerateReportModal.vue`
+- Scheduled reports UI: `dashboard-frontend/src/components/insights/ScheduledReports.vue`
 - Advanced reporter: `test-harness/services/advanced-reporter.ts`
   - Executive reports with key metrics, trends, top risks, recommendations
   - Regulatory reports (GDPR, HIPAA, SOC2, PCI-DSS, custom frameworks)
   - Custom reports with configurable sections
   - Export formats: PDF (Puppeteer/PDFKit), Excel (ExcelJS), PowerPoint (PptxGenJS), HTML, JSON
+- Scheduled reports service: `dashboard-api/src/scheduled-reports/`
+  - Scheduler service with cron expression support
+  - Daily, weekly, monthly, and custom frequency schedules
+  - Automated report generation and delivery (email, webhook, storage)
+  - Report execution tracking and error handling
 - Report viewer with charts and detailed content
 - Report templates for different use cases
-- Backend API: `dashboard-api/src/reports/` - Full CRUD operations, generation, download
+- Backend API: 
+  - `dashboard-api/src/reports/` - Full CRUD operations, generation, download
+  - `dashboard-api/src/scheduled-reports/` - Scheduled report management and execution
 
 ---
 
@@ -778,46 +786,102 @@ Need APIs and extensibility for custom integrations and automation.
 
 ## 13. Security & Compliance of the Platform
 
+### Status: ✅ **PARTIALLY COMPLETED** (13.1 mostly implemented; 13.2 compliance certifications pending)
+
 ### Problem
 The ASPM platform itself must be secure and compliant.
 
 ### Required Components
 
-#### 13.1 Security
-- Encryption at rest and in transit
-- Secrets management
-- Audit logging
-- Access controls
-- Vulnerability management for the platform
+#### 13.1 Security ✅ **MOSTLY IMPLEMENTED**
+- ✅ Encryption at rest and in transit
+- ✅ Secrets management
+- ✅ Audit logging
+- ✅ Access controls
+- ⏳ Vulnerability management for the platform (framework exists, full implementation pending)
 
-#### 13.2 Compliance
-- SOC 2 Type II
-- ISO 27001
-- GDPR compliance
-- Data residency options
+**Implementation Details:**
+- Location: `dashboard-api/src/security/`
+- **Encryption Service**: `encryption.service.ts`
+  - AES-256-GCM encryption for data at rest
+  - Encryption in transit support
+  - Password hashing with salt
+  - Configurable via `ENCRYPTION_KEY` environment variable
+- **Secrets Management Service**: `secrets.service.ts`
+  - Secure storage and retrieval of platform secrets
+  - Secret encryption at rest
+  - Secret rotation capabilities
+  - Tag-based organization
+  - REST API: `/api/security/secrets` - Full CRUD operations
+- **Security Audit Logging Service**: `audit-log.service.ts`
+  - Comprehensive audit logging for security events
+  - Event types: authentication, authorization, data access, configuration changes, secrets management, system events, security events
+  - Query and filter capabilities
+  - REST API: `/api/security/audit-logs` - Query and retrieve audit logs
+- **Access Control Guards**: `guards/access-control.guard.ts`
+  - Role-based access control (ADMIN, EDITOR, VIEWER, AUDITOR)
+  - Permission-based access control (read, write, delete, manage)
+  - Decorator-based permission and role requirements
+  - Integration with NestJS guards
+- **Audit Logging Middleware**: `middleware/audit-logging.middleware.ts`
+  - Automatic logging of all HTTP requests
+  - Captures request metadata (IP, user agent, duration, request ID)
+  - Logs write operations and sensitive read operations
+  - Applied to all routes automatically
+- **Security Module**: `security.module.ts` - Centralized security module with all services
+
+#### 13.2 Compliance ⏳ **FRAMEWORK READY**
+- ⏳ SOC 2 Type II (security controls implemented, certification pending)
+- ⏳ ISO 27001 (security controls implemented, certification pending)
+- ⏳ GDPR compliance (data protection and audit trails implemented, full compliance review pending)
+- ⏳ Data residency options (framework exists, implementation pending)
+
+**Implementation Details:**
+- Security module provides foundation for compliance certifications
+- Audit logging supports SOC 2 and ISO 27001 requirements
+- Encryption and access controls support GDPR requirements
+- Framework ready for data residency implementation
 
 ---
 
 ## 14. User Experience Enhancements
+
+### Status: ✅ **PARTIALLY COMPLETED** (14.2 mostly implemented; 14.1 pending)
 
 ### Problem
 Complex security data needs intuitive interfaces.
 
 ### Required Components
 
-#### 14.1 Advanced UI Features
+#### 14.1 Advanced UI Features ⏳ **PENDING**
 - Interactive risk heatmaps
 - Attack path visualization
 - Dependency graph visualization
 - Timeline views
 - Comparison views
 
-#### 14.2 Workflow Optimization
-- Bulk operations
-- Keyboard shortcuts
-- Saved filters and views
-- Customizable dashboards
-- Mobile-responsive design
+#### 14.2 Workflow Optimization ✅ **MOSTLY IMPLEMENTED**
+- ✅ Bulk operations (framework exists)
+- ✅ Keyboard shortcuts (basic implementation)
+- ✅ Saved filters and views
+- ✅ Customizable dashboards
+- ✅ Mobile-responsive design
+- ✅ **WCAG 2.1 AA Compliance** - Full accessibility implementation
+
+**Implementation Details:**
+- Location: `dashboard-frontend/src/utils/accessibility.ts` - Comprehensive accessibility utilities
+- Accessibility components: `SkipLink.vue`, `AccessibilityAnnouncer.vue`
+- Accessibility styles: `dashboard-frontend/src/styles/accessibility.css`
+- WCAG Compliance Guide: `docs/WCAG_COMPLIANCE.md` - Complete compliance documentation
+- **Perceivable**: Text alternatives, captions, sufficient contrast (4.5:1 for normal text, 3:1 for large), resizable text
+- **Operable**: Full keyboard accessibility, no keyboard traps, skip links, focus management, target size (44x44px)
+- **Understandable**: Clear language, consistent navigation, error identification and suggestions
+- **Robust**: Valid HTML, proper ARIA implementation, status messages, screen reader support
+- Focus management: Focus trapping in modals, focus restoration, visible focus indicators
+- Screen reader support: ARIA live regions, announcements, proper labeling
+- Color contrast: All text meets WCAG AA standards
+- Keyboard navigation: All functionality accessible via keyboard
+- Form accessibility: Proper labels, error messages, required field indicators
 
 ---
 
@@ -847,9 +911,9 @@ Complex security data needs intuitive interfaces.
 
 ### Phase 4: Scale & Polish (Months 10-12)
 1. Additional scanner adapters
-2. Advanced reporting
+2. ✅ Advanced reporting **COMPLETED** (including scheduled reports)
 3. Predictive analytics
-4. Platform security hardening
+4. ✅ Platform security hardening **MOSTLY COMPLETED** (encryption, secrets, audit logging, access controls implemented; vulnerability management pending)
 5. UX enhancements
 
 ---
@@ -880,7 +944,9 @@ Complex security data needs intuitive interfaces.
 10. ✅ **Remediation & Workflows**: Ticketing integration, SLA management, remediation tracking **COMPLETED**
 11. ✅ **Compliance Frameworks**: NIST 800-53 Rev 4 & 5 implementation **COMPLETED**
 12. **Additional Compliance Frameworks**: Implement SOC 2, PCI-DSS, HIPAA, GDPR, ISO 27001 controls
-13. ✅ **Advanced Analytics & Reporting**: Insights Hub with executive dashboards, trend analysis, custom reports **MOSTLY COMPLETED** (predictive analytics placeholder created)
+13. ✅ **Advanced Analytics & Reporting**: Insights Hub with executive dashboards, trend analysis, custom reports, scheduled reports **MOSTLY COMPLETED** (predictive analytics placeholder created)
+14. ✅ **Scheduled Reports**: Automated report generation and delivery **COMPLETED**
+15. ✅ **Platform Security**: Encryption, secrets management, audit logging, access controls **MOSTLY COMPLETED** (vulnerability management for platform pending)
 
 ## Recent Completions
 
@@ -1031,9 +1097,11 @@ Complex security data needs intuitive interfaces.
   - `dashboard-frontend/src/components/insights/RemediationVelocity.vue` - Issues fixed per week, MTTR, open issues
   - `dashboard-frontend/src/components/insights/ROIMetrics.vue` - Cost savings, time saved, risk reduction
   - `dashboard-frontend/src/components/insights/RiskTrends.vue` - Risk score trends, distribution, top risks
+  - `dashboard-frontend/src/components/insights/ScheduledReports.vue` - Scheduled report management UI
 - **Backend APIs**: 
   - `dashboard-api/src/dashboard/dashboard.controller.ts` - `/api/executive-metrics`, `/api/risk-metrics` endpoints
   - `dashboard-api/src/dashboard/dashboard.service.ts` - Executive metrics and risk metrics calculation
+  - `dashboard-api/src/scheduled-reports/` - Scheduled report service with automated execution
 - **Advanced Reporter**: `test-harness/services/advanced-reporter.ts` - Executive, regulatory, and custom reports with multiple export formats
 
 **Key Features:**
@@ -1042,8 +1110,28 @@ Complex security data needs intuitive interfaces.
 - Comprehensive trend analysis (compliance, risk, violation patterns, performance)
 - Risk trend analysis with distribution and top risks identification
 - Custom report generation with multiple templates (executive, regulatory, technical, custom)
+- **Scheduled Reports**: Automated report generation with daily, weekly, monthly, and custom cron schedules
+- Report delivery via email, webhook, or storage
 - Export formats: PDF, Excel, PowerPoint, HTML, JSON, XML
 - Backward-compatible route migration (old routes redirect to `/insights`)
 - Shared filters across tabs for consistent data analysis
 - URL-based tab navigation with query parameters for bookmarking
+
+### Security & Compliance of the Platform (✅ Partially Completed)
+- **Security Module**: `dashboard-api/src/security/` - Comprehensive security features for the ASPM platform
+- **Encryption Service**: `encryption.service.ts` - AES-256-GCM encryption at rest and in transit, password hashing
+- **Secrets Management Service**: `secrets.service.ts` - Secure storage, retrieval, and rotation of platform secrets
+- **Security Audit Logging Service**: `audit-log.service.ts` - Comprehensive audit logging for security events
+- **Access Control Guards**: `guards/access-control.guard.ts` - Role-based and permission-based access control
+- **Audit Logging Middleware**: `middleware/audit-logging.middleware.ts` - Automatic HTTP request logging
+- **Backend API**: `dashboard-api/src/security/security.controller.ts` - REST API for security management
+
+**Key Features:**
+- Encryption at rest and in transit with AES-256-GCM
+- Secure secrets management with encryption and rotation
+- Comprehensive audit logging for all security events
+- Role-based access control (ADMIN, EDITOR, VIEWER, AUDITOR)
+- Permission-based fine-grained access control
+- Automatic audit logging of HTTP requests
+- Foundation for SOC 2, ISO 27001, and GDPR compliance
 

@@ -1,11 +1,13 @@
 <template>
   <div class="app">
+    <SkipLink />
+    <AccessibilityAnnouncer />
     <TopNav />
     <div class="app-layout">
       <Sidebar class="desktop-sidebar" />
       <Drawer class="desktop-drawer" />
       <MobileDrawer :is-open="drawerOpen" @close="closeDrawer" @navigate="handleNavigate" />
-      <div class="content-wrapper" :class="{ 'drawer-open': drawerIsOpen }">
+      <main id="main-content" class="content-wrapper" :class="{ 'drawer-open': drawerIsOpen }" role="main" tabindex="-1">
         <Banner
           v-for="banner in activeBanners"
           :key="banner.id"
@@ -13,7 +15,7 @@
           @dismiss="handleBannerDismiss"
         />
         <router-view />
-      </div>
+      </main>
     </div>
   </div>
 </template>
@@ -25,6 +27,8 @@ import Sidebar from './components/Sidebar.vue';
 import Drawer from './components/Drawer.vue';
 import MobileDrawer from './components/MobileDrawer.vue';
 import Banner, { type Banner as BannerType } from './components/Banner.vue';
+import SkipLink from './components/SkipLink.vue';
+import AccessibilityAnnouncer from './components/AccessibilityAnnouncer.vue';
 
 const drawerOpen = ref(false);
 const drawerIsOpen = ref(false);

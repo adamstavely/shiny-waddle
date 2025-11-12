@@ -1,0 +1,430 @@
+<template>
+  <div class="not-found">
+    <div class="not-found-container">
+      <!-- Background decoration -->
+      <div class="background-decoration" aria-hidden="true">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+      </div>
+
+      <!-- Main content -->
+      <div class="not-found-content">
+        <!-- Large 404 number -->
+        <div class="error-code" aria-label="Error 404">
+          <span class="code-digit" aria-hidden="true">4</span>
+          <span class="code-digit" aria-hidden="true">0</span>
+          <span class="code-digit" aria-hidden="true">4</span>
+        </div>
+
+        <!-- Icon -->
+        <div class="error-icon" aria-hidden="true">
+          <FileQuestion class="icon" />
+        </div>
+
+        <!-- Title and message -->
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+          The page you're looking for doesn't exist or has been moved.
+          <br />
+          Let's get you back on track.
+        </p>
+
+        <!-- Action buttons -->
+        <nav class="error-actions" aria-label="Primary navigation actions">
+          <router-link to="/" class="btn-primary" aria-label="Go to home page">
+            <Home class="btn-icon" aria-hidden="true" />
+            <span>Go Home</span>
+          </router-link>
+          <button @click="goBack" class="btn-secondary" aria-label="Go back to previous page">
+            <ArrowLeft class="btn-icon" aria-hidden="true" />
+            <span>Go Back</span>
+          </button>
+        </nav>
+
+        <!-- Quick links -->
+        <nav class="quick-links" aria-label="Quick navigation links">
+          <h2 class="quick-links-title">Popular Pages:</h2>
+          <ul class="links-grid" role="list">
+            <li>
+              <router-link to="/insights" class="quick-link" aria-label="Go to Insights dashboard">
+                <BarChart3 class="link-icon" aria-hidden="true" />
+                <span>Insights</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/violations" class="quick-link" aria-label="Go to Violations page">
+                <AlertTriangle class="link-icon" aria-hidden="true" />
+                <span>Violations</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/policies" class="quick-link" aria-label="Go to Policies page">
+                <Shield class="link-icon" aria-hidden="true" />
+                <span>Policies</span>
+              </router-link>
+            </li>
+            <li>
+              <router-link to="/compliance" class="quick-link" aria-label="Go to Compliance page">
+                <FileCheck class="link-icon" aria-hidden="true" />
+                <span>Compliance</span>
+              </router-link>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import { 
+  FileQuestion, 
+  Home, 
+  ArrowLeft, 
+  BarChart3, 
+  AlertTriangle, 
+  Shield, 
+  FileCheck 
+} from 'lucide-vue-next';
+
+const router = useRouter();
+
+const goBack = () => {
+  if (window.history.length > 1) {
+    router.go(-1);
+  } else {
+    router.push('/');
+  }
+};
+</script>
+
+<style scoped>
+.not-found {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.not-found-container {
+  position: relative;
+  max-width: 800px;
+  width: 100%;
+  z-index: 10;
+}
+
+.background-decoration {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  filter: blur(60px);
+  animation: float 20s ease-in-out infinite;
+}
+
+.circle-1 {
+  width: 400px;
+  height: 400px;
+  top: -200px;
+  left: -200px;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -150px;
+  right: -150px;
+  animation-delay: 7s;
+}
+
+.circle-3 {
+  width: 250px;
+  height: 250px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 14s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(30px, -30px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+.not-found-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(26, 31, 46, 0.9) 0%, rgba(45, 55, 72, 0.9) 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 24px;
+  padding: 64px 48px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.error-code {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 32px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.code-digit {
+  font-size: 8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(79, 172, 254, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.code-digit:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.code-digit:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.error-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.icon {
+  width: 120px;
+  height: 120px;
+  color: #4facfe;
+  opacity: 0.6;
+  animation: float-icon 3s ease-in-out infinite;
+}
+
+@keyframes float-icon {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.error-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.error-message {
+  font-size: 1.125rem;
+  color: #a0aec0;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #0f1419;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #4facfe;
+  border: 2px solid rgba(79, 172, 254, 0.3);
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.quick-links {
+  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  padding-top: 32px;
+}
+
+.quick-links-title {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+  list-style: none;
+  padding: 0;
+}
+
+.links-grid li {
+  margin: 0;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(79, 172, 254, 0.05);
+  border: 1px solid rgba(79, 172, 254, 0.1);
+  color: #a0aec0;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.quick-link:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.3);
+  color: #4facfe;
+  transform: translateY(-2px);
+}
+
+.link-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .not-found {
+    padding: 24px 16px;
+  }
+
+  .not-found-content {
+    padding: 48px 32px;
+  }
+
+  .code-digit {
+    font-size: 5rem;
+  }
+
+  .error-title {
+    font-size: 2rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .error-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .code-digit {
+    font-size: 4rem;
+  }
+
+  .icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .error-title {
+    font-size: 1.75rem;
+  }
+
+  .links-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+

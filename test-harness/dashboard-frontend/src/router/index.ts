@@ -29,6 +29,7 @@ import TicketingIntegrations from '../views/TicketingIntegrations.vue';
 import SLAManagement from '../views/SLAManagement.vue';
 import Compliance from '../views/Compliance.vue';
 import UnifiedFindings from '../views/UnifiedFindings.vue';
+import NotFound from '../views/NotFound.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -196,6 +197,11 @@ const router = createRouter({
       path: '/compliance',
       name: 'Compliance',
       component: Compliance,
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: NotFound,
     },
   ],
 });

@@ -8,9 +8,13 @@
       @click="toggleDrawer" 
       class="drawer-toggle"
       :aria-label="isCollapsed ? 'Expand drawer' : 'Collapse drawer'"
+      :aria-expanded="!isCollapsed"
     >
-      <Menu v-if="isCollapsed" class="toggle-icon" />
-      <ChevronLeft v-else class="toggle-icon" />
+      <component 
+        :is="isCollapsed ? Menu : ChevronLeft" 
+        class="toggle-icon" 
+        aria-hidden="true"
+      />
     </button>
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
       <!-- Access Control -->
@@ -261,20 +265,24 @@ watch(() => route.path, (newPath) => {
   display: flex;
   flex-direction: column;
   z-index: 20;
-  overflow: hidden;
+  overflow: hidden; /* Keep hidden for drawer content */
   transition: width 0.3s ease;
 }
 
 .drawer-collapsed {
   width: 0;
+  overflow: visible; /* Allow toggle button to overflow when collapsed */
+  border-right: none; /* Remove border when collapsed */
 }
 
 .drawer-toggle {
-  position: absolute;
-  top: 16px;
-  left: 8px;
-  width: 40px;
-  height: 40px;
+  position: fixed; /* Always use fixed positioning */
+  top: 80px; /* 64px top nav + 16px offset */
+  left: 88px; /* 80px sidebar + 8px offset */
+  width: 44px; /* Increased to meet WCAG target size */
+  height: 44px; /* Increased to meet WCAG target size */
+  min-width: 44px; /* Ensure minimum size */
+  min-height: 44px; /* Ensure minimum size */
   background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   border: 1px solid rgba(79, 172, 254, 0.3);
   border-radius: 8px;
@@ -282,10 +290,22 @@ watch(() => route.path, (newPath) => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 21;
+  z-index: 25; /* High z-index to ensure it's always on top */
   color: #4facfe;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0; /* Prevent button from shrinking */
+  visibility: visible !important; /* Ensure button is always visible */
+  opacity: 1 !important; /* Ensure button is fully opaque */
+  pointer-events: auto; /* Ensure button is clickable */
+}
+
+/* When drawer is open, position button inside drawer */
+.drawer:not(.drawer-collapsed) .drawer-toggle {
+  position: absolute;
+  left: 8px;
+  top: 16px;
+  z-index: 22;
 }
 
 .drawer-toggle:hover {
@@ -294,14 +314,43 @@ watch(() => route.path, (newPath) => {
   transform: scale(1.05);
 }
 
-.drawer-collapsed .drawer-toggle {
-  left: 8px;
+.drawer-toggle:focus-visible {
+  outline: 3px solid #4facfe;
+  outline-offset: 2px;
 }
 
 .toggle-icon {
   width: 20px;
   height: 20px;
   stroke-width: 2;
+  flex-shrink: 0;
+  display: block;
+  color: #4facfe;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure icons are visible and properly styled */
+.drawer-toggle .toggle-icon {
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: #4facfe !important;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Ensure SVG icons render */
+.drawer-toggle :deep(svg),
+.drawer-toggle svg {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  color: #4facfe !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none;
 }
 
 .drawer-nav {
@@ -313,6 +362,12 @@ watch(() => route.path, (newPath) => {
   gap: 32px;
   overflow-y: auto;
   overflow-x: hidden;
+  width: 100%; /* Ensure nav takes full width of drawer */
+}
+
+/* When drawer is collapsed, hide the nav but keep toggle visible */
+.drawer-collapsed .drawer-nav {
+  display: none;
 }
 
 .drawer-category {
