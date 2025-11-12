@@ -17,10 +17,12 @@ import { RemediationTrackingModule } from './remediation-tracking/remediation-tr
 import { ComplianceModule } from './compliance/compliance.module';
 import { UnifiedFindingsModule } from './unified-findings/unified-findings.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { ScheduledReportsModule } from './scheduled-reports/scheduled-reports.module';
+import { SecurityModule } from './security/security.module';
 import { AppController } from './app.controller';
 
 @Module({
-  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule, IntegrationsModule],
+  imports: [DashboardModule, ApplicationsModule, ValidatorsModule, ValidationTargetsModule, PoliciesModule, ViolationsModule, HistoryModule, ApiSecurityModule, ReportsModule, DistributedSystemsModule, CICDModule, TicketingModule, SLAModule, RemediationModule, RemediationTrackingModule, ComplianceModule, UnifiedFindingsModule, IntegrationsModule, ScheduledReportsModule, SecurityModule],
   controllers: [AppController],
 })
 export class AppModule {}

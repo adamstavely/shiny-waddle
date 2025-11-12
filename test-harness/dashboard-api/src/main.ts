@@ -1,9 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import * as https from 'https';
+import * as fs from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  let app;
+  
+  // Enable HTTPS if configured (for encryption in transit)
+  const httpsEnabled = process.env.HTTPS_ENABLED === 'true';
+  const httpsKeyPath = process.env.HTTPS_KEY_PATH;
+  const httpsCertPath = process.env.HTTPS_CERT_PATH;
+
+  if (httpsEnabled && httpsKeyPath && httpsCertPath) {
+    const httpsOptions = {
+      key: fs.readFileSync(httpsKeyPath),
+      cert: fs.readFileSync(httpsCertPath),
+    };
+    app = await NestFactory.create(AppModule, {
+      httpsOptions,
+    });
+    console.log('🔒 HTTPS enabled for encryption in transit');
+  } else {
+    app = await NestFactory.create(AppModule);
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️  WARNING: HTTPS is not enabled. Enable HTTPS in production for encryption in transit.');
+    }
+  }
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -23,8 +46,9 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3001;
+  const protocol = httpsEnabled ? 'https' : 'http';
   await app.listen(port);
-  console.log(`🚀 Heimdall Dashboard API running on http://localhost:${port}`);
+  console.log(`🚀 Heimdall Dashboard API running on ${protocol}://localhost:${port}`);
 }
 
 bootstrap();
