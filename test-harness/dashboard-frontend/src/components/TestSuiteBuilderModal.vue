@@ -338,7 +338,7 @@ import {
   Code,
   Shield,
   FileText,
-  BarChart3
+  BarChart3,
   AlertTriangle
 } from 'lucide-vue-next';
 
