@@ -60,6 +60,13 @@
                   {{ getTypeLabel(config.type) }}
                 </span>
                 <span
+                  class="enabled-badge"
+                  :class="config.enabled ? 'enabled' : 'disabled'"
+                  :title="config.enabled ? 'Enabled' : 'Disabled'"
+                >
+                  {{ config.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+                <span
                   v-if="getLatestResult(config.id)"
                   class="test-status-badge"
                   :class="`status-${getLatestResult(config.id).status}`"
@@ -78,6 +85,14 @@
             </div>
           </div>
           <div class="card-actions">
+            <button 
+              @click="toggleConfiguration(config)" 
+              class="btn-icon" 
+              :title="config.enabled ? 'Disable' : 'Enable'"
+              :class="{ 'btn-warning': !config.enabled }"
+            >
+              <Power class="icon" />
+            </button>
             <button @click="editConfiguration(config)" class="btn-icon" title="Edit">
               <Edit class="icon" />
             </button>
@@ -187,7 +202,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings, Search, History } from 'lucide-vue-next';
+import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings, Search, History, Power } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
 import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
@@ -204,6 +219,7 @@ interface TestConfiguration {
   name: string;
   type: 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway' | 'distributed-systems';
   description?: string;
+  enabled: boolean;
   createdAt: string;
   updatedAt: string;
   [key: string]: any;
@@ -435,6 +451,20 @@ const closeResultsModal = () => {
   showResultsModal.value = false;
   testResults.value = null;
   testError.value = null;
+};
+
+const toggleConfiguration = async (config: TestConfiguration) => {
+  try {
+    if (config.enabled) {
+      await axios.patch(`/api/test-configurations/${config.id}/disable`);
+    } else {
+      await axios.patch(`/api/test-configurations/${config.id}/enable`);
+    }
+    await loadConfigurations();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Failed to toggle configuration';
+    console.error('Error toggling configuration:', err);
+  }
 };
 
 const deleteConfiguration = async (id: string) => {
@@ -701,6 +731,26 @@ onMounted(() => {
   color: #fc8181;
 }
 
+.btn-icon.btn-warning {
+  color: #e2e8f0;
+}
+
+.btn-icon.btn-warning:hover {
+  background: rgba(237, 137, 54, 0.1);
+  color: #ed8936;
+}
+
+.btn-icon.btn-warning .icon {
+  color: #e2e8f0;
+  stroke: #e2e8f0;
+  stroke-width: 2;
+}
+
+.btn-icon.btn-warning:hover .icon {
+  color: #ed8936;
+  stroke: #ed8936;
+}
+
 .btn-icon .icon {
   width: 1rem;
   height: 1rem;
@@ -799,6 +849,27 @@ onMounted(() => {
 }
 
 .test-status-badge.status-never {
+  background: rgba(160, 174, 192, 0.2);
+  color: #a0aec0;
+  border: 1px solid rgba(160, 174, 192, 0.3);
+}
+
+.enabled-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.enabled-badge.enabled {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+  border: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.enabled-badge.disabled {
   background: rgba(160, 174, 192, 0.2);
   color: #a0aec0;
   border: 1px solid rgba(160, 174, 192, 0.3);

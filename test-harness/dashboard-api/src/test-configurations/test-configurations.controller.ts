@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -64,6 +65,20 @@ export class TestConfigurationsController {
   async delete(@Param('id') id: string): Promise<void> {
     this.logger.log(`Deleting test configuration: ${id}`);
     await this.configurationsService.delete(id);
+  }
+
+  @Patch(':id/enable')
+  @HttpCode(HttpStatus.OK)
+  async enable(@Param('id') id: string): Promise<TestConfigurationEntity> {
+    this.logger.log(`Enabling test configuration: ${id}`);
+    return this.configurationsService.enable(id);
+  }
+
+  @Patch(':id/disable')
+  @HttpCode(HttpStatus.OK)
+  async disable(@Param('id') id: string): Promise<TestConfigurationEntity> {
+    this.logger.log(`Disabling test configuration: ${id}`);
+    return this.configurationsService.disable(id);
   }
 
   @Post(':id/duplicate')

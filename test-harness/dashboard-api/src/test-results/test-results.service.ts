@@ -94,6 +94,18 @@ export class TestResultsService {
     return result;
   }
 
+  async delete(id: string): Promise<void> {
+    await this.loadResults();
+    const index = this.results.findIndex(r => r.id === id);
+    if (index === -1) {
+      throw new NotFoundException(`Test result with ID "${id}" not found`);
+    }
+
+    this.results.splice(index, 1);
+    await this.saveResults();
+    this.logger.log(`Deleted test result: ${id}`);
+  }
+
   async findByApplication(appId: string, filters?: QueryFilters): Promise<TestResultEntity[]> {
     let filtered = this.results.filter(r => r.applicationId === appId);
 

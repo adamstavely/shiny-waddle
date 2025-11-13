@@ -1,0 +1,21 @@
+export type TestSuiteStatus = 'passing' | 'failing' | 'pending' | 'error';
+
+export interface TestSuiteEntity {
+  id: string;
+  name: string;
+  applicationId: string;
+  application?: string; // For display purposes
+  team: string;
+  status: TestSuiteStatus;
+  lastRun?: Date;
+  testCount: number;
+  score: number;
+  testTypes: string[];
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string;
+  description?: string;
+  testConfigurationIds?: string[]; // IDs of test configurations to run
+}
+

@@ -37,6 +37,10 @@ class BaseConfigurationDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 }
 
 class RLSCLSValidationRulesDto {

@@ -84,6 +84,7 @@ export class TestConfigurationsService {
           ...c,
           createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
           updatedAt: c.updatedAt ? new Date(c.updatedAt) : new Date(),
+          enabled: c.enabled !== undefined ? c.enabled : true, // Default to enabled for existing configs
         }));
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
@@ -147,6 +148,7 @@ export class TestConfigurationsService {
         skipDisabledPolicies: true,
         validateCrossTenant: true,
       },
+      enabled: true,
       createdAt: now,
       updatedAt: now,
     };
@@ -183,6 +185,7 @@ export class TestConfigurationsService {
         validateConnectivity: true,
         checkSegmentation: true,
       },
+      enabled: true,
       createdAt: now,
       updatedAt: now,
     };
@@ -215,6 +218,7 @@ export class TestConfigurationsService {
         validateAPIResponses: true,
         checkBulkExports: true,
       },
+      enabled: true,
       createdAt: now,
       updatedAt: now,
     };
@@ -242,6 +246,7 @@ export class TestConfigurationsService {
         apiKeyMaxAge: 365,
         requireMFA: true,
       },
+      enabled: true,
       createdAt: now,
       updatedAt: now,
     };
@@ -270,6 +275,7 @@ export class TestConfigurationsService {
         methods: ['api-key', 'mtls'],
         requiredForEndpoints: [],
       },
+      enabled: true,
       createdAt: now,
       updatedAt: now,
     };
@@ -342,6 +348,7 @@ export class TestConfigurationsService {
           testQueries: rlsDto.testQueries,
           validationRules: rlsDto.validationRules,
           testLogic: rlsDto.testLogic,
+          enabled: rlsDto.enabled !== undefined ? rlsDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as RLSCLSConfigurationEntity;
@@ -359,6 +366,7 @@ export class TestConfigurationsService {
           networkSegments: npDto.networkSegments,
           serviceMeshConfig: npDto.serviceMeshConfig,
           testLogic: npDto.testLogic,
+          enabled: npDto.enabled !== undefined ? npDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as NetworkPolicyConfigurationEntity;
@@ -376,6 +384,7 @@ export class TestConfigurationsService {
           bulkExportLimits: dlpDto.bulkExportLimits,
           piiDetectionRules: dlpDto.piiDetectionRules,
           testLogic: dlpDto.testLogic,
+          enabled: dlpDto.enabled !== undefined ? dlpDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as DLPConfigurationEntity;
@@ -393,6 +402,7 @@ export class TestConfigurationsService {
           pamConfig: ilDto.pamConfig,
           credentialRotationRules: ilDto.credentialRotationRules,
           testLogic: ilDto.testLogic,
+          enabled: ilDto.enabled !== undefined ? ilDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as IdentityLifecycleConfigurationEntity;
@@ -410,6 +420,7 @@ export class TestConfigurationsService {
           serviceAuthConfig: agDto.serviceAuthConfig,
           gatewayPolicies: agDto.gatewayPolicies,
           testLogic: agDto.testLogic,
+          enabled: agDto.enabled !== undefined ? agDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as APIGatewayConfigurationEntity;
@@ -427,6 +438,7 @@ export class TestConfigurationsService {
           policySync: dsDto.policySync,
           coordination: dsDto.coordination,
           testLogic: dsDto.testLogic,
+          enabled: dsDto.enabled !== undefined ? dsDto.enabled : true,
           createdAt: now,
           updatedAt: now,
         } as DistributedSystemsConfigurationEntity;
@@ -485,6 +497,26 @@ export class TestConfigurationsService {
     this.configurations.splice(index, 1);
     await this.saveConfigurations();
     this.logger.log(`Deleted test configuration: ${id}`);
+  }
+
+  async enable(id: string): Promise<TestConfigurationEntity> {
+    await this.loadConfigurations();
+    const config = await this.findOne(id);
+    config.enabled = true;
+    config.updatedAt = new Date();
+    await this.saveConfigurations();
+    this.logger.log(`Enabled test configuration: ${id}`);
+    return config;
+  }
+
+  async disable(id: string): Promise<TestConfigurationEntity> {
+    await this.loadConfigurations();
+    const config = await this.findOne(id);
+    config.enabled = false;
+    config.updatedAt = new Date();
+    await this.saveConfigurations();
+    this.logger.log(`Disabled test configuration: ${id}`);
+    return config;
   }
 
   async duplicate(id: string, newName?: string): Promise<TestConfigurationEntity> {

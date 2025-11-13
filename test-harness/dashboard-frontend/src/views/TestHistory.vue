@@ -142,9 +142,14 @@
                 <span v-else class="text-muted">-</span>
               </td>
               <td>
-                <button @click="viewResult(result)" class="btn-icon" title="View Details">
-                  <Eye class="icon" />
-                </button>
+                <div class="action-buttons">
+                  <button @click="viewResult(result)" class="btn-icon" title="View Details">
+                    <Eye class="icon" />
+                  </button>
+                  <button @click="deleteResult(result.id)" class="btn-icon btn-danger" title="Delete">
+                    <Trash2 class="icon" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -169,7 +174,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { History, Eye } from 'lucide-vue-next';
+import { History, Eye, Trash2 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
@@ -322,6 +327,20 @@ const nextPage = () => {
 const viewResult = (result: TestResult) => {
   selectedResult.value = result;
   showResultModal.value = true;
+};
+
+const deleteResult = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this test result? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await axios.delete(`/api/test-results/${id}`);
+    await loadResults();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Failed to delete test result';
+    console.error('Error deleting test result:', err);
+    alert(err.response?.data?.message || 'Failed to delete test result');
+  }
 };
 
 const formatDateTime = (date: Date | string) => {
@@ -572,17 +591,38 @@ td {
   font-style: italic;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .btn-icon {
   padding: 0.5rem;
   background: transparent;
   border: none;
   cursor: pointer;
   border-radius: 6px;
-  color: #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.2s;
+  color: #4facfe;
+}
+
+.btn-icon:hover {
+  background: rgba(79, 172, 254, 0.1);
+}
+
+.btn-icon.btn-danger {
+  color: #fc8181;
+}
+
+.btn-icon.btn-danger:hover {
+  background: rgba(252, 129, 129, 0.1);
+  color: #fc8181;
+}
+
+.btn-icon .icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .btn-icon:hover {

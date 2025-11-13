@@ -31,6 +31,9 @@
 
     <!-- Test Suites List -->
     <div v-if="activeTab === 'suites'" class="tab-content">
+      <div v-if="loadingSuites" class="loading">Loading test suites...</div>
+      <div v-else-if="suitesError" class="error">{{ suitesError }}</div>
+      <div v-else>
       <div class="filters">
         <input
           v-model="searchQuery"
@@ -74,9 +77,18 @@
           <div class="suite-header">
             <div class="suite-title-row">
               <h3 class="suite-name">{{ suite.name }}</h3>
-              <span class="suite-status" :class="`status-${suite.status}`">
-                {{ suite.status }}
-              </span>
+              <div class="suite-status-badges">
+                <span 
+                  class="enabled-badge"
+                  :class="suite.enabled ? 'enabled' : 'disabled'"
+                  :title="suite.enabled ? 'Enabled' : 'Disabled'"
+                >
+                  {{ suite.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+                <span class="suite-status" :class="`status-${suite.status}`">
+                  {{ suite.status }}
+                </span>
+              </div>
             </div>
             <p class="suite-meta">{{ suite.application }} • {{ suite.team }}</p>
           </div>
@@ -109,6 +121,15 @@
           </div>
 
           <div class="suite-actions">
+            <button 
+              @click.stop="toggleTestSuite(suite)" 
+              class="action-btn"
+              :class="{ 'warning-btn': !suite.enabled }"
+              :title="suite.enabled ? 'Disable' : 'Enable'"
+            >
+              <Power class="action-icon" />
+              {{ suite.enabled ? 'Disable' : 'Enable' }}
+            </button>
             <button @click.stop="runTestSuite(suite.id)" class="action-btn run-btn">
               <Play class="action-icon" />
               Run
@@ -136,6 +157,7 @@
         <button @click="showCreateModal = true" class="btn-primary">
           Create Test Suite
         </button>
+      </div>
       </div>
     </div>
 
@@ -270,6 +292,11 @@
             <AlertTriangle class="error-icon" />
             <span>{{ result.error }}</span>
           </div>
+          <div class="result-actions" @click.stop>
+            <button @click="deleteTestResult(result.id)" class="btn-icon btn-danger" title="Delete">
+              <Trash2 class="icon" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -315,7 +342,8 @@ import {
   List,
   Clock,
   CheckCircle2,
-  Trash2
+  Trash2,
+  Power
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -345,41 +373,9 @@ const selectedResult = ref<any>(null);
 const previousResult = ref<any>(null);
 
 // Test suites data
-const testSuites = ref([
-  {
-    id: '1',
-    name: 'Research Tracker API Compliance Tests',
-    application: 'research-tracker-api',
-    team: 'research-platform',
-    status: 'passing',
-    lastRun: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    testCount: 24,
-    score: 95,
-    testTypes: ['Access Control', 'Data Behavior', 'Contract']
-  },
-  {
-    id: '2',
-    name: 'User Management Service Tests',
-    application: 'user-service',
-    team: 'platform-team',
-    status: 'failing',
-    lastRun: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    testCount: 18,
-    score: 72,
-    testTypes: ['Access Control', 'Data Behavior']
-  },
-  {
-    id: '3',
-    name: 'Data Pipeline Compliance Tests',
-    application: 'data-pipeline',
-    team: 'data-engineering',
-    status: 'pending',
-    lastRun: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    testCount: 32,
-    score: 88,
-    testTypes: ['Data Behavior', 'Dataset Health']
-  }
-]);
+const testSuites = ref<any[]>([]);
+const loadingSuites = ref(false);
+const suitesError = ref<string | null>(null);
 
 const applications = computed(() => {
   return [...new Set(testSuites.value.map(s => s.application))];
@@ -616,6 +612,26 @@ const formatDuration = (ms: number): string => {
   return `${seconds}s`;
 };
 
+const loadTestSuites = async () => {
+  loadingSuites.value = true;
+  suitesError.value = null;
+  try {
+    const response = await axios.get('/api/test-suites');
+    testSuites.value = response.data.map((s: any) => ({
+      ...s,
+      application: s.application || s.applicationId,
+      lastRun: s.lastRun ? new Date(s.lastRun) : undefined,
+      createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+      updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
+    }));
+  } catch (err: any) {
+    suitesError.value = err.response?.data?.message || 'Failed to load test suites';
+    console.error('Error loading test suites:', err);
+  } finally {
+    loadingSuites.value = false;
+  }
+};
+
 const editTestSuite = (id: string) => {
   const suite = testSuites.value.find(s => s.id === id);
   if (suite) {
@@ -626,13 +642,31 @@ const editTestSuite = (id: string) => {
 };
 
 const deleteTestSuite = async (id: string) => {
-  if (confirm('Are you sure you want to delete this test suite? This action cannot be undone.')) {
-    const index = testSuites.value.findIndex(s => s.id === id);
-    if (index !== -1) {
-      testSuites.value.splice(index, 1);
-      // In a real app, you would call an API endpoint here
-      // await axios.delete(`/api/test-suites/${id}`);
+  if (!confirm('Are you sure you want to delete this test suite? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await axios.delete(`/api/test-suites/${id}`);
+    await loadTestSuites();
+  } catch (err: any) {
+    suitesError.value = err.response?.data?.message || 'Failed to delete test suite';
+    console.error('Error deleting test suite:', err);
+    alert(err.response?.data?.message || 'Failed to delete test suite');
+  }
+};
+
+const toggleTestSuite = async (suite: any) => {
+  try {
+    if (suite.enabled) {
+      await axios.patch(`/api/test-suites/${suite.id}/disable`);
+    } else {
+      await axios.patch(`/api/test-suites/${suite.id}/enable`);
     }
+    await loadTestSuites();
+  } catch (err: any) {
+    suitesError.value = err.response?.data?.message || 'Failed to toggle test suite';
+    console.error('Error toggling test suite:', err);
+    alert(err.response?.data?.message || 'Failed to toggle test suite');
   }
 };
 
@@ -654,6 +688,23 @@ const viewResultDetails = (id: string) => {
   }
 };
 
+const deleteTestResult = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this test result? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await axios.delete(`/api/test-results/${id}`);
+    // Remove from local array if it exists
+    const index = testResults.value.findIndex(r => r.id === id);
+    if (index !== -1) {
+      testResults.value.splice(index, 1);
+    }
+  } catch (err: any) {
+    console.error('Error deleting test result:', err);
+    alert(err.response?.data?.message || 'Failed to delete test result');
+  }
+};
+
 const closeResultDetail = () => {
   showResultDetail.value = false;
   selectedResult.value = null;
@@ -671,30 +722,32 @@ const exportTestResult = (result: any) => {
   URL.revokeObjectURL(url);
 };
 
-const handleSaveTestSuite = (suiteData: any) => {
-  if (editingSuite.value) {
-    // Update existing
-    const index = testSuites.value.findIndex(s => s.id === editingSuite.value);
-    if (index !== -1) {
-      testSuites.value[index] = {
-        ...testSuites.value[index],
-        ...suiteData,
-        testTypes: getTestTypes(suiteData)
-      };
-    }
-  } else {
-    // Create new
-    testSuites.value.push({
-      id: String(testSuites.value.length + 1),
+const handleSaveTestSuite = async (suiteData: any) => {
+  try {
+    const testTypes = getTestTypes(suiteData);
+    const payload = {
       ...suiteData,
-      status: 'pending',
-      lastRun: new Date(),
-      testCount: 0,
-      score: 0,
-      testTypes: getTestTypes(suiteData)
-    });
+      applicationId: suiteData.applicationId || suiteData.application,
+      testTypes,
+    };
+
+    if (editingSuite.value) {
+      await axios.put(`/api/test-suites/${editingSuite.value}`, payload);
+    } else {
+      await axios.post('/api/test-suites', {
+        ...payload,
+        status: 'pending',
+        testCount: 0,
+        score: 0,
+      });
+    }
+    await loadTestSuites();
+    closeModal();
+  } catch (err: any) {
+    suitesError.value = err.response?.data?.message || 'Failed to save test suite';
+    console.error('Error saving test suite:', err);
+    alert(err.response?.data?.message || 'Failed to save test suite');
   }
-  closeModal();
 };
 
 const handleSaveDraft = (suiteData: any) => {
@@ -752,6 +805,7 @@ const loadValidators = async () => {
 
 onMounted(() => {
   loadValidators();
+  loadTestSuites();
 });
 
 const getScoreClass = (score: number): string => {
@@ -811,8 +865,34 @@ const getScoreClass = (score: number): string => {
 }
 
 .btn-icon {
-  width: 18px;
-  height: 18px;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  color: #4facfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: rgba(79, 172, 254, 0.1);
+}
+
+.btn-icon.btn-danger {
+  color: #fc8181;
+}
+
+.btn-icon.btn-danger:hover {
+  background: rgba(252, 129, 129, 0.1);
+  color: #fc8181;
+}
+
+.btn-icon .icon {
+  width: 1rem;
+  height: 1rem;
 }
 
 .tabs {
@@ -930,12 +1010,39 @@ const getScoreClass = (score: number): string => {
   flex: 1;
 }
 
+.suite-status-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .suite-status {
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
+}
+
+.enabled-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.enabled-badge.enabled {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+  border: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.enabled-badge.disabled {
+  background: rgba(160, 174, 192, 0.2);
+  color: #a0aec0;
+  border: 1px solid rgba(160, 174, 192, 0.3);
 }
 
 .status-passing {
@@ -1042,6 +1149,16 @@ const getScoreClass = (score: number): string => {
 .action-btn:hover {
   background: rgba(79, 172, 254, 0.1);
   border-color: rgba(79, 172, 254, 0.5);
+}
+
+.action-btn.warning-btn {
+  color: #ed8936;
+  border-color: rgba(237, 137, 54, 0.3);
+}
+
+.action-btn.warning-btn:hover {
+  background: rgba(237, 137, 54, 0.1);
+  border-color: rgba(237, 137, 54, 0.5);
 }
 
 .delete-btn {
@@ -1434,6 +1551,15 @@ const getScoreClass = (score: number): string => {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
 }
 
 .empty-state {

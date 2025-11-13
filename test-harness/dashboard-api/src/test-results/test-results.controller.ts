@@ -129,9 +129,7 @@ export class TestResultsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
     this.logger.log(`Deleting test result: ${id}`);
-    // For now, we'll just log - actual deletion can be implemented if needed
-    // Since we're using file-based storage, deletion would require rewriting the file
-    throw new Error('Delete not yet implemented');
+    await this.testResultsService.delete(id);
   }
 }
 

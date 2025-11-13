@@ -11,6 +11,7 @@ export interface BaseTestConfigurationEntity {
   updatedAt: Date;
   createdBy?: string;
   tags?: string[];
+  enabled: boolean;
 }
 
 export interface RLSCLSConfigurationEntity extends BaseTestConfigurationEntity {

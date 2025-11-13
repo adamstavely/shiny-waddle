@@ -28,6 +28,7 @@ import { APIGatewayModule } from './api-gateway/api-gateway.module';
 import { DLPModule } from './dlp/dlp.module';
 import { TestConfigurationsModule } from './test-configurations/test-configurations.module';
 import { TestResultsModule } from './test-results/test-results.module';
+import { TestSuitesModule } from './test-suites/test-suites.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -61,6 +62,7 @@ import { AppController } from './app.controller';
     DLPModule,
     TestConfigurationsModule,
     TestResultsModule,
+    TestSuitesModule,
   ],
   controllers: [AppController],
 })
