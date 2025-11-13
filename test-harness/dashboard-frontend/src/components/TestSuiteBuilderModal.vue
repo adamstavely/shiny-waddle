@@ -14,6 +14,20 @@
           </div>
           
           <div class="modal-body">
+            <div v-if="editingSuite?._isTypeScript" class="typescript-warning">
+              <AlertTriangle class="warning-icon" />
+              <div class="warning-content">
+                <strong>TypeScript Source File</strong>
+                <p v-if="editingSuite?._extractionFailed">
+                  Warning: Could not fully extract configuration from TypeScript source. 
+                  Some fields may be missing. Use the source code editor for complete editing.
+                </p>
+                <p v-else>
+                  This test suite is defined in a TypeScript file. Editing will update the source file directly. 
+                  For advanced editing, use the source code editor.
+                </p>
+              </div>
+            </div>
             <div class="builder-tabs">
               <button
                 v-for="tab in tabs"
@@ -325,6 +339,7 @@ import {
   Shield,
   FileText,
   BarChart3
+  AlertTriangle
 } from 'lucide-vue-next';
 
 interface Resource {
@@ -599,6 +614,41 @@ function saveAsDraft() {
 .large-modal {
   max-width: 900px;
   max-height: 90vh;
+}
+
+.typescript-warning {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  color: #fbbf24;
+}
+
+.warning-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warning-content {
+  flex: 1;
+}
+
+.warning-content strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #fbbf24;
+}
+
+.warning-content p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #fcd34d;
+  line-height: 1.5;
 }
 
 .builder-tabs {

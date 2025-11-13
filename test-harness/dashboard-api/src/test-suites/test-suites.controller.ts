@@ -83,5 +83,47 @@ export class TestSuitesController {
     this.logger.log(`Disabling test suite: ${id}`);
     return this.testSuitesService.disable(id);
   }
+
+  @Get('discover')
+  @HttpCode(HttpStatus.OK)
+  async discover(): Promise<{ message: string; count: number }> {
+    this.logger.log('Triggering filesystem test suite discovery');
+    await this.testSuitesService.discoverFilesystemSuites();
+    const allSuites = await this.testSuitesService.findAll();
+    const fsCount = allSuites.filter(s => s.sourceType === 'typescript').length;
+    return {
+      message: 'Filesystem test suites discovered',
+      count: fsCount,
+    };
+  }
+
+  @Get(':id/source')
+  @HttpCode(HttpStatus.OK)
+  async getSource(@Param('id') id: string): Promise<{ content: string; sourceType: string; sourcePath?: string }> {
+    this.logger.log(`Getting source for test suite: ${id}`);
+    return this.testSuitesService.getTestSuiteSource(id);
+  }
+
+  @Put(':id/source')
+  @HttpCode(HttpStatus.OK)
+  async updateSource(
+    @Param('id') id: string,
+    @Body() body: { content: string },
+  ): Promise<{ message: string }> {
+    this.logger.log(`Updating source for test suite: ${id}`);
+    await this.testSuitesService.updateTestSuiteSource(id, body.content);
+    return { message: 'Source file updated successfully' };
+  }
+
+  @Get(':id/extract-config')
+  @HttpCode(HttpStatus.OK)
+  async extractConfig(@Param('id') id: string): Promise<{ config: any }> {
+    this.logger.log(`Extracting config for test suite: ${id}`);
+    const config = await this.testSuitesService.extractTestSuiteConfig(id);
+    if (!config) {
+      throw new NotFoundException('Could not extract configuration from source file');
+    }
+    return { config };
+  }
 }
 

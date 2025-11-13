@@ -5,16 +5,24 @@ import { v4 as uuidv4 } from 'uuid';
 import { TestSuiteEntity, TestSuiteStatus } from './entities/test-suite.entity';
 import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
+import { parseTypeScriptTestSuite, convertJSONToTypeScript } from './test-suite-converter';
 
 @Injectable()
 export class TestSuitesService {
   private readonly logger = new Logger(TestSuitesService.name);
   private readonly suitesFile = path.join(process.cwd(), 'data', 'test-suites.json');
+  private readonly projectRoot = process.cwd().includes('dashboard-api') 
+    ? path.join(process.cwd(), '..')
+    : process.cwd();
   private suites: TestSuiteEntity[] = [];
+  private filesystemSuites: Map<string, TestSuiteEntity> = new Map(); // keyed by sourcePath
 
   constructor() {
     this.loadSuites().catch(err => {
       this.logger.error('Error loading test suites on startup:', err);
+    });
+    this.discoverFilesystemSuites().catch(err => {
+      this.logger.error('Error discovering filesystem test suites on startup:', err);
     });
   }
 
@@ -107,12 +115,199 @@ export class TestSuitesService {
 
   async findAll(): Promise<TestSuiteEntity[]> {
     await this.loadSuites();
-    return this.suites;
+    await this.discoverFilesystemSuites();
+    
+    // Combine JSON-based suites with filesystem suites
+    const allSuites = [...this.suites];
+    const filesystemArray = Array.from(this.filesystemSuites.values());
+    
+    // Merge filesystem suites, avoiding duplicates by name+application
+    for (const fsSuite of filesystemArray) {
+      const existing = allSuites.find(
+        s => s.name === fsSuite.name && s.applicationId === fsSuite.applicationId
+      );
+      if (!existing) {
+        allSuites.push(fsSuite);
+      }
+    }
+    
+    return allSuites;
+  }
+
+  /**
+   * Discover test suite files from filesystem
+   */
+  async discoverFilesystemSuites(): Promise<void> {
+    try {
+      this.filesystemSuites.clear();
+      
+      // Scan tests/ directory for configuration test suites
+      const testsDir = path.join(this.projectRoot, 'tests');
+      try {
+        const testFiles = await fs.readdir(testsDir);
+        for (const file of testFiles) {
+          if (file.endsWith('.ts') && !file.endsWith('.d.ts') && file !== 'test-suite-loader.ts') {
+            const filePath = path.join(testsDir, file);
+            await this.processTestSuiteFile(filePath, 'tests');
+          }
+        }
+      } catch (error: any) {
+        if (error.code !== 'ENOENT') {
+          this.logger.warn(`Could not read tests directory: ${error.message}`);
+        }
+      }
+
+      // Scan services/test-suites/ directory for class-based test suites
+      const servicesTestSuitesDir = path.join(this.projectRoot, 'services', 'test-suites');
+      try {
+        const suiteFiles = await fs.readdir(servicesTestSuitesDir);
+        for (const file of suiteFiles) {
+          if (file.endsWith('.ts') && !file.endsWith('.d.ts') && file !== 'base-test-suite.ts') {
+            const filePath = path.join(servicesTestSuitesDir, file);
+            await this.processTestSuiteFile(filePath, 'services/test-suites');
+          }
+        }
+      } catch (error: any) {
+        if (error.code !== 'ENOENT') {
+          this.logger.warn(`Could not read services/test-suites directory: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error discovering filesystem test suites:', error);
+    }
+  }
+
+  /**
+   * Process a single test suite file
+   */
+  private async processTestSuiteFile(filePath: string, baseDir: string): Promise<void> {
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
+      const parsed = parseTypeScriptTestSuite(content, filePath);
+      
+      if (parsed) {
+        // Generate ID from file path (consistent hash)
+        const relativePath = path.relative(this.projectRoot, filePath);
+        const id = `fs-${Buffer.from(relativePath).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)}`;
+        
+        const suite: TestSuiteEntity = {
+          id,
+          name: parsed.name,
+          applicationId: parsed.application,
+          application: parsed.application,
+          team: parsed.team,
+          description: parsed.description,
+          status: 'pending',
+          testCount: 0,
+          score: 0,
+          testTypes: parsed.testTypes,
+          enabled: true,
+          createdAt: new Date(), // Use file mtime if available
+          updatedAt: new Date(),
+          sourceType: 'typescript',
+          sourcePath: relativePath,
+        };
+
+        // Try to get file stats for better timestamps
+        try {
+          const stats = await fs.stat(filePath);
+          suite.createdAt = stats.birthtime;
+          suite.updatedAt = stats.mtime;
+        } catch {
+          // Ignore stat errors
+        }
+
+        this.filesystemSuites.set(relativePath, suite);
+      }
+    } catch (error) {
+      this.logger.warn(`Error processing test suite file ${filePath}:`, error);
+    }
+  }
+
+  /**
+   * Get source file content for a test suite
+   */
+  async getTestSuiteSource(id: string): Promise<{ content: string; sourceType: string; sourcePath?: string }> {
+    const suite = await this.findOne(id);
+    
+    if (suite.sourceType === 'typescript' && suite.sourcePath) {
+      const fullPath = path.join(this.projectRoot, suite.sourcePath);
+      try {
+        const content = await fs.readFile(fullPath, 'utf-8');
+        return {
+          content,
+          sourceType: 'typescript',
+          sourcePath: suite.sourcePath,
+        };
+      } catch (error: any) {
+        throw new NotFoundException(`Source file not found: ${suite.sourcePath}`);
+      }
+    } else {
+      // For JSON-based suites, return the JSON representation
+      const jsonContent = JSON.stringify(suite, null, 2);
+      return {
+        content: jsonContent,
+        sourceType: 'json',
+      };
+    }
+  }
+
+  /**
+   * Update source file for a test suite
+   */
+  async updateTestSuiteSource(id: string, content: string): Promise<void> {
+    const suite = await this.findOne(id);
+    
+    if (suite.sourceType === 'typescript' && suite.sourcePath) {
+      const fullPath = path.join(this.projectRoot, suite.sourcePath);
+      try {
+        await fs.writeFile(fullPath, content, 'utf-8');
+        // Re-discover to update metadata
+        await this.discoverFilesystemSuites();
+        this.logger.log(`Updated test suite source file: ${suite.sourcePath}`);
+      } catch (error: any) {
+        throw new BadRequestException(`Failed to update source file: ${error.message}`);
+      }
+    } else {
+      // For JSON-based suites, we can't update the source directly via this method
+      // They should be updated via the regular update() method
+      throw new BadRequestException('Cannot update source for JSON-based test suites. Use the regular update endpoint.');
+    }
+  }
+
+  /**
+   * Extract full TestSuite configuration from TypeScript source
+   */
+  async extractTestSuiteConfig(id: string): Promise<TestSuite | null> {
+    const suite = await this.findOne(id);
+    
+    if (suite.sourceType === 'typescript' && suite.sourcePath) {
+      const fullPath = path.join(this.projectRoot, suite.sourcePath);
+      try {
+        const content = await fs.readFile(fullPath, 'utf-8');
+        const { extractTestSuiteFromContent } = await import('./test-suite-converter');
+        return extractTestSuiteFromContent(content, suite.sourcePath);
+      } catch (error: any) {
+        this.logger.error(`Error extracting config from ${suite.sourcePath}:`, error);
+        throw new BadRequestException(`Failed to extract configuration: ${error.message}`);
+      }
+    }
+    
+    return null;
   }
 
   async findOne(id: string): Promise<TestSuiteEntity> {
     await this.loadSuites();
-    const suite = this.suites.find(s => s.id === id);
+    await this.discoverFilesystemSuites();
+    
+    // Check JSON-based suites first
+    let suite = this.suites.find(s => s.id === id);
+    
+    // If not found, check filesystem suites
+    if (!suite) {
+      suite = Array.from(this.filesystemSuites.values()).find(s => s.id === id);
+    }
+    
     if (!suite) {
       throw new NotFoundException(`Test suite with ID ${id} not found`);
     }
@@ -185,12 +380,22 @@ export class TestSuitesService {
 
   async findByApplication(applicationId: string): Promise<TestSuiteEntity[]> {
     await this.loadSuites();
-    return this.suites.filter(s => s.applicationId === applicationId);
+    await this.discoverFilesystemSuites();
+    
+    const jsonSuites = this.suites.filter(s => s.applicationId === applicationId);
+    const fsSuites = Array.from(this.filesystemSuites.values()).filter(s => s.applicationId === applicationId);
+    
+    return [...jsonSuites, ...fsSuites];
   }
 
   async findByTeam(team: string): Promise<TestSuiteEntity[]> {
     await this.loadSuites();
-    return this.suites.filter(s => s.team === team);
+    await this.discoverFilesystemSuites();
+    
+    const jsonSuites = this.suites.filter(s => s.team === team);
+    const fsSuites = Array.from(this.filesystemSuites.values()).filter(s => s.team === team);
+    
+    return [...jsonSuites, ...fsSuites];
   }
 }
 

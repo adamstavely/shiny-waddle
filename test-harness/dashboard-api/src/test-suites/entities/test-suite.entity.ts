@@ -1,4 +1,5 @@
 export type TestSuiteStatus = 'passing' | 'failing' | 'pending' | 'error';
+export type TestSuiteSourceType = 'json' | 'typescript';
 
 export interface TestSuiteEntity {
   id: string;
@@ -17,5 +18,7 @@ export interface TestSuiteEntity {
   createdBy?: string;
   description?: string;
   testConfigurationIds?: string[]; // IDs of test configurations to run
+  sourceType?: TestSuiteSourceType; // 'json' for data/test-suites.json, 'typescript' for filesystem files
+  sourcePath?: string; // Path to source file relative to project root
 }
 

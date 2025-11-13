@@ -79,6 +79,14 @@
               <h3 class="suite-name">{{ suite.name }}</h3>
               <div class="suite-status-badges">
                 <span 
+                  v-if="suite.sourceType"
+                  class="source-type-badge"
+                  :class="suite.sourceType === 'typescript' ? 'typescript' : 'json'"
+                  :title="suite.sourceType === 'typescript' ? 'TypeScript source file' : 'JSON configuration'"
+                >
+                  {{ suite.sourceType === 'typescript' ? 'TS' : 'JSON' }}
+                </span>
+                <span 
                   class="enabled-badge"
                   :class="suite.enabled ? 'enabled' : 'disabled'"
                   :title="suite.enabled ? 'Enabled' : 'Disabled'"
@@ -90,7 +98,12 @@
                 </span>
               </div>
             </div>
-            <p class="suite-meta">{{ suite.application }} • {{ suite.team }}</p>
+            <p class="suite-meta">
+              {{ suite.application }} • {{ suite.team }}
+              <span v-if="suite.sourcePath" class="source-path" :title="suite.sourcePath">
+                • {{ suite.sourcePath }}
+              </span>
+            </p>
           </div>
           
           <div class="suite-stats">
@@ -137,6 +150,15 @@
             <button @click.stop="editTestSuite(suite.id)" class="action-btn edit-btn">
               <Edit class="action-icon" />
               Edit
+            </button>
+            <button 
+              v-if="suite.sourceType === 'typescript'"
+              @click.stop="editSource(suite.id)" 
+              class="action-btn source-btn"
+              title="Edit source file"
+            >
+              <Code class="action-icon" />
+              Source
             </button>
             <button @click.stop="viewResults(suite.id)" class="action-btn view-btn">
               <FileText class="action-icon" />
@@ -324,6 +346,14 @@
       @close="closeResultDetail"
       @export="exportTestResult"
     />
+
+    <!-- Source Editor Modal -->
+    <TestSuiteSourceEditor
+      :show="showSourceEditor"
+      :suite-id="editingSourceSuiteId || ''"
+      @close="closeSourceEditor"
+      @saved="handleSourceSaved"
+    />
   </div>
 </template>
 
@@ -343,13 +373,15 @@ import {
   Clock,
   CheckCircle2,
   Trash2,
-  Power
+  Power,
+  Code
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import TestSuiteBuilderModal from '../components/TestSuiteBuilderModal.vue';
 import TestResultDetailModal from '../components/TestResultDetailModal.vue';
+import TestSuiteSourceEditor from '../components/TestSuiteSourceEditor.vue';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -371,6 +403,8 @@ const validators = ref<any[]>([]);
 const showResultDetail = ref(false);
 const selectedResult = ref<any>(null);
 const previousResult = ref<any>(null);
+const showSourceEditor = ref(false);
+const editingSourceSuiteId = ref<string | null>(null);
 
 // Test suites data
 const testSuites = ref<any[]>([]);
@@ -623,6 +657,8 @@ const loadTestSuites = async () => {
       lastRun: s.lastRun ? new Date(s.lastRun) : undefined,
       createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
       updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
+      sourceType: s.sourceType || 'json',
+      sourcePath: s.sourcePath,
     }));
   } catch (err: any) {
     suitesError.value = err.response?.data?.message || 'Failed to load test suites';
@@ -632,11 +668,38 @@ const loadTestSuites = async () => {
   }
 };
 
-const editTestSuite = (id: string) => {
+const editTestSuite = async (id: string) => {
   const suite = testSuites.value.find(s => s.id === id);
   if (suite) {
     editingSuite.value = id;
-    editingSuiteData.value = suite;
+    
+    // If it's a TypeScript suite, extract the full config from source
+    if (suite.sourceType === 'typescript' && suite.sourcePath) {
+      try {
+        // Try to extract the full configuration from TypeScript source
+        const extractResponse = await axios.get(`/api/test-suites/${id}/extract-config`);
+        const extractedConfig = extractResponse.data.config;
+        
+        // Merge extracted config with suite metadata
+        editingSuiteData.value = {
+          ...suite,
+          ...extractedConfig,
+          application: extractedConfig.application || suite.application || suite.applicationId,
+          _isTypeScript: true,
+        };
+      } catch (err: any) {
+        console.error('Error extracting TypeScript config:', err);
+        // Fall back to basic suite data with warning
+        editingSuiteData.value = {
+          ...suite,
+          _isTypeScript: true,
+          _extractionFailed: true,
+        };
+      }
+    } else {
+      editingSuiteData.value = suite;
+    }
+    
     showCreateModal.value = true;
   }
 };
@@ -725,6 +788,35 @@ const exportTestResult = (result: any) => {
 const handleSaveTestSuite = async (suiteData: any) => {
   try {
     const testTypes = getTestTypes(suiteData);
+    const currentSuite = editingSuite.value ? testSuites.value.find(s => s.id === editingSuite.value) : null;
+    
+    // If editing a TypeScript suite, convert to TypeScript and update source file
+    if (currentSuite?.sourceType === 'typescript' && currentSuite.sourcePath) {
+      try {
+        // Get the original source to preserve structure
+        const sourceResponse = await axios.get(`/api/test-suites/${editingSuite.value}/source`);
+        const originalContent = sourceResponse.data.content;
+        
+        // Convert suiteData to TypeScript format
+        // This is a simplified conversion - in production, use proper TS parser
+        const tsContent = convertJSONToTypeScript(suiteData, currentSuite.sourcePath, originalContent);
+        
+        // Update the source file
+        await axios.put(`/api/test-suites/${editingSuite.value}/source`, {
+          content: tsContent,
+        });
+        
+        await loadTestSuites();
+        closeModal();
+        return;
+      } catch (err: any) {
+        console.error('Error updating TypeScript source:', err);
+        alert('Failed to update TypeScript source file. Please use the source editor instead.');
+        return;
+      }
+    }
+    
+    // For JSON-based suites, use the regular update/create flow
     const payload = {
       ...suiteData,
       applicationId: suiteData.applicationId || suiteData.application,
@@ -750,6 +842,59 @@ const handleSaveTestSuite = async (suiteData: any) => {
   }
 };
 
+// Helper function to convert JSON suite data to TypeScript
+function convertJSONToTypeScript(suiteData: any, sourcePath: string, originalContent?: string): string {
+  const suiteName = suiteData.name
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .replace(/^[a-z]/, (c: string) => c.toUpperCase())
+    .replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()) + 'TestSuite';
+
+  // Try to preserve original variable name if available
+  let varName = suiteName;
+  if (originalContent) {
+    const constMatch = originalContent.match(/export\s+const\s+(\w+)\s*:\s*TestSuite/);
+    if (constMatch) {
+      varName = constMatch[1];
+    }
+  }
+
+  // Build the TestSuite object
+  const config: any = {
+    name: suiteData.name,
+    application: suiteData.application || suiteData.applicationId,
+    team: suiteData.team,
+    includeAccessControlTests: suiteData.includeAccessControlTests || false,
+    includeDataBehaviorTests: suiteData.includeDataBehaviorTests || false,
+    includeContractTests: suiteData.includeContractTests || false,
+    includeDatasetHealthTests: suiteData.includeDatasetHealthTests || false,
+    userRoles: suiteData.userRoles || [],
+    resources: suiteData.resources || [],
+    contexts: suiteData.contexts || [],
+  };
+
+  if (suiteData.expectedDecisions) config.expectedDecisions = suiteData.expectedDecisions;
+  if (suiteData.testQueries) config.testQueries = suiteData.testQueries;
+  if (suiteData.allowedFields) config.allowedFields = suiteData.allowedFields;
+  if (suiteData.requiredFilters) config.requiredFilters = suiteData.requiredFilters;
+  if (suiteData.disallowedJoins) config.disallowedJoins = suiteData.disallowedJoins;
+  if (suiteData.contracts) config.contracts = suiteData.contracts;
+  if (suiteData.datasets) config.datasets = suiteData.datasets;
+  if (suiteData.privacyThresholds) config.privacyThresholds = suiteData.privacyThresholds;
+  if (suiteData.statisticalFidelityTargets) config.statisticalFidelityTargets = suiteData.statisticalFidelityTargets;
+
+  const configStr = JSON.stringify(config, null, 2);
+  
+  return `/**
+ * ${suiteData.name}
+ * ${suiteData.description || `Test suite for ${suiteData.application || suiteData.applicationId}`}
+ */
+
+import { TestSuite } from '../core/types';
+
+export const ${varName}: TestSuite = ${configStr};
+`;
+}
+
 const handleSaveDraft = (suiteData: any) => {
   // Same as save, but could mark as draft
   handleSaveTestSuite(suiteData);
@@ -768,6 +913,20 @@ const closeModal = () => {
   showCreateModal.value = false;
   editingSuite.value = null;
   editingSuiteData.value = null;
+};
+
+const editSource = (id: string) => {
+  editingSourceSuiteId.value = id;
+  showSourceEditor.value = true;
+};
+
+const closeSourceEditor = () => {
+  showSourceEditor.value = false;
+  editingSourceSuiteId.value = null;
+};
+
+const handleSourceSaved = async () => {
+  await loadTestSuites();
 };
 
 const formatDate = (date: Date): string => {
@@ -1045,6 +1204,28 @@ const getScoreClass = (score: number): string => {
   border: 1px solid rgba(160, 174, 192, 0.3);
 }
 
+.source-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.source-type-badge.typescript {
+  background: rgba(49, 120, 198, 0.2);
+  color: #3178c6;
+  border: 1px solid rgba(49, 120, 198, 0.3);
+}
+
+.source-type-badge.json {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
 .status-passing {
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
@@ -1064,6 +1245,17 @@ const getScoreClass = (score: number): string => {
   font-size: 0.875rem;
   color: #a0aec0;
   margin: 0;
+}
+
+.source-path {
+  font-size: 0.75rem;
+  color: #718096;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .suite-stats {
