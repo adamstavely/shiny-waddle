@@ -9,6 +9,7 @@ import { UsersModule } from '../users/users.module';
   imports: [ApplicationsModule, NotificationsModule, UsersModule],
   controllers: [UnifiedFindingsController],
   providers: [UnifiedFindingsService],
+  exports: [UnifiedFindingsService],
 })
 export class UnifiedFindingsModule {}
 
