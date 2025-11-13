@@ -6,6 +6,7 @@ import ApplicationDetail from '../views/ApplicationDetail.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import Tests from '../views/Tests.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
+import TestSuiteDetail from '../views/TestSuiteDetail.vue';
 import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
@@ -91,6 +92,16 @@ const router = createRouter({
       path: '/tests',
       name: 'Tests',
       component: Tests,
+    },
+    {
+      path: '/tests/new',
+      name: 'TestSuiteCreate',
+      component: TestSuiteDetail,
+    },
+    {
+      path: '/tests/:id',
+      name: 'TestSuiteDetail',
+      component: TestSuiteDetail,
     },
     {
       path: '/tests/builder',

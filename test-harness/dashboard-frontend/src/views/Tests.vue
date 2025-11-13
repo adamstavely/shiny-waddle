@@ -7,7 +7,7 @@
           <h1 class="page-title">Tests</h1>
           <p class="page-description">Manage and run compliance test suites</p>
         </div>
-        <button @click="showCreateModal = true" class="btn-primary">
+        <button @click="router.push({ name: 'TestSuiteCreate' })" class="btn-primary">
           <Plus class="btn-icon" />
           Create Test Suite
         </button>
@@ -147,7 +147,7 @@
               <Play class="action-icon" />
               Run
             </button>
-            <button @click.stop="editTestSuite(suite.id)" class="action-btn edit-btn">
+            <button @click.stop="viewTestSuite(suite.id)" class="action-btn edit-btn">
               <Edit class="action-icon" />
               Edit
             </button>
@@ -176,7 +176,7 @@
         <TestTube class="empty-icon" />
         <h3>No test suites found</h3>
         <p>Create your first test suite to get started</p>
-        <button @click="showCreateModal = true" class="btn-primary">
+        <button @click="router.push({ name: 'TestSuiteCreate' })" class="btn-primary">
           Create Test Suite
         </button>
       </div>
@@ -541,7 +541,7 @@ const tabs = [
 ];
 
 const viewTestSuite = (id: string) => {
-  router.push(`/tests/${id}`);
+  router.push({ name: 'TestSuiteDetail', params: { id } });
 };
 
 const runTestSuite = async (id: string) => {
@@ -668,41 +668,6 @@ const loadTestSuites = async () => {
   }
 };
 
-const editTestSuite = async (id: string) => {
-  const suite = testSuites.value.find(s => s.id === id);
-  if (suite) {
-    editingSuite.value = id;
-    
-    // If it's a TypeScript suite, extract the full config from source
-    if (suite.sourceType === 'typescript' && suite.sourcePath) {
-      try {
-        // Try to extract the full configuration from TypeScript source
-        const extractResponse = await axios.get(`/api/test-suites/${id}/extract-config`);
-        const extractedConfig = extractResponse.data.config;
-        
-        // Merge extracted config with suite metadata
-        editingSuiteData.value = {
-          ...suite,
-          ...extractedConfig,
-          application: extractedConfig.application || suite.application || suite.applicationId,
-          _isTypeScript: true,
-        };
-      } catch (err: any) {
-        console.error('Error extracting TypeScript config:', err);
-        // Fall back to basic suite data with warning
-        editingSuiteData.value = {
-          ...suite,
-          _isTypeScript: true,
-          _extractionFailed: true,
-        };
-      }
-    } else {
-      editingSuiteData.value = suite;
-    }
-    
-    showCreateModal.value = true;
-  }
-};
 
 const deleteTestSuite = async (id: string) => {
   if (!confirm('Are you sure you want to delete this test suite? This action cannot be undone.')) {
