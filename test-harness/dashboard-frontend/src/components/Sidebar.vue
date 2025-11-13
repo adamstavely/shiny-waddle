@@ -68,7 +68,6 @@ import {
   FileText, 
   TestTube, 
   BarChart3, 
-  AlertTriangle,
   Settings,
   Globe,
   Database,
@@ -89,7 +88,6 @@ const currentPath = ref(route.path);
 
 const menuItems = [
   { path: '/insights', label: 'Insights', icon: LayoutDashboard, divider: false },
-  { path: '/violations', label: 'Violations', icon: AlertTriangle, divider: false },
   { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
   { path: '/configuration', label: 'Configuration', icon: Settings, divider: false },
   { path: '/compliance', label: 'Compliance', icon: CheckCircle2, divider: true },
@@ -97,7 +95,7 @@ const menuItems = [
 
 // Test pages
 const testPages = [
-  '/policy-validation', '/identity-lifecycle',
+  '/policy-validation',
   '/api-security', '/users', '/api-gateway', '/dlp',
   '/distributed-systems', '/network-policies',
   '/rls-cls'
@@ -122,7 +120,8 @@ const isActive = (path: string): boolean => {
     return configPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/compliance') {
-    return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/');
+    return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/') ||
+           currentPath.value === '/violations' || currentPath.value.startsWith('/violations/');
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');

@@ -19,7 +19,6 @@ import {
   CreateRLSCLSConfigurationDto,
   CreateNetworkPolicyConfigurationDto,
   CreateDLPConfigurationDto,
-  CreateIdentityLifecycleConfigurationDto,
   CreateAPIGatewayConfigurationDto,
 } from './dto/create-test-configuration.dto';
 import { TestConfigurationEntity, TestConfigurationType } from './entities/test-configuration.entity';

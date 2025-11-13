@@ -19,7 +19,7 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        @click="activeTab = tab.id"
+        @click="switchTab(tab.id)"
         class="tab-button"
         :class="{ active: activeTab === tab.id }"
       >
@@ -27,6 +27,160 @@
         {{ tab.label }}
         <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
       </button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div v-if="activeTab === 'overview'" class="tab-content">
+      <div class="overview-grid">
+        <!-- Quick Stats -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon-wrapper">
+              <List class="stat-icon" />
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ testSuites.length || 0 }}</div>
+              <div class="stat-label">Test Suites</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrapper">
+              <TestTube class="stat-icon" />
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ testTypes.length }}</div>
+              <div class="stat-label">Test Types</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrapper">
+              <Settings class="stat-icon" />
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ configurationsCount }}</div>
+              <div class="stat-label">Configurations</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon-wrapper">
+              <CheckCircle2 class="stat-icon" />
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ testResults.length || 0 }}</div>
+              <div class="stat-label">Test Results</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3 class="section-title">Quick Actions</h3>
+          <div class="actions-grid">
+            <button @click="router.push({ name: 'TestSuiteCreate' })" class="action-card">
+              <Plus class="action-icon" />
+              <span>Create Test Suite</span>
+            </button>
+            <button @click="switchTab('test-types')" class="action-card">
+              <TestTube class="action-icon" />
+              <span>Run Test</span>
+            </button>
+            <button @click="switchTab('configurations')" class="action-card">
+              <Settings class="action-icon" />
+              <span>Manage Configurations</span>
+            </button>
+            <button @click="switchTab('results')" class="action-card">
+              <FileText class="action-icon" />
+              <span>View Results</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Test Runs -->
+        <div class="recent-runs">
+          <h3 class="section-title">Recent Test Runs</h3>
+          <div v-if="!testResults || testResults.length === 0" class="empty-state-small">
+            <p>No recent test runs</p>
+          </div>
+          <div v-else class="runs-list">
+            <div
+              v-for="result in (testResults || []).slice(0, 5)"
+              :key="result.id"
+              class="run-item"
+              @click="viewResultDetails(result.id)"
+            >
+              <div class="run-info">
+                <span class="run-name">{{ result.testName }}</span>
+                <span class="run-type">{{ result.testType }}</span>
+              </div>
+              <span class="run-status" :class="result.passed ? 'passed' : 'failed'">
+                {{ result.passed ? 'Passed' : 'Failed' }}
+              </span>
+              <span class="run-time">{{ formatRelativeTime(result.timestamp) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test Health Dashboard -->
+        <div class="health-dashboard">
+          <h3 class="section-title">Test Health</h3>
+          <div class="health-stats">
+            <div class="health-item">
+              <div class="health-label">Pass Rate</div>
+              <div class="health-value" :class="getHealthClass(passRate)">
+                {{ passRate.toFixed(1) }}%
+              </div>
+            </div>
+            <div class="health-item">
+              <div class="health-label">Active Suites</div>
+              <div class="health-value">
+                {{ activeSuitesCount }}
+              </div>
+            </div>
+            <div class="health-item">
+              <div class="health-label">Last 24h Runs</div>
+              <div class="health-value">
+                {{ last24hRuns }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="how-it-works">
+          <h3 class="section-title">How It Works</h3>
+          <div class="relationship-explanation">
+            <div class="relationship-item">
+              <div class="relationship-icon">
+                <TestTube class="icon" />
+              </div>
+              <div class="relationship-content">
+                <h4>Test Types</h4>
+                <p>Different categories of security tests (API Gateway, DLP, Network Policies, etc.). Each test type has specific test functions you can run.</p>
+              </div>
+            </div>
+            <div class="relationship-arrow">→</div>
+            <div class="relationship-item">
+              <div class="relationship-icon">
+                <Settings class="icon" />
+              </div>
+              <div class="relationship-content">
+                <h4>Configurations</h4>
+                <p>Test parameters and settings for each test type. Configurations define how tests should run and what to check for.</p>
+              </div>
+            </div>
+            <div class="relationship-arrow">→</div>
+            <div class="relationship-item">
+              <div class="relationship-icon">
+                <List class="icon" />
+              </div>
+              <div class="relationship-content">
+                <h4>Test Suites</h4>
+                <p>Collections of configurations grouped together. Test suites allow you to run multiple tests together and track results.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Test Suites List -->
@@ -267,6 +421,132 @@
       </div>
     </div>
 
+    <!-- Test Types Tab -->
+    <div v-if="activeTab === 'test-types'" class="tab-content">
+      <div class="test-types-grid">
+        <TestTypeCard
+          v-for="testType in testTypes"
+          :key="testType.type"
+          :name="testType.name"
+          :type="testType.type"
+          :description="testType.description"
+          :icon="testType.icon"
+          :config-count="getConfigCountForType(testType.type)"
+          :last-run-status="getLastRunStatusForType(testType.type)"
+          @edit-config="handleEditConfig"
+          @view-result="handleViewResult"
+        />
+      </div>
+    </div>
+
+    <!-- Configurations Tab -->
+    <div v-if="activeTab === 'configurations'" class="tab-content">
+      <div class="configurations-header">
+        <div class="header-actions">
+          <button @click="showCreateConfigModal = true" class="btn-primary">
+            <Plus class="btn-icon" />
+            Create Configuration
+          </button>
+        </div>
+        <div class="filters">
+          <input
+            v-model="configSearchQuery"
+            type="text"
+            placeholder="Search configurations..."
+            class="search-input"
+          />
+          <Dropdown
+            v-model="configFilterType"
+            :options="configTypeOptions"
+            placeholder="All Types"
+            class="filter-dropdown"
+          />
+        </div>
+      </div>
+
+      <div v-if="loadingConfigs" class="loading">Loading configurations...</div>
+      <div v-else-if="configsError" class="error">{{ configsError }}</div>
+      <div v-else class="configurations-grid">
+        <div
+          v-for="config in filteredConfigurations"
+          :key="config.id"
+          class="configuration-card"
+          @click="editConfiguration(config)"
+        >
+          <div class="config-card-header">
+            <div class="config-title-section">
+              <h3 class="config-name">{{ config.name }}</h3>
+              <span class="config-type-badge" :class="`type-${config.type}`">
+                {{ getTypeLabel(config.type) }}
+              </span>
+            </div>
+            <div class="config-status-badges">
+              <span
+                class="enabled-badge"
+                :class="config.enabled ? 'enabled' : 'disabled'"
+              >
+                {{ config.enabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+          </div>
+          <p class="config-description">{{ config.description || 'No description' }}</p>
+          <div class="config-meta">
+            <span class="meta-item">
+              <span class="meta-label">Used by:</span>
+              <span class="meta-value">{{ getUsedByCount(config.id) }} test suite(s)</span>
+              <span v-if="getUsedByCount(config.id) > 0" class="used-by-list">
+                <span
+                  v-for="suiteId in getUsedBySuites(config.id)"
+                  :key="suiteId"
+                  class="suite-badge"
+                  :title="getSuiteName(suiteId)"
+                >
+                  {{ getSuiteName(suiteId) }}
+                </span>
+              </span>
+            </span>
+            <span class="meta-item">
+              <span class="meta-label">Last run:</span>
+              <span class="meta-value">{{ getLastRunForConfig(config.id) }}</span>
+            </span>
+          </div>
+          <div class="config-actions" @click.stop>
+            <button @click.stop="editConfiguration(config)" class="action-btn">
+              <Edit class="action-icon" />
+              Edit
+            </button>
+            <button @click.stop="testConfiguration(config.id)" class="action-btn">
+              <Play class="action-icon" />
+              Test
+            </button>
+            <button @click.stop="deleteConfiguration(config.id)" class="action-btn delete-btn">
+              <Trash2 class="action-icon" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loadingConfigs && filteredConfigurations.length === 0" class="empty-state">
+        <Settings class="empty-icon" />
+        <h3>No configurations found</h3>
+        <p>Create your first configuration to get started</p>
+        <button @click="showCreateConfigModal = true" class="btn-primary">
+          Create Configuration
+        </button>
+      </div>
+
+      <!-- Configuration Modal -->
+      <ConfigurationModal
+        v-if="showCreateConfigModal || editingConfig"
+        :show="showCreateConfigModal || !!editingConfig"
+        :config="editingConfig"
+        :type="editingConfig?.type"
+        @close="closeConfigModal"
+        @save="handleSaveConfig"
+      />
+    </div>
+
     <!-- Test Results -->
     <div v-if="activeTab === 'results'" class="tab-content">
       <div class="results-filters">
@@ -358,8 +638,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { Teleport } from 'vue';
 import {
   TestTube,
@@ -374,7 +654,15 @@ import {
   CheckCircle2,
   Trash2,
   Power,
-  Code
+  Code,
+  LayoutDashboard,
+  Settings,
+  Server,
+  FileX,
+  Network,
+  Shield,
+  Lock,
+  Database
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -382,6 +670,8 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import TestSuiteBuilderModal from '../components/TestSuiteBuilderModal.vue';
 import TestResultDetailModal from '../components/TestResultDetailModal.vue';
 import TestSuiteSourceEditor from '../components/TestSuiteSourceEditor.vue';
+import TestTypeCard from '../components/TestTypeCard.vue';
+import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -389,8 +679,19 @@ const breadcrumbItems = [
 ];
 
 const router = useRouter();
+const route = useRoute();
 
-const activeTab = ref<'suites' | 'execution' | 'results'>('suites');
+// Initialize active tab from query parameter or default to overview
+const getInitialTab = (): 'overview' | 'suites' | 'test-types' | 'configurations' | 'execution' | 'results' => {
+  const tab = route.query.tab as string;
+  const validTabs = ['overview', 'suites', 'test-types', 'configurations', 'execution', 'results'];
+  if (tab && validTabs.includes(tab)) {
+    return tab as any;
+  }
+  return 'overview';
+};
+
+const activeTab = ref<'overview' | 'suites' | 'test-types' | 'configurations' | 'execution' | 'results'>(getInitialTab());
 const searchQuery = ref('');
 const filterApplication = ref('');
 const filterTeam = ref('');
@@ -405,6 +706,24 @@ const selectedResult = ref<any>(null);
 const previousResult = ref<any>(null);
 const showSourceEditor = ref(false);
 const editingSourceSuiteId = ref<string | null>(null);
+
+// Test Types data
+const testTypes = [
+  { name: 'API Gateway', type: 'api-gateway', description: 'Test API gateway policies, rate limiting, and service authentication', icon: Server },
+  { name: 'DLP', type: 'dlp', description: 'Test data exfiltration detection, API response validation, and bulk export controls', icon: FileX },
+  { name: 'Network Policies', type: 'network-policy', description: 'Test firewall rules, network segmentation, and service mesh policies', icon: Network },
+  { name: 'API Security', type: 'api-security', description: 'Test REST and GraphQL API security', icon: Lock },
+  { name: 'RLS/CLS', type: 'rls-cls', description: 'Test row-level and column-level security', icon: Database },
+];
+
+// Configurations data
+const configurations = ref<any[]>([]);
+const loadingConfigs = ref(false);
+const configsError = ref<string | null>(null);
+const configSearchQuery = ref('');
+const configFilterType = ref('');
+const showCreateConfigModal = ref(false);
+const editingConfig = ref<any>(null);
 
 // Test suites data
 const testSuites = ref<any[]>([]);
@@ -522,6 +841,7 @@ const resultsFilterStatus = ref('');
 const resultsFilterType = ref('');
 
 const filteredResults = computed(() => {
+  if (!testResults.value) return [];
   return testResults.value.filter(result => {
     const matchesSuite = !resultsFilterSuite.value || true; // Would filter by suite
     const matchesStatus = !resultsFilterStatus.value ||
@@ -534,11 +854,20 @@ const filteredResults = computed(() => {
 
 // Form data - removed, now handled by TestSuiteBuilderModal
 
-const tabs = [
-  { id: 'suites', label: 'Test Suites', icon: List, badge: testSuites.value.length },
+const tabs = computed(() => [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'suites', label: 'Test Suites', icon: List, badge: testSuites.value?.length || 0 },
+  { id: 'test-types', label: 'Test Types', icon: TestTube },
+  { id: 'configurations', label: 'Configurations', icon: Settings },
   { id: 'execution', label: 'Execution', icon: Play },
-  { id: 'results', label: 'Results', icon: CheckCircle2, badge: testResults.value.length }
-];
+  { id: 'results', label: 'Results', icon: CheckCircle2, badge: testResults.value?.length || 0 }
+]);
+
+const switchTab = (tabId: string) => {
+  activeTab.value = tabId as any;
+  // Update URL without navigation
+  router.replace({ query: { ...route.query, tab: tabId } });
+};
 
 const viewTestSuite = (id: string) => {
   router.push({ name: 'TestSuiteDetail', params: { id } });
@@ -548,7 +877,7 @@ const runTestSuite = async (id: string) => {
   const suite = testSuites.value.find(s => s.id === id);
   if (!suite) return;
   
-  activeTab.value = 'execution';
+  switchTab('execution');
   const startTime = new Date();
   currentExecution.value = {
     suiteName: suite.name,
@@ -624,7 +953,7 @@ const simulateTestExecution = (startTime: Date) => {
       
       // Refresh results
       setTimeout(() => {
-        activeTab.value = 'results';
+        switchTab('results');
       }, 3000);
     }
   }, 500);
@@ -699,7 +1028,7 @@ const toggleTestSuite = async (suite: any) => {
 };
 
 const viewResults = (id: string) => {
-  activeTab.value = 'results';
+  switchTab('results');
   resultsFilterSuite.value = id;
 };
 
@@ -930,15 +1259,307 @@ const loadValidators = async () => {
   }
 };
 
-onMounted(() => {
-  loadValidators();
-  loadTestSuites();
+// Watch for route query changes to update active tab
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && typeof newTab === 'string') {
+    const validTabs = ['overview', 'suites', 'test-types', 'configurations', 'execution', 'results'];
+    if (validTabs.includes(newTab)) {
+      activeTab.value = newTab as any;
+    }
+  }
+});
+
+onMounted(async () => {
+  await Promise.all([
+    loadValidators(),
+    loadTestSuites(),
+    loadConfigurations(),
+    loadTestResults()
+  ]);
+  
+  // Load last run statuses for all test types
+  await loadLastRunStatusForTypes();
+  
+  // If there's a type query parameter, ensure we're on test-types tab
+  if (route.query.type && activeTab.value !== 'test-types') {
+    switchTab('test-types');
+  }
 });
 
 const getScoreClass = (score: number): string => {
   if (score >= 90) return 'score-high';
   if (score >= 70) return 'score-medium';
   return 'score-low';
+};
+
+// Overview computed properties
+const configurationsCount = computed(() => configurations.value.length);
+
+const passRate = computed(() => {
+  if (!testResults.value || testResults.value.length === 0) return 0;
+  const passed = testResults.value.filter(r => r.passed).length;
+  return (passed / testResults.value.length) * 100;
+});
+
+const activeSuitesCount = computed(() => {
+  if (!testSuites.value) return 0;
+  return testSuites.value.filter(s => s.enabled).length;
+});
+
+const last24hRuns = computed(() => {
+  if (!testResults.value) return 0;
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return testResults.value.filter(r => {
+    const timestamp = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+    return timestamp >= yesterday;
+  }).length;
+});
+
+const getHealthClass = (rate: number): string => {
+  if (rate >= 90) return 'health-excellent';
+  if (rate >= 70) return 'health-good';
+  if (rate >= 50) return 'health-warning';
+  return 'health-poor';
+};
+
+// Test Types computed properties
+const getConfigCountForType = (type: string): number => {
+  return configurations.value.filter(c => c.type === type).length;
+};
+
+// Store last run status for each test type
+const lastRunStatusForTypes = ref<Record<string, string>>({});
+
+const loadLastRunStatusForTypes = async () => {
+  // Load last run status for each test type
+  const typePromises = testTypes.map(async (testType) => {
+    const typeConfigs = configurations.value.filter(c => c.type === testType.type);
+    if (typeConfigs.length === 0) {
+      lastRunStatusForTypes.value[testType.type] = undefined as any;
+      return;
+    }
+    
+    try {
+      // Get the most recent test result for any configuration of this type
+      const resultsPromises = typeConfigs.map(async (config) => {
+        try {
+          const response = await axios.get(`/api/test-results/test-configuration/${config.id}?limit=1`);
+          return response.data && response.data.length > 0 ? response.data[0] : null;
+        } catch (err) {
+          return null;
+        }
+      });
+
+      const results = await Promise.all(resultsPromises);
+      const validResults = results.filter(r => r !== null);
+      
+      if (validResults.length > 0) {
+        // Sort by timestamp and get the most recent
+        validResults.sort((a, b) => {
+          const timeA = new Date(a.timestamp).getTime();
+          const timeB = new Date(b.timestamp).getTime();
+          return timeB - timeA;
+        });
+        
+        const mostRecent = validResults[0];
+        lastRunStatusForTypes.value[testType.type] = mostRecent.status === 'passed' ? 'passed' : 'failed';
+      } else {
+        lastRunStatusForTypes.value[testType.type] = undefined as any;
+      }
+    } catch (err) {
+      console.error(`Error loading last run status for type ${testType.type}:`, err);
+      lastRunStatusForTypes.value[testType.type] = undefined as any;
+    }
+  });
+  
+  await Promise.all(typePromises);
+};
+
+const getLastRunStatusForType = (type: string): string | undefined => {
+  return lastRunStatusForTypes.value[type];
+};
+
+// Configurations computed properties
+const configTypeOptions = computed(() => {
+  return [
+    { label: 'All Types', value: '' },
+    ...testTypes.map(t => ({ label: t.name, value: t.type }))
+  ];
+});
+
+const filteredConfigurations = computed(() => {
+  return configurations.value.filter(config => {
+    const matchesSearch = !configSearchQuery.value ||
+      config.name.toLowerCase().includes(configSearchQuery.value.toLowerCase()) ||
+      (config.description && config.description.toLowerCase().includes(configSearchQuery.value.toLowerCase()));
+    const matchesType = !configFilterType.value || config.type === configFilterType.value;
+    return matchesSearch && matchesType;
+  });
+});
+
+const getTypeLabel = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    'api-gateway': 'API Gateway',
+    'dlp': 'DLP',
+    'network-policy': 'Network Policy',
+    'api-security': 'API Security',
+    'rls-cls': 'RLS/CLS',
+    'distributed-systems': 'Distributed Systems'
+  };
+  return typeMap[type] || type;
+};
+
+// Load test results for better relationship tracking
+const loadTestResults = async () => {
+  try {
+    const response = await axios.get('/api/test-results?limit=100');
+    if (response.data) {
+      // Update testResults with real data
+      testResults.value = response.data.map((r: any) => ({
+        ...r,
+        timestamp: r.timestamp ? new Date(r.timestamp) : new Date(),
+        passed: r.status === 'passed'
+      }));
+    }
+  } catch (err) {
+    console.error('Error loading test results:', err);
+  }
+};
+
+const getUsedByCount = (configId: string): number => {
+  return testSuites.value.filter(s => 
+    s.testConfigurationIds && s.testConfigurationIds.includes(configId)
+  ).length;
+};
+
+const getUsedBySuites = (configId: string): string[] => {
+  return testSuites.value
+    .filter(s => s.testConfigurationIds && s.testConfigurationIds.includes(configId))
+    .map(s => s.id);
+};
+
+const getSuiteName = (suiteId: string): string => {
+  const suite = testSuites.value.find(s => s.id === suiteId);
+  return suite?.name || suiteId;
+};
+
+const getLastRunForConfig = (configId: string): string => {
+  // This will be populated when we load test results
+  const lastRun = lastRunForConfigs.value[configId];
+  if (!lastRun) return 'Never';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - new Date(lastRun).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMs / 3600000);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(lastRun).toLocaleDateString();
+};
+
+const lastRunForConfigs = ref<Record<string, string>>({});
+
+const loadLastRunsForConfigs = async () => {
+  // Load last run timestamp for each configuration
+  const configIds = configurations.value.map(c => c.id);
+  
+  const promises = configIds.map(async (configId) => {
+    try {
+      const response = await axios.get(`/api/test-results/test-configuration/${configId}?limit=1`);
+      if (response.data && response.data.length > 0) {
+        lastRunForConfigs.value[configId] = response.data[0].timestamp;
+      }
+    } catch (err) {
+      // Ignore errors
+    }
+  });
+  
+  await Promise.all(promises);
+};
+
+// Configuration handlers
+const loadConfigurations = async () => {
+  loadingConfigs.value = true;
+  configsError.value = null;
+  try {
+    const response = await axios.get('/api/test-configurations');
+    configurations.value = response.data || [];
+    // Load last run timestamps for configurations
+    await loadLastRunsForConfigs();
+    // Reload last run statuses for types after configurations load
+    await loadLastRunStatusForTypes();
+  } catch (err: any) {
+    configsError.value = err.response?.data?.message || 'Failed to load configurations';
+    console.error('Error loading configurations:', err);
+  } finally {
+    loadingConfigs.value = false;
+  }
+};
+
+const handleEditConfig = (config: any) => {
+  editingConfig.value = config;
+  showCreateConfigModal.value = true;
+};
+
+const handleViewResult = (result: any) => {
+  selectedResult.value = result;
+  showResultDetail.value = true;
+};
+
+const editConfiguration = (config: any) => {
+  editingConfig.value = config;
+  showCreateConfigModal.value = true;
+};
+
+const testConfiguration = async (configId: string) => {
+  try {
+    const response = await axios.post(`/api/test-configurations/${configId}/test`);
+    // Refresh data after test
+    await loadConfigurations();
+    await loadLastRunStatusForTypes();
+    await loadTestResults();
+    // Show result or navigate to results
+    switchTab('results');
+  } catch (err: any) {
+    alert(err.response?.data?.message || 'Failed to run test');
+  }
+};
+
+const deleteConfiguration = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this configuration? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await axios.delete(`/api/test-configurations/${id}`);
+    await loadConfigurations();
+    await loadLastRunStatusForTypes(); // Refresh type statuses
+  } catch (err: any) {
+    alert(err.response?.data?.message || 'Failed to delete configuration');
+  }
+};
+
+const closeConfigModal = () => {
+  showCreateConfigModal.value = false;
+  editingConfig.value = null;
+};
+
+const handleSaveConfig = async (configData: any) => {
+  try {
+    if (editingConfig.value) {
+      await axios.put(`/api/test-configurations/${editingConfig.value.id}`, configData);
+    } else {
+      await axios.post('/api/test-configurations', configData);
+    }
+    await loadConfigurations();
+    await loadLastRunStatusForTypes(); // Refresh type statuses
+    closeConfigModal();
+  } catch (err: any) {
+    alert(err.response?.data?.message || 'Failed to save configuration');
+  }
 };
 </script>
 
@@ -1930,5 +2551,414 @@ const getScoreClass = (score: number): string => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Overview Tab Styles */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.stats-cards {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(79, 172, 254, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+.quick-actions,
+.recent-runs,
+.how-it-works {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.relationship-explanation {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.relationship-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.relationship-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(79, 172, 254, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(79, 172, 254, 0.3);
+}
+
+.relationship-icon .icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+}
+
+.relationship-content {
+  text-align: center;
+}
+
+.relationship-content h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.relationship-content p {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.relationship-arrow {
+  font-size: 1.5rem;
+  color: #4facfe;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .relationship-explanation {
+    flex-direction: column;
+  }
+  
+  .relationship-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+.health-dashboard {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(15, 20, 25, 0.4);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  color: #4facfe;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-card:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.empty-state-small {
+  padding: 24px;
+  text-align: center;
+  color: #718096;
+}
+
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.run-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  background: rgba(15, 20, 25, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.run-item:hover {
+  background: rgba(15, 20, 25, 0.6);
+}
+
+.run-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.run-name {
+  font-weight: 500;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.run-type {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.run-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.run-status.passed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.run-status.failed {
+  background: rgba(252, 129, 129, 0.2);
+  color: #fc8181;
+}
+
+.run-time {
+  color: #718096;
+  font-size: 0.75rem;
+}
+
+.health-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.health-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(15, 20, 25, 0.4);
+  border-radius: 8px;
+}
+
+.health-label {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.health-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.health-value.health-excellent {
+  color: #22c55e;
+}
+
+.health-value.health-good {
+  color: #4facfe;
+}
+
+.health-value.health-warning {
+  color: #fbbf24;
+}
+
+.health-value.health-poor {
+  color: #fc8181;
+}
+
+/* Test Types Tab Styles */
+.test-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+/* Configurations Tab Styles */
+.configurations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.configurations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.configuration-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.configuration-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(79, 172, 254, 0.4);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.config-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.config-title-section {
+  flex: 1;
+}
+
+.config-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.config-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+}
+
+.config-description {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin: 0 0 16px 0;
+}
+
+.config-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.meta-item {
+  display: flex;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.meta-label {
+  color: #718096;
+}
+
+.meta-value {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.used-by-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.suite-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(79, 172, 254, 0.15);
+  color: #4facfe;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: help;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

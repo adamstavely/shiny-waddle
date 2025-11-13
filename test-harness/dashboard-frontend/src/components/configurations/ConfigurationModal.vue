@@ -16,7 +16,6 @@
             <option value="rls-cls">RLS/CLS</option>
             <option value="network-policy">Network Policy</option>
             <option value="dlp">DLP</option>
-            <option value="identity-lifecycle">Identity Lifecycle</option>
             <option value="api-gateway">API Gateway</option>
             <option value="distributed-systems">Distributed Systems</option>
           </select>
@@ -54,7 +53,6 @@ import { Settings } from 'lucide-vue-next';
 import RLSCLSConfigForm from './RLSCLSConfigForm.vue';
 import NetworkPolicyConfigForm from './NetworkPolicyConfigForm.vue';
 import DLPConfigForm from './DLPConfigForm.vue';
-import IdentityLifecycleConfigForm from './IdentityLifecycleConfigForm.vue';
 import APIGatewayConfigForm from './APIGatewayConfigForm.vue';
 import DistributedSystemsConfigForm from './DistributedSystemsConfigForm.vue';
 
@@ -83,7 +81,6 @@ const configFormComponent = computed(() => {
     'rls-cls': RLSCLSConfigForm,
     'network-policy': NetworkPolicyConfigForm,
     'dlp': DLPConfigForm,
-    'identity-lifecycle': IdentityLifecycleConfigForm,
     'api-gateway': APIGatewayConfigForm,
     'distributed-systems': DistributedSystemsConfigForm,
   };

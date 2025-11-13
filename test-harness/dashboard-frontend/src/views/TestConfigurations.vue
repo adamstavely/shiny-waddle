@@ -217,7 +217,7 @@ const breadcrumbItems = [
 interface TestConfiguration {
   id: string;
   name: string;
-  type: 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway' | 'distributed-systems';
+  type: 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems';
   description?: string;
   enabled: boolean;
   createdAt: string;
@@ -243,7 +243,6 @@ const typeOptions = [
   { label: 'RLS/CLS', value: 'rls-cls' },
   { label: 'Network Policy', value: 'network-policy' },
   { label: 'DLP', value: 'dlp' },
-  { label: 'Identity Lifecycle', value: 'identity-lifecycle' },
   { label: 'API Gateway', value: 'api-gateway' },
   { label: 'Distributed Systems', value: 'distributed-systems' },
 ];
@@ -271,7 +270,6 @@ const getTypeLabel = (type: string) => {
     'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
     'dlp': 'DLP',
-    'identity-lifecycle': 'Identity Lifecycle',
     'api-gateway': 'API Gateway',
     'distributed-systems': 'Distributed Systems'
   };
@@ -681,11 +679,6 @@ onMounted(() => {
   border: 1px solid rgba(230, 81, 0, 0.3);
 }
 
-.type-identity-lifecycle {
-  background: rgba(56, 142, 60, 0.2);
-  color: #81c784;
-  border: 1px solid rgba(56, 142, 60, 0.3);
-}
 
 .type-api-gateway {
   background: rgba(194, 24, 91, 0.2);

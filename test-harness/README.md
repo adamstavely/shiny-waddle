@@ -23,7 +23,6 @@ Heimdall is an automated testing framework that validates applications are adher
 
 #### Access Control
 - **Policy Validation**: Detect policy conflicts, analyze coverage, test performance, run regression tests, and simulate policy changes
-- **Identity Lifecycle**: Test onboarding, role changes, offboarding, credential rotation, MFA enforcement, JIT access, and break-glass procedures
 - **Identity Providers**: Test AD group membership, Okta/Auth0/Azure AD policy synchronization, GCP IAM bindings, and cross-system policy validation
 
 #### Data Security

@@ -70,7 +70,6 @@ Heimdall is a comprehensive testing framework designed to:
 
 #### Access Control
 - **Policy Validation**: Detect policy conflicts, analyze coverage, test performance, run regression tests, simulate policy changes
-- **Identity Lifecycle**: Test onboarding, role changes, offboarding, credential rotation, MFA enforcement, JIT access, break-glass procedures
 - **Identity Providers**: Test AD group membership, Okta/Auth0/Azure AD policy synchronization, GCP IAM bindings, cross-system policy validation
 
 #### Data Security
@@ -108,7 +107,6 @@ The Dashboard API provides REST endpoints for:
 - **RLS/CLS Testing**: Test Row-Level and Column-Level Security
 - **Network Policy Testing**: Test firewall rules and network segmentation
 - **DLP Testing**: Test data loss prevention policies
-- **Identity Lifecycle Testing**: Test identity management workflows
 - **API Gateway Testing**: Test API gateway policies and rate limiting
 - **Distributed Systems Testing**: Test multi-region access control
 - **Policy Validation**: Detect conflicts and analyze coverage
@@ -494,7 +492,6 @@ Heimdall includes validators for:
 - **RLS/CLS**: Tests Row-Level and Column-Level Security
 - **Network Policy**: Tests firewall rules and segmentation
 - **DLP**: Tests data loss prevention
-- **Identity Lifecycle**: Tests identity management workflows
 - **API Gateway**: Tests API gateway policies
 - **Distributed Systems**: Tests multi-region access control
 
@@ -742,20 +739,7 @@ POST /api/test-configurations/:id/test
 }
 ```
 
-#### 4. Identity Lifecycle Configuration
-
-```json
-{
-  "name": "Identity Management",
-  "type": "identity-lifecycle",
-  "workflows": {
-    "onboarding": {...},
-    "offboarding": {...}
-  }
-}
-```
-
-#### 5. API Gateway Configuration
+#### 4. API Gateway Configuration
 
 ```json
 {
@@ -766,7 +750,7 @@ POST /api/test-configurations/:id/test
 }
 ```
 
-#### 6. Distributed Systems Configuration
+#### 5. Distributed Systems Configuration
 
 ```json
 {

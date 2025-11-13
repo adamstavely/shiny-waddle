@@ -1,6 +1,6 @@
 import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, User, ServiceMeshConfig } from '../../../../core/types';
 
-export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'identity-lifecycle' | 'api-gateway' | 'distributed-systems';
+export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems';
 
 export interface BaseTestConfigurationEntity {
   id: string;
@@ -87,36 +87,6 @@ export interface DLPConfigurationEntity extends BaseTestConfigurationEntity {
   };
 }
 
-export interface IdentityLifecycleConfigurationEntity extends BaseTestConfigurationEntity {
-  type: 'identity-lifecycle';
-  onboardingWorkflow?: {
-    steps: Array<{
-      name: string;
-      required: boolean;
-      description?: string;
-    }>;
-  };
-  pamConfig?: {
-    maxJITDuration?: number;
-    requireApproval?: boolean;
-    emergencyAccessEnabled?: boolean;
-  };
-  credentialRotationRules?: {
-    passwordMaxAge?: number;
-    apiKeyMaxAge?: number;
-    requireMFA?: boolean;
-  };
-  testLogic?: {
-    validateWorkflow?: boolean;
-    checkMFA?: boolean;
-    customValidations?: Array<{
-      name: string;
-      condition: string;
-      description?: string;
-    }>;
-  };
-}
-
 export interface APIGatewayConfigurationEntity extends BaseTestConfigurationEntity {
   type: 'api-gateway';
   rateLimitConfig?: {
@@ -183,7 +153,6 @@ export type TestConfigurationEntity =
   | RLSCLSConfigurationEntity
   | NetworkPolicyConfigurationEntity
   | DLPConfigurationEntity
-  | IdentityLifecycleConfigurationEntity
   | APIGatewayConfigurationEntity
   | DistributedSystemsConfigurationEntity;
 

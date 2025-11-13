@@ -16,7 +16,6 @@ import {
   RLSCLSConfigurationEntity,
   NetworkPolicyConfigurationEntity,
   DLPConfigurationEntity,
-  IdentityLifecycleConfigurationEntity,
   APIGatewayConfigurationEntity,
   DistributedSystemsConfigurationEntity,
   RegionConfig,
@@ -298,64 +297,6 @@ export class CreateDLPConfigurationDto extends BaseConfigurationDto {
   testLogic?: DLPTestLogicDto;
 }
 
-class IdentityLifecycleTestLogicDto {
-  @IsOptional()
-  @IsBoolean()
-  validateWorkflow?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  checkMFA?: boolean;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Object)
-  customValidations?: Array<{
-    name: string;
-    condition: string;
-    description?: string;
-  }>;
-}
-
-export class CreateIdentityLifecycleConfigurationDto extends BaseConfigurationDto {
-  @IsNotEmpty()
-  @IsEnum(['identity-lifecycle'])
-  type: 'identity-lifecycle';
-
-  @IsOptional()
-  @IsObject()
-  onboardingWorkflow?: {
-    steps: Array<{
-      name: string;
-      required: boolean;
-      description?: string;
-    }>;
-  };
-
-  @IsOptional()
-  @IsObject()
-  pamConfig?: {
-    maxJITDuration?: number;
-    requireApproval?: boolean;
-    emergencyAccessEnabled?: boolean;
-  };
-
-  @IsOptional()
-  @IsObject()
-  credentialRotationRules?: {
-    passwordMaxAge?: number;
-    apiKeyMaxAge?: number;
-    requireMFA?: boolean;
-  };
-
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => IdentityLifecycleTestLogicDto)
-  testLogic?: IdentityLifecycleTestLogicDto;
-}
-
 class APIGatewayTestLogicDto {
   @IsOptional()
   @IsBoolean()
@@ -524,7 +465,6 @@ export type CreateTestConfigurationDto =
   | CreateRLSCLSConfigurationDto
   | CreateNetworkPolicyConfigurationDto
   | CreateDLPConfigurationDto
-  | CreateIdentityLifecycleConfigurationDto
   | CreateAPIGatewayConfigurationDto
   | CreateDistributedSystemsConfigurationDto;
 

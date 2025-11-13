@@ -54,31 +54,23 @@
               <FileSearch class="item-icon" />
               <span>Policy Validation</span>
             </a>
-            <a
-              href="/identity-lifecycle"
-              @click.prevent="handleNavClick('/identity-lifecycle')"
-              :class="['drawer-item', isActive('/identity-lifecycle') ? 'drawer-item-active' : '']"
-            >
-              <UserCog class="item-icon" />
-              <span>Identity Lifecycle</span>
-            </a>
           </div>
         </div>
 
-        <!-- App Security Tests -->
+        <!-- Tests -->
         <div class="category-section">
           <div class="section-header">
-            <Lock class="section-icon" />
-            <h3 class="section-title">App Security</h3>
+            <TestTube class="section-icon" />
+            <h3 class="section-title">Tests</h3>
           </div>
           <div class="category-items">
             <a
-              href="/api-security"
-              @click.prevent="handleNavClick('/api-security')"
-              :class="['drawer-item', isActive('/api-security') ? 'drawer-item-active' : '']"
+              href="/tests"
+              @click.prevent="handleNavClick('/tests')"
+              :class="['drawer-item', isActive('/tests') ? 'drawer-item-active' : '']"
             >
-              <Lock class="item-icon" />
-              <span>API Security</span>
+              <TestTube class="item-icon" />
+              <span>All Tests</span>
             </a>
             <a
               href="/users"
@@ -89,32 +81,6 @@
               <span>User Simulation</span>
             </a>
             <a
-              href="/api-gateway"
-              @click.prevent="handleNavClick('/api-gateway')"
-              :class="['drawer-item', isActive('/api-gateway') ? 'drawer-item-active' : '']"
-            >
-              <Server class="item-icon" />
-              <span>API Gateway</span>
-            </a>
-            <a
-              href="/dlp"
-              @click.prevent="handleNavClick('/dlp')"
-              :class="['drawer-item', isActive('/dlp') ? 'drawer-item-active' : '']"
-            >
-              <FileX class="item-icon" />
-              <span>DLP</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Platform Config Tests -->
-        <div class="category-section">
-          <div class="section-header">
-            <Settings class="section-icon" />
-            <h3 class="section-title">Platform Config</h3>
-          </div>
-          <div class="category-items">
-            <a
               href="/distributed-systems"
               @click.prevent="handleNavClick('/distributed-systems')"
               :class="['drawer-item', isActive('/distributed-systems') ? 'drawer-item-active' : '']"
@@ -122,24 +88,6 @@
               <Globe class="item-icon" />
               <span>Distributed Systems</span>
             </a>
-            <a
-              href="/network-policies"
-              @click.prevent="handleNavClick('/network-policies')"
-              :class="['drawer-item', isActive('/network-policies') ? 'drawer-item-active' : '']"
-            >
-              <Network class="item-icon" />
-              <span>Network Policies</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Data Security Tests -->
-        <div class="category-section">
-          <div class="section-header">
-            <Database class="section-icon" />
-            <h3 class="section-title">Data Security</h3>
-          </div>
-          <div class="category-items">
             <a
               href="/rls-cls"
               @click.prevent="handleNavClick('/rls-cls')"
@@ -261,6 +209,14 @@
             <TrendingUp class="item-icon" />
             <span>Compliance Trends</span>
           </a>
+          <a
+            href="/violations"
+            @click.prevent="handleNavClick('/violations')"
+            :class="['drawer-item', isActive('/violations') ? 'drawer-item-active' : '']"
+          >
+            <AlertTriangle class="item-icon" />
+            <span>Violations</span>
+          </a>
         </div>
 
         <!-- Compliance Frameworks -->
@@ -308,7 +264,8 @@ import {
   TestTube,
   History,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -319,7 +276,7 @@ const activeCategory = ref<string | null>(null);
 
 // Test pages
 const testPages = [
-  '/policy-validation', '/identity-lifecycle',
+  '/policy-validation',
   '/api-security', '/users', '/api-gateway', '/dlp',
   '/distributed-systems', '/network-policies',
   '/rls-cls'
@@ -336,7 +293,8 @@ const configPages = [
 const compliancePages = [
   '/compliance',
   '/compliance-trends',
-  '/compliance/nist-800-207'
+  '/compliance/nist-800-207',
+  '/violations'
 ];
 
 // Determine active category based on current route

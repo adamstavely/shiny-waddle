@@ -1,5 +1,47 @@
 [
   {
+    "id": "420540a0-edf9-44b3-859e-95e44b5d87ad",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/network-policy/test-firewall-rules",
+    "description": "Data write operation: POST /api/network-policy/test-firewall-rules",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/network-policy/test-firewall-rules",
+    "timestamp": "2025-11-13T03:20:03.216Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/network-policy/test-firewall-rules",
+      "query": {},
+      "bodySize": "174"
+    },
+    "requestId": "req-1763004003215-z3410cidp",
+    "responseCode": 200,
+    "duration": 1
+  },
+  {
+    "id": "e4be42c9-f4e3-4a48-a794-447f4b617f95",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/dlp/test-exfiltration",
+    "description": "Data write operation: POST /api/dlp/test-exfiltration",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/dlp/test-exfiltration",
+    "timestamp": "2025-11-13T03:19:34.159Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/dlp/test-exfiltration",
+      "query": {},
+      "bodySize": "180"
+    },
+    "requestId": "req-1763003974157-p0wq96a2t",
+    "responseCode": 200,
+    "duration": 1
+  },
+  {
     "id": "418bf4c2-3c16-40de-b6c2-e489b2797677",
     "type": "data-write",
     "severity": "medium",

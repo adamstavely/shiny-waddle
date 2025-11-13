@@ -1,7 +1,6 @@
 import {
   RLSCLSConfigurationEntity,
   DLPConfigurationEntity,
-  IdentityLifecycleConfigurationEntity,
   APIGatewayConfigurationEntity,
   NetworkPolicyConfigurationEntity,
   TestConfigurationEntity,
@@ -52,24 +51,6 @@ export function validateDLPConfig(config: DLPConfigurationEntity): ValidationErr
       field: 'patterns',
       message: 'DLP patterns are recommended for effective data loss prevention testing',
       suggestion: 'Add DLP patterns to detect sensitive data (e.g., SSN, credit card numbers)',
-    });
-  }
-
-  return errors;
-}
-
-export function validateIdentityLifecycleConfig(
-  config: IdentityLifecycleConfigurationEntity,
-): ValidationError[] {
-  const errors: ValidationError[] = [];
-
-  // Identity lifecycle configs are flexible - most fields are optional
-  // But onboarding workflow is recommended for onboarding tests
-  if (!config.onboardingWorkflow || !config.onboardingWorkflow.steps || config.onboardingWorkflow.steps.length === 0) {
-    errors.push({
-      field: 'onboardingWorkflow',
-      message: 'Onboarding workflow is recommended for identity lifecycle tests',
-      suggestion: 'Add workflow steps to validate the onboarding process',
     });
   }
 
@@ -131,8 +112,6 @@ export function validateConfiguration(config: TestConfigurationEntity): Validati
       return validateRLSCLSConfig(config as RLSCLSConfigurationEntity);
     case 'dlp':
       return validateDLPConfig(config as DLPConfigurationEntity);
-    case 'identity-lifecycle':
-      return validateIdentityLifecycleConfig(config as IdentityLifecycleConfigurationEntity);
     case 'api-gateway':
       return validateAPIGatewayConfig(config as APIGatewayConfigurationEntity);
     case 'network-policy':

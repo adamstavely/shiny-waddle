@@ -8,7 +8,6 @@ import {
   RLSCLSConfigurationEntity,
   NetworkPolicyConfigurationEntity,
   DLPConfigurationEntity,
-  IdentityLifecycleConfigurationEntity,
   APIGatewayConfigurationEntity,
   DistributedSystemsConfigurationEntity,
 } from './entities/test-configuration.entity';
@@ -17,13 +16,11 @@ import {
   CreateRLSCLSConfigurationDto,
   CreateNetworkPolicyConfigurationDto,
   CreateDLPConfigurationDto,
-  CreateIdentityLifecycleConfigurationDto,
   CreateAPIGatewayConfigurationDto,
   CreateDistributedSystemsConfigurationDto,
 } from './dto/create-test-configuration.dto';
 import { RLSCLSService } from '../rls-cls/rls-cls.service';
 import { DLPService } from '../dlp/dlp.service';
-import { IdentityLifecycleService } from '../identity-lifecycle/identity-lifecycle.service';
 import { APIGatewayService } from '../api-gateway/api-gateway.service';
 import { NetworkPolicyService } from '../network-policy/network-policy.service';
 import { DistributedSystemsService } from '../distributed-systems/distributed-systems.service';
@@ -42,8 +39,6 @@ export class TestConfigurationsService {
     private readonly rlsClsService: RLSCLSService,
     @Inject(forwardRef(() => DLPService))
     private readonly dlpService: DLPService,
-    @Inject(forwardRef(() => IdentityLifecycleService))
-    private readonly identityLifecycleService: IdentityLifecycleService,
     @Inject(forwardRef(() => APIGatewayService))
     private readonly apiGatewayService: APIGatewayService,
     @Inject(forwardRef(() => NetworkPolicyService))
@@ -223,34 +218,6 @@ export class TestConfigurationsService {
       updatedAt: now,
     };
 
-    // Default Identity Lifecycle Configuration
-    const defaultIdentityLifecycle: IdentityLifecycleConfigurationEntity = {
-      id: uuidv4(),
-      name: 'Default Identity Lifecycle',
-      type: 'identity-lifecycle',
-      description: 'Default configuration for identity lifecycle testing',
-      onboardingWorkflow: {
-        steps: [
-          { name: 'create-account', required: true },
-          { name: 'assign-role', required: true },
-          { name: 'enable-mfa', required: true },
-        ],
-      },
-      pamConfig: {
-        maxJITDuration: 60,
-        requireApproval: true,
-        emergencyAccessEnabled: true,
-      },
-      credentialRotationRules: {
-        passwordMaxAge: 90,
-        apiKeyMaxAge: 365,
-        requireMFA: true,
-      },
-      enabled: true,
-      createdAt: now,
-      updatedAt: now,
-    };
-
     // Default API Gateway Configuration
     const defaultAPIGateway: APIGatewayConfigurationEntity = {
       id: uuidv4(),
@@ -284,7 +251,6 @@ export class TestConfigurationsService {
       defaultRLSCLS,
       defaultNetworkPolicy,
       defaultDLP,
-      defaultIdentityLifecycle,
       defaultAPIGateway,
     ];
     
@@ -388,24 +354,6 @@ export class TestConfigurationsService {
           createdAt: now,
           updatedAt: now,
         } as DLPConfigurationEntity;
-        break;
-      }
-      case 'identity-lifecycle': {
-        const ilDto = dto as CreateIdentityLifecycleConfigurationDto;
-        newConfig = {
-          id: uuidv4(),
-          name: ilDto.name,
-          type: 'identity-lifecycle',
-          description: ilDto.description,
-          tags: ilDto.tags || [],
-          onboardingWorkflow: ilDto.onboardingWorkflow,
-          pamConfig: ilDto.pamConfig,
-          credentialRotationRules: ilDto.credentialRotationRules,
-          testLogic: ilDto.testLogic,
-          enabled: ilDto.enabled !== undefined ? ilDto.enabled : true,
-          createdAt: now,
-          updatedAt: now,
-        } as IdentityLifecycleConfigurationEntity;
         break;
       }
       case 'api-gateway': {
@@ -581,12 +529,6 @@ export class TestConfigurationsService {
           const dlpConfig = config as DLPConfigurationEntity;
           // Run exfiltration test as the primary test
           result = await this.dlpService.testExfiltration({ configId: id });
-          break;
-        }
-        case 'identity-lifecycle': {
-          const ilConfig = config as IdentityLifecycleConfigurationEntity;
-          // Run onboarding test as the primary test
-          result = await this.identityLifecycleService.testOnboarding({ configId: id });
           break;
         }
         case 'api-gateway': {

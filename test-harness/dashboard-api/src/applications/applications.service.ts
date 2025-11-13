@@ -24,7 +24,6 @@ export class ApplicationsService {
     'rls-cls': ['rls-cls', 'access-control'],
     'network-policy': ['network-policy'],
     'dlp': ['dlp'],
-    'identity-lifecycle': ['identity-lifecycle'],
     'api-gateway': ['api-gateway'],
     'distributed-systems': ['distributed-systems', 'access-control'],
   };

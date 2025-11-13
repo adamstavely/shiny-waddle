@@ -314,32 +314,6 @@ export interface NetworkPolicyTest {
   policyApplied?: string;
 }
 
-// Identity Lifecycle Types
-export interface IdentityLifecycleEvent {
-  type: 'onboarding' | 'role-change' | 'offboarding' | 'credential-rotation' | 'mfa-enforcement';
-  userId: string;
-  timestamp: Date;
-  details: Record<string, any>;
-}
-
-export interface PAMRequest {
-  userId: string;
-  resource: string;
-  reason: string;
-  duration: number; // minutes
-  approver?: string;
-  emergency?: boolean;
-}
-
-export interface PAMWorkflow {
-  id: string;
-  name: string;
-  steps: Array<{
-    type: 'approval' | 'notification' | 'validation';
-    config: Record<string, any>;
-  }>;
-}
-
 export interface IdentityVerification {
   userId: string;
   method: 'password' | 'mfa' | 'certificate' | 'biometric';

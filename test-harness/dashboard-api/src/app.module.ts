@@ -21,7 +21,6 @@ import { ScheduledReportsModule } from './scheduled-reports/scheduled-reports.mo
 import { SecurityModule } from './security/security.module';
 import { RLSCLSModule } from './rls-cls/rls-cls.module';
 import { PolicyValidationModule } from './policy-validation/policy-validation.module';
-import { IdentityLifecycleModule } from './identity-lifecycle/identity-lifecycle.module';
 import { IdentityProviderModule } from './identity-providers/identity-provider.module';
 import { NetworkPolicyModule } from './network-policy/network-policy.module';
 import { APIGatewayModule } from './api-gateway/api-gateway.module';
@@ -58,7 +57,6 @@ import { AppController } from './app.controller';
     SecurityModule,
     RLSCLSModule,
     PolicyValidationModule,
-    IdentityLifecycleModule,
     IdentityProviderModule,
     NetworkPolicyModule,
     APIGatewayModule,

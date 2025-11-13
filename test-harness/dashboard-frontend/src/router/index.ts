@@ -36,7 +36,6 @@ import NotFound from '../views/NotFound.vue';
 import AccessDenied from '../views/AccessDenied.vue';
 import RLSCLS from '../views/RLSCLS.vue';
 import PolicyValidation from '../views/PolicyValidation.vue';
-import IdentityLifecycle from '../views/IdentityLifecycle.vue';
 import IdentityProviders from '../views/IdentityProviders.vue';
 import NetworkPolicies from '../views/NetworkPolicies.vue';
 import APIGateway from '../views/APIGateway.vue';
@@ -189,8 +188,10 @@ const router = createRouter({
     },
     {
       path: '/api-security',
-      name: 'ApiSecurity',
-      component: ApiSecurity,
+      redirect: () => {
+        console.warn('Route /api-security is deprecated. Use /tests?tab=test-types instead.');
+        return { path: '/tests', query: { tab: 'test-types', type: 'api-security' } };
+      }
     },
     {
       path: '/settings',
@@ -258,29 +259,30 @@ const router = createRouter({
       component: PolicyValidation,
     },
     {
-      path: '/identity-lifecycle',
-      name: 'IdentityLifecycle',
-      component: IdentityLifecycle,
-    },
-    {
       path: '/identity-providers',
       name: 'IdentityProviders',
       component: IdentityProviders,
     },
     {
       path: '/network-policies',
-      name: 'NetworkPolicies',
-      component: NetworkPolicies,
+      redirect: () => {
+        console.warn('Route /network-policies is deprecated. Use /tests?tab=test-types instead.');
+        return { path: '/tests', query: { tab: 'test-types', type: 'network-policy' } };
+      }
     },
     {
       path: '/api-gateway',
-      name: 'APIGateway',
-      component: APIGateway,
+      redirect: () => {
+        console.warn('Route /api-gateway is deprecated. Use /tests?tab=test-types instead.');
+        return { path: '/tests', query: { tab: 'test-types', type: 'api-gateway' } };
+      }
     },
     {
       path: '/dlp',
-      name: 'DLP',
-      component: DLP,
+      redirect: () => {
+        console.warn('Route /dlp is deprecated. Use /tests?tab=test-types instead.');
+        return { path: '/tests', query: { tab: 'test-types', type: 'dlp' } };
+      }
     },
     {
       path: '/compliance/nist-800-207',
@@ -294,8 +296,10 @@ const router = createRouter({
     },
     {
       path: '/test-configurations',
-      name: 'TestConfigurations',
-      component: TestConfigurations,
+      redirect: () => {
+        console.warn('Route /test-configurations is deprecated. Use /tests?tab=configurations instead.');
+        return { path: '/tests', query: { tab: 'configurations' } };
+      }
     },
     {
       path: '/test-history',
