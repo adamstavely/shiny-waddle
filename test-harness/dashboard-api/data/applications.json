@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "test",
+    "name": "test",
+    "type": "web",
+    "status": "active",
+    "config": {},
+    "registeredAt": "2025-11-13T02:29:02.918Z",
+    "updatedAt": "2025-11-13T02:29:02.918Z"
+  }
+]

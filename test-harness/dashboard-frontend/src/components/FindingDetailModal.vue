@@ -149,6 +149,12 @@
               </div>
             </div>
 
+            <!-- Approval Status -->
+            <div v-if="finding.status === 'risk-accepted' || finding.status === 'false-positive' || showApprovalStatus" class="section">
+              <h3>Approval Status</h3>
+              <ApprovalWorkflowStatus :findingId="finding.id" ref="approvalStatusRef" />
+            </div>
+
             <!-- Remediation -->
             <div class="section">
               <h3>Remediation</h3>
@@ -176,6 +182,9 @@
                     Effort: {{ finding.remediation.estimatedEffort }}
                   </span>
                 </div>
+                <button @click="showRemediationHelp = true" class="btn-help">
+                  Get Help Resolving This Finding
+                </button>
               </div>
             </div>
 
@@ -221,8 +230,11 @@
             <button @click="updateStatus('resolved')" class="btn-secondary" v-if="finding.status !== 'resolved'">
               Mark Resolved
             </button>
-            <button @click="updateStatus('false-positive')" class="btn-secondary" v-if="finding.status !== 'false-positive'">
-              Mark False Positive
+            <button @click="requestRiskAcceptance" class="btn-secondary" v-if="finding.status !== 'risk-accepted'">
+              Request Risk Acceptance
+            </button>
+            <button @click="requestFalsePositive" class="btn-secondary" v-if="finding.status !== 'false-positive'">
+              Mark as False Positive
             </button>
             <button @click="close" class="btn-primary">
               Close
@@ -231,14 +243,48 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Risk Acceptance Request Modal -->
+    <RiskAcceptanceRequestModal
+      :isOpen="showRiskAcceptanceModal"
+      :finding="finding"
+      type="risk-acceptance"
+      @update:isOpen="showRiskAcceptanceModal = false"
+      @submitted="handleApprovalSubmitted"
+    />
+
+    <!-- False Positive Request Modal -->
+    <RiskAcceptanceRequestModal
+      :isOpen="showFalsePositiveModal"
+      :finding="finding"
+      type="false-positive"
+      @update:isOpen="showFalsePositiveModal = false"
+      @submitted="handleApprovalSubmitted"
+    />
+
+    <!-- Remediation Help Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showRemediationHelp && finding" class="modal-overlay" @click="showRemediationHelp = false">
+          <FindingRemediationHelp
+            :findingId="finding.id"
+            @close="showRemediationHelp = false"
+          />
+        </div>
+      </Transition>
+    </Teleport>
   </Teleport>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Teleport } from 'vue';
 import { ShieldAlert, X, Download } from 'lucide-vue-next';
 import axios from 'axios';
 import EnhancedRiskScore from './EnhancedRiskScore.vue';
+import ApprovalWorkflowStatus from './ApprovalWorkflowStatus.vue';
+import RiskAcceptanceRequestModal from './RiskAcceptanceRequestModal.vue';
+import FindingRemediationHelp from './FindingRemediationHelp.vue';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -250,7 +296,16 @@ const emit = defineEmits<{
   'updated': [];
 }>();
 
+const showRiskAcceptanceModal = ref(false);
+const showFalsePositiveModal = ref(false);
+const showRemediationHelp = ref(false);
+const showApprovalStatus = ref(false);
+const approvalStatusRef = ref<any>(null);
+
 const close = () => {
+  showRiskAcceptanceModal.value = false;
+  showFalsePositiveModal.value = false;
+  showRemediationHelp.value = false;
   emit('update:isOpen', false);
 };
 
@@ -258,10 +313,28 @@ const updateStatus = async (status: string) => {
   try {
     await axios.patch(`/api/unified-findings/${props.finding.id}`, { status });
     emit('updated');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to update finding:', error);
-    alert('Failed to update finding. Please try again.');
+    const errorMessage = error.response?.data?.message || 'Failed to update finding. Please try again.';
+    alert(errorMessage);
   }
+};
+
+const requestRiskAcceptance = () => {
+  showRiskAcceptanceModal.value = true;
+};
+
+const requestFalsePositive = () => {
+  showFalsePositiveModal.value = true;
+};
+
+const handleApprovalSubmitted = () => {
+  // Refresh approval status
+  if (approvalStatusRef.value) {
+    approvalStatusRef.value.refresh();
+  }
+  showApprovalStatus.value = true;
+  emit('updated');
 };
 
 const downloadECS = async () => {
@@ -698,6 +771,24 @@ const getRiskScoreClass = (score: number): string => {
 
 .btn-secondary:hover {
   background: rgba(79, 172, 254, 0.1);
+}
+
+.btn-help {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-help:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.5);
 }
 
 .fade-enter-active,

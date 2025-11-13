@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { UnifiedFinding } from '../../../core/unified-finding-schema';
@@ -30,10 +30,14 @@ import {
   AttackPathAnalyzer,
   AttackPathAnalysis,
 } from '../../../services/attack-path-analyzer';
+import { NotificationsService } from '../notifications/notifications.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class UnifiedFindingsService {
+  private readonly logger = new Logger(UnifiedFindingsService.name);
   private readonly findingsPath = path.join(process.cwd(), '..', '..', 'unified-findings.json');
+  private readonly complianceScoresHistoryPath = path.join(process.cwd(), '..', '..', 'data', 'compliance-scores-history.json');
   private normalizationEngine: NormalizationEngine;
   private ecsAdapter: ECSAdapter;
   private riskScorer: EnhancedRiskScorer;
@@ -43,7 +47,11 @@ export class UnifiedFindingsService {
 
   constructor(
     @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService
+    private readonly applicationsService: ApplicationsService,
+    @Inject(forwardRef(() => NotificationsService))
+    private readonly notificationsService: NotificationsService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService
   ) {
     this.normalizationEngine = new NormalizationEngine({
       deduplication: {
@@ -98,7 +106,7 @@ export class UnifiedFindingsService {
         'utf-8'
       );
     } catch (error) {
-      console.error('Failed to save findings:', error);
+      this.logger.error('Failed to save findings:', error);
     }
   }
 
@@ -142,14 +150,41 @@ export class UnifiedFindingsService {
     // Merge with existing findings (deduplication handled by engine)
     for (const finding of normalized) {
       const existingIndex = this.findings.findIndex(f => f.id === finding.id);
+      const isNew = existingIndex < 0;
+      
       if (existingIndex >= 0) {
         this.findings[existingIndex] = finding;
       } else {
         this.findings.push(finding);
       }
+
+      // Notify about new critical findings
+      if (isNew && finding.severity === 'critical' && this.notificationsService) {
+        try {
+          const userIds = await this.getUsersToNotify(
+            finding.asset.applicationId ? [finding.asset.applicationId] : undefined
+          );
+          for (const userId of userIds) {
+            await this.notificationsService.notifyCriticalFinding(
+              userId,
+              finding.id,
+              finding.title
+            );
+          }
+        } catch (err) {
+          this.logger.error('Failed to notify about critical finding:', err);
+          // Don't throw - notification failures shouldn't break ingestion
+        }
+      }
     }
 
     await this.saveFindings();
+    
+    // Store compliance score after new findings
+    this.storeComplianceScoreAfterUpdate().catch(err => {
+      this.logger.error('Failed to store compliance score after ingestion:', err);
+    });
+    
     return normalized;
   }
 
@@ -159,14 +194,150 @@ export class UnifiedFindingsService {
       throw new Error('Finding not found');
     }
 
+    const currentFinding = this.findings[index];
+
+    // Block direct status changes to 'risk-accepted' or 'false-positive'
+    // These require approval workflow
+    if (updates.status === 'risk-accepted' || updates.status === 'false-positive') {
+      if (currentFinding.status !== updates.status) {
+        throw new Error(
+          `Cannot directly change status to '${updates.status}'. Please create an approval request first.`
+        );
+      }
+    }
+
     this.findings[index] = {
-      ...this.findings[index],
+      ...currentFinding,
       ...updates,
       updatedAt: new Date(),
     };
 
     await this.saveFindings();
+
+    // Store compliance score after update (async, don't wait)
+    this.storeComplianceScoreAfterUpdate().catch(err => {
+      this.logger.error('Failed to store compliance score after update:', err);
+    });
+
     return this.findings[index];
+  }
+
+  /**
+   * Store compliance score after finding update
+   */
+  private async storeComplianceScoreAfterUpdate(): Promise<void> {
+    try {
+      // Store overall score
+      const overallScore = this.calculateComplianceScore(this.findings);
+      const history = await this.loadComplianceScoreHistory();
+      const previousScore = history.length > 0 ? history[history.length - 1].score : overallScore;
+      
+      await this.storeComplianceScore(overallScore);
+
+      // Check for score drop and notify
+      if (this.notificationsService && overallScore < previousScore) {
+        const scoreChange = overallScore - previousScore;
+        
+        // Get users to notify (all users, since this is overall score)
+        const userIds = await this.getUsersToNotify();
+        
+        for (const userId of userIds) {
+          try {
+            // Check each user's preferences individually
+            const preferences = this.notificationsService.getUserPreferences(userId);
+            
+            // Only notify if drop exceeds this user's threshold
+            if (Math.abs(scoreChange) >= preferences.scoreDropThreshold) {
+              await this.notificationsService.notifyScoreDrop(
+                userId,
+                scoreChange,
+                previousScore,
+                overallScore
+              );
+            }
+          } catch (err) {
+            this.logger.error(`Failed to notify user ${userId} about score drop:`, err);
+            // Don't throw - notification failures shouldn't break finding updates
+          }
+        }
+      }
+
+      // Store per-application scores
+      const appGroups = new Map<string, UnifiedFinding[]>();
+      this.findings.forEach(f => {
+        if (f.asset.applicationId) {
+          if (!appGroups.has(f.asset.applicationId)) {
+            appGroups.set(f.asset.applicationId, []);
+          }
+          appGroups.get(f.asset.applicationId)!.push(f);
+        }
+      });
+
+      for (const [appId, appFindings] of appGroups.entries()) {
+        const appScore = this.calculateComplianceScore(appFindings);
+        await this.storeComplianceScore(appScore, [appId]);
+        
+        // Check for application-specific score drops
+        const appHistory = await this.loadComplianceScoreHistory();
+        const appPreviousScore = appHistory
+          .filter(h => h.applicationIds.includes(appId))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.score;
+        
+        if (appPreviousScore !== undefined && appScore < appPreviousScore) {
+          const appScoreChange = appScore - appPreviousScore;
+          
+          // Get users associated with this application
+          const userIds = await this.getUsersToNotify([appId]);
+          
+          for (const userId of userIds) {
+            try {
+              // Check each user's preferences individually
+              const preferences = this.notificationsService.getUserPreferences(userId);
+              
+              // Only notify if drop exceeds this user's threshold
+              if (Math.abs(appScoreChange) >= preferences.scoreDropThreshold) {
+                await this.notificationsService.notifyScoreDrop(
+                  userId,
+                  appScoreChange,
+                  appPreviousScore,
+                  appScore,
+                  appId
+                );
+              }
+            } catch (err) {
+              this.logger.error(`Failed to notify user ${userId} about app score drop:`, err);
+              // Don't throw - notification failures shouldn't break finding updates
+            }
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error in storeComplianceScoreAfterUpdate:', error);
+      // Don't throw - score tracking failures shouldn't break finding updates
+    }
+  }
+
+  /**
+   * Get users to notify for score drops
+   * Returns user IDs associated with the given applications/teams
+   */
+  private async getUsersToNotify(applicationIds?: string[], teamNames?: string[]): Promise<string[]> {
+    try {
+      const users = await this.usersService.getUsersByApplicationsAndTeams(applicationIds, teamNames);
+      
+      if (users.length === 0) {
+        this.logger.warn(
+          `No users found for applications: ${applicationIds?.join(', ') || 'none'}, teams: ${teamNames?.join(', ') || 'none'}`
+        );
+        return [];
+      }
+
+      return users.map(u => u.id);
+    } catch (error) {
+      this.logger.error('Error getting users to notify:', error);
+      // Return empty array on error - don't break notification flow
+      return [];
+    }
   }
 
   async deleteFinding(id: string): Promise<void> {
@@ -473,6 +644,313 @@ export class UnifiedFindingsService {
     }
 
     return prioritized;
+  }
+
+  /**
+   * Developer Dashboard methods
+   */
+
+  /**
+   * Calculate compliance score based on findings
+   * Score = (resolved + risk-accepted) / total * 100
+   */
+  calculateComplianceScore(findings: UnifiedFinding[]): number {
+    if (findings.length === 0) return 100;
+
+    const resolvedCount = findings.filter(f => 
+      f.status === 'resolved' || f.status === 'risk-accepted'
+    ).length;
+
+    return Math.round((resolvedCount / findings.length) * 100);
+  }
+
+  /**
+   * Get developer dashboard data
+   */
+  async getDeveloperDashboard(applicationIds?: string[], teamNames?: string[]): Promise<{
+    currentScore: number;
+    previousScore: number;
+    trend: 'up' | 'down' | 'stable';
+    scoreChange: number;
+    findings: {
+      total: number;
+      bySeverity: Record<string, number>;
+      byStatus: Record<string, number>;
+    };
+    trends: Array<{
+      date: string;
+      score: number;
+    }>;
+    recentFindings: UnifiedFinding[];
+  }> {
+    // Filter findings by application/team
+    let filteredFindings = [...this.findings];
+
+    if (applicationIds && applicationIds.length > 0) {
+      filteredFindings = filteredFindings.filter(f => 
+        f.asset.applicationId && applicationIds.includes(f.asset.applicationId)
+      );
+    }
+
+    if (teamNames && teamNames.length > 0) {
+      // Get applications for these teams
+      const teamApplications = await Promise.all(
+        teamNames.map(team => this.applicationsService.findByTeam(team))
+      );
+      const teamAppIds = new Set(
+        teamApplications.flat().map(app => app.id)
+      );
+      filteredFindings = filteredFindings.filter(f =>
+        f.asset.applicationId && teamAppIds.has(f.asset.applicationId)
+      );
+    }
+
+    // Calculate current score
+    const currentScore = this.calculateComplianceScore(filteredFindings);
+
+    // Get historical scores
+    const history = await this.loadComplianceScoreHistory();
+    const previousScore = history.length > 0 
+      ? history[history.length - 1].score 
+      : currentScore;
+
+    // Calculate trend
+    const scoreChange = currentScore - previousScore;
+    let trend: 'up' | 'down' | 'stable' = 'stable';
+    if (scoreChange > 0) trend = 'up';
+    else if (scoreChange < 0) trend = 'down';
+
+    // Get findings breakdown
+    const bySeverity: Record<string, number> = {};
+    const byStatus: Record<string, number> = {};
+
+    filteredFindings.forEach(f => {
+      bySeverity[f.severity] = (bySeverity[f.severity] || 0) + 1;
+      byStatus[f.status] = (byStatus[f.status] || 0) + 1;
+    });
+
+    // Get trends (last 30 days)
+    const trends = await this.getComplianceTrends(30, applicationIds, teamNames);
+
+    // Get recent findings (last 10)
+    const recentFindings = filteredFindings
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, 10);
+
+    return {
+      currentScore,
+      previousScore,
+      trend,
+      scoreChange,
+      findings: {
+        total: filteredFindings.length,
+        bySeverity,
+        byStatus,
+      },
+      trends,
+      recentFindings,
+    };
+  }
+
+  /**
+   * Store compliance score in history
+   */
+  async storeComplianceScore(
+    score: number,
+    applicationIds?: string[],
+    teamNames?: string[]
+  ): Promise<void> {
+    const history = await this.loadComplianceScoreHistory();
+    
+    history.push({
+      date: new Date().toISOString(),
+      score,
+      applicationIds: applicationIds || [],
+      teamNames: teamNames || [],
+    });
+
+    // Keep only last 365 days
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 365);
+    const filtered = history.filter(h => new Date(h.date) >= cutoffDate);
+
+    await this.saveComplianceScoreHistory(filtered);
+  }
+
+  /**
+   * Get compliance trends over time
+   */
+  async getComplianceTrends(
+    days: number = 30,
+    applicationIds?: string[],
+    teamNames?: string[]
+  ): Promise<Array<{ date: string; score: number }>> {
+    const history = await this.loadComplianceScoreHistory();
+    
+    // Filter by application/team if provided
+    let filtered = history;
+    if (applicationIds && applicationIds.length > 0) {
+      filtered = filtered.filter(h => 
+        h.applicationIds.length === 0 || 
+        h.applicationIds.some(id => applicationIds.includes(id))
+      );
+    }
+    if (teamNames && teamNames.length > 0) {
+      filtered = filtered.filter(h =>
+        h.teamNames.length === 0 ||
+        h.teamNames.some(name => teamNames.includes(name))
+      );
+    }
+
+    // Get last N days
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    filtered = filtered.filter(h => new Date(h.date) >= cutoffDate);
+
+    // Group by date and average scores for same date
+    const byDate = new Map<string, number[]>();
+    filtered.forEach(h => {
+      const dateKey = h.date.split('T')[0]; // YYYY-MM-DD
+      if (!byDate.has(dateKey)) {
+        byDate.set(dateKey, []);
+      }
+      byDate.get(dateKey)!.push(h.score);
+    });
+
+    // Calculate average per day
+    const trends = Array.from(byDate.entries())
+      .map(([date, scores]) => ({
+        date,
+        score: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return trends;
+  }
+
+  /**
+   * Load compliance score history
+   */
+  private async loadComplianceScoreHistory(): Promise<Array<{
+    date: string;
+    score: number;
+    applicationIds: string[];
+    teamNames: string[];
+  }>> {
+    try {
+      await fs.mkdir(path.dirname(this.complianceScoresHistoryPath), { recursive: true });
+      try {
+        const data = await fs.readFile(this.complianceScoresHistoryPath, 'utf-8');
+        if (!data || data.trim() === '') {
+          return [];
+        }
+        return JSON.parse(data);
+      } catch {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Save compliance score history
+   */
+  private async saveComplianceScoreHistory(
+    history: Array<{
+      date: string;
+      score: number;
+      applicationIds: string[];
+      teamNames: string[];
+    }>
+  ): Promise<void> {
+    try {
+      await fs.mkdir(path.dirname(this.complianceScoresHistoryPath), { recursive: true });
+      await fs.writeFile(
+        this.complianceScoresHistoryPath,
+        JSON.stringify(history, null, 2),
+        'utf-8'
+      );
+    } catch (error) {
+      this.logger.error('Failed to save compliance score history:', error);
+    }
+  }
+
+  /**
+   * Get remediation help for a finding
+   */
+  async getRemediationHelp(findingId: string): Promise<{
+    finding: UnifiedFinding;
+    remediationSteps: string[];
+    references: string[];
+    estimatedEffort?: string;
+    automated?: boolean;
+    knowledgeBaseArticles?: Array<{
+      title: string;
+      url: string;
+      description: string;
+    }>;
+    similarFindings?: Array<{
+      id: string;
+      title: string;
+      status: string;
+      resolutionDate?: Date;
+    }>;
+  }> {
+    const finding = await this.getFindingById(findingId);
+    if (!finding) {
+      throw new Error('Finding not found');
+    }
+
+    // Load knowledge base
+    const knowledgeBasePath = path.join(process.cwd(), '..', '..', 'data', 'remediation-knowledge-base.json');
+    let knowledgeBase: Record<string, any> = {};
+    try {
+      const kbData = await fs.readFile(knowledgeBasePath, 'utf-8');
+      knowledgeBase = JSON.parse(kbData);
+    } catch {
+      // Knowledge base doesn't exist yet, use defaults
+    }
+
+    // Find relevant knowledge base articles
+    const articles: Array<{ title: string; url: string; description: string }> = [];
+    if (finding.vulnerability?.cve?.id && knowledgeBase[finding.vulnerability.cve.id]) {
+      articles.push(...knowledgeBase[finding.vulnerability.cve.id]);
+    }
+    if (finding.vulnerability?.classification && knowledgeBase[finding.vulnerability.classification]) {
+      articles.push(...knowledgeBase[finding.vulnerability.classification]);
+    }
+    if (finding.source && knowledgeBase[finding.source]) {
+      articles.push(...knowledgeBase[finding.source]);
+    }
+
+    // Find similar findings (same CVE or classification)
+    const similarFindings = this.findings
+      .filter(f => 
+        f.id !== findingId &&
+        (
+          (finding.vulnerability?.cve?.id && f.vulnerability?.cve?.id === finding.vulnerability.cve.id) ||
+          (finding.vulnerability?.classification && f.vulnerability?.classification === finding.vulnerability.classification)
+        ) &&
+        (f.status === 'resolved' || f.status === 'risk-accepted')
+      )
+      .slice(0, 5)
+      .map(f => ({
+        id: f.id,
+        title: f.title,
+        status: f.status,
+        resolutionDate: f.resolvedAt,
+      }));
+
+    return {
+      finding,
+      remediationSteps: finding.remediation.steps,
+      references: finding.remediation.references,
+      estimatedEffort: finding.remediation.estimatedEffort,
+      automated: finding.remediation.automated,
+      knowledgeBaseArticles: articles,
+      similarFindings,
+    };
   }
 }
 

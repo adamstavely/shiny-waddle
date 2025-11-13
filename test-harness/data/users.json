@@ -1,0 +1,51 @@
+[
+  {
+    "id": "user-1",
+    "email": "developer@example.com",
+    "name": "Developer One",
+    "roles": ["editor"],
+    "applicationIds": ["app-1", "app-2"],
+    "teamNames": ["backend-team"]
+  },
+  {
+    "id": "user-2",
+    "email": "developer2@example.com",
+    "name": "Developer Two",
+    "roles": ["editor", "viewer"],
+    "applicationIds": ["app-2", "app-3"],
+    "teamNames": ["frontend-team"]
+  },
+  {
+    "id": "user-3",
+    "email": "risk-manager@example.com",
+    "name": "Risk Manager",
+    "roles": ["cyber-risk-manager"],
+    "applicationIds": [],
+    "teamNames": []
+  },
+  {
+    "id": "user-4",
+    "email": "data-steward@example.com",
+    "name": "Data Steward",
+    "roles": ["data-steward"],
+    "applicationIds": [],
+    "teamNames": []
+  },
+  {
+    "id": "user-5",
+    "email": "admin@example.com",
+    "name": "Admin User",
+    "roles": ["admin", "cyber-risk-manager", "data-steward"],
+    "applicationIds": ["app-1", "app-2", "app-3"],
+    "teamNames": ["backend-team", "frontend-team"]
+  },
+  {
+    "id": "current-user",
+    "email": "developer@example.com",
+    "name": "Current User",
+    "roles": ["editor", "cyber-risk-manager"],
+    "applicationIds": ["app-1"],
+    "teamNames": ["backend-team"]
+  }
+]
+

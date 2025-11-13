@@ -1,0 +1,79 @@
+{
+  "CVE-2023-12345": [
+    {
+      "title": "CVE-2023-12345: SQL Injection Vulnerability",
+      "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-12345",
+      "description": "This vulnerability allows SQL injection attacks. Use parameterized queries to prevent injection."
+    },
+    {
+      "title": "OWASP SQL Injection Prevention",
+      "url": "https://owasp.org/www-community/attacks/SQL_Injection",
+      "description": "Comprehensive guide on preventing SQL injection attacks using parameterized queries and input validation."
+    }
+  ],
+  "CWE-79": [
+    {
+      "title": "CWE-79: Cross-site Scripting (XSS)",
+      "url": "https://cwe.mitre.org/data/definitions/79.html",
+      "description": "XSS vulnerabilities allow attackers to inject malicious scripts. Sanitize all user input and use Content Security Policy."
+    },
+    {
+      "title": "OWASP XSS Prevention Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
+      "description": "Best practices for preventing XSS attacks including input validation, output encoding, and CSP headers."
+    }
+  ],
+  "CWE-89": [
+    {
+      "title": "CWE-89: SQL Injection",
+      "url": "https://cwe.mitre.org/data/definitions/89.html",
+      "description": "SQL injection vulnerabilities occur when user input is directly concatenated into SQL queries. Use parameterized queries or prepared statements."
+    },
+    {
+      "title": "SQL Injection Prevention Guide",
+      "url": "https://owasp.org/www-community/attacks/SQL_Injection",
+      "description": "Complete guide on preventing SQL injection including code examples and best practices."
+    }
+  ],
+  "sast": [
+    {
+      "title": "SAST Finding Remediation Guide",
+      "url": "https://owasp.org/www-community/Source_Code_Analysis_Tools",
+      "description": "General guidance on remediating findings from Static Application Security Testing tools."
+    },
+    {
+      "title": "Secure Coding Practices",
+      "url": "https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/",
+      "description": "Quick reference guide for secure coding practices to prevent common vulnerabilities."
+    }
+  ],
+  "dast": [
+    {
+      "title": "DAST Finding Remediation",
+      "url": "https://owasp.org/www-community/Vulnerability_Scanning_Tools",
+      "description": "Guidance on fixing vulnerabilities discovered through Dynamic Application Security Testing."
+    }
+  ],
+  "sca": [
+    {
+      "title": "Dependency Vulnerability Remediation",
+      "url": "https://owasp.org/www-community/vulnerabilities/Using_Components_with_Known_Vulnerabilities",
+      "description": "How to update or patch dependencies with known vulnerabilities discovered through Software Composition Analysis."
+    }
+  ],
+  "secrets": [
+    {
+      "title": "Secrets Management Best Practices",
+      "url": "https://owasp.org/www-community/vulnerabilities/Use_of_hard-coded_cryptographic_key",
+      "description": "Guidance on properly managing secrets and avoiding hardcoded credentials in source code."
+    }
+  ],
+  "iac": [
+    {
+      "title": "Infrastructure as Code Security",
+      "url": "https://owasp.org/www-project-cloud-native-application-security-top-10/",
+      "description": "Best practices for securing infrastructure defined as code, including Terraform, CloudFormation, and Kubernetes configurations."
+    }
+  ]
+}
+

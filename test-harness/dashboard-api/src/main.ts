@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { UserContextInterceptor } from './common/interceptors/user-context.interceptor';
 import * as https from 'https';
 import * as fs from 'fs';
 
@@ -40,6 +41,9 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Global user context interceptor
+  app.useGlobalInterceptors(new UserContextInterceptor());
 
   // Enable CORS for Vue frontend
   app.enableCors({

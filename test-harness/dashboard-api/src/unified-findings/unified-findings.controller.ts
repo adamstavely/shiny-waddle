@@ -13,6 +13,8 @@ import {
 import { UnifiedFindingsService } from './unified-findings.service';
 import { UnifiedFinding } from '../../../core/unified-finding-schema';
 import { ScannerResult } from '../../../services/normalization-engine';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { UserContext } from '../common/interfaces/user-context.interface';
 
 @Controller('api/unified-findings')
 export class UnifiedFindingsController {
@@ -211,6 +213,31 @@ export class UnifiedFindingsController {
   async getAttackPathPrioritizedFindings(@Query('limit') limit?: string) {
     const limitNum = limit ? parseInt(limit, 10) : undefined;
     return this.service.getAttackPathPrioritizedFindings(limitNum);
+  }
+
+  /**
+   * Developer Dashboard endpoints
+   */
+
+  @Get('dashboard/developer')
+  async getDeveloperDashboard(
+    @CurrentUser() user: UserContext,
+    @Query('applicationIds') applicationIds?: string,
+    @Query('teamNames') teamNames?: string,
+  ) {
+    // Use user's applications/teams if not specified
+    const appIds = applicationIds 
+      ? applicationIds.split(',') 
+      : (user.applicationIds && user.applicationIds.length > 0 ? user.applicationIds : undefined);
+    const teams = teamNames 
+      ? teamNames.split(',') 
+      : (user.teamNames && user.teamNames.length > 0 ? user.teamNames : undefined);
+    return this.service.getDeveloperDashboard(appIds, teams);
+  }
+
+  @Get('remediation-help/:id')
+  async getRemediationHelp(@Param('id') id: string) {
+    return this.service.getRemediationHelp(id);
   }
 }
 

@@ -112,7 +112,7 @@
             <span 
               v-if="totalNotificationCount > 0"
               class="notification-badge"
-              :class="breakingChangeNotifications.length > 0 ? 'badge-critical' : 'badge-normal'"
+              :class="criticalFindingNotifications.length > 0 ? 'badge-critical' : 'badge-normal'"
               aria-hidden="true"
             >
               {{ totalNotificationCount > 9 ? '9+' : totalNotificationCount }}
@@ -146,130 +146,96 @@
                     :class="{ 'active': notificationTab === 'all' }"
                   >
                     All
-                    <span v-if="totalNotificationCount > 0" class="tab-badge">
-                      {{ totalNotificationCount }}
+                    <span v-if="unreadCount > 0" class="tab-badge">
+                      {{ unreadCount }}
                     </span>
                   </button>
                   <button
-                    @click="notificationTab = 'breaking'"
+                    @click="notificationTab = 'score-drops'"
                     class="notification-tab"
-                    :class="{ 'active': notificationTab === 'breaking' }"
+                    :class="{ 'active': notificationTab === 'score-drops' }"
                   >
-                    Breaking Changes
-                    <span v-if="breakingChangeNotifications.length > 0" class="tab-badge tab-badge-critical">
-                      {{ breakingChangeNotifications.length }}
+                    Score Drops
+                    <span v-if="scoreDropNotifications.length > 0" class="tab-badge">
+                      {{ scoreDropNotifications.filter(n => !n.read).length }}
                     </span>
                   </button>
                   <button
-                    @click="notificationTab = 'activity'"
+                    @click="notificationTab = 'findings'"
                     class="notification-tab"
-                    :class="{ 'active': notificationTab === 'activity' }"
+                    :class="{ 'active': notificationTab === 'findings' }"
                   >
-                    Activity
-                    <span v-if="recentActivity.length > 0" class="tab-badge">
-                      {{ recentActivity.length }}
+                    Critical Findings
+                    <span v-if="criticalFindingNotifications.length > 0" class="tab-badge tab-badge-critical">
+                      {{ criticalFindingNotifications.filter(n => !n.read).length }}
                     </span>
+                  </button>
+                  <button
+                    @click="notificationTab = 'approvals'"
+                    class="notification-tab"
+                    :class="{ 'active': notificationTab === 'approvals' }"
+                  >
+                    Approvals
+                    <span v-if="approvalNotifications.length > 0" class="tab-badge">
+                      {{ approvalNotifications.filter(n => !n.read).length }}
+                    </span>
+                  </button>
+                </div>
+                
+                <!-- Mark All Read Button -->
+                <div v-if="unreadCount > 0" class="notification-actions">
+                  <button @click="markAllAsRead" class="mark-all-read-btn">
+                    Mark all as read
                   </button>
                 </div>
                 
                 <!-- Notification List -->
                 <div class="notification-list">
-                  <!-- All Tab -->
-                  <div v-if="notificationTab === 'all'">
-                    <div v-if="totalNotificationCount === 0" class="notification-empty">
-                      <Bell class="empty-icon" />
-                      <p>No notifications</p>
-                    </div>
-                    <div v-else>
-                      <!-- Breaking Changes First -->
-                      <div
-                        v-for="notification in breakingChangeNotifications"
-                        :key="`breaking-${notification.id}`"
-                        @click="handleNotificationClick(notification)"
-                        class="notification-item notification-item-breaking"
-                      >
-                        <div class="notification-icon breaking-icon">
-                          <AlertTriangle class="icon" />
-                        </div>
-                        <div class="notification-content">
-                          <div class="notification-header-item">
-                            <h4>Breaking Change</h4>
-                            <span class="notification-tag breaking-tag">{{ notification.componentName }}</span>
-                          </div>
-                          <p class="notification-message">{{ notification.message }}</p>
-                          <p class="notification-time">{{ formatRelativeTime(notification.timestamp) }}</p>
-                        </div>
-                      </div>
-                      
-                      <!-- Activity -->
-                      <div
-                        v-for="activity in recentActivity"
-                        :key="activity.id"
-                        @click="handleActivityClick(activity)"
-                        class="notification-item"
-                      >
-                        <div class="notification-icon activity-icon">
-                          <FileText class="icon" />
-                        </div>
-                        <div class="notification-content">
-                          <div class="notification-header-item">
-                            <h4>{{ activity.title }}</h4>
-                          </div>
-                          <p class="notification-message">{{ activity.description }}</p>
-                          <p class="notification-time">{{ formatRelativeTime(activity.timestamp) }}</p>
-                        </div>
-                      </div>
-                    </div>
+                  <div v-if="notificationsLoading" class="notification-loading">
+                    <p>Loading notifications...</p>
                   </div>
-                  
-                  <!-- Breaking Changes Tab -->
-                  <div v-else-if="notificationTab === 'breaking'">
-                    <div v-if="breakingChangeNotifications.length === 0" class="notification-empty">
-                      <AlertTriangle class="empty-icon" />
-                      <p>No breaking changes</p>
-                    </div>
+                  <div v-else-if="filteredNotifications.length === 0" class="notification-empty">
+                    <Bell class="empty-icon" />
+                    <p>No notifications</p>
+                  </div>
+                  <div v-else>
                     <div
-                      v-for="notification in breakingChangeNotifications"
+                      v-for="notification in filteredNotifications"
                       :key="notification.id"
                       @click="handleNotificationClick(notification)"
-                      class="notification-item notification-item-breaking"
+                      class="notification-item"
+                      :class="{
+                        'notification-item-unread': !notification.read,
+                        'notification-item-critical': notification.type === NotificationType.CRITICAL_FINDING,
+                        'notification-item-score-drop': notification.type === NotificationType.SCORE_DROP,
+                      }"
                     >
-                      <div class="notification-icon breaking-icon">
-                        <AlertTriangle class="icon" />
+                      <div class="notification-icon" :class="getNotificationIconClass(notification.type)">
+                        <component :is="getNotificationIcon(notification.type)" class="icon" />
                       </div>
                       <div class="notification-content">
                         <div class="notification-header-item">
-                          <h4>Breaking Change</h4>
-                          <span class="notification-tag breaking-tag">{{ notification.componentName }}</span>
+                          <h4>{{ notification.title }}</h4>
+                          <span v-if="!notification.read" class="unread-dot"></span>
                         </div>
                         <p class="notification-message">{{ notification.message }}</p>
-                        <p class="notification-time">{{ formatRelativeTime(notification.timestamp) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Activity Tab -->
-                  <div v-else-if="notificationTab === 'activity'">
-                    <div v-if="recentActivity.length === 0" class="notification-empty">
-                      <FileText class="empty-icon" />
-                      <p>No recent activity</p>
-                    </div>
-                    <div
-                      v-for="activity in recentActivity"
-                      :key="activity.id"
-                      @click="handleActivityClick(activity)"
-                      class="notification-item"
-                    >
-                      <div class="notification-icon activity-icon">
-                        <FileText class="icon" />
-                      </div>
-                      <div class="notification-content">
-                        <div class="notification-header-item">
-                          <h4>{{ activity.title }}</h4>
+                        <div v-if="notification.metadata?.scoreChange" class="notification-meta">
+                          <span class="score-change" :class="notification.metadata.scoreChange < 0 ? 'negative' : 'positive'">
+                            {{ notification.metadata.scoreChange > 0 ? '+' : '' }}{{ notification.metadata.scoreChange }} points
+                          </span>
+                          <span class="score-details">
+                            ({{ notification.metadata.previousScore }} → {{ notification.metadata.currentScore }})
+                          </span>
                         </div>
-                        <p class="notification-message">{{ activity.description }}</p>
-                        <p class="notification-time">{{ formatRelativeTime(activity.timestamp) }}</p>
+                        <p class="notification-time">{{ formatRelativeTime(notification.createdAt) }}</p>
                       </div>
+                      <button
+                        @click.stop="deleteNotification(notification.id)"
+                        class="notification-delete"
+                        title="Delete notification"
+                      >
+                        <X class="delete-icon" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -303,7 +269,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import { Shield, Search, X, FileText, ShieldCheck, FileCode, RefreshCw, Settings, Menu, Bell, AlertTriangle } from 'lucide-vue-next';
+import { Shield, Search, X, FileText, ShieldCheck, FileCode, RefreshCw, Settings, Menu, Bell, AlertTriangle, TrendingDown, ShieldAlert, CheckCircle, XCircle } from 'lucide-vue-next';
+import { useNotifications } from '../composables/useNotifications';
+import { NotificationType } from '../types/notification';
 
 const router = useRouter();
 
@@ -313,40 +281,50 @@ const isRefreshing = ref(false);
 const showSettings = ref(false);
 const drawerOpen = ref(false);
 const showNotifications = ref(false);
-const notificationTab = ref<'all' | 'breaking' | 'activity'>('all');
+const notificationTab = ref<'all' | 'score-drops' | 'findings' | 'approvals'>('all');
 const notificationsContainer = ref<HTMLElement | null>(null);
 
-// Mock notification data
-const breakingChangeNotifications = ref([
-  {
-    id: '1',
-    componentName: 'TestSuite',
-    message: 'Test suite configuration has been updated with breaking changes',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    componentId: 'test-suite'
-  }
-]);
+// Use notifications composable
+const {
+  notifications,
+  unreadCount,
+  loading: notificationsLoading,
+  loadNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+} = useNotifications();
 
-const recentActivity = ref([
-  {
-    id: '1',
-    title: 'Test Execution Completed',
-    description: 'Compliance test suite ran successfully with 95% pass rate',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    reviewId: 'test-123'
-  },
-  {
-    id: '2',
-    title: 'New Policy Added',
-    description: 'RBAC policy for data access has been configured',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-    reviewId: 'policy-456'
-  }
-]);
+// Filter notifications by type
+const scoreDropNotifications = computed(() => 
+  notifications.value.filter(n => n.type === NotificationType.SCORE_DROP)
+);
 
-const totalNotificationCount = computed(() => {
-  return breakingChangeNotifications.value.length + recentActivity.value.length;
+const criticalFindingNotifications = computed(() => 
+  notifications.value.filter(n => n.type === NotificationType.CRITICAL_FINDING)
+);
+
+const approvalNotifications = computed(() => 
+  notifications.value.filter(n => 
+    n.type === NotificationType.APPROVAL_REQUEST || 
+    n.type === NotificationType.APPROVAL_STATUS_CHANGED
+  )
+);
+
+const filteredNotifications = computed(() => {
+  if (notificationTab.value === 'all') {
+    return notifications.value;
+  } else if (notificationTab.value === 'score-drops') {
+    return scoreDropNotifications.value;
+  } else if (notificationTab.value === 'findings') {
+    return criticalFindingNotifications.value;
+  } else if (notificationTab.value === 'approvals') {
+    return approvalNotifications.value;
+  }
+  return [];
 });
+
+const totalNotificationCount = computed(() => unreadCount.value);
 
 // Mock search results - in real app, this would come from API
 const searchResults = ref([
@@ -411,21 +389,45 @@ const closeNotifications = () => {
   showNotifications.value = false;
 };
 
-const handleNotificationClick = (notification: any) => {
-  // Navigate to component or handle notification click
-  console.log('Notification clicked:', notification);
+const handleNotificationClick = async (notification: any) => {
+  // Mark as read
+  if (!notification.read) {
+    await markAsRead(notification.id);
+  }
+
+  // Navigate based on notification type
+  if (notification.metadata?.findingId) {
+    // Navigate to findings page with findingId query param to auto-open modal
+    router.push({
+      path: '/findings',
+      query: { findingId: notification.metadata.findingId }
+    });
+  } else if (notification.metadata?.approvalRequestId) {
+    router.push('/pending-approvals');
+  } else if (notification.type === NotificationType.SCORE_DROP) {
+    router.push('/developer-findings');
+  } else if (notification.type === NotificationType.CRITICAL_FINDING) {
+    // Critical findings also have findingId in metadata
+    if (notification.metadata?.findingId) {
+      router.push({
+        path: '/findings',
+        query: { findingId: notification.metadata.findingId }
+      });
+    } else {
+      router.push('/findings');
+    }
+  } else {
+    // Default to findings page
+    router.push('/findings');
+  }
+
   closeNotifications();
 };
 
-const handleActivityClick = (activity: any) => {
-  // Navigate to activity or handle click
-  console.log('Activity clicked:', activity);
-  closeNotifications();
-};
-
-const formatRelativeTime = (date: Date): string => {
+const formatRelativeTime = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - d.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
@@ -434,7 +436,37 @@ const formatRelativeTime = (date: Date): string => {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+  return d.toLocaleDateString();
+};
+
+const getNotificationIcon = (type: NotificationType) => {
+  switch (type) {
+    case NotificationType.SCORE_DROP:
+      return TrendingDown;
+    case NotificationType.CRITICAL_FINDING:
+      return ShieldAlert;
+    case NotificationType.APPROVAL_REQUEST:
+      return AlertTriangle;
+    case NotificationType.APPROVAL_STATUS_CHANGED:
+      return CheckCircle;
+    default:
+      return Bell;
+  }
+};
+
+const getNotificationIconClass = (type: NotificationType): string => {
+  switch (type) {
+    case NotificationType.SCORE_DROP:
+      return 'score-drop-icon';
+    case NotificationType.CRITICAL_FINDING:
+      return 'critical-icon';
+    case NotificationType.APPROVAL_REQUEST:
+      return 'approval-icon';
+    case NotificationType.APPROVAL_STATUS_CHANGED:
+      return 'status-icon';
+    default:
+      return 'default-icon';
+  }
 };
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -959,19 +991,165 @@ onBeforeUnmount(() => {
   background: rgba(79, 172, 254, 0.05);
 }
 
+.notification-item-unread {
+  background: rgba(79, 172, 254, 0.1);
+  border-left: 4px solid #4facfe;
+}
+
+.notification-item-critical {
+  border-left: 4px solid #fc8181;
+  background: rgba(252, 129, 129, 0.05);
+}
+
+.notification-item-score-drop {
+  border-left: 4px solid #fbbf24;
+  background: rgba(251, 191, 36, 0.05);
+}
+
 .notification-item-breaking {
   border-left: 4px solid #fc8181;
   background: rgba(252, 129, 129, 0.05);
 }
 
 .notification-icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.score-drop-icon {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+
+.critical-icon {
+  background: rgba(252, 129, 129, 0.1);
+  color: #fc8181;
+}
+
+.approval-icon {
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+}
+
+.status-icon {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.default-icon {
+  background: rgba(160, 174, 192, 0.1);
+  color: #a0aec0;
+}
+
+.notification-icon .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-header-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4facfe;
+  flex-shrink: 0;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+.score-change {
+  font-weight: 600;
+}
+
+.score-change.negative {
+  color: #fc8181;
+}
+
+.score-change.positive {
+  color: #22c55e;
+}
+
+.score-details {
+  color: #a0aec0;
+  font-size: 0.75rem;
+}
+
+.notification-delete {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #a0aec0;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.notification-item:hover .notification-delete {
+  opacity: 1;
+}
+
+.notification-delete:hover {
+  background: rgba(252, 129, 129, 0.1);
+  color: #fc8181;
+}
+
+.delete-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.notification-loading {
+  padding: 40px 20px;
+  text-align: center;
+  color: #a0aec0;
+}
+
+.notification-actions {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.mark-all-read-btn {
+  width: 100%;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 6px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mark-all-read-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
 }
 
 .breaking-icon {

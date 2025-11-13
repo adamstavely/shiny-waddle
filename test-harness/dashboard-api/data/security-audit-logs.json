@@ -1,5 +1,68 @@
 [
   {
+    "id": "418bf4c2-3c16-40de-b6c2-e489b2797677",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/dlp/test-exfiltration",
+    "description": "Data write operation: POST /api/dlp/test-exfiltration",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/dlp/test-exfiltration",
+    "timestamp": "2025-11-13T02:47:28.544Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/dlp/test-exfiltration",
+      "query": {},
+      "bodySize": "180"
+    },
+    "requestId": "req-1763002048542-7l0yywbug",
+    "responseCode": 200,
+    "duration": 2
+  },
+  {
+    "id": "0bfbd8c4-e96d-48be-bc64-3a535b4471aa",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/applications/test/run-tests",
+    "description": "Data write operation: POST /api/applications/test/run-tests",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/applications/test/run-tests",
+    "timestamp": "2025-11-13T02:30:17.450Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/applications/test/run-tests",
+      "query": {},
+      "bodySize": "0"
+    },
+    "requestId": "req-1763001017449-aewxajokg",
+    "responseCode": 200,
+    "duration": 1
+  },
+  {
+    "id": "fc919b6e-8a86-4777-8a1e-50ca6f2bf9f5",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/applications",
+    "description": "Data write operation: POST /api/applications",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/applications",
+    "timestamp": "2025-11-13T02:29:02.925Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/applications",
+      "query": {},
+      "bodySize": "58"
+    },
+    "requestId": "req-1763000942910-dqptj35cd",
+    "responseCode": 201,
+    "duration": 14
+  },
+  {
     "id": "c2a5b2a8-6155-48ea-8661-b277b259a2e2",
     "type": "data-write",
     "severity": "medium",

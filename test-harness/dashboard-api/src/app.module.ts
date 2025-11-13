@@ -29,6 +29,9 @@ import { DLPModule } from './dlp/dlp.module';
 import { TestConfigurationsModule } from './test-configurations/test-configurations.module';
 import { TestResultsModule } from './test-results/test-results.module';
 import { TestSuitesModule } from './test-suites/test-suites.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { FindingApprovalsModule } from './finding-approvals/finding-approvals.module';
+import { UsersModule } from './users/users.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -63,6 +66,9 @@ import { AppController } from './app.controller';
     TestConfigurationsModule,
     TestResultsModule,
     TestSuitesModule,
+    NotificationsModule,
+    FindingApprovalsModule,
+    UsersModule,
   ],
   controllers: [AppController],
 })

@@ -208,7 +208,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   ShieldAlert,
   Upload,
@@ -223,6 +224,8 @@ import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import ImportFindingsModal from '../components/ImportFindingsModal.vue';
 import FindingDetailModal from '../components/FindingDetailModal.vue';
+
+const route = useRoute();
 
 const breadcrumbItems = [
   { label: 'Security Findings', icon: ShieldAlert }
@@ -465,6 +468,18 @@ onMounted(async () => {
   await loadFindings();
   await loadPrioritizedFindings();
   await loadRiskAggregation();
+  
+  // Check if findingId is in query params (from notification navigation)
+  if (route.query.findingId && typeof route.query.findingId === 'string') {
+    await viewFinding(route.query.findingId);
+  }
+});
+
+// Watch for route query changes (e.g., when navigating from notifications)
+watch(() => route.query.findingId, async (findingId) => {
+  if (findingId && typeof findingId === 'string' && !showDetailModal.value) {
+    await viewFinding(findingId);
+  }
 });
 </script>
 

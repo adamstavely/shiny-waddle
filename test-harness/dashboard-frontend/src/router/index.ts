@@ -45,6 +45,9 @@ import CICDSecurityGates from '../views/CICDSecurityGates.vue';
 import TestConfigurations from '../views/TestConfigurations.vue';
 import TestHistory from '../views/TestHistory.vue';
 import ComplianceTrends from '../views/ComplianceTrends.vue';
+import DeveloperFindingsDashboard from '../views/DeveloperFindingsDashboard.vue';
+import PendingApprovals from '../views/PendingApprovals.vue';
+import NotificationSettings from '../views/NotificationSettings.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -292,6 +295,21 @@ const router = createRouter({
       path: '/compliance-trends',
       name: 'ComplianceTrends',
       component: ComplianceTrends,
+    },
+    {
+      path: '/developer-findings',
+      name: 'DeveloperFindingsDashboard',
+      component: DeveloperFindingsDashboard,
+    },
+    {
+      path: '/pending-approvals',
+      name: 'PendingApprovals',
+      component: PendingApprovals,
+    },
+    {
+      path: '/settings/notifications',
+      name: 'NotificationSettings',
+      component: NotificationSettings,
     },
     {
       path: '/:pathMatch(.*)*',
