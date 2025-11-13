@@ -1517,6 +1517,215 @@ Checks all security gates for a pull request.
 
 ## Applications and Test Configurations Endpoints
 
+### Application Test/Validator Management
+
+Data stewards and cyber risk managers can toggle tests and validators on/off for specific applications.
+
+#### Toggle Test Configuration for Application
+
+Enable or disable a specific test configuration for an application.
+
+```http
+PATCH /api/applications/:id/test-configurations/:configId/toggle
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+- `configId` (string, required): Test configuration ID
+
+**Request Body:**
+```json
+{
+  "enabled": true,
+  "reason": "Temporarily disabled for maintenance"
+}
+```
+
+**Response:** Application object with updated overrides
+
+**Permissions Required:** `MANAGE_APPLICATION_TESTS` (Data Steward, Cyber Risk Manager, or Admin)
+
+#### Toggle Validator for Application
+
+Enable or disable a specific validator for an application.
+
+```http
+PATCH /api/applications/:id/validators/:validatorId/toggle
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+- `validatorId` (string, required): Validator ID
+
+**Request Body:**
+```json
+{
+  "enabled": false,
+  "reason": "Validator causing false positives"
+}
+```
+
+**Response:** Application object with updated overrides
+
+**Permissions Required:** `MANAGE_APPLICATION_VALIDATORS` (Data Steward, Cyber Risk Manager, or Admin)
+
+#### Get Test Configuration Status
+
+Get the status of all test configurations for an application, including override information.
+
+```http
+GET /api/applications/:id/test-configurations/status
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Response:**
+```json
+[
+  {
+    "configId": "config-123",
+    "name": "RLS Coverage Test",
+    "type": "rls-cls",
+    "enabled": true,
+    "override": {
+      "enabled": false,
+      "reason": "Temporarily disabled",
+      "updatedBy": "user@example.com",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    }
+  }
+]
+```
+
+**Permissions Required:** `READ_APPLICATIONS`
+
+#### Get Validator Status
+
+Get the status of all validators for an application, including override information.
+
+```http
+GET /api/applications/:id/validators/status
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Response:**
+```json
+[
+  {
+    "validatorId": "validator-123",
+    "name": "Access Control Validator",
+    "testType": "access-control",
+    "enabled": true,
+    "override": {
+      "enabled": true,
+      "reason": "Required for compliance",
+      "updatedBy": "steward@example.com",
+      "updatedAt": "2024-01-15T10:00:00Z"
+    }
+  }
+]
+```
+
+**Permissions Required:** `READ_APPLICATIONS`
+
+#### Bulk Toggle Test Configurations
+
+Toggle multiple test configurations at once.
+
+```http
+PATCH /api/applications/:id/test-configurations/bulk-toggle
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Request Body:**
+```json
+{
+  "items": [
+    {
+      "id": "config-123",
+      "enabled": true,
+      "reason": "Re-enabled after fix"
+    },
+    {
+      "id": "config-456",
+      "enabled": false,
+      "reason": "Temporarily disabled"
+    }
+  ]
+}
+```
+
+**Response:** Application object with updated overrides
+
+**Permissions Required:** `MANAGE_APPLICATION_TESTS`
+
+#### Bulk Toggle Validators
+
+Toggle multiple validators at once.
+
+```http
+PATCH /api/applications/:id/validators/bulk-toggle
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Request Body:**
+```json
+{
+  "items": [
+    {
+      "id": "validator-123",
+      "enabled": false,
+      "reason": "Disabled for testing"
+    }
+  ]
+}
+```
+
+**Response:** Application object with updated overrides
+
+**Permissions Required:** `MANAGE_APPLICATION_VALIDATORS`
+
+#### Remove Test Configuration Override
+
+Remove an override for a test configuration, reverting to default state.
+
+```http
+DELETE /api/applications/:id/test-configurations/:configId/override
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+- `configId` (string, required): Test configuration ID
+
+**Response:** Application object with override removed
+
+**Permissions Required:** `MANAGE_APPLICATION_TESTS`
+
+#### Remove Validator Override
+
+Remove an override for a validator, reverting to default state.
+
+```http
+DELETE /api/applications/:id/validators/:validatorId/override
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+- `validatorId` (string, required): Validator ID
+
+**Response:** Application object with override removed
+
+**Permissions Required:** `MANAGE_APPLICATION_VALIDATORS`
+
+## Applications and Test Configurations Endpoints
+
 ### Assign Test Configurations to Application
 
 Assign test configurations to an application. Test assignments are managed externally (not by users in the UI).

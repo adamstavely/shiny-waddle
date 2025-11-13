@@ -423,6 +423,60 @@ See `tests/example-test-suite.ts` for a complete example with all test types.
 
 ---
 
+## Managing Application Test and Validator Overrides
+
+Data stewards and cyber risk managers can control which tests and validators run for specific applications. This allows fine-grained control over compliance testing per application.
+
+### Accessing Application Test Management
+
+1. Navigate to **Admin** → **Applications** tab
+2. Click **"Manage Tests"** on any application card
+3. You'll see two sections:
+   - **Test Configuration Management**: Control which test configurations run
+   - **Validator Management**: Control which validators are used
+
+### Toggling Test Configurations
+
+1. In the **Test Configuration Management** section, you'll see all test configurations assigned to the application
+2. Use the toggle switch to enable/disable a test configuration
+3. A modal will appear where you can optionally provide a reason
+4. Click **Enable** or **Disable** to confirm
+5. The override will be saved and the test configuration will be skipped during test runs if disabled
+
+### Toggling Validators
+
+1. In the **Validator Management** section, you'll see all available validators
+2. Use the toggle switch to enable/disable a validator for this application
+3. A modal will appear where you can optionally provide a reason
+4. Click **Enable** or **Disable** to confirm
+5. The override will be saved
+
+### Removing Overrides
+
+If an override exists, you'll see a **"Remove Override"** button. Clicking this will:
+- Remove the application-specific override
+- Revert to the default state (test configuration's or validator's global enabled status)
+
+### Bulk Operations
+
+Use the **"Bulk Toggle"** button to:
+- Select multiple test configurations or validators
+- Enable or disable them all at once
+- Apply changes with a single action
+
+### Understanding Override Status
+
+- **Green toggle (enabled)**: The test/validator will run for this application
+- **Gray toggle (disabled)**: The test/validator will be skipped for this application
+- **Override indicator**: Shows if an override exists, who set it, when, and the reason
+
+### Best Practices
+
+- **Document reasons**: Always provide a reason when toggling, especially when disabling
+- **Review regularly**: Periodically review overrides to ensure they're still needed
+- **Use bulk operations**: When making multiple changes, use bulk toggle for efficiency
+- **Remove when done**: Remove overrides once they're no longer needed
+
 ## Configuring Validators
 
 ### What are Validators?

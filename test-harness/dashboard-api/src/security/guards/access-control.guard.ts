@@ -14,6 +14,8 @@ export enum UserRole {
   EDITOR = 'editor',
   VIEWER = 'viewer',
   AUDITOR = 'auditor',
+  DATA_STEWARD = 'data-steward',
+  CYBER_RISK_MANAGER = 'cyber-risk-manager',
 }
 
 export enum Permission {
@@ -46,6 +48,10 @@ export enum Permission {
   MANAGE_ROLES = 'manage:roles',
   MANAGE_SYSTEM = 'manage:system',
   VIEW_AUDIT_LOGS = 'view:audit-logs',
+  
+  // Application test/validator management
+  MANAGE_APPLICATION_TESTS = 'manage:application-tests',
+  MANAGE_APPLICATION_VALIDATORS = 'manage:application-validators',
 }
 
 // Role to permissions mapping
@@ -83,6 +89,26 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.READ_REPORTS,
     Permission.READ_AUDIT_LOGS,
     Permission.VIEW_AUDIT_LOGS,
+  ],
+  [UserRole.DATA_STEWARD]: [
+    Permission.READ_POLICIES,
+    Permission.READ_APPLICATIONS,
+    Permission.READ_VIOLATIONS,
+    Permission.READ_REPORTS,
+    Permission.READ_CONFIG,
+    Permission.MANAGE_APPLICATION_TESTS,
+    Permission.MANAGE_APPLICATION_VALIDATORS,
+  ],
+  [UserRole.CYBER_RISK_MANAGER]: [
+    Permission.READ_POLICIES,
+    Permission.READ_APPLICATIONS,
+    Permission.READ_VIOLATIONS,
+    Permission.READ_REPORTS,
+    Permission.READ_CONFIG,
+    Permission.READ_AUDIT_LOGS,
+    Permission.VIEW_AUDIT_LOGS,
+    Permission.MANAGE_APPLICATION_TESTS,
+    Permission.MANAGE_APPLICATION_VALIDATORS,
   ],
 };
 

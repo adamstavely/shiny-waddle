@@ -1,5 +1,69 @@
 [
   {
+    "id": "c2a5b2a8-6155-48ea-8661-b277b259a2e2",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "PATCH /api/test-configurations/760886ec-a9e6-4214-8507-3c78cfe30e44/enable",
+    "description": "Data write operation: PATCH /api/test-configurations/760886ec-a9e6-4214-8507-3c78cfe30e44/enable",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/test-configurations/760886ec-a9e6-4214-8507-3c78cfe30e44/enable",
+    "timestamp": "2025-11-13T01:51:38.136Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "PATCH",
+      "path": "/api/test-configurations/760886ec-a9e6-4214-8507-3c78cfe30e44/enable",
+      "query": {},
+      "bodySize": "0"
+    },
+    "requestId": "req-1762998698132-1bxrv11lz",
+    "responseCode": 404,
+    "duration": 3
+  },
+  {
+    "id": "91ab2ee3-8845-4479-bce8-fd3a22526278",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/compliance/nist-800-207/assess",
+    "description": "Data write operation: POST /api/compliance/nist-800-207/assess",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/compliance/nist-800-207/assess",
+    "timestamp": "2025-11-13T01:41:49.236Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/compliance/nist-800-207/assess",
+      "query": {},
+      "bodySize": "2"
+    },
+    "requestId": "req-1762998109234-3sv6g9odv",
+    "responseCode": 200,
+    "duration": 2
+  },
+  {
+    "id": "6d16d017-9559-49a9-be19-7038a5c9cf34",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/network-policy/test-service-to-service",
+    "description": "Data write operation: POST /api/network-policy/test-service-to-service",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/network-policy/test-service-to-service",
+    "timestamp": "2025-11-13T01:41:04.818Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/network-policy/test-service-to-service",
+      "query": {},
+      "bodySize": "40"
+    },
+    "requestId": "req-1762998064816-r36fyj7dl",
+    "responseCode": 200,
+    "duration": 1
+  },
+  {
     "id": "8eb7959b-e087-479f-80ad-426e401784d7",
     "type": "data-write",
     "severity": "medium",

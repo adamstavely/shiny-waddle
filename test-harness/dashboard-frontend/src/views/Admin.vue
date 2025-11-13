@@ -534,6 +534,10 @@
           </div>
 
           <div class="app-actions">
+            <button @click="viewApplicationDetail(app.id)" class="action-btn view-btn">
+              <Settings class="action-icon" />
+              Manage Tests
+            </button>
             <button @click="editApplication(app)" class="action-btn edit-btn">
               <Edit class="action-icon" />
               Edit
@@ -1375,6 +1379,10 @@ const editApplication = (app: any) => {
 
 const viewHistory = (appId: string) => {
   window.location.href = `/test-history?applicationId=${appId}`;
+};
+
+const viewApplicationDetail = (appId: string) => {
+  window.location.href = `/admin/applications/${appId}`;
 };
 
 const viewTestResult = (result: any) => {

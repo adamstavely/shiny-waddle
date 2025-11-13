@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Dashboard from '../views/Dashboard.vue';
 import ApplicationDashboard from '../views/ApplicationDashboard.vue';
+import ApplicationDetail from '../views/ApplicationDetail.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import Tests from '../views/Tests.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
@@ -72,6 +73,11 @@ const router = createRouter({
       path: '/dashboard/app/:id',
       name: 'ApplicationDashboard',
       component: ApplicationDashboard,
+    },
+    {
+      path: '/admin/applications/:id',
+      name: 'ApplicationDetail',
+      component: ApplicationDetail,
     },
     {
       path: '/dashboard/team/:id',
