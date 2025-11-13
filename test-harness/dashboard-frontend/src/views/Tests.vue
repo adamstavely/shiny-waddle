@@ -929,7 +929,8 @@ const handleSourceSaved = async () => {
   await loadTestSuites();
 };
 
-const formatDate = (date: Date): string => {
+const formatDate = (date: Date | undefined): string => {
+  if (!date) return 'Never';
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / 3600000);
@@ -938,11 +939,13 @@ const formatDate = (date: Date): string => {
   return date.toLocaleDateString();
 };
 
-const formatTime = (date: Date): string => {
+const formatTime = (date: Date | undefined): string => {
+  if (!date) return 'N/A';
   return date.toLocaleTimeString();
 };
 
-const formatRelativeTime = (date: Date): string => {
+const formatRelativeTime = (date: Date | undefined): string => {
+  if (!date) return 'Never';
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
