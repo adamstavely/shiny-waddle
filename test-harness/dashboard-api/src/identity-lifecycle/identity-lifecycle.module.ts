@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { IdentityLifecycleController } from './identity-lifecycle.controller';
 import { IdentityLifecycleService } from './identity-lifecycle.service';
 import { TestConfigurationsModule } from '../test-configurations/test-configurations.module';
 
 @Module({
-  imports: [TestConfigurationsModule],
+  imports: [forwardRef(() => TestConfigurationsModule)],
   controllers: [IdentityLifecycleController],
   providers: [IdentityLifecycleService],
   exports: [IdentityLifecycleService],

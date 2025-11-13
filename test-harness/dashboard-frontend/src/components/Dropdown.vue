@@ -152,6 +152,7 @@ onBeforeUnmount(() => {
 .dropdown-wrapper {
   position: relative;
   width: 100%;
+  min-width: 200px;
 }
 
 .dropdown-button {
@@ -220,7 +221,9 @@ onBeforeUnmount(() => {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 400px;
   max-height: 300px;
   overflow-y: auto;
   background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
@@ -282,9 +285,9 @@ onBeforeUnmount(() => {
 
 .option-label {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .dropdown-empty {

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { NetworkMicrosegmentationTester } from '../../../services/network-microsegmentation-tester';
 import { ServiceMeshConfig } from '../../../services/service-mesh-integration';
 import { FirewallRule, NetworkSegment } from '../../../core/types';
@@ -12,7 +12,10 @@ export class NetworkPolicyService {
   private readonly logger = new Logger(NetworkPolicyService.name);
   private tester: NetworkMicrosegmentationTester;
 
-  constructor(private readonly configService: TestConfigurationsService) {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly configService: TestConfigurationsService,
+  ) {
     this.tester = new NetworkMicrosegmentationTester();
   }
 

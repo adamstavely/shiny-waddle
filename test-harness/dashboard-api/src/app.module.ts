@@ -27,6 +27,7 @@ import { NetworkPolicyModule } from './network-policy/network-policy.module';
 import { APIGatewayModule } from './api-gateway/api-gateway.module';
 import { DLPModule } from './dlp/dlp.module';
 import { TestConfigurationsModule } from './test-configurations/test-configurations.module';
+import { TestResultsModule } from './test-results/test-results.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -59,6 +60,7 @@ import { AppController } from './app.controller';
     APIGatewayModule,
     DLPModule,
     TestConfigurationsModule,
+    TestResultsModule,
   ],
   controllers: [AppController],
 })

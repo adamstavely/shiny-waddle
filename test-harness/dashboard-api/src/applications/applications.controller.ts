@@ -14,6 +14,7 @@ import {
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto, ApplicationStatus, ApplicationType } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { AssignTestConfigurationsDto } from './dto/assign-test-configurations.dto';
 import { Application } from './entities/application.entity';
 
 @Controller('api/applications')
@@ -67,6 +68,41 @@ export class ApplicationsController {
   @HttpCode(HttpStatus.OK)
   async updateLastTest(@Param('id') id: string): Promise<Application> {
     return this.applicationsService.updateLastTestAt(id, new Date());
+  }
+
+  @Post(':id/test-configurations')
+  @HttpCode(HttpStatus.OK)
+  async assignTestConfigurations(
+    @Param('id') id: string,
+    @Body(ValidationPipe) body: AssignTestConfigurationsDto,
+  ): Promise<Application> {
+    return this.applicationsService.assignTestConfigurations(id, body.testConfigurationIds);
+  }
+
+  @Get(':id/test-configurations')
+  async getTestConfigurations(
+    @Param('id') id: string,
+    @Query('expand') expand?: string,
+  ): Promise<string[] | any[]> {
+    return this.applicationsService.getTestConfigurations(id, expand === 'true');
+  }
+
+  @Post(':id/run-tests')
+  @HttpCode(HttpStatus.OK)
+  async runTests(
+    @Param('id') id: string,
+    @Query('buildId') buildId?: string,
+    @Query('runId') runId?: string,
+    @Query('commitSha') commitSha?: string,
+    @Query('branch') branch?: string,
+  ): Promise<{
+    status: 'passed' | 'failed' | 'partial';
+    totalTests: number;
+    passed: number;
+    failed: number;
+    results: any[];
+  }> {
+    return this.applicationsService.runTests(id, { buildId, runId, commitSha, branch });
   }
 }
 

@@ -131,8 +131,8 @@ const isActive = (path: string): boolean => {
 };
 
 const handleNavClick = (path: string) => {
-  // For Tests and Configuration, open the drawer with that category's content
-  if (['/tests', '/configuration'].includes(path)) {
+  // For Tests, Configuration, and Compliance, open the drawer with that category's content
+  if (['/tests', '/configuration', '/compliance'].includes(path)) {
     // Emit event to open drawer with specific category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
     return;

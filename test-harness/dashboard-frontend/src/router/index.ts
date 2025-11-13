@@ -42,6 +42,8 @@ import DLP from '../views/DLP.vue';
 import NIST800207 from '../views/NIST800207.vue';
 import CICDSecurityGates from '../views/CICDSecurityGates.vue';
 import TestConfigurations from '../views/TestConfigurations.vue';
+import TestHistory from '../views/TestHistory.vue';
+import ComplianceTrends from '../views/ComplianceTrends.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -274,6 +276,16 @@ const router = createRouter({
       path: '/test-configurations',
       name: 'TestConfigurations',
       component: TestConfigurations,
+    },
+    {
+      path: '/test-history',
+      name: 'TestHistory',
+      component: TestHistory,
+    },
+    {
+      path: '/compliance-trends',
+      name: 'ComplianceTrends',
+      component: ComplianceTrends,
     },
     {
       path: '/:pathMatch(.*)*',

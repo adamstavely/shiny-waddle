@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { IdentityLifecycleTester } from '../../../services/identity-lifecycle-tester';
 import { PAMTester } from '../../../services/pam-tester';
 import { IdentityVerificationTester } from '../../../services/identity-verification-tester';
@@ -15,7 +15,10 @@ export class IdentityLifecycleService {
   private pamTester: PAMTester;
   private verificationTester: IdentityVerificationTester;
 
-  constructor(private readonly configService: TestConfigurationsService) {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly configService: TestConfigurationsService,
+  ) {
     this.lifecycleTester = new IdentityLifecycleTester();
     this.pamTester = new PAMTester();
     this.verificationTester = new IdentityVerificationTester();

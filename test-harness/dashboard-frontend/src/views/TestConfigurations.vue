@@ -53,14 +53,36 @@
       >
         <div class="card-header">
           <div class="card-title-section">
-            <h3 class="card-title">{{ config.name }}</h3>
-            <span class="config-type-badge" :class="`type-${config.type}`">
-              {{ getTypeLabel(config.type) }}
-            </span>
+            <div class="card-title-row">
+              <h3 class="card-title">{{ config.name }}</h3>
+              <div class="config-status-badges">
+                <span class="config-type-badge" :class="`type-${config.type}`">
+                  {{ getTypeLabel(config.type) }}
+                </span>
+                <span
+                  v-if="getLatestResult(config.id)"
+                  class="test-status-badge"
+                  :class="`status-${getLatestResult(config.id).status}`"
+                  :title="`Last test: ${getLatestResult(config.id).status}`"
+                >
+                  {{ getLatestResult(config.id).status }}
+                </span>
+                <span
+                  v-else
+                  class="test-status-badge status-never"
+                  title="Never tested"
+                >
+                  Never tested
+                </span>
+              </div>
+            </div>
           </div>
           <div class="card-actions">
             <button @click="editConfiguration(config)" class="btn-icon" title="Edit">
               <Edit class="icon" />
+            </button>
+            <button @click="viewHistory(config.id)" class="btn-icon" title="View History">
+              <History class="icon" />
             </button>
             <button @click="duplicateConfiguration(config)" class="btn-icon" title="Duplicate">
               <Copy class="icon" />
@@ -84,6 +106,54 @@
               <Calendar class="meta-icon" />
               Updated: {{ formatDate(config.updatedAt) }}
             </span>
+            <span v-if="getAssignedAppsCount(config.id) > 0" class="meta-item">
+              <Settings class="meta-icon" />
+              Assigned to {{ getAssignedAppsCount(config.id) }} app{{ getAssignedAppsCount(config.id) !== 1 ? 's' : '' }}
+            </span>
+            <span v-if="getPassRate(config.id) !== null" class="meta-item">
+              <span class="pass-rate-display" :class="getPassRateClass(getPassRate(config.id))">
+                Pass Rate: {{ getPassRate(config.id)?.toFixed(1) }}%
+              </span>
+            </span>
+            <span v-else class="meta-item">
+              <span class="pass-rate-display pass-rate-none">No tests yet</span>
+            </span>
+          </div>
+          <div v-if="getAssignedApps(config.id).length > 0" class="assigned-apps">
+            <div
+              v-for="app in getAssignedApps(config.id)"
+              :key="app.id"
+              class="app-badge"
+            >
+              {{ app.name }}
+            </div>
+          </div>
+          <!-- Recent Tests Section -->
+          <div v-if="getRecentResults(config.id).length > 0" class="recent-tests-section">
+            <div class="recent-tests-header">
+              <span class="recent-tests-label">Recent Tests</span>
+            </div>
+            <div class="recent-tests-list">
+              <div
+                v-for="result in getRecentResults(config.id)"
+                :key="result.id"
+                class="recent-test-item"
+                @click="viewTestResult(result)"
+              >
+                <div class="recent-test-info">
+                  <span class="recent-test-time">{{ formatDateTime(result.timestamp) }}</span>
+                  <span class="recent-test-app">{{ result.applicationName }}</span>
+                </div>
+                <div class="recent-test-meta">
+                  <span class="test-status-badge" :class="`status-${result.status}`">
+                    {{ result.status }}
+                  </span>
+                  <span v-if="result.duration" class="recent-test-duration">
+                    {{ formatDuration(result.duration) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -117,7 +187,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings, Search } from 'lucide-vue-next';
+import { Plus, Edit, Trash2, Play, Copy, Calendar, Settings, Search, History } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
 import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
@@ -147,6 +217,10 @@ const searchQuery = ref('');
 const showCreateModal = ref(false);
 const editingConfig = ref<TestConfiguration | null>(null);
 const selectedType = ref<string>('');
+const configApplications = ref<Record<string, any[]>>({});
+const latestResults = ref<Record<string, any>>({});
+const recentResults = ref<Record<string, any[]>>({});
+const passRates = ref<Record<string, number>>({});
 
 const typeOptions = [
   { label: 'All Types', value: '' },
@@ -201,12 +275,118 @@ const loadConfigurations = async () => {
       : '/api/test-configurations';
     const response = await axios.get(url);
     configurations.value = response.data;
+    
+    // Load applications for each configuration
+    await loadApplicationsForConfigs();
+    // Load test results for each configuration
+    await loadLatestResults();
+    await loadRecentResults();
+    await loadPassRates();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to load configurations';
     console.error('Error loading configurations:', err);
   } finally {
     loading.value = false;
   }
+};
+
+const loadApplicationsForConfigs = async () => {
+  for (const config of configurations.value) {
+    try {
+      const response = await axios.get(`/api/test-configurations/${config.id}/applications`);
+      configApplications.value[config.id] = response.data || [];
+    } catch (err) {
+      console.error(`Error loading applications for config ${config.id}:`, err);
+      configApplications.value[config.id] = [];
+    }
+  }
+};
+
+const getAssignedApps = (configId: string) => {
+  return configApplications.value[configId] || [];
+};
+
+const getAssignedAppsCount = (configId: string) => {
+  return getAssignedApps(configId).length;
+};
+
+const loadLatestResults = async () => {
+  for (const config of configurations.value) {
+    try {
+      const response = await axios.get(`/api/test-results/test-configuration/${config.id}?limit=1`);
+      if (response.data && response.data.length > 0) {
+        latestResults.value[config.id] = response.data[0];
+      } else {
+        latestResults.value[config.id] = null;
+      }
+    } catch (err) {
+      console.error(`Error loading latest result for config ${config.id}:`, err);
+      latestResults.value[config.id] = null;
+    }
+  }
+};
+
+const loadRecentResults = async () => {
+  for (const config of configurations.value) {
+    try {
+      const response = await axios.get(`/api/test-results/test-configuration/${config.id}?limit=5`);
+      recentResults.value[config.id] = response.data || [];
+    } catch (err) {
+      console.error(`Error loading recent results for config ${config.id}:`, err);
+      recentResults.value[config.id] = [];
+    }
+  }
+};
+
+const loadPassRates = async () => {
+  for (const config of configurations.value) {
+    try {
+      const response = await axios.get(`/api/test-results/compliance/metrics?testConfigurationId=${config.id}`);
+      if (response.data && response.data.overall) {
+        passRates.value[config.id] = response.data.overall.passRate;
+      } else {
+        passRates.value[config.id] = null;
+      }
+    } catch (err) {
+      console.error(`Error loading pass rate for config ${config.id}:`, err);
+      passRates.value[config.id] = null;
+    }
+  }
+};
+
+const getLatestResult = (configId: string) => {
+  return latestResults.value[configId] || null;
+};
+
+const getRecentResults = (configId: string) => {
+  return recentResults.value[configId] || [];
+};
+
+const getPassRate = (configId: string) => {
+  return passRates.value[configId] ?? null;
+};
+
+const getPassRateClass = (passRate: number | null) => {
+  if (passRate === null) return '';
+  if (passRate >= 90) return 'pass-rate-excellent';
+  if (passRate >= 70) return 'pass-rate-good';
+  if (passRate >= 50) return 'pass-rate-warning';
+  return 'pass-rate-poor';
+};
+
+const viewTestResult = (result: any) => {
+  window.location.href = `/test-history?testConfigurationId=${result.testConfigurationId}`;
+};
+
+const formatDateTime = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleString();
+};
+
+const formatDuration = (ms: number) => {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${(ms / 60000).toFixed(1)}m`;
 };
 
 const editConfiguration = (config: TestConfiguration) => {
@@ -238,6 +418,10 @@ const testConfiguration = async (config: TestConfiguration) => {
     const response = await axios.post(`/api/test-configurations/${config.id}/test`);
     testResults.value = response.data;
     showResultsModal.value = true;
+    // Reload test results after testing
+    await loadLatestResults();
+    await loadRecentResults();
+    await loadPassRates();
   } catch (err: any) {
     testError.value = err.response?.data?.message || 'Failed to test configuration';
     showResultsModal.value = true;
@@ -556,12 +740,163 @@ onMounted(() => {
   gap: 1rem;
   font-size: 0.875rem;
   color: #718096;
+  flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.assigned-apps {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.app-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #4facfe;
+  font-weight: 500;
+}
+
+.test-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.test-status-badge.status-passed {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+  border: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.test-status-badge.status-failed {
+  background: rgba(252, 129, 129, 0.2);
+  color: #fc8181;
+  border: 1px solid rgba(252, 129, 129, 0.3);
+}
+
+.test-status-badge.status-partial {
+  background: rgba(237, 137, 54, 0.2);
+  color: #ed8936;
+  border: 1px solid rgba(237, 137, 54, 0.3);
+}
+
+.test-status-badge.status-error {
+  background: rgba(245, 101, 101, 0.2);
+  color: #f56565;
+  border: 1px solid rgba(245, 101, 101, 0.3);
+}
+
+.test-status-badge.status-never {
+  background: rgba(160, 174, 192, 0.2);
+  color: #a0aec0;
+  border: 1px solid rgba(160, 174, 192, 0.3);
+}
+
+.pass-rate-display {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.pass-rate-excellent {
+  color: #48bb78;
+}
+
+.pass-rate-good {
+  color: #4facfe;
+}
+
+.pass-rate-warning {
+  color: #ed8936;
+}
+
+.pass-rate-poor {
+  color: #fc8181;
+}
+
+.pass-rate-none {
+  color: #a0aec0;
+}
+
+.recent-tests-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.recent-tests-header {
+  margin-bottom: 0.75rem;
+}
+
+.recent-tests-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recent-tests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recent-test-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recent-test-item:hover {
+  background: rgba(79, 172, 254, 0.05);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+.recent-test-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.recent-test-time {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.recent-test-app {
+  font-size: 0.875rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.recent-test-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.recent-test-duration {
+  font-size: 0.75rem;
+  color: #a0aec0;
 }
 
 .meta-icon {

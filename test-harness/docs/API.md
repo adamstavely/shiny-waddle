@@ -1515,6 +1515,519 @@ Checks all security gates for a pull request.
 }
 ```
 
+## Applications and Test Configurations Endpoints
+
+### Assign Test Configurations to Application
+
+Assign test configurations to an application. Test assignments are managed externally (not by users in the UI).
+
+```http
+POST /api/applications/:id/test-configurations
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Request Body:**
+```json
+{
+  "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "app-123",
+  "name": "My Application",
+  "type": "api",
+  "status": "active",
+  "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"],
+  "registeredAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Status Codes:**
+- `200` - Success
+- `400` - Bad Request (invalid test configuration IDs)
+- `404` - Application not found
+
+### Get Application Test Configurations
+
+Retrieve test configurations assigned to an application.
+
+```http
+GET /api/applications/:id/test-configurations
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Query Parameters:**
+- `expand` (boolean, optional): If `true`, returns full test configuration objects instead of just IDs
+
+**Response (without expand):**
+```json
+["config-id-1", "config-id-2", "config-id-3"]
+```
+
+**Response (with expand=true):**
+```json
+[
+  {
+    "id": "config-id-1",
+    "name": "RLS/CLS Test Config",
+    "type": "rls-cls",
+    "description": "Test configuration for RLS/CLS coverage",
+    "createdAt": "2024-01-10T10:00:00Z",
+    "updatedAt": "2024-01-10T10:00:00Z"
+  },
+  {
+    "id": "config-id-2",
+    "name": "DLP Test Config",
+    "type": "dlp",
+    "description": "Test configuration for DLP patterns",
+    "createdAt": "2024-01-11T10:00:00Z",
+    "updatedAt": "2024-01-11T10:00:00Z"
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Success
+- `404` - Application not found
+
+### Run Tests for Application (CI/CD Integration)
+
+Execute all assigned test configurations for an application. This is the primary endpoint for CI/CD pipeline integration.
+
+```http
+POST /api/applications/:id/run-tests
+```
+
+**Path Parameters:**
+- `id` (string, required): Application ID
+
+**Query Parameters:**
+- `buildId` (string, optional): CI/CD build identifier
+- `runId` (string, optional): CI/CD run identifier
+- `commitSha` (string, optional): Git commit SHA
+- `branch` (string, optional): Git branch name
+
+**Example Request:**
+```http
+POST /api/applications/app-123/run-tests?buildId=build-456&commitSha=abc123def&branch=main
+```
+
+**Response:**
+```json
+{
+  "status": "passed",
+  "totalTests": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "configId": "config-id-1",
+      "configName": "RLS/CLS Test Config",
+      "passed": true,
+      "result": {
+        "passed": true,
+        "coverage": 85,
+        "applicationId": "app-123",
+        "buildId": "build-456",
+        "commitSha": "abc123def",
+        "branch": "main",
+        "testConfigurationId": "config-id-1",
+        "testConfigurationName": "RLS/CLS Test Config",
+        "timestamp": "2024-01-15T10:30:00Z"
+      }
+    },
+    {
+      "configId": "config-id-2",
+      "configName": "DLP Test Config",
+      "passed": true,
+      "result": {
+        "passed": true,
+        "patternsMatched": 0,
+        "applicationId": "app-123",
+        "buildId": "build-456",
+        "commitSha": "abc123def",
+        "branch": "main",
+        "testConfigurationId": "config-id-2",
+        "testConfigurationName": "DLP Test Config",
+        "timestamp": "2024-01-15T10:30:00Z"
+      }
+    },
+    {
+      "configId": "config-id-3",
+      "configName": "Network Policy Test Config",
+      "passed": false,
+      "error": {
+        "message": "Firewall rule validation failed",
+        "type": "BadRequestException",
+        "details": {
+          "statusCode": 400,
+          "message": "Firewall rule validation failed"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Status Field Values:**
+- `passed` - All tests passed
+- `failed` - All tests failed
+- `partial` - Some tests passed, some failed
+
+**Status Codes:**
+- `200` - Success (tests executed, check `status` field for results)
+- `404` - Application not found
+
+**Note:** If no test configurations are assigned to the application, the response will have `status: "passed"`, `totalTests: 0`, and an empty `results` array.
+
+### Get Applications Using Test Configuration
+
+Retrieve all applications that have a specific test configuration assigned.
+
+```http
+GET /api/test-configurations/:id/applications
+```
+
+**Path Parameters:**
+- `id` (string, required): Test configuration ID
+
+**Response:**
+```json
+[
+  {
+    "id": "app-123",
+    "name": "My Application",
+    "type": "api",
+    "status": "active",
+    "baseUrl": "https://api.example.com",
+    "team": "backend-team",
+    "registeredAt": "2024-01-15T10:00:00Z",
+    "lastTestAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": "app-456",
+    "name": "Another Application",
+    "type": "web",
+    "status": "active",
+    "registeredAt": "2024-01-16T10:00:00Z",
+    "updatedAt": "2024-01-16T10:00:00Z"
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Success
+- `404` - Test configuration not found
+
+## CI/CD Integration Examples
+
+### GitHub Actions
+
+```yaml
+name: Run Heimdall Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Heimdall Tests
+        run: |
+          response=$(curl -X POST \
+            "http://heimdall-api/api/applications/${{ env.APP_ID }}/run-tests?buildId=${{ github.run_id }}&commitSha=${{ github.sha }}&branch=${{ github.ref_name }}" \
+            -H "Content-Type: application/json")
+          
+          status=$(echo $response | jq -r '.status')
+          
+          if [ "$status" != "passed" ]; then
+            echo "Tests failed with status: $status"
+            exit 1
+          fi
+```
+
+### GitLab CI
+
+```yaml
+test:
+  stage: test
+  script:
+    - |
+      response=$(curl -X POST \
+        "http://heimdall-api/api/applications/${APP_ID}/run-tests?buildId=${CI_PIPELINE_ID}&commitSha=${CI_COMMIT_SHA}&branch=${CI_COMMIT_REF_NAME}" \
+        -H "Content-Type: application/json")
+      
+      status=$(echo $response | jq -r '.status')
+      
+      if [ "$status" != "passed" ]; then
+        echo "Tests failed with status: $status"
+        exit 1
+      fi
+```
+
+### Jenkins Pipeline
+
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('Run Heimdall Tests') {
+            steps {
+                script {
+                    def response = sh(
+                        script: """
+                            curl -X POST \
+                            "http://heimdall-api/api/applications/${env.APP_ID}/run-tests?buildId=${env.BUILD_NUMBER}&commitSha=${env.GIT_COMMIT}&branch=${env.GIT_BRANCH}" \
+                            -H "Content-Type: application/json"
+                        """,
+                        returnStdout: true
+                    ).trim()
+                    
+                    def json = readJSON text: response
+                    def status = json.status
+                    
+                    if (status != "passed") {
+                        error("Tests failed with status: ${status}")
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Assigning Tests to Applications (External System)
+
+External systems can assign test configurations to applications:
+
+```bash
+curl -X POST "http://heimdall-api/api/applications/app-123/test-configurations" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"]
+  }'
+```
+
+## Test Results Endpoints
+
+### Query Test Results
+
+Query test results with various filters.
+
+```http
+GET /api/test-results
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application ID
+- `testConfigurationId` (string, optional): Filter by test configuration ID
+- `buildId` (string, optional): Filter by CI/CD build ID
+- `branch` (string, optional): Filter by Git branch name
+- `status` (string, optional): Filter by status (`passed`, `failed`, `partial`, `error`)
+- `startDate` (string, optional): Filter by start date (ISO 8601 format)
+- `endDate` (string, optional): Filter by end date (ISO 8601 format)
+- `limit` (number, optional): Maximum number of results to return (default: 20)
+- `offset` (number, optional): Number of results to skip (for pagination)
+
+**Response:**
+```json
+[
+  {
+    "id": "result-id-1",
+    "applicationId": "app-123",
+    "applicationName": "Research Tracker API",
+    "testConfigurationId": "config-id-1",
+    "testConfigurationName": "RLS Coverage Test",
+    "testConfigurationType": "rls-cls",
+    "status": "passed",
+    "passed": true,
+    "buildId": "build-456",
+    "runId": "run-789",
+    "commitSha": "abc123def456",
+    "branch": "main",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "duration": 1250,
+    "result": {
+      "passed": true,
+      "coveragePercentage": 95,
+      "policies": [...]
+    },
+    "error": null,
+    "metadata": {
+      "buildId": "build-456",
+      "runId": "run-789"
+    },
+    "createdAt": "2024-01-15T10:30:00Z"
+  }
+]
+```
+
+### Get Test Result by ID
+
+Get a specific test result by its ID.
+
+```http
+GET /api/test-results/:id
+```
+
+**Path Parameters:**
+- `id` (string, required): Test result ID
+
+**Response:** Same as individual result object in query response
+
+### Get Test Results for Application
+
+Get all test results for a specific application.
+
+```http
+GET /api/test-results/application/:appId
+```
+
+**Path Parameters:**
+- `appId` (string, required): Application ID
+
+**Query Parameters:**
+- `status` (string, optional): Filter by status
+- `branch` (string, optional): Filter by branch
+- `limit` (number, optional): Maximum number of results
+- `offset` (number, optional): Number of results to skip
+
+**Response:** Array of test result objects
+
+### Get Test Results for Test Configuration
+
+Get all test results for a specific test configuration.
+
+```http
+GET /api/test-results/test-configuration/:configId
+```
+
+**Path Parameters:**
+- `configId` (string, required): Test configuration ID
+
+**Query Parameters:** Same as application endpoint
+
+**Response:** Array of test result objects
+
+### Get Test Results for Build
+
+Get all test results for a specific CI/CD build.
+
+```http
+GET /api/test-results/build/:buildId
+```
+
+**Path Parameters:**
+- `buildId` (string, required): Build ID
+
+**Response:** Array of test result objects
+
+### Get Compliance Metrics
+
+Get compliance metrics and statistics.
+
+```http
+GET /api/test-results/compliance/metrics
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application
+- `testConfigurationId` (string, optional): Filter by test configuration
+- `startDate` (string, optional): Start date for metrics period
+- `endDate` (string, optional): End date for metrics period
+
+**Response:**
+```json
+{
+  "period": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2024-01-31T23:59:59Z"
+  },
+  "overall": {
+    "totalTests": 150,
+    "passed": 135,
+    "failed": 10,
+    "partial": 3,
+    "errors": 2,
+    "passRate": 90.0,
+    "averageDuration": 1250,
+    "trend": "improving"
+  },
+  "byTestConfiguration": {
+    "config-id-1": {
+      "configName": "RLS Coverage Test",
+      "configType": "rls-cls",
+      "totalTests": 50,
+      "passed": 48,
+      "failed": 2,
+      "passRate": 96.0
+    }
+  },
+  "failingTests": [
+    {
+      "configId": "config-id-2",
+      "configName": "DLP Test",
+      "lastFailure": "2024-01-15T10:30:00Z",
+      "failureCount": 5
+    }
+  ],
+  "trends": [
+    {
+      "period": "2024-01-15",
+      "passRate": 92.5,
+      "totalTests": 10
+    }
+  ]
+}
+```
+
+### Get Compliance Trends
+
+Get compliance trends over time.
+
+```http
+GET /api/test-results/compliance/trends
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application
+- `testConfigurationId` (string, optional): Filter by test configuration
+- `period` (string, optional): Grouping period (`day`, `week`, `month`, default: `day`)
+- `startDate` (string, optional): Start date
+- `endDate` (string, optional): End date
+
+**Response:**
+```json
+[
+  {
+    "period": "2024-01-15",
+    "passRate": 92.5,
+    "totalTests": 10
+  },
+  {
+    "period": "2024-01-16",
+    "passRate": 95.0,
+    "totalTests": 12
+  }
+]
+```
+
 ## Rate Limits
 
 Currently, there are no rate limits enforced. In production, rate limiting should be implemented based on user roles and endpoint criticality.

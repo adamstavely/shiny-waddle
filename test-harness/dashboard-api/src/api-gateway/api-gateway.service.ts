@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { APIGatewayTester } from '../../../services/api-gateway-tester';
 import { APIGatewayPolicy, APIRequest } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
@@ -11,7 +11,10 @@ export class APIGatewayService {
   private readonly logger = new Logger(APIGatewayService.name);
   private tester: APIGatewayTester;
 
-  constructor(private readonly configService: TestConfigurationsService) {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly configService: TestConfigurationsService,
+  ) {
     this.tester = new APIGatewayTester();
   }
 

@@ -82,5 +82,11 @@ export class TestConfigurationsController {
     this.logger.log(`Testing configuration: ${id}`);
     return this.configurationsService.testConfiguration(id);
   }
+
+  @Get(':id/applications')
+  async getApplicationsUsingConfig(@Param('id') id: string): Promise<any[]> {
+    this.logger.log(`Getting applications using test configuration: ${id}`);
+    return this.configurationsService.findApplicationsUsingConfig(id);
+  }
 }
 

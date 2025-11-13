@@ -7,6 +7,8 @@ import { IdentityLifecycleModule } from '../identity-lifecycle/identity-lifecycl
 import { APIGatewayModule } from '../api-gateway/api-gateway.module';
 import { NetworkPolicyModule } from '../network-policy/network-policy.module';
 import { DistributedSystemsModule } from '../distributed-systems/distributed-systems.module';
+import { ApplicationsModule } from '../applications/applications.module';
+import { TestResultsModule } from '../test-results/test-results.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { DistributedSystemsModule } from '../distributed-systems/distributed-sys
     forwardRef(() => APIGatewayModule),
     forwardRef(() => NetworkPolicyModule),
     forwardRef(() => DistributedSystemsModule),
+    forwardRef(() => ApplicationsModule),
+    forwardRef(() => TestResultsModule),
   ],
   controllers: [TestConfigurationsController],
   providers: [TestConfigurationsService],

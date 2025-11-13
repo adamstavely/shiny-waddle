@@ -441,9 +441,26 @@
           <div class="app-header">
             <div class="app-title-row">
               <h3 class="app-name">{{ app.name }}</h3>
-              <span class="app-status" :class="`status-${app.status}`">
-                {{ app.status }}
-              </span>
+              <div class="app-status-badges">
+                <span class="app-status" :class="`status-${app.status}`">
+                  {{ app.status }}
+                </span>
+                <span
+                  v-if="getLatestResult(app.id)"
+                  class="test-status-badge"
+                  :class="`status-${getLatestResult(app.id).status}`"
+                  :title="`Last test: ${getLatestResult(app.id).status}`"
+                >
+                  {{ getLatestResult(app.id).status }}
+                </span>
+                <span
+                  v-else
+                  class="test-status-badge status-never"
+                  title="Never tested"
+                >
+                  Never tested
+                </span>
+              </div>
             </div>
             <p class="app-id">ID: {{ app.id }}</p>
           </div>
@@ -469,12 +486,61 @@
               <span class="detail-label">Last Test</span>
               <span class="detail-value">{{ app.lastTestAt ? formatDate(app.lastTestAt) : 'Never' }}</span>
             </div>
+            <div v-if="getAssignedTestConfigs(app.id).length > 0" class="detail-item full-width">
+              <span class="detail-label">Assigned Tests</span>
+              <div class="test-configs-list">
+                <span
+                  v-for="config in getAssignedTestConfigs(app.id)"
+                  :key="config.id || config"
+                  class="test-config-badge"
+                >
+                  {{ typeof config === 'string' ? config : config.name }}
+                </span>
+              </div>
+              <p class="assignment-note">Test assignments are managed externally</p>
+            </div>
+            <div v-else class="detail-item full-width">
+              <span class="detail-label">Assigned Tests</span>
+              <span class="detail-value">No tests assigned</span>
+            </div>
+          </div>
+
+          <!-- Recent Tests Section -->
+          <div v-if="getRecentResults(app.id).length > 0" class="recent-tests-section">
+            <div class="recent-tests-header">
+              <span class="recent-tests-label">Recent Tests</span>
+            </div>
+            <div class="recent-tests-list">
+              <div
+                v-for="result in getRecentResults(app.id)"
+                :key="result.id"
+                class="recent-test-item"
+                @click="viewTestResult(result)"
+              >
+                <div class="recent-test-info">
+                  <span class="recent-test-time">{{ formatDateTime(result.timestamp) }}</span>
+                  <span class="recent-test-config">{{ result.testConfigurationName }}</span>
+                </div>
+                <div class="recent-test-meta">
+                  <span class="test-status-badge" :class="`status-${result.status}`">
+                    {{ result.status }}
+                  </span>
+                  <span v-if="result.duration" class="recent-test-duration">
+                    {{ formatDuration(result.duration) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="app-actions">
             <button @click="editApplication(app)" class="action-btn edit-btn">
               <Edit class="action-icon" />
               Edit
+            </button>
+            <button @click="viewHistory(app.id)" class="action-btn history-btn">
+              <History class="action-icon" />
+              History
             </button>
             <button @click="testApplication(app)" class="action-btn test-btn">
               <TestTube class="action-icon" />
@@ -773,6 +839,13 @@
       @close="showAddValidatorModal = false; editingValidator = null"
       @submit="handleValidatorSubmit"
     />
+
+    <!-- Test Result Modal -->
+    <TestResultModal
+      v-model:isOpen="showTestResultModal"
+      :result="selectedTestResult"
+      @close="showTestResultModal = false; selectedTestResult = null"
+    />
   </div>
 </template>
 
@@ -787,6 +860,7 @@ import {
   Edit,
   Trash2,
   TestTube,
+  History,
   X,
   BarChart3,
   Activity,
@@ -809,6 +883,7 @@ import Dropdown from '../components/Dropdown.vue';
 import ValidatorCard from '../components/ValidatorCard.vue';
 import ValidatorDetailModal from '../components/ValidatorDetailModal.vue';
 import AddValidatorModal from '../components/AddValidatorModal.vue';
+import TestResultModal from '../components/TestResultModal.vue';
 
 const activeTab = ref<'overview' | 'applications' | 'banners' | 'validators'>('overview');
 const showCreateModal = ref(false);
@@ -824,6 +899,8 @@ const showAddValidatorModal = ref(false);
 const showValidatorDetailModal = ref(false);
 const selectedValidator = ref<any>(null);
 const editingValidator = ref<any>(null);
+const showTestResultModal = ref(false);
+const selectedTestResult = ref<any>(null);
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -842,6 +919,10 @@ const applications = ref<any[]>([]);
 const loadingApplications = ref(false);
 const applicationsError = ref<string | null>(null);
 
+const appTestConfigs = ref<Record<string, any[]>>({});
+const latestResults = ref<Record<string, any>>({});
+const recentResults = ref<Record<string, any[]>>({});
+
 const loadApplications = async () => {
   try {
     loadingApplications.value = true;
@@ -853,12 +934,70 @@ const loadApplications = async () => {
       lastTestAt: app.lastTestAt ? new Date(app.lastTestAt) : null,
       updatedAt: new Date(app.updatedAt)
     }));
+    
+    // Load test configurations for each application
+    await loadTestConfigsForApps();
+    // Load test results for each application
+    await loadLatestResults();
+    await loadRecentResults();
   } catch (err: any) {
     applicationsError.value = err.message || 'Failed to load applications';
     console.error('Error loading applications:', err);
   } finally {
     loadingApplications.value = false;
   }
+};
+
+const loadTestConfigsForApps = async () => {
+  for (const app of applications.value) {
+    try {
+      const response = await axios.get(`/api/applications/${app.id}/test-configurations?expand=true`);
+      appTestConfigs.value[app.id] = response.data || [];
+    } catch (err) {
+      console.error(`Error loading test configs for app ${app.id}:`, err);
+      appTestConfigs.value[app.id] = [];
+    }
+  }
+};
+
+const getAssignedTestConfigs = (appId: string) => {
+  return appTestConfigs.value[appId] || [];
+};
+
+const loadLatestResults = async () => {
+  for (const app of applications.value) {
+    try {
+      const response = await axios.get(`/api/test-results/application/${app.id}?limit=1`);
+      if (response.data && response.data.length > 0) {
+        latestResults.value[app.id] = response.data[0];
+      } else {
+        latestResults.value[app.id] = null;
+      }
+    } catch (err) {
+      console.error(`Error loading latest result for app ${app.id}:`, err);
+      latestResults.value[app.id] = null;
+    }
+  }
+};
+
+const loadRecentResults = async () => {
+  for (const app of applications.value) {
+    try {
+      const response = await axios.get(`/api/test-results/application/${app.id}?limit=5`);
+      recentResults.value[app.id] = response.data || [];
+    } catch (err) {
+      console.error(`Error loading recent results for app ${app.id}:`, err);
+      recentResults.value[app.id] = [];
+    }
+  }
+};
+
+const getLatestResult = (appId: string) => {
+  return latestResults.value[appId] || null;
+};
+
+const getRecentResults = (appId: string) => {
+  return recentResults.value[appId] || [];
 };
 
 const appForm = ref({
@@ -1234,15 +1373,57 @@ const editApplication = (app: any) => {
   showCreateModal.value = true;
 };
 
+const viewHistory = (appId: string) => {
+  window.location.href = `/test-history?applicationId=${appId}`;
+};
+
+const viewTestResult = (result: any) => {
+  selectedTestResult.value = {
+    ...result,
+    timestamp: typeof result.timestamp === 'string' ? new Date(result.timestamp) : result.timestamp,
+    createdAt: typeof result.createdAt === 'string' ? new Date(result.createdAt) : result.createdAt,
+  };
+  showTestResultModal.value = true;
+};
+
+const formatDateTime = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleString();
+};
+
+const formatDuration = (ms: number) => {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${(ms / 60000).toFixed(1)}m`;
+};
+
 const testApplication = async (app: any) => {
   try {
-    await axios.post(`/api/applications/${app.id}/test`);
+    const response = await axios.post(`/api/applications/${app.id}/run-tests`);
     // Reload applications to update lastTestAt
     await loadApplications();
+    // Reload test results
+    await loadLatestResults();
+    await loadRecentResults();
+    
+    // Show test results
+    const status = response.data.status;
+    const total = response.data.totalTests;
+    const passed = response.data.passed;
+    const failed = response.data.failed;
+    
+    if (status === 'passed') {
+      alert(`All tests passed! (${passed}/${total})`);
+    } else if (status === 'failed') {
+      alert(`All tests failed! (${failed}/${total})`);
+    } else {
+      alert(`Tests completed with partial results: ${passed} passed, ${failed} failed out of ${total} total`);
+    }
+    
     // In real app: router.push(`/tests?app=${app.id}`);
   } catch (err: any) {
-    console.error('Error updating test time:', err);
-    alert('Failed to update test time');
+    console.error('Error running tests:', err);
+    alert('Failed to run tests: ' + (err.response?.data?.message || err.message));
   }
 };
 
@@ -1529,6 +1710,36 @@ const closeModal = () => {
   justify-content: space-between;
   align-items: center;
   font-size: 0.875rem;
+}
+
+.detail-item.full-width {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.test-configs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.test-config-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #4facfe;
+  font-weight: 500;
+}
+
+.assignment-note {
+  font-size: 0.75rem;
+  color: #718096;
+  font-style: italic;
+  margin-top: 0.25rem;
 }
 
 .detail-label {
@@ -2368,6 +2579,120 @@ const closeModal = () => {
 .btn-retry:hover {
   background: rgba(79, 172, 254, 0.2);
   border-color: rgba(79, 172, 254, 0.5);
+}
+
+.app-status-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.test-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.test-status-badge.status-passed {
+  background: rgba(72, 187, 120, 0.2);
+  color: #48bb78;
+  border: 1px solid rgba(72, 187, 120, 0.3);
+}
+
+.test-status-badge.status-failed {
+  background: rgba(252, 129, 129, 0.2);
+  color: #fc8181;
+  border: 1px solid rgba(252, 129, 129, 0.3);
+}
+
+.test-status-badge.status-partial {
+  background: rgba(237, 137, 54, 0.2);
+  color: #ed8936;
+  border: 1px solid rgba(237, 137, 54, 0.3);
+}
+
+.test-status-badge.status-error {
+  background: rgba(245, 101, 101, 0.2);
+  color: #f56565;
+  border: 1px solid rgba(245, 101, 101, 0.3);
+}
+
+.test-status-badge.status-never {
+  background: rgba(160, 174, 192, 0.2);
+  color: #a0aec0;
+  border: 1px solid rgba(160, 174, 192, 0.3);
+}
+
+.recent-tests-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.recent-tests-header {
+  margin-bottom: 0.75rem;
+}
+
+.recent-tests-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recent-tests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recent-test-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recent-test-item:hover {
+  background: rgba(79, 172, 254, 0.05);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+.recent-test-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.recent-test-time {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.recent-test-config {
+  font-size: 0.875rem;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.recent-test-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.recent-test-duration {
+  font-size: 0.75rem;
+  color: #a0aec0;
 }
 
 /* Validators Styles */

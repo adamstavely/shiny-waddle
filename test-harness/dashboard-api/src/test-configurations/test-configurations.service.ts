@@ -27,6 +27,9 @@ import { IdentityLifecycleService } from '../identity-lifecycle/identity-lifecyc
 import { APIGatewayService } from '../api-gateway/api-gateway.service';
 import { NetworkPolicyService } from '../network-policy/network-policy.service';
 import { DistributedSystemsService } from '../distributed-systems/distributed-systems.service';
+import { ApplicationsService } from '../applications/applications.service';
+import { TestResultsService } from '../test-results/test-results.service';
+import { TestResultStatus } from '../test-results/entities/test-result.entity';
 
 @Injectable()
 export class TestConfigurationsService {
@@ -47,6 +50,10 @@ export class TestConfigurationsService {
     private readonly networkPolicyService: NetworkPolicyService,
     @Inject(forwardRef(() => DistributedSystemsService))
     private readonly distributedSystemsService: DistributedSystemsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
+    @Inject(forwardRef(() => TestResultsService))
+    private readonly testResultsService: TestResultsService,
   ) {
     this.loadConfigurations().catch(err => {
       this.logger.error('Error loading test configurations on startup:', err);
@@ -58,14 +65,35 @@ export class TestConfigurationsService {
       await fs.mkdir(path.dirname(this.configsFile), { recursive: true });
       try {
         const data = await fs.readFile(this.configsFile, 'utf-8');
+        if (!data || data.trim() === '') {
+          // Empty file, initialize defaults
+          this.configurations = [];
+          await this.initializeDefaultConfigurations();
+          await this.saveConfigurations();
+          return;
+        }
         const parsed = JSON.parse(data);
-        this.configurations = (Array.isArray(parsed) ? parsed : []).map((c: any) => ({
+        if (!Array.isArray(parsed)) {
+          this.logger.warn('Configurations file does not contain an array, initializing defaults');
+          this.configurations = [];
+          await this.initializeDefaultConfigurations();
+          await this.saveConfigurations();
+          return;
+        }
+        this.configurations = parsed.map((c: any) => ({
           ...c,
-          createdAt: new Date(c.createdAt),
-          updatedAt: new Date(c.updatedAt),
+          createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
+          updatedAt: c.updatedAt ? new Date(c.updatedAt) : new Date(),
         }));
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
+          // File doesn't exist, initialize defaults
+          this.configurations = [];
+          await this.initializeDefaultConfigurations();
+          await this.saveConfigurations();
+        } else if (readError instanceof SyntaxError) {
+          // JSON parsing error - file is corrupted
+          this.logger.error('JSON parsing error in configurations file, initializing defaults:', readError.message);
           this.configurations = [];
           await this.initializeDefaultConfigurations();
           await this.saveConfigurations();
@@ -81,7 +109,11 @@ export class TestConfigurationsService {
       }
     } catch (error) {
       this.logger.error('Error loading test configurations:', error);
-      this.configurations = [];
+      // Ensure we have at least an empty array
+      if (!this.configurations) {
+        this.configurations = [];
+      }
+      // Don't throw - allow service to continue with empty array
     }
   }
 
@@ -264,11 +296,16 @@ export class TestConfigurationsService {
   }
 
   async findAll(type?: TestConfigurationType): Promise<TestConfigurationEntity[]> {
-    await this.loadConfigurations();
-    if (type) {
-      return this.configurations.filter(c => c.type === type);
+    try {
+      await this.loadConfigurations();
+      if (type) {
+        return this.configurations.filter(c => c.type === type);
+      }
+      return this.configurations;
+    } catch (error) {
+      this.logger.error('Error in findAll:', error);
+      throw error;
     }
-    return this.configurations;
   }
 
   async findOne(id: string): Promise<TestConfigurationEntity> {
@@ -468,55 +505,153 @@ export class TestConfigurationsService {
     return duplicated;
   }
 
-  async testConfiguration(id: string): Promise<any> {
+  /**
+   * Test a configuration by executing the appropriate test based on configuration type.
+   * 
+   * @param id - Configuration ID to test
+   * @param context - Optional context including applicationId, buildId, runId, commitSha, branch
+   * @param saveResult - Optional flag to save test result to storage (requires applicationId in context)
+   * @returns Test result object
+   */
+  async testConfiguration(
+    id: string,
+    context?: {
+      applicationId?: string;
+      buildId?: string;
+      runId?: string;
+      commitSha?: string;
+      branch?: string;
+    },
+    saveResult?: boolean
+  ): Promise<any> {
     await this.loadConfigurations();
     const config = await this.findOne(id);
 
-    this.logger.log(`Testing configuration: ${id} (${config.type})`);
+    this.logger.log(`Testing configuration: ${id} (${config.type})${context?.applicationId ? ` for application ${context.applicationId}` : ''}`);
 
+    const testStartTime = Date.now();
     try {
+      let result: any;
       switch (config.type) {
         case 'rls-cls': {
           const rlsConfig = config as RLSCLSConfigurationEntity;
           // Run RLS coverage test as the primary test
-          return await this.rlsClsService.testRLSCoverage({ configId: id });
+          result = await this.rlsClsService.testRLSCoverage({ configId: id });
+          break;
         }
         case 'network-policy': {
           const npConfig = config as NetworkPolicyConfigurationEntity;
           // Run firewall rules test as the primary test
-          return await this.networkPolicyService.testFirewallRules({ configId: id });
+          result = await this.networkPolicyService.testFirewallRules({ configId: id });
+          break;
         }
         case 'dlp': {
           const dlpConfig = config as DLPConfigurationEntity;
           // Run exfiltration test as the primary test
-          return await this.dlpService.testExfiltration({ configId: id });
+          result = await this.dlpService.testExfiltration({ configId: id });
+          break;
         }
         case 'identity-lifecycle': {
           const ilConfig = config as IdentityLifecycleConfigurationEntity;
           // Run onboarding test as the primary test
-          return await this.identityLifecycleService.testOnboarding({ configId: id });
+          result = await this.identityLifecycleService.testOnboarding({ configId: id });
+          break;
         }
         case 'api-gateway': {
           const agConfig = config as APIGatewayConfigurationEntity;
           // Run rate limiting test as the primary test
-          return await this.apiGatewayService.testRateLimiting({ configId: id });
+          result = await this.apiGatewayService.testRateLimiting({ configId: id });
+          break;
         }
         case 'distributed-systems': {
           const dsConfig = config as DistributedSystemsConfigurationEntity;
           // Run a multi-region test as the primary test
-          return await this.distributedSystemsService.runTest({
+          result = await this.distributedSystemsService.runTest({
             name: `Test: ${dsConfig.name}`,
             testType: 'multi-region',
             configId: id,
           });
+          break;
         }
         default:
           throw new BadRequestException(`Unknown configuration type: ${(config as any).type}`);
       }
+
+      // Add context metadata to result if provided
+      if (context) {
+        result = {
+          ...result,
+          applicationId: context.applicationId,
+          buildId: context.buildId,
+          runId: context.runId,
+          commitSha: context.commitSha,
+          branch: context.branch,
+          testConfigurationId: id,
+          testConfigurationName: config.name,
+          timestamp: new Date(),
+        };
+      }
+
+      // Save result if requested and applicationId is provided
+      if (saveResult && context?.applicationId) {
+        try {
+          const testPassed = result.passed !== false;
+          const testStatus: TestResultStatus = testPassed ? 'passed' : 'failed';
+          const testDuration = Date.now() - testStartTime;
+
+          // Get application name
+          let applicationName = 'Unknown';
+          try {
+            const application = await this.applicationsService.findOne(context.applicationId);
+            applicationName = application.name;
+          } catch (err) {
+            this.logger.warn(`Could not load application ${context.applicationId} for result storage: ${err}`);
+          }
+
+          await this.testResultsService.saveResult({
+            applicationId: context.applicationId,
+            applicationName,
+            testConfigurationId: id,
+            testConfigurationName: config.name,
+            testConfigurationType: config.type,
+            status: testStatus,
+            passed: testPassed,
+            buildId: context.buildId,
+            runId: context.runId,
+            commitSha: context.commitSha,
+            branch: context.branch,
+            timestamp: new Date(),
+            duration: testDuration,
+            result: result,
+            error: result.error ? {
+              message: result.error.message || result.error,
+              type: result.error.type || 'Error',
+              details: result.error.details || result.error,
+            } : undefined,
+            metadata: {
+              buildId: context.buildId,
+              runId: context.runId,
+              commitSha: context.commitSha,
+              branch: context.branch,
+            },
+          });
+
+          this.logger.log(`Saved test result for configuration ${id} and application ${context.applicationId}`);
+        } catch (storageError: any) {
+          // Log but don't fail the test execution if storage fails
+          this.logger.warn(`Failed to save test result for configuration ${id}: ${storageError.message}`);
+        }
+      }
+
+      return result;
     } catch (error: any) {
       this.logger.error(`Error testing configuration ${id}: ${error.message}`, error.stack);
       throw error;
     }
+  }
+
+  async findApplicationsUsingConfig(configId: string): Promise<any[]> {
+    return this.applicationsService.findApplicationsUsingConfig(configId);
   }
 }
 

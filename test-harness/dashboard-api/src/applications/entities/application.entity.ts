@@ -9,6 +9,7 @@ export interface Application {
   team?: string;
   description?: string;
   config?: Record<string, any>;
+  testConfigurationIds?: string[];
   registeredAt: Date;
   lastTestAt?: Date;
   updatedAt: Date;

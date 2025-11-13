@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { DLPTester } from '../../../services/dlp-tester';
 import { User, DataOperation, TestQuery, DLPPattern } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
@@ -11,7 +11,10 @@ export class DLPService {
   private readonly logger = new Logger(DLPService.name);
   private tester: DLPTester;
 
-  constructor(private readonly configService: TestConfigurationsService) {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly configService: TestConfigurationsService,
+  ) {
     this.tester = new DLPTester();
   }
 

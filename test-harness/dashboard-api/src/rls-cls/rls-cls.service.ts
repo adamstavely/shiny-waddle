@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { RLSCLSTester } from '../../../services/rls-cls-tester';
 import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
@@ -11,7 +11,10 @@ export class RLSCLSService {
   private readonly logger = new Logger(RLSCLSService.name);
   private tester: RLSCLSTester;
 
-  constructor(private readonly configService: TestConfigurationsService) {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly configService: TestConfigurationsService,
+  ) {
     this.tester = new RLSCLSTester();
   }
 

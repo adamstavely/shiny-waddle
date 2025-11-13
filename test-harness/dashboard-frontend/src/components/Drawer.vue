@@ -29,6 +29,14 @@
             <TestTube class="item-icon" />
             <span>Test Suites</span>
           </a>
+          <a
+            href="/test-history"
+            @click.prevent="handleNavClick('/test-history')"
+            :class="['drawer-item', isActive('/test-history') ? 'drawer-item-active' : '']"
+          >
+            <History class="item-icon" />
+            <span>Test History</span>
+          </a>
         </div>
 
         <!-- Access Control Tests -->
@@ -232,6 +240,47 @@
           </div>
         </div>
       </div>
+
+      <!-- Compliance Category -->
+      <div v-if="activeCategory === 'compliance'" class="drawer-category" data-category="compliance">
+        <!-- Main Compliance Page -->
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/compliance"
+            @click.prevent="handleNavClick('/compliance')"
+            :class="['drawer-item', isActive('/compliance') ? 'drawer-item-active' : '']"
+          >
+            <CheckCircle2 class="item-icon" />
+            <span>Compliance Overview</span>
+          </a>
+          <a
+            href="/compliance-trends"
+            @click.prevent="handleNavClick('/compliance-trends')"
+            :class="['drawer-item', isActive('/compliance-trends') ? 'drawer-item-active' : '']"
+          >
+            <TrendingUp class="item-icon" />
+            <span>Compliance Trends</span>
+          </a>
+        </div>
+
+        <!-- Compliance Frameworks -->
+        <div class="category-section">
+          <div class="section-header">
+            <FileCheck class="section-icon" />
+            <h3 class="section-title">Compliance Frameworks</h3>
+          </div>
+          <div class="category-items">
+            <a
+              href="/compliance/nist-800-207"
+              @click.prevent="handleNavClick('/compliance/nist-800-207')"
+              :class="['drawer-item', isActive('/compliance/nist-800-207') ? 'drawer-item-active' : '']"
+            >
+              <ShieldCheck class="item-icon" />
+              <span>NIST 800-207</span>
+            </a>
+          </div>
+        </div>
+      </div>
     </nav>
   </aside>
 </template>
@@ -256,7 +305,10 @@ import {
   ShieldCheck,
   FileX,
   Server,
-  TestTube
+  TestTube,
+  History,
+  CheckCircle2,
+  TrendingUp
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -280,6 +332,13 @@ const configPages = [
   '/datasets', '/contracts'
 ];
 
+// Compliance pages
+const compliancePages = [
+  '/compliance',
+  '/compliance-trends',
+  '/compliance/nist-800-207'
+];
+
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
   // Check if it's a test page
@@ -290,6 +349,10 @@ const getCategoryFromRoute = (path: string): string | null => {
   // Check if it's a configuration page
   if (configPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'configuration';
+  }
+  // Check if it's a compliance page
+  if (compliancePages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'compliance';
   }
   return null;
 };
