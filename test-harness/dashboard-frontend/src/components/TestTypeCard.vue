@@ -168,7 +168,6 @@ import {
   FileText,
   AlertTriangle
 } from 'lucide-vue-next';
-import Dropdown from './Dropdown.vue';
 import ConfigurationModal from './configurations/ConfigurationModal.vue';
 import axios from 'axios';
 
@@ -863,94 +862,6 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.5;
-}
-
-.runner-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.config-selector {
-  flex: 1;
-}
-
-.btn-run {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  border: none;
-  border-radius: 8px;
-  color: #0f1419;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-run:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
-}
-
-.btn-run:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(15, 20, 25, 0.3);
-  border-top-color: #0f1419;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.test-result {
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.result-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.result-status.passed {
-  color: #22c55e;
-}
-
-.result-status.failed {
-  color: #fc8181;
-}
-
-.result-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.result-error {
-  margin-top: 8px;
-  padding: 8px;
-  background: rgba(252, 129, 129, 0.1);
-  border-left: 3px solid #fc8181;
-  border-radius: 4px;
-  color: #fc8181;
-  font-size: 0.875rem;
 }
 
 .results-list {
