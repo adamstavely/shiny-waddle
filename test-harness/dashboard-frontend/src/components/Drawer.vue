@@ -24,7 +24,7 @@
           <a
             href="/tests"
             @click.prevent="handleNavClick('/tests')"
-            :class="['drawer-item', isActive('/tests') ? 'drawer-item-active' : '']"
+            :class="['drawer-item', isActive('/tests') && !currentPath.value?.includes('/tests/') ? 'drawer-item-active' : '']"
           >
             <LayoutDashboard class="item-icon" />
             <span>Overview</span>
@@ -91,6 +91,14 @@
       <div v-if="activeCategory === 'access-control'" class="drawer-category" data-category="access-control">
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
+            href="/access-control"
+            @click.prevent="handleNavClick('/access-control')"
+            :class="['drawer-item', currentPath.value === '/access-control' ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
+          <a
             href="/policies"
             @click.prevent="handleNavClick('/policies')"
             :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
@@ -129,6 +137,14 @@
       <div v-if="activeCategory === 'platform-config'" class="drawer-category" data-category="platform-config">
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
+            href="/platform-config"
+            @click.prevent="handleNavClick('/platform-config')"
+            :class="['drawer-item', currentPath.value === '/platform-config' ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
+          <a
             href="/configuration-validation"
             @click.prevent="handleNavClick('/configuration-validation')"
             :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
@@ -142,6 +158,14 @@
       <!-- Data Security Category -->
       <div v-if="activeCategory === 'data-security'" class="drawer-category" data-category="data-security">
         <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/data-security"
+            @click.prevent="handleNavClick('/data-security')"
+            :class="['drawer-item', currentPath.value === '/data-security' ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
           <a
             href="/datasets"
             @click.prevent="handleNavClick('/datasets')"
@@ -165,6 +189,14 @@
       <div v-if="activeCategory === 'insights'" class="drawer-category" data-category="insights">
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
+            href="/insights"
+            @click.prevent="handleNavClick('/insights')"
+            :class="['drawer-item', (currentPath.value === '/insights' || (currentPath.value && currentPath.value.startsWith('/insights'))) && (!route.query.tab || route.query.tab === 'overview') ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
+          <a
             href="/insights?tab=reports"
             @click.prevent="handleNavClick('/insights?tab=reports')"
             :class="['drawer-item', (currentPath.value === '/insights' || (currentPath.value && currentPath.value.startsWith('/insights'))) && route.query.tab === 'reports' ? 'drawer-item-active' : '']"
@@ -186,6 +218,14 @@
       <!-- Admin Category -->
       <div v-if="activeCategory === 'admin'" class="drawer-category" data-category="admin">
         <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/admin"
+            @click.prevent="handleNavClick('/admin')"
+            :class="['drawer-item', currentPath.value === '/admin' ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
           <a
             href="/identity-providers"
             @click.prevent="handleNavClick('/identity-providers')"

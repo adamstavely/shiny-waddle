@@ -1,0 +1,496 @@
+<template>
+  <div class="access-control-overview-page">
+    <Breadcrumb :items="breadcrumbItems" />
+    
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-card">
+        <!-- Background texture/grain effect -->
+        <div class="hero-background"></div>
+        
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              Access Control
+              <span class="hero-subtitle">Policy & Identity Management</span>
+            </h1>
+            <p class="hero-description">
+              Manage and configure access control policies, resources, and identity providers. 
+              Define RBAC and ABAC policies, configure resources with attributes, simulate user 
+              access scenarios, and validate policy decisions to ensure proper access control 
+              across your applications.
+            </p>
+            <div class="hero-actions">
+              <button @click="navigateTo('/policies')" class="btn-primary">View Policies</button>
+              <button @click="navigateTo('/resources')" class="btn-secondary">Manage Resources</button>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="svg-container">
+              <svg viewBox="0 0 250 200" class="access-control-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <linearGradient id="accessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                  </linearGradient>
+                  <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
+                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                  </linearGradient>
+                </defs>
+                
+                <!-- Shield - Main Access Control -->
+                <path d="M 125 20 L 200 50 L 200 120 L 125 180 L 50 120 L 50 50 Z" 
+                      fill="url(#shieldGradient)" 
+                      opacity="0.3" 
+                      stroke="url(#accessGradient)" 
+                      stroke-width="2"/>
+                <path d="M 125 30 L 190 55 L 190 115 L 125 170 L 60 115 L 60 55 Z" 
+                      fill="url(#shieldGradient)" 
+                      opacity="0.4" 
+                      stroke="url(#accessGradient)" 
+                      stroke-width="1.5"/>
+                
+                <!-- Policy Document -->
+                <rect x="30" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
+                <line x1="40" y1="75" x2="70" y2="75" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
+                <line x1="40" y1="85" x2="65" y2="85" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
+                <line x1="40" y1="95" x2="70" y2="95" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
+                
+                <!-- Resource Folder -->
+                <rect x="170" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
+                <path d="M 170 60 L 180 60 L 185 70 L 220 70 L 220 120 L 170 120 Z" 
+                      fill="url(#accessGradient)" 
+                      opacity="0.3" 
+                      stroke="url(#accessGradient)" 
+                      stroke-width="1.5"/>
+                
+                <!-- User Icon -->
+                <circle cx="125" cy="140" r="20" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
+                <circle cx="125" cy="130" r="8" fill="#00f2fe" opacity="0.9"/>
+                <path d="M 105 160 Q 105 150, 125 150 Q 145 150, 145 160" 
+                      stroke="#00f2fe" 
+                      stroke-width="3" 
+                      fill="none" 
+                      opacity="0.9"/>
+                
+                <!-- Connection lines -->
+                <line x1="80" y1="90" x2="110" y2="100" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
+                <line x1="170" y1="90" x2="140" y2="100" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
+                <line x1="125" y1="120" x2="125" y2="140" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
+                
+                <!-- Checkmark symbols -->
+                <path d="M 45 80 L 52 87 L 62 72" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 185 80 L 192 87 L 202 72" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                
+                <!-- Accent dots -->
+                <circle cx="125" cy="50" r="3" fill="#00f2fe" opacity="0.8"/>
+                <circle cx="60" cy="90" r="2.5" fill="#4facfe" opacity="0.7"/>
+                <circle cx="190" cy="90" r="2.5" fill="#4facfe" opacity="0.7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- How It Works Section -->
+    <div class="how-it-works-section">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-description">
+        Understand how to configure and manage access control in your applications
+      </p>
+      
+      <div class="explanation-grid">
+        <div class="explanation-card">
+          <div class="explanation-icon">
+            <Shield />
+          </div>
+          <h3 class="explanation-title">Policies</h3>
+          <p class="explanation-text">
+            Define RBAC (Role-Based) and ABAC (Attribute-Based) access control policies. 
+            Create rules that determine who can access what resources under which conditions. 
+            Policies are evaluated by the Policy Decision Point (PDP) to make access decisions.
+          </p>
+          <button @click="navigateTo('/policies')" class="explanation-link">Manage Policies →</button>
+        </div>
+        
+        <div class="explanation-card">
+          <div class="explanation-icon">
+            <Folder />
+          </div>
+          <h3 class="explanation-title">Resources</h3>
+          <p class="explanation-text">
+            Configure resources with ABAC attributes such as sensitivity level, department, 
+            project, and region. Resources are the entities that policies protect, and their 
+            attributes are used in policy evaluation.
+          </p>
+          <button @click="navigateTo('/resources')" class="explanation-link">Manage Resources →</button>
+        </div>
+        
+        <div class="explanation-card">
+          <div class="explanation-icon">
+            <Users />
+          </div>
+          <h3 class="explanation-title">User Simulation</h3>
+          <p class="explanation-text">
+            Simulate users with different roles, attributes, and contexts to test how your 
+            policies behave. Generate test users and validate that access control works as 
+            expected across various scenarios.
+          </p>
+          <button @click="navigateTo('/tests/user-simulation')" class="explanation-link">Simulate Users →</button>
+        </div>
+        
+        <div class="explanation-card">
+          <div class="explanation-icon">
+            <FileSearch />
+          </div>
+          <h3 class="explanation-title">Policy Validation</h3>
+          <p class="explanation-text">
+            Validate policy decisions and test policy configurations. Check for conflicts, 
+            analyze coverage, and ensure policies are working correctly before deploying to 
+            production.
+          </p>
+          <button @click="navigateTo('/tests/policy-validation')" class="explanation-link">Validate Policies →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="stats-section">
+      <h2 class="section-title">Quick Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <Shield class="stat-icon" />
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.policies || 0 }}</div>
+            <div class="stat-label">Policies</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <Folder class="stat-icon" />
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.resources || 0 }}</div>
+            <div class="stat-label">Resources</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <Users class="stat-icon" />
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.users || 0 }}</div>
+            <div class="stat-label">Test Users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { Shield, Folder, Users, FileSearch } from 'lucide-vue-next';
+import Breadcrumb from '../components/Breadcrumb.vue';
+import axios from 'axios';
+
+const router = useRouter();
+
+const breadcrumbItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Access Control', to: '/access-control' },
+];
+
+const stats = ref({
+  policies: 0,
+  resources: 0,
+  users: 0,
+});
+
+const navigateTo = (path: string) => {
+  router.push(path);
+};
+
+const loadStats = async () => {
+  try {
+    // Load policies count
+    const policiesRes = await axios.get('/api/policies');
+    stats.value.policies = policiesRes.data?.length || 0;
+    
+    // Load resources count
+    const resourcesRes = await axios.get('/api/resources');
+    stats.value.resources = resourcesRes.data?.length || 0;
+    
+    // Load test users count (if available)
+    // stats.value.users = ...;
+  } catch (error) {
+    console.error('Failed to load stats:', error);
+  }
+};
+
+onMounted(() => {
+  loadStats();
+});
+</script>
+
+<style scoped>
+.access-control-overview-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.hero-section {
+  margin-bottom: 3rem;
+}
+
+.hero-card {
+  position: relative;
+  border-radius: 24px;
+  padding: 48px 64px;
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.hero-content {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.hero-text {
+  flex: 1;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 2rem;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+.hero-description {
+  font-size: 1.125rem;
+  color: #a0aec0;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.svg-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.access-control-svg {
+  width: 100%;
+  height: auto;
+}
+
+.how-it-works-section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.section-description {
+  font-size: 1.125rem;
+  color: #a0aec0;
+  margin-bottom: 2rem;
+}
+
+.explanation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.explanation-card {
+  background: rgba(26, 31, 46, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s;
+}
+
+.explanation-card:hover {
+  background: rgba(26, 31, 46, 0.8);
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-2px);
+}
+
+.explanation-icon {
+  width: 48px;
+  height: 48px;
+  color: #4facfe;
+  margin-bottom: 1rem;
+}
+
+.explanation-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.explanation-text {
+  font-size: 0.95rem;
+  color: #a0aec0;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.explanation-link {
+  color: #4facfe;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.explanation-link:hover {
+  color: #00f2fe;
+}
+
+.stats-section {
+  margin-bottom: 3rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: rgba(26, 31, 46, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  background: rgba(26, 31, 46, 0.8);
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  color: #4facfe;
+  flex-shrink: 0;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-visual {
+    order: -1;
+  }
+}
+</style>
+

@@ -7,6 +7,9 @@ import Applications from '../views/Applications.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import Tests from '../views/Tests.vue';
 import TestsOverview from '../views/TestsOverview.vue';
+import AccessControlOverview from '../views/AccessControlOverview.vue';
+import PlatformConfigOverview from '../views/PlatformConfigOverview.vue';
+import DataSecurityOverview from '../views/DataSecurityOverview.vue';
 import TestBatteries from '../views/TestBatteries.vue';
 import TestHarnesses from '../views/TestHarnesses.vue';
 import TestSuites from '../views/TestSuites.vue';
@@ -200,6 +203,21 @@ const router = createRouter({
         console.warn('Route /reports is deprecated. Use /insights?tab=reports instead.');
         return { path: '/insights', query: { ...to.query, tab: 'reports' } };
       }
+    },
+    {
+      path: '/access-control',
+      name: 'AccessControlOverview',
+      component: AccessControlOverview,
+    },
+    {
+      path: '/platform-config',
+      name: 'PlatformConfigOverview',
+      component: PlatformConfigOverview,
+    },
+    {
+      path: '/data-security',
+      name: 'DataSecurityOverview',
+      component: DataSecurityOverview,
     },
     {
       path: '/policies',
