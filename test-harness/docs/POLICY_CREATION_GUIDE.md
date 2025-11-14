@@ -1,6 +1,6 @@
 # Policy Creation Guide
 
-This guide explains how to create and configure access control policies for Sentinel, supporting both RBAC (Role-Based Access Control) and ABAC (Attribute-Based Access Control).
+This guide explains how to create and configure access control policies for TestOrchestrator, supporting both RBAC (Role-Based Access Control) and ABAC (Attribute-Based Access Control).
 
 ## Table of Contents
 

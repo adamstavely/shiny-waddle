@@ -90,6 +90,14 @@
         </div>
       </div>
 
+      <!-- Test Assignment Management Section -->
+      <div class="content-section">
+        <AssignmentManager
+          :application-id="application.id"
+          @updated="refreshData"
+        />
+      </div>
+
       <!-- Validator Management Section -->
       <div class="content-section">
         <div class="section-header">
@@ -144,6 +152,7 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import TestConfigToggle from '../components/TestConfigToggle.vue';
 import ValidatorToggle from '../components/ValidatorToggle.vue';
 import BulkTogglePanel from '../components/BulkTogglePanel.vue';
+import AssignmentManager from '../components/AssignmentManager.vue';
 
 const route = useRoute();
 const router = useRouter();

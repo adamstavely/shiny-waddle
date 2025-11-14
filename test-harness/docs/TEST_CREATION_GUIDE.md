@@ -1,6 +1,6 @@
 # Test Creation Guide
 
-This guide explains how to create test suites for Sentinel. You'll learn how to define test scenarios, configure test data, and validate access control policies.
+This guide explains how to create test suites for TestOrchestrator. You'll learn how to define test scenarios, configure test data, and validate access control policies.
 
 ## Table of Contents
 
@@ -796,12 +796,12 @@ POLICY_MODE=abac TEST_SUITE=abac-test-suite npm run test:compliance
 ### From Code
 
 ```typescript
-import { Sentinel } from './core/test-harness';
+import { TestOrchestrator } from './core/test-harness';
 import { loadTestSuite } from './tests/test-suite-loader';
 
 const suite = await loadTestSuite('my-test-suite');
-const sentinel = new Sentinel(config);
-const results = await sentinel.runTestSuite(suite);
+const orchestrator = new TestOrchestrator(config);
+const results = await orchestrator.runTestSuite(suite);
 ```
 
 ## Troubleshooting

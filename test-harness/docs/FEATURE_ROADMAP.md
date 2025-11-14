@@ -1,6 +1,6 @@
 # Feature Roadmap
 
-This document outlines recommended features and capabilities to enhance the Sentinel framework for production use.
+This document outlines recommended features and capabilities to enhance the TestOrchestrator framework for production use.
 
 ## Priority 1: Critical Production Features
 

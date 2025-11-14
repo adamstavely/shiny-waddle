@@ -565,3 +565,43 @@ export interface PullRequest {
   author: string;
 }
 
+// Test Harness Entity
+export interface TestHarness {
+  id: string;
+  name: string;
+  description: string;
+  testSuiteIds: string[]; // Many-to-many: suites can be in multiple harnesses
+  applicationIds: string[]; // Assigned to applications
+  team?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Test Battery Entity
+export interface TestBattery {
+  id: string;
+  name: string;
+  description?: string;
+  harnessIds: string[]; // Collection of test harnesses
+  executionConfig?: BatteryExecutionConfig;
+  team?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface BatteryExecutionConfig {
+  executionMode: 'parallel' | 'sequential';
+  timeout?: number;
+  stopOnFailure?: boolean;
+}
+
+export interface TestBatteryResult {
+  batteryId: string;
+  harnessResults: Array<{
+    harnessId: string;
+    results: TestResult[];
+  }>;
+  overallPassed: boolean;
+  timestamp: Date;
+}
+

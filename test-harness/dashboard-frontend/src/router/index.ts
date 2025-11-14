@@ -3,10 +3,13 @@ import Home from '../views/Home.vue';
 import Dashboard from '../views/Dashboard.vue';
 import ApplicationDashboard from '../views/ApplicationDashboard.vue';
 import ApplicationDetail from '../views/ApplicationDetail.vue';
+import Applications from '../views/Applications.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import Tests from '../views/Tests.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
 import TestSuiteDetail from '../views/TestSuiteDetail.vue';
+import TestBatteryDetail from '../views/TestBatteryDetail.vue';
+import TestHarnessDetail from '../views/TestHarnessDetail.vue';
 import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
@@ -78,6 +81,11 @@ const router = createRouter({
       component: ApplicationDashboard,
     },
     {
+      path: '/applications',
+      name: 'Applications',
+      component: Applications,
+    },
+    {
       path: '/admin/applications/:id',
       name: 'ApplicationDetail',
       component: ApplicationDetail,
@@ -101,6 +109,16 @@ const router = createRouter({
       path: '/tests/:id',
       name: 'TestSuiteDetail',
       component: TestSuiteDetail,
+    },
+    {
+      path: '/tests/batteries/:id',
+      name: 'TestBatteryDetail',
+      component: TestBatteryDetail,
+    },
+    {
+      path: '/tests/harnesses/:id',
+      name: 'TestHarnessDetail',
+      component: TestHarnessDetail,
     },
     {
       path: '/tests/builder',

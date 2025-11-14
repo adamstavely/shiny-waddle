@@ -1,8 +1,8 @@
-# Sentinel Extensibility Guide
+# TestOrchestrator Extensibility Guide
 
 ## Overview
 
-Sentinel is designed to be extensible for different types of compliance and configuration validation. While the current implementation focuses on access control testing (RBAC/ABAC), data behavior validation, and contract testing, the architecture supports adding new test types and custom validators.
+TestOrchestrator is designed to be extensible for different types of compliance and configuration validation. While the current implementation focuses on access control testing (RBAC/ABAC), data behavior validation, and contract testing, the architecture supports adding new test types and custom validators.
 
 ## Current Architecture
 
@@ -260,13 +260,13 @@ export interface ValidationResult {
 }
 ```
 
-### 3. Extend the Sentinel Class
+### 3. Extend the TestOrchestrator Class
 
 ```typescript
 // In core/test-harness.ts
 import { ConfigurationValidator } from '../services/configuration-validator';
 
-export class Sentinel {
+export class TestOrchestrator {
   // ... existing properties
   private configurationValidator?: ConfigurationValidator;
 
@@ -449,12 +449,12 @@ export class SalesforceValidatorPlugin implements ValidatorPlugin {
 }
 
 // Register plugin
-Sentinel.registerValidatorPlugin(new SalesforceValidatorPlugin());
+TestOrchestrator.registerValidatorPlugin(new SalesforceValidatorPlugin());
 ```
 
 ## Improved Extensibility Architecture
 
-To make it **much easier** to add validators, Sentinel now includes:
+To make it **much easier** to add validators, TestOrchestrator now includes:
 
 ### 1. Validator Registry System
 
@@ -500,7 +500,7 @@ export class MyCustomValidator extends BaseValidator {
 
 ### 3. Benefits of the New Architecture
 
-✅ **No Core Changes Needed**: Add validators without modifying `Sentinel` class
+✅ **No Core Changes Needed**: Add validators without modifying `TestOrchestrator` class
 ✅ **Standard Interface**: All validators implement the same interface
 ✅ **Automatic Discovery**: Registry can find validators for test suites
 ✅ **Configuration Validation**: Built-in config validation
@@ -536,12 +536,12 @@ validatorRegistry.register(validator);
 
 **Step 3: Use It**
 
-The `Sentinel` class automatically discovers and uses registered validators:
+The `TestOrchestrator` class automatically discovers and uses registered validators:
 
 ```typescript
-const sentinel = new Sentinel(config);
+const orchestrator = new TestOrchestrator(config);
 // Validators are automatically discovered and used
-const results = await sentinel.runTestSuite(suite);
+const results = await orchestrator.runTestSuite(suite);
 ```
 
 ### 5. Dynamic Validator Loading
@@ -588,7 +588,7 @@ const configValidators = validatorRegistry.getByType('configuration-validation')
 
 ## Summary
 
-The Sentinel framework is now **highly extensible** for adding validators:
+The TestOrchestrator framework is now **highly extensible** for adding validators:
 
 ✅ **What's Easy:**
 - Creating new validators (extend `BaseValidator`)

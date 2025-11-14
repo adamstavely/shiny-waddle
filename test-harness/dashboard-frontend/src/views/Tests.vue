@@ -29,11 +29,122 @@
       </button>
     </div>
 
-    <!-- Overview Tab -->
-    <div v-if="activeTab === 'overview'" class="tab-content">
-      <div class="overview-grid">
-        <!-- Quick Stats -->
-        <div class="stats-cards">
+    <!-- Test Batteries Tab -->
+    <div v-if="activeTab === 'batteries'" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Test Batteries</h2>
+          <p class="section-description">Collections of test harnesses that can be executed together</p>
+        </div>
+        <button @click="createBattery" class="btn-primary">
+          <Plus class="btn-icon" />
+          Create Test Battery
+        </button>
+      </div>
+      <div class="info-banner">
+        <AlertCircle class="info-icon" />
+        <p>Tests run automatically in CI/CD during builds. This UI is for viewing and managing test organization.</p>
+      </div>
+      <div v-if="loadingBatteries" class="loading">Loading test batteries...</div>
+      <div v-if="batteriesError" class="error">{{ batteriesError }}</div>
+      <div v-if="!loadingBatteries && !batteriesError && testBatteries.length === 0" class="empty-state">
+        <Battery class="empty-icon" />
+        <h3>No test batteries found</h3>
+        <p>Create a test battery to organize your test harnesses</p>
+        <button @click="createBattery" class="btn-primary">
+          Create Test Battery
+        </button>
+      </div>
+      <div v-if="!loadingBatteries && !batteriesError && testBatteries.length > 0" class="batteries-grid">
+        <div
+          v-for="battery in testBatteries"
+          :key="battery.id"
+          class="battery-card"
+        >
+          <div class="battery-content" @click="viewBattery(battery.id)">
+            <div class="battery-header">
+              <h3 class="battery-name">{{ battery.name }}</h3>
+              <span class="battery-badge">{{ battery.harnessIds?.length || 0 }} harnesses</span>
+            </div>
+            <p v-if="battery.description" class="battery-description">{{ battery.description }}</p>
+            <div class="battery-meta">
+              <span v-if="battery.team" class="team-badge">{{ battery.team }}</span>
+              <span class="execution-mode">{{ battery.executionConfig?.executionMode || 'sequential' }}</span>
+            </div>
+          </div>
+          <div class="battery-actions" @click.stop>
+            <button @click="editBattery(battery)" class="btn-icon" title="Edit">
+              <Edit class="icon-small" />
+            </button>
+            <button @click="viewBattery(battery.id)" class="btn-icon" title="View Details">
+              <FileText class="icon-small" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Harnesses Tab -->
+    <div v-if="activeTab === 'harnesses'" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Test Harnesses</h2>
+          <p class="section-description">Collections of test suites assigned to applications</p>
+        </div>
+        <button @click="createHarness" class="btn-primary">
+          <Plus class="btn-icon" />
+          Create Test Harness
+        </button>
+      </div>
+      <div class="info-banner">
+        <AlertCircle class="info-icon" />
+        <p>Tests run automatically in CI/CD during builds. This UI is for viewing and managing test organization.</p>
+      </div>
+      <div v-if="loadingHarnesses" class="loading">Loading test harnesses...</div>
+      <div v-if="harnessesError" class="error">{{ harnessesError }}</div>
+      <div v-if="!loadingHarnesses && !harnessesError && testHarnesses.length === 0" class="empty-state">
+        <Layers class="empty-icon" />
+        <h3>No test harnesses found</h3>
+        <p>Create a test harness to organize your test suites</p>
+        <button @click="createHarness" class="btn-primary">
+          Create Test Harness
+        </button>
+      </div>
+      <div v-if="!loadingHarnesses && !harnessesError && testHarnesses.length > 0" class="harnesses-grid">
+        <div
+          v-for="harness in testHarnesses"
+          :key="harness.id"
+          class="harness-card"
+        >
+          <div class="harness-content" @click="viewHarness(harness.id)">
+            <div class="harness-header">
+              <h3 class="harness-name">{{ harness.name }}</h3>
+              <div class="harness-badges">
+                <span class="badge">{{ harness.testSuiteIds?.length || 0 }} suites</span>
+                <span class="badge">{{ harness.applicationIds?.length || 0 }} applications</span>
+              </div>
+            </div>
+            <p v-if="harness.description" class="harness-description">{{ harness.description }}</p>
+            <div class="harness-meta">
+              <span v-if="harness.team" class="team-badge">{{ harness.team }}</span>
+            </div>
+          </div>
+          <div class="harness-actions" @click.stop>
+            <button @click="editHarness(harness)" class="btn-icon" title="Edit">
+              <Edit class="icon-small" />
+            </button>
+            <button @click="viewHarness(harness.id)" class="btn-icon" title="View Details">
+              <FileText class="icon-small" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Suites Tab -->
+    <div v-if="activeTab === 'suites'" class="tab-content">
+      <!-- Quick Stats -->
+      <div class="stats-cards">
           <div class="stat-card">
             <div class="stat-icon-wrapper">
               <List class="stat-icon" />
@@ -80,17 +191,13 @@
               <Plus class="action-icon" />
               <span>Create Test Suite</span>
             </button>
-            <button @click="switchTab('test-types')" class="action-card">
-              <TestTube class="action-icon" />
-              <span>Run Test</span>
+            <button @click="switchTab('library')" class="action-card">
+              <BookOpen class="action-icon" />
+              <span>Browse Test Library</span>
             </button>
-            <button @click="switchTab('configurations')" class="action-card">
-              <Settings class="action-icon" />
-              <span>Manage Configurations</span>
-            </button>
-            <button @click="switchTab('results')" class="action-card">
-              <FileText class="action-icon" />
-              <span>View Results</span>
+            <button @click="switchTab('findings')" class="action-card">
+              <AlertCircle class="action-icon" />
+              <span>View Findings</span>
             </button>
           </div>
         </div>
@@ -180,11 +287,8 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Test Suites List -->
-    <div v-if="activeTab === 'suites'" class="tab-content">
+      <!-- Test Suites List -->
       <div v-if="loadingSuites" class="loading">Loading test suites...</div>
       <div v-else-if="suitesError" class="error">{{ suitesError }}</div>
       <div v-else>
@@ -217,6 +321,12 @@
           v-model="filterValidator"
           :options="validatorOptions"
           placeholder="All Validators"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterHarness"
+          :options="harnessOptions"
+          placeholder="All Harnesses"
           class="filter-dropdown"
         />
       </div>
@@ -258,6 +368,18 @@
                 • {{ suite.sourcePath }}
               </span>
             </p>
+            <div v-if="suite.harnessNames && suite.harnessNames.length > 0" class="suite-harnesses">
+              <span class="harness-label">In harnesses:</span>
+              <span
+                v-for="harnessName in suite.harnessNames"
+                :key="harnessName.id"
+                class="harness-badge"
+                @click.stop="viewHarness(harnessName.id)"
+                :title="`View ${harnessName.name} harness`"
+              >
+                {{ harnessName.name }}
+              </span>
+            </div>
           </div>
           
           <div class="suite-stats">
@@ -297,10 +419,6 @@
               <Power class="action-icon" />
               {{ suite.enabled ? 'Disable' : 'Enable' }}
             </button>
-            <button @click.stop="runTestSuite(suite.id)" class="action-btn run-btn">
-              <Play class="action-icon" />
-              Run
-            </button>
             <button @click.stop="viewTestSuite(suite.id)" class="action-btn edit-btn">
               <Edit class="action-icon" />
               Edit
@@ -338,91 +456,10 @@
     </div>
 
     <!-- Test Execution -->
-    <div v-if="activeTab === 'execution'" class="tab-content">
-      <div v-if="!currentExecution" class="empty-state">
-        <Play class="empty-icon" />
-        <h3>No test execution in progress</h3>
-        <p>Select a test suite and click "Run" to start execution</p>
-      </div>
-      <div v-else class="execution-view">
-        <div class="execution-header">
-          <div>
-            <h2>{{ currentExecution.suiteName }}</h2>
-            <p class="execution-status" :class="`status-${currentExecution.status}`">
-              {{ currentExecution.status }}
-            </p>
-          </div>
-          <div class="execution-progress">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: `${currentExecution.progress}%` }"
-              ></div>
-            </div>
-            <span class="progress-text">
-              {{ currentExecution.completed }}/{{ currentExecution.total }} tests
-            </span>
-          </div>
-        </div>
-
-        <div v-if="currentExecution.status === 'completed' || currentExecution.status === 'failed'" class="execution-summary">
-          <div class="summary-stats">
-            <div class="summary-stat">
-              <span class="stat-label">Total Tests</span>
-              <span class="stat-value">{{ currentExecution.total }}</span>
-            </div>
-            <div class="summary-stat">
-              <span class="stat-label">Passed</span>
-              <span class="stat-value passed">{{ currentExecution.passed || 0 }}</span>
-            </div>
-            <div class="summary-stat">
-              <span class="stat-label">Failed</span>
-              <span class="stat-value failed">{{ currentExecution.failed || 0 }}</span>
-            </div>
-            <div class="summary-stat">
-              <span class="stat-label">Duration</span>
-              <span class="stat-value">{{ formatDuration(currentExecution.duration) }}</span>
-            </div>
-          </div>
-          <div v-if="currentExecution.errors && currentExecution.errors.length > 0" class="execution-errors">
-            <h3 class="errors-title">
-              <AlertTriangle class="error-icon" />
-              Errors ({{ currentExecution.errors.length }})
-            </h3>
-            <div v-for="(error, index) in currentExecution.errors" :key="index" class="error-item">
-              <div class="error-header">
-                <span class="error-test">{{ error.testName }}</span>
-                <span class="error-type">{{ error.type }}</span>
-              </div>
-              <div class="error-message">{{ error.message }}</div>
-              <pre v-if="error.stack" class="error-stack">{{ error.stack }}</pre>
-            </div>
-          </div>
-        </div>
-
-        <div class="execution-log">
-          <div class="log-header">
-            <h3>Execution Log</h3>
-            <button @click="clearLog" class="btn-small-text">Clear</button>
-          </div>
-          <div class="log-content">
-            <div
-              v-for="(log, index) in currentExecution.logs"
-              :key="index"
-              class="log-entry"
-              :class="`log-${log.level}`"
-            >
-              <span class="log-time">{{ formatTime(log.timestamp) }}</span>
-              <span class="log-level">{{ log.level.toUpperCase() }}</span>
-              <span class="log-message">{{ log.message }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Test Types Tab -->
-    <div v-if="activeTab === 'test-types'" class="tab-content">
+    <!-- Test Library Tab -->
+    <div v-if="activeTab === 'library'" class="tab-content">
       <div class="test-types-grid">
         <TestTypeCard
           v-for="testType in testTypes"
@@ -548,12 +585,52 @@
     </div>
 
     <!-- Test Results -->
-    <div v-if="activeTab === 'results'" class="tab-content">
+    <!-- Findings Tab -->
+    <div v-if="activeTab === 'findings'" class="tab-content">
+      <div class="findings-tabs">
+        <button 
+          @click="findingsView = 'list'"
+          class="view-tab"
+          :class="{ active: findingsView === 'list' }"
+        >
+          <FileText class="tab-icon" />
+          List View
+        </button>
+        <button 
+          @click="findingsView = 'timeline'"
+          class="view-tab"
+          :class="{ active: findingsView === 'timeline' }"
+        >
+          <Clock class="tab-icon" />
+          Timeline
+        </button>
+      </div>
+
+      <!-- List View -->
+      <div v-if="findingsView === 'list'">
       <div class="results-filters">
         <Dropdown
           v-model="resultsFilterSuite"
           :options="testSuiteOptions"
           placeholder="All Test Suites"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="resultsFilterHarness"
+          :options="harnessFilterOptions"
+          placeholder="All Harnesses"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="resultsFilterBattery"
+          :options="batteryFilterOptions"
+          placeholder="All Batteries"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="resultsFilterApplication"
+          :options="applicationFilterOptions"
+          placeholder="All Applications"
           class="filter-dropdown"
         />
         <Dropdown
@@ -594,7 +671,58 @@
             <AlertTriangle class="error-icon" />
             <span>{{ result.error }}</span>
           </div>
+          <div v-if="!result.passed" class="result-risk-management">
+            <div v-if="result.riskStatus" class="risk-badge" :class="`risk-${result.riskStatus}`">
+              <Shield v-if="result.riskStatus === 'accepted'" class="badge-icon" />
+              <AlertCircle v-else-if="result.riskStatus === 'pending'" class="badge-icon" />
+              <CheckCircle v-else-if="result.riskStatus === 'remediated'" class="badge-icon" />
+              {{ getRiskStatusLabel(result.riskStatus) }}
+            </div>
+            <div v-if="result.remediationStatus" class="remediation-badge" :class="`remediation-${result.remediationStatus}`">
+              <Wrench class="badge-icon" />
+              {{ getRemediationStatusLabel(result.remediationStatus) }}
+              <span v-if="result.remediationProgress !== undefined" class="progress-text">
+                ({{ result.remediationProgress }}%)
+              </span>
+            </div>
+            <div v-if="result.ticketId" class="ticket-link">
+              <ExternalLink class="ticket-icon" />
+              <a :href="result.ticketUrl" target="_blank" @click.stop>{{ result.ticketId }}</a>
+            </div>
+          </div>
           <div class="result-actions" @click.stop>
+            <button 
+              v-if="!result.passed && !result.riskStatus" 
+              @click="openRiskAcceptanceModal(result)" 
+              class="btn-icon btn-warning" 
+              title="Accept Risk"
+            >
+              <Shield class="icon" />
+            </button>
+            <button 
+              v-if="!result.passed && !result.ticketId" 
+              @click="openTicketLinkModal(result)" 
+              class="btn-icon btn-secondary" 
+              title="Link Ticket"
+            >
+              <ExternalLink class="icon" />
+            </button>
+            <button 
+              v-if="!result.passed && !result.remediationStatus" 
+              @click="openRemediationModal(result)" 
+              class="btn-icon btn-primary" 
+              title="Start Remediation"
+            >
+              <Wrench class="icon" />
+            </button>
+            <button 
+              v-if="!result.passed && result.remediationStatus === 'in-progress'" 
+              @click="openRemediationModal(result)" 
+              class="btn-icon btn-primary" 
+              title="Update Remediation"
+            >
+              <Wrench class="icon" />
+            </button>
             <button @click="deleteTestResult(result.id)" class="btn-icon btn-danger" title="Delete">
               <Trash2 class="icon" />
             </button>
@@ -606,6 +734,57 @@
         <FileText class="empty-icon" />
         <h3>No test results found</h3>
         <p>Run a test suite to see results here</p>
+      </div>
+      </div>
+
+      <!-- Timeline View -->
+      <div v-if="findingsView === 'timeline'" class="timeline-view">
+        <div class="timeline-container">
+          <div
+            v-for="(group, index) in timelineGroups"
+            :key="index"
+            class="timeline-group"
+          >
+            <div class="timeline-date-header">
+              <Clock class="date-icon" />
+              <h3>{{ group.date }}</h3>
+              <span class="date-count">{{ group.results.length }} result(s)</span>
+            </div>
+            <div class="timeline-items">
+              <div
+                v-for="result in group.results"
+                :key="result.id"
+                class="timeline-item"
+                :class="{ 'passed': result.passed, 'failed': !result.passed }"
+              >
+                <div class="timeline-marker">
+                  <CheckCircle v-if="result.passed" class="marker-icon" />
+                  <XCircle v-else class="marker-icon" />
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-time">{{ formatTime(result.timestamp) }}</div>
+                  <div class="timeline-title">{{ result.testName }}</div>
+                  <div class="timeline-meta">
+                    <span class="timeline-type">{{ result.testType }}</span>
+                    <span v-if="result.validatorName" class="timeline-validator">{{ result.validatorName }}</span>
+                  </div>
+                  <div v-if="result.error" class="timeline-error">
+                    <AlertTriangle class="error-icon-small" />
+                    {{ result.error }}
+                  </div>
+                  <div v-if="!result.passed" class="timeline-actions">
+                    <button @click="viewResultDetails(result.id)" class="btn-link">View Details</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="timelineGroups.length === 0" class="empty-state">
+            <Clock class="empty-icon" />
+            <h3>No test execution history</h3>
+            <p>Test runs will appear here in chronological order</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -634,6 +813,196 @@
       @close="closeSourceEditor"
       @saved="handleSourceSaved"
     />
+
+    <!-- Test Battery Modal -->
+    <TestBatteryModal
+      :show="showBatteryModal"
+      :editing-battery="editingBattery"
+      @close="closeBatteryModal"
+      @saved="handleBatterySaved"
+    />
+
+    <!-- Test Harness Modal -->
+    <TestHarnessModal
+      :show="showHarnessModal"
+      :editing-harness="editingHarness"
+      @close="closeHarnessModal"
+      @saved="handleHarnessSaved"
+    />
+
+    <!-- Risk Acceptance Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showRiskAcceptanceModal" class="modal-overlay" @click="closeRiskAcceptanceModal">
+          <div class="modal-content risk-modal" @click.stop>
+            <div class="modal-header">
+              <h2>Request Risk Acceptance</h2>
+              <button @click="closeRiskAcceptanceModal" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div v-if="selectedResultForRisk" class="risk-form">
+                <div class="form-group">
+                  <label>Test Result</label>
+                  <div class="result-summary">
+                    <strong>{{ selectedResultForRisk.testName }}</strong>
+                    <span class="result-type-badge">{{ selectedResultForRisk.testType }}</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="risk-reason">Reason for Risk Acceptance *</label>
+                  <textarea
+                    id="risk-reason"
+                    v-model="riskReason"
+                    rows="3"
+                    placeholder="Explain why this risk should be accepted..."
+                    class="form-textarea"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="risk-justification">Justification *</label>
+                  <textarea
+                    id="risk-justification"
+                    v-model="riskJustification"
+                    rows="3"
+                    placeholder="Provide business or technical justification..."
+                    class="form-textarea"
+                  />
+                </div>
+                <div class="form-actions">
+                  <button @click="closeRiskAcceptanceModal" class="btn-secondary">Cancel</button>
+                  <button @click="handleSubmitRiskAcceptance" class="btn-primary">Submit Request</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Ticket Link Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showTicketLinkModal" class="modal-overlay" @click="closeTicketLinkModal">
+          <div class="modal-content ticket-modal" @click.stop>
+            <div class="modal-header">
+              <h2>Link Ticket</h2>
+              <button @click="closeTicketLinkModal" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div v-if="selectedResultForTicket" class="ticket-form">
+                <div class="form-group">
+                  <label>Test Result</label>
+                  <div class="result-summary">
+                    <strong>{{ selectedResultForTicket.testName }}</strong>
+                    <span class="result-type-badge">{{ selectedResultForTicket.testType }}</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="ticket-id">Ticket ID *</label>
+                  <input
+                    id="ticket-id"
+                    v-model="ticketId"
+                    type="text"
+                    placeholder="e.g., JIRA-123, GH-456"
+                    class="form-input"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="ticket-url">Ticket URL (optional)</label>
+                  <input
+                    id="ticket-url"
+                    v-model="ticketUrl"
+                    type="url"
+                    placeholder="https://..."
+                    class="form-input"
+                  />
+                </div>
+                <div class="form-actions">
+                  <button @click="closeTicketLinkModal" class="btn-secondary">Cancel</button>
+                  <button @click="submitTicketLink" class="btn-primary">Link Ticket</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Remediation Tracking Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showRemediationModal" class="modal-overlay" @click="closeRemediationModal">
+          <div class="modal-content remediation-modal" @click.stop>
+            <div class="modal-header">
+              <h2>Remediation Tracking</h2>
+              <button @click="closeRemediationModal" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div v-if="selectedResultForRemediation" class="remediation-form">
+                <div class="form-group">
+                  <label>Test Result</label>
+                  <div class="result-summary">
+                    <strong>{{ selectedResultForRemediation.testName }}</strong>
+                    <span class="result-type-badge">{{ selectedResultForRemediation.testType }}</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="remediation-progress">Progress (%)</label>
+                  <input
+                    id="remediation-progress"
+                    v-model.number="remediationProgress"
+                    type="number"
+                    min="0"
+                    max="100"
+                    class="form-input"
+                  />
+                  <div class="progress-bar-container">
+                    <div class="progress-bar" :style="{ width: `${remediationProgress}%` }"></div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="remediation-step">Current Step</label>
+                  <input
+                    id="remediation-step"
+                    v-model="remediationCurrentStep"
+                    type="text"
+                    placeholder="e.g., Fixing access control policy..."
+                    class="form-input"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="remediation-notes">Notes</label>
+                  <textarea
+                    id="remediation-notes"
+                    v-model="remediationNotes"
+                    rows="4"
+                    placeholder="Add notes about remediation progress..."
+                    class="form-textarea"
+                  />
+                </div>
+                <div class="form-actions">
+                  <button @click="closeRemediationModal" class="btn-secondary">Cancel</button>
+                  <button 
+                    v-if="remediationProgress === 100"
+                    @click="completeRemediation"
+                    class="btn-primary"
+                  >
+                    Mark Complete
+                  </button>
+                  <button @click="submitRemediation" class="btn-primary">Update Progress</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -652,6 +1021,7 @@ import {
   List,
   Clock,
   CheckCircle2,
+  XCircle,
   Trash2,
   Power,
   Code,
@@ -662,7 +1032,16 @@ import {
   Network,
   Shield,
   Lock,
-  Database
+  Database,
+  Battery,
+  Layers,
+  BookOpen,
+  AlertCircle,
+  ExternalLink,
+  CheckCircle,
+  X,
+  Wrench,
+  Clock
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -672,6 +1051,8 @@ import TestResultDetailModal from '../components/TestResultDetailModal.vue';
 import TestSuiteSourceEditor from '../components/TestSuiteSourceEditor.vue';
 import TestTypeCard from '../components/TestTypeCard.vue';
 import ConfigurationModal from '../components/configurations/ConfigurationModal.vue';
+import TestBatteryModal from '../components/TestBatteryModal.vue';
+import TestHarnessModal from '../components/TestHarnessModal.vue';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -682,21 +1063,22 @@ const router = useRouter();
 const route = useRoute();
 
 // Initialize active tab from query parameter or default to overview
-const getInitialTab = (): 'overview' | 'suites' | 'test-types' | 'configurations' | 'execution' | 'results' => {
+const getInitialTab = (): 'batteries' | 'harnesses' | 'suites' | 'library' | 'findings' => {
   const tab = route.query.tab as string;
-  const validTabs = ['overview', 'suites', 'test-types', 'configurations', 'execution', 'results'];
+  const validTabs = ['batteries', 'harnesses', 'suites', 'library', 'findings'];
   if (tab && validTabs.includes(tab)) {
     return tab as any;
   }
-  return 'overview';
+  return 'batteries';
 };
 
-const activeTab = ref<'overview' | 'suites' | 'test-types' | 'configurations' | 'execution' | 'results'>(getInitialTab());
+const activeTab = ref<'batteries' | 'harnesses' | 'suites' | 'library' | 'findings'>(getInitialTab());
 const searchQuery = ref('');
 const filterApplication = ref('');
 const filterTeam = ref('');
 const filterStatus = ref('');
 const filterValidator = ref('');
+const filterHarness = ref('');
 const showCreateModal = ref(false);
 const editingSuite = ref<string | null>(null);
 const editingSuiteData = ref<any>(null);
@@ -706,6 +1088,12 @@ const selectedResult = ref<any>(null);
 const previousResult = ref<any>(null);
 const showSourceEditor = ref(false);
 const editingSourceSuiteId = ref<string | null>(null);
+const showBatteryModal = ref(false);
+const editingBattery = ref<any>(null);
+const showHarnessModal = ref(false);
+const editingHarness = ref<any>(null);
+
+// Test execution removed - tests run automatically in CI/CD
 
 // Test Types data
 const testTypes = [
@@ -729,6 +1117,16 @@ const editingConfig = ref<any>(null);
 const testSuites = ref<any[]>([]);
 const loadingSuites = ref(false);
 const suitesError = ref<string | null>(null);
+
+// Test batteries data
+const testBatteries = ref<any[]>([]);
+const loadingBatteries = ref(false);
+const batteriesError = ref<string | null>(null);
+
+// Test harnesses data
+const testHarnesses = ref<any[]>([]);
+const loadingHarnesses = ref(false);
+const harnessesError = ref<string | null>(null);
 
 const applications = computed(() => {
   return [...new Set(testSuites.value.map(s => s.application))];
@@ -787,20 +1185,27 @@ const validatorOptions = computed(() => {
   ];
 });
 
+const harnessOptions = computed(() => {
+  return [
+    { label: 'All Harnesses', value: '' },
+    ...testHarnesses.value.map(h => ({ label: h.name, value: h.id }))
+  ];
+});
+
 const filteredTestSuites = computed(() => {
   return testSuites.value.filter(suite => {
-    const matchesSearch = suite.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-                         suite.application.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchesSearch = !searchQuery.value || suite.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                         (suite.application && suite.application.toLowerCase().includes(searchQuery.value.toLowerCase()));
     const matchesApp = !filterApplication.value || suite.application === filterApplication.value;
     const matchesTeam = !filterTeam.value || suite.team === filterTeam.value;
     const matchesStatus = !filterStatus.value || suite.status === filterStatus.value;
     const matchesValidator = !filterValidator.value || (suite.validatorId === filterValidator.value);
-    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesValidator;
+    const matchesHarness = !filterHarness.value || (suite.harnessIds && suite.harnessIds.includes(filterHarness.value));
+    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesValidator && matchesHarness;
   });
 });
 
-// Test execution
-const currentExecution = ref<any>(null);
+// Test execution removed - tests run automatically in CI/CD
 
 // Test results
 const testResults = ref([
@@ -837,30 +1242,105 @@ const testResults = ref([
 ]);
 
 const resultsFilterSuite = ref('');
+const resultsFilterHarness = ref('');
+const resultsFilterBattery = ref('');
+const resultsFilterApplication = ref('');
 const resultsFilterStatus = ref('');
 const resultsFilterType = ref('');
+
+const applications = ref<any[]>([]);
+
+const harnessFilterOptions = computed(() => {
+  return [
+    { label: 'All Harnesses', value: '' },
+    ...testHarnesses.value.map(h => ({ label: h.name, value: h.id }))
+  ];
+});
+
+const batteryFilterOptions = computed(() => {
+  return [
+    { label: 'All Batteries', value: '' },
+    ...testBatteries.value.map(b => ({ label: b.name, value: b.id }))
+  ];
+});
+
+const applicationFilterOptions = computed(() => {
+  return [
+    { label: 'All Applications', value: '' },
+    ...applications.value.map(a => ({ label: a.name, value: a.id }))
+  ];
+});
 
 const filteredResults = computed(() => {
   if (!testResults.value) return [];
   return testResults.value.filter(result => {
-    const matchesSuite = !resultsFilterSuite.value || true; // Would filter by suite
+    const matchesSuite = !resultsFilterSuite.value || (result.testSuiteId === resultsFilterSuite.value);
+    const matchesHarness = !resultsFilterHarness.value || 
+      (result.harnessId === resultsFilterHarness.value || 
+       (result.harnessIds && result.harnessIds.includes(resultsFilterHarness.value)));
+    const matchesBattery = !resultsFilterBattery.value ||
+      (result.batteryId === resultsFilterBattery.value ||
+       (result.batteryIds && result.batteryIds.includes(resultsFilterBattery.value)));
+    const matchesApplication = !resultsFilterApplication.value ||
+      (result.applicationId === resultsFilterApplication.value ||
+       (result.application && result.application === resultsFilterApplication.value));
     const matchesStatus = !resultsFilterStatus.value ||
       (resultsFilterStatus.value === 'passed' && result.passed) ||
       (resultsFilterStatus.value === 'failed' && !result.passed);
     const matchesType = !resultsFilterType.value || result.testType === resultsFilterType.value;
-    return matchesSuite && matchesStatus && matchesType;
+    return matchesSuite && matchesHarness && matchesBattery && matchesApplication && matchesStatus && matchesType;
   });
 });
+
+const timelineGroups = computed(() => {
+  if (!filteredResults.value || filteredResults.value.length === 0) return [];
+  
+  // Group results by date
+  const groups = new Map<string, any[]>();
+  
+  filteredResults.value.forEach(result => {
+    const date = new Date(result.timestamp);
+    const dateKey = date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    if (!groups.has(dateKey)) {
+      groups.set(dateKey, []);
+    }
+    groups.get(dateKey)!.push(result);
+  });
+  
+  // Convert to array and sort by date (newest first)
+  return Array.from(groups.entries())
+    .map(([date, results]) => ({
+      date,
+      results: results.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ),
+    }))
+    .sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+});
+
+const formatTime = (timestamp: Date | string): string => {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+  return date.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+};
 
 // Form data - removed, now handled by TestSuiteBuilderModal
 
 const tabs = computed(() => [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'batteries', label: 'Test Batteries', icon: Battery },
+  { id: 'harnesses', label: 'Test Harnesses', icon: Layers },
   { id: 'suites', label: 'Test Suites', icon: List, badge: testSuites.value?.length || 0 },
-  { id: 'test-types', label: 'Test Types', icon: TestTube },
-  { id: 'configurations', label: 'Configurations', icon: Settings },
-  { id: 'execution', label: 'Execution', icon: Play },
-  { id: 'results', label: 'Results', icon: CheckCircle2, badge: testResults.value?.length || 0 }
+  { id: 'library', label: 'Test Library', icon: BookOpen },
+  { id: 'findings', label: 'Findings', icon: AlertCircle, badge: testResults.value?.filter(r => !r.passed).length || 0 }
 ]);
 
 const switchTab = (tabId: string) => {
@@ -873,97 +1353,86 @@ const viewTestSuite = (id: string) => {
   router.push({ name: 'TestSuiteDetail', params: { id } });
 };
 
-const runTestSuite = async (id: string) => {
-  const suite = testSuites.value.find(s => s.id === id);
-  if (!suite) return;
-  
-  switchTab('execution');
-  const startTime = new Date();
-  currentExecution.value = {
-    suiteName: suite.name,
-    status: 'running',
-    progress: 0,
-    completed: 0,
-    total: suite.testCount || 10,
-    passed: 0,
-    failed: 0,
-    errors: [] as any[],
-    duration: 0,
-    logs: [
-      { level: 'info', message: `Starting test suite: ${suite.name}`, timestamp: new Date() },
-      { level: 'info', message: 'Initializing test environment...', timestamp: new Date() }
-    ]
-  };
-
-  // Simulate test execution
-  simulateTestExecution(startTime);
-};
-
-const simulateTestExecution = (startTime: Date) => {
-  if (!currentExecution.value) return;
-  
-  let testIndex = 0;
-  const interval = setInterval(() => {
-    if (!currentExecution.value) {
-      clearInterval(interval);
-      return;
-    }
-    
-    testIndex++;
-    currentExecution.value.completed++;
-    currentExecution.value.progress = Math.round(
-      (currentExecution.value.completed / currentExecution.value.total) * 100
-    );
-    
-    // Simulate some tests passing and some failing
-    const testPassed = Math.random() > 0.2; // 80% pass rate
-    if (testPassed) {
-      currentExecution.value.passed = (currentExecution.value.passed || 0) + 1;
-      currentExecution.value.logs.push({
-        level: 'success',
-        message: `Test ${testIndex}: PASSED`,
-        timestamp: new Date()
-      });
-    } else {
-      currentExecution.value.failed = (currentExecution.value.failed || 0) + 1;
-      const error = {
-        testName: `Test ${testIndex}`,
-        type: 'AssertionError',
-        message: `Test assertion failed: Expected value did not match actual value`,
-        stack: `at TestRunner.runTest (test-runner.js:45:12)\n  at Suite.execute (suite.js:123:8)`
-      };
-      currentExecution.value.errors.push(error);
-      currentExecution.value.logs.push({
-        level: 'error',
-        message: `Test ${testIndex}: FAILED - ${error.message}`,
-        timestamp: new Date()
-      });
-    }
-
-    if (currentExecution.value.completed >= currentExecution.value.total) {
-      const endTime = new Date();
-      currentExecution.value.duration = endTime.getTime() - startTime.getTime();
-      currentExecution.value.status = currentExecution.value.failed > 0 ? 'failed' : 'completed';
-      currentExecution.value.logs.push({
-        level: currentExecution.value.failed > 0 ? 'error' : 'success',
-        message: `Test suite ${currentExecution.value.failed > 0 ? 'completed with failures' : 'completed successfully'}. Passed: ${currentExecution.value.passed}, Failed: ${currentExecution.value.failed}`,
-        timestamp: new Date()
-      });
-      clearInterval(interval);
-      
-      // Refresh results
-      setTimeout(() => {
-        switchTab('results');
-      }, 3000);
-    }
-  }, 500);
-};
-
-const clearLog = () => {
-  if (currentExecution.value) {
-    currentExecution.value.logs = [];
+// Load test batteries
+const loadTestBatteries = async () => {
+  try {
+    loadingBatteries.value = true;
+    batteriesError.value = null;
+    const response = await axios.get('/api/test-batteries');
+    testBatteries.value = response.data;
+  } catch (err: any) {
+    batteriesError.value = err.response?.data?.message || 'Failed to load test batteries';
+    console.error('Error loading test batteries:', err);
+  } finally {
+    loadingBatteries.value = false;
   }
 };
+
+// Load test harnesses
+const loadTestHarnesses = async () => {
+  try {
+    loadingHarnesses.value = true;
+    harnessesError.value = null;
+    const response = await axios.get('/api/test-harnesses');
+    testHarnesses.value = response.data;
+  } catch (err: any) {
+    harnessesError.value = err.response?.data?.message || 'Failed to load test harnesses';
+    console.error('Error loading test harnesses:', err);
+  } finally {
+    loadingHarnesses.value = false;
+  }
+};
+
+// Battery and harness actions
+const createBattery = () => {
+  editingBattery.value = null;
+  showBatteryModal.value = true;
+};
+
+const editBattery = (battery: any) => {
+  editingBattery.value = battery;
+  showBatteryModal.value = true;
+};
+
+const handleBatterySaved = async (battery: any) => {
+  await loadTestBatteries();
+};
+
+const closeBatteryModal = () => {
+  showBatteryModal.value = false;
+  editingBattery.value = null;
+};
+
+const viewBattery = (id: string) => {
+  // TODO: Navigate to battery detail view
+  router.push({ path: `/tests/batteries/${id}` });
+};
+
+const createHarness = () => {
+  editingHarness.value = null;
+  showHarnessModal.value = true;
+};
+
+const editHarness = (harness: any) => {
+  editingHarness.value = harness;
+  showHarnessModal.value = true;
+};
+
+const handleHarnessSaved = async (harness: any) => {
+  await loadTestHarnesses();
+};
+
+const closeHarnessModal = () => {
+  showHarnessModal.value = false;
+  editingHarness.value = null;
+};
+
+const viewHarness = (id: string) => {
+  // TODO: Navigate to harness detail view
+  router.push({ path: `/tests/harnesses/${id}` });
+};
+
+// Test execution removed - tests run automatically in CI/CD during builds
 
 const formatDuration = (ms: number): string => {
   if (!ms) return '0s';
@@ -979,16 +1448,32 @@ const loadTestSuites = async () => {
   loadingSuites.value = true;
   suitesError.value = null;
   try {
-    const response = await axios.get('/api/test-suites');
-    testSuites.value = response.data.map((s: any) => ({
-      ...s,
-      application: s.application || s.applicationId,
-      lastRun: s.lastRun ? new Date(s.lastRun) : undefined,
-      createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
-      updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
-      sourceType: s.sourceType || 'json',
-      sourcePath: s.sourcePath,
-    }));
+    const [suitesResponse, harnessesResponse] = await Promise.all([
+      axios.get('/api/test-suites'),
+      axios.get('/api/test-harnesses'),
+    ]);
+    
+    const allHarnesses = harnessesResponse.data || [];
+    const harnessMap = new Map(allHarnesses.map((h: any) => [h.id, h]));
+    
+    testSuites.value = suitesResponse.data.map((s: any) => {
+      // Find which harnesses contain this suite
+      const containingHarnesses = allHarnesses.filter((h: any) => 
+        h.testSuiteIds && h.testSuiteIds.includes(s.id)
+      );
+      
+      return {
+        ...s,
+        application: s.application || s.applicationId,
+        lastRun: s.lastRun ? new Date(s.lastRun) : undefined,
+        createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+        updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
+        sourceType: s.sourceType || 'json',
+        sourcePath: s.sourcePath,
+        harnessIds: containingHarnesses.map((h: any) => h.id),
+        harnessNames: containingHarnesses.map((h: any) => ({ id: h.id, name: h.name })),
+      };
+    });
   } catch (err: any) {
     suitesError.value = err.response?.data?.message || 'Failed to load test suites';
     console.error('Error loading test suites:', err);
@@ -1059,6 +1544,238 @@ const deleteTestResult = async (id: string) => {
   } catch (err: any) {
     console.error('Error deleting test result:', err);
     alert(err.response?.data?.message || 'Failed to delete test result');
+  }
+};
+
+const openRiskAcceptanceModal = (result: any) => {
+  selectedResultForRisk.value = result;
+  showRiskAcceptanceModal.value = true;
+};
+
+const closeRiskAcceptanceModal = () => {
+  showRiskAcceptanceModal.value = false;
+  selectedResultForRisk.value = null;
+};
+
+const submitRiskAcceptance = async (reason: string, justification: string) => {
+  if (!selectedResultForRisk.value) return;
+  
+  try {
+    await axios.post('/api/finding-approvals/request', {
+      findingId: selectedResultForRisk.value.id,
+      type: 'risk-acceptance',
+      reason,
+      justification,
+    });
+    // Update local result
+    const index = testResults.value.findIndex(r => r.id === selectedResultForRisk.value.id);
+    if (index !== -1) {
+      testResults.value[index] = {
+        ...testResults.value[index],
+        riskStatus: 'pending',
+      };
+    }
+    closeRiskAcceptanceModal();
+  } catch (err: any) {
+    console.error('Error submitting risk acceptance:', err);
+    alert(err.response?.data?.message || 'Failed to submit risk acceptance request');
+  }
+};
+
+const openTicketLinkModal = (result: any) => {
+  selectedResultForTicket.value = result;
+  ticketId.value = result.ticketId || '';
+  ticketUrl.value = result.ticketUrl || '';
+  showTicketLinkModal.value = true;
+};
+
+const closeTicketLinkModal = () => {
+  showTicketLinkModal.value = false;
+  selectedResultForTicket.value = null;
+  ticketId.value = '';
+  ticketUrl.value = '';
+};
+
+const submitTicketLink = async () => {
+  if (!selectedResultForTicket.value || !ticketId.value) {
+    alert('Please enter a ticket ID');
+    return;
+  }
+  
+  try {
+    // Update the result with ticket information
+    const index = testResults.value.findIndex(r => r.id === selectedResultForTicket.value.id);
+    if (index !== -1) {
+      testResults.value[index] = {
+        ...testResults.value[index],
+        ticketId: ticketId.value,
+        ticketUrl: ticketUrl.value || `https://tickets.example.com/${ticketId.value}`,
+      };
+    }
+    closeTicketLinkModal();
+  } catch (err: any) {
+    console.error('Error linking ticket:', err);
+    alert(err.response?.data?.message || 'Failed to link ticket');
+  }
+};
+
+const getRiskStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    'pending': 'Risk Acceptance Pending',
+    'accepted': 'Risk Accepted',
+    'rejected': 'Risk Rejected',
+    'remediated': 'Remediated',
+  };
+  return labels[status] || status;
+};
+
+const getRemediationStatusLabel = (status: string): string => {
+  const labels: Record<string, string> = {
+    'not-started': 'Not Started',
+    'in-progress': 'In Progress',
+    'completed': 'Completed',
+    'verified': 'Verified',
+  };
+  return labels[status] || status;
+};
+
+const showRemediationModal = ref(false);
+const selectedResultForRemediation = ref<any>(null);
+const remediationProgress = ref(0);
+const remediationCurrentStep = ref('');
+const remediationNotes = ref('');
+
+const openRemediationModal = async (result: any) => {
+  selectedResultForRemediation.value = result;
+  
+  // Try to load existing remediation tracking
+  try {
+    const response = await axios.get(`/api/remediation-tracking/violation/${result.id}`);
+    if (response.data) {
+      remediationProgress.value = response.data.progress || 0;
+      remediationCurrentStep.value = response.data.currentStep || '';
+      remediationNotes.value = response.data.notes || '';
+    } else {
+      remediationProgress.value = 0;
+      remediationCurrentStep.value = '';
+      remediationNotes.value = '';
+    }
+  } catch (err) {
+    // No existing tracking, start fresh
+    remediationProgress.value = 0;
+    remediationCurrentStep.value = '';
+    remediationNotes.value = '';
+  }
+  
+  showRemediationModal.value = true;
+};
+
+const closeRemediationModal = () => {
+  showRemediationModal.value = false;
+  selectedResultForRemediation.value = null;
+  remediationProgress.value = 0;
+  remediationCurrentStep.value = '';
+  remediationNotes.value = '';
+};
+
+const submitRemediation = async () => {
+  if (!selectedResultForRemediation.value) return;
+  
+  try {
+    // Check if remediation tracking already exists
+    let trackingId = null;
+    try {
+      const existingResponse = await axios.get(`/api/remediation-tracking/violation/${selectedResultForRemediation.value.id}`);
+      if (existingResponse.data) {
+        trackingId = existingResponse.data.id;
+      }
+    } catch (err) {
+      // No existing tracking
+    }
+    
+    if (trackingId) {
+      // Update existing tracking
+      await axios.patch(`/api/remediation-tracking/${trackingId}/progress`, {
+        progress: remediationProgress.value,
+        currentStep: remediationCurrentStep.value,
+      });
+    } else {
+      // Create new tracking
+      const response = await axios.post('/api/remediation-tracking', {
+        violationId: selectedResultForRemediation.value.id,
+        findingId: selectedResultForRemediation.value.id,
+        description: `Remediation for ${selectedResultForRemediation.value.testName}`,
+      });
+      trackingId = response.data.id;
+      
+      // Start remediation
+      await axios.post(`/api/remediation-tracking/${trackingId}/start`, {
+        actor: 'current-user', // Would use actual user context
+      });
+      
+      // Update progress
+      if (remediationProgress.value > 0) {
+        await axios.patch(`/api/remediation-tracking/${trackingId}/progress`, {
+          progress: remediationProgress.value,
+          currentStep: remediationCurrentStep.value,
+        });
+      }
+    }
+    
+    // Update local result
+    const index = testResults.value.findIndex(r => r.id === selectedResultForRemediation.value.id);
+    if (index !== -1) {
+      testResults.value[index] = {
+        ...testResults.value[index],
+        remediationStatus: remediationProgress.value === 100 ? 'completed' : 'in-progress',
+        remediationProgress: remediationProgress.value,
+      };
+    }
+    
+    closeRemediationModal();
+  } catch (err: any) {
+    console.error('Error submitting remediation:', err);
+    alert(err.response?.data?.message || 'Failed to submit remediation tracking');
+  }
+};
+
+const completeRemediation = async () => {
+  if (!selectedResultForRemediation.value) return;
+  
+  try {
+    // Get tracking ID
+    let trackingId = null;
+    try {
+      const existingResponse = await axios.get(`/api/remediation-tracking/violation/${selectedResultForRemediation.value.id}`);
+      if (existingResponse.data) {
+        trackingId = existingResponse.data.id;
+      }
+    } catch (err) {
+      alert('Remediation tracking not found. Please update progress first.');
+      return;
+    }
+    
+    if (trackingId) {
+      await axios.post(`/api/remediation-tracking/${trackingId}/complete`, {
+        actor: 'current-user',
+        effectiveness: 'effective',
+      });
+      
+      // Update local result
+      const index = testResults.value.findIndex(r => r.id === selectedResultForRemediation.value.id);
+      if (index !== -1) {
+        testResults.value[index] = {
+          ...testResults.value[index],
+          remediationStatus: 'completed',
+          remediationProgress: 100,
+        };
+      }
+    }
+    
+    closeRemediationModal();
+  } catch (err: any) {
+    console.error('Error completing remediation:', err);
+    alert(err.response?.data?.message || 'Failed to complete remediation');
   }
 };
 
@@ -1262,27 +1979,40 @@ const loadValidators = async () => {
 // Watch for route query changes to update active tab
 watch(() => route.query.tab, (newTab) => {
   if (newTab && typeof newTab === 'string') {
-    const validTabs = ['overview', 'suites', 'test-types', 'configurations', 'execution', 'results'];
+    const validTabs = ['batteries', 'harnesses', 'suites', 'library', 'findings'];
     if (validTabs.includes(newTab)) {
       activeTab.value = newTab as any;
     }
   }
 });
 
+const loadApplications = async () => {
+  try {
+    const response = await axios.get('/api/applications');
+    applications.value = response.data || [];
+  } catch (err) {
+    console.error('Error loading applications:', err);
+    applications.value = [];
+  }
+};
+
 onMounted(async () => {
   await Promise.all([
     loadValidators(),
     loadTestSuites(),
     loadConfigurations(),
-    loadTestResults()
+    loadTestResults(),
+    loadTestBatteries(),
+    loadTestHarnesses(),
+    loadApplications()
   ]);
   
   // Load last run statuses for all test types
   await loadLastRunStatusForTypes();
   
-  // If there's a type query parameter, ensure we're on test-types tab
-  if (route.query.type && activeTab.value !== 'test-types') {
-    switchTab('test-types');
+  // If there's a type query parameter, ensure we're on library tab
+  if (route.query.type && activeTab.value !== 'library') {
+    switchTab('library');
   }
 });
 
@@ -2960,5 +3690,750 @@ const handleSaveConfig = async (configData: any) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Test Batteries and Harnesses Styles */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  color: #a0aec0;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  color: #856404;
+}
+
+.info-banner .info-icon {
+  flex-shrink: 0;
+}
+
+.info-banner p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.batteries-grid,
+.harnesses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.battery-card,
+.harness-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: white;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.battery-content,
+.harness-content {
+  flex: 1;
+  cursor: pointer;
+}
+
+.battery-card:hover,
+.harness-card:hover {
+  border-color: #4facfe;
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.15);
+  transform: translateY(-2px);
+}
+
+.battery-actions,
+.harness-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.btn-icon {
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 6px;
+  color: #4facfe;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.battery-header,
+.harness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.battery-name,
+.harness-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1a202c;
+}
+
+.battery-badge,
+.harness-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.battery-description,
+.harness-description {
+  color: #718096;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.battery-meta,
+.harness-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.team-badge {
+  padding: 0.25rem 0.75rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.execution-mode {
+  padding: 0.25rem 0.75rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.suite-harnesses {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.harness-label {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.harness-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.harness-badge:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-1px);
+}
+
+.result-risk-management {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.risk-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.risk-badge.risk-pending {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.risk-badge.risk-accepted {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.risk-badge.risk-remediated {
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  color: #4facfe;
+}
+
+.badge-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.ticket-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4facfe;
+  font-size: 0.875rem;
+}
+
+.ticket-link a {
+  color: #4facfe;
+  text-decoration: none;
+}
+
+.ticket-link a:hover {
+  text-decoration: underline;
+}
+
+.ticket-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-warning {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+}
+
+.btn-warning:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+/* Risk Acceptance Modal Styles */
+.risk-modal,
+.ticket-modal {
+  max-width: 600px;
+}
+
+.risk-form,
+.ticket-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.result-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 6px;
+}
+
+.result-type-badge {
+  padding: 0.25rem 0.5rem;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #4facfe;
+}
+
+.form-textarea,
+.form-input {
+  padding: 0.75rem;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.form-textarea:focus,
+.form-input:focus {
+  outline: none;
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border: none;
+  border-radius: 6px;
+  color: #0f1419;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: rgba(160, 174, 192, 0.1);
+  border: 1px solid rgba(160, 174, 192, 0.3);
+  border-radius: 6px;
+  color: #a0aec0;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(160, 174, 192, 0.2);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.modal-content {
+  background: #1a1f2e;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+}
+
+.close-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.modal-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.remediation-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.remediation-badge.remediation-not-started {
+  background: rgba(160, 174, 192, 0.1);
+  border: 1px solid rgba(160, 174, 192, 0.3);
+  color: #a0aec0;
+}
+
+.remediation-badge.remediation-in-progress {
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  color: #4facfe;
+}
+
+.remediation-badge.remediation-completed {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.remediation-badge.remediation-verified {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.remediation-modal {
+  max-width: 600px;
+}
+
+.remediation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  transition: width 0.3s ease;
+}
+
+/* Findings View Tabs */
+.findings-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.view-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #a0aec0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-tab:hover {
+  color: #4facfe;
+}
+
+.view-tab.active {
+  color: #4facfe;
+  border-bottom-color: #4facfe;
+}
+
+.tab-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Timeline View Styles */
+.timeline-view {
+  padding: 1rem 0;
+}
+
+.timeline-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.timeline-group {
+  margin-bottom: 3rem;
+}
+
+.timeline-date-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(79, 172, 254, 0.2);
+}
+
+.date-icon {
+  width: 20px;
+  height: 20px;
+  color: #4facfe;
+}
+
+.timeline-date-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  flex: 1;
+}
+
+.date-count {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.timeline-items {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline-items::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(79, 172, 254, 0.2);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 2rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -1.5rem;
+  top: 0.25rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 20, 25, 0.8);
+  border: 2px solid rgba(79, 172, 254, 0.3);
+  z-index: 1;
+}
+
+.timeline-item.passed .timeline-marker {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.timeline-item.failed .timeline-marker {
+  border-color: rgba(252, 129, 129, 0.5);
+  background: rgba(252, 129, 129, 0.1);
+}
+
+.marker-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.timeline-item.passed .marker-icon {
+  color: #22c55e;
+}
+
+.timeline-item.failed .marker-icon {
+  color: #fc8181;
+}
+
+.timeline-content {
+  background: rgba(15, 20, 25, 0.4);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.timeline-content:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  background: rgba(15, 20, 25, 0.6);
+}
+
+.timeline-time {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-type,
+.timeline-validator {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+.timeline-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(252, 129, 129, 0.1);
+  border: 1px solid rgba(252, 129, 129, 0.2);
+  border-radius: 6px;
+  color: #fc8181;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.error-icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.timeline-actions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: #00f2fe;
 }
 </style>

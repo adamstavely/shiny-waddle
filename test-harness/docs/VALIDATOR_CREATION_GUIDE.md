@@ -1,6 +1,6 @@
 # Validator Creation Guide
 
-This guide shows you how to create custom validators for Sentinel using the new extensibility architecture.
+This guide shows you how to create custom validators for TestOrchestrator using the new extensibility architecture.
 
 ## Quick Start
 
@@ -284,12 +284,12 @@ describe('SalesforceValidator', () => {
 });
 ```
 
-## Integration with Sentinel
+## Integration with TestOrchestrator
 
 Once registered, validators are automatically discovered and used:
 
 ```typescript
-import { Sentinel } from '../core/test-harness';
+import { TestOrchestrator } from '../core/test-harness';
 import { validatorRegistry } from '../core/validator-registry';
 import { SalesforceValidator } from './salesforce-validator';
 
@@ -298,9 +298,9 @@ validatorRegistry.register(
   new SalesforceValidator({ username: '...', password: '...' })
 );
 
-// Sentinel automatically uses registered validators
-const sentinel = new Sentinel(config);
-const results = await sentinel.runTestSuite(suite);
+// TestOrchestrator automatically uses registered validators
+const orchestrator = new TestOrchestrator(config);
+const results = await orchestrator.runTestSuite(suite);
 ```
 
 ## Next Steps

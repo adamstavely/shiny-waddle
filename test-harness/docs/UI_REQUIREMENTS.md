@@ -1,6 +1,6 @@
 # UI Requirements for Validator Registry System
 
-This document outlines what needs to be added to the Sentinel dashboard UI to support the new validator registry system and extensibility features.
+This document outlines what needs to be added to the TestOrchestrator dashboard UI to support the new validator registry system and extensibility features.
 
 ## 1. Admin Page - Validators Tab
 

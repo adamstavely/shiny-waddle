@@ -38,13 +38,11 @@
           <p>No configurations yet. Create one to get started.</p>
         </div>
         <div v-else class="configs-list">
-          <div
-            v-for="config in configurations"
-            :key="config.id"
-            class="config-item"
-            :class="{ active: selectedConfigId === config.id }"
-            @click.stop="selectConfig(config.id)"
-          >
+            <div
+              v-for="config in configurations"
+              :key="config.id"
+              class="config-item"
+            >
             <div class="config-info">
               <span class="config-name">{{ config.name }}</span>
               <span class="config-status" :class="config.enabled ? 'enabled' : 'disabled'">
@@ -69,6 +67,10 @@
           <Play class="section-icon" />
           <h4>Test Functions</h4>
         </div>
+        <div class="info-banner">
+          <AlertTriangle class="info-icon" />
+          <p>Tests run automatically in CI/CD during builds. This UI is for viewing and managing test configurations only.</p>
+        </div>
         <div class="functions-list">
           <div
             v-for="testFunc in availableTestFunctions"
@@ -80,31 +82,6 @@
               <div class="function-info">
                 <h5 class="function-name">{{ testFunc.name }}</h5>
                 <p class="function-description">{{ testFunc.description }}</p>
-              </div>
-            </div>
-            <div class="function-actions">
-              <Dropdown
-                v-model="selectedConfigId"
-                :options="configOptions"
-                placeholder="Select config..."
-                class="config-selector-small"
-                v-if="configurations.length > 0"
-              />
-              <button
-                @click="runTestFunction(testFunc)"
-                class="btn-run-function"
-                :disabled="running || (configurations.length > 0 && !selectedConfigId)"
-              >
-                <Play v-if="!running || currentTestFunction?.id !== testFunc.id" class="btn-icon-small" />
-                <div v-else class="spinner-small"></div>
-                {{ running && currentTestFunction?.id === testFunc.id ? 'Running...' : 'Run' }}
-              </button>
-            </div>
-            <div v-if="testResults[testFunc.id]" class="function-result">
-              <div class="result-status" :class="testResults[testFunc.id].passed !== false ? 'passed' : 'failed'">
-                <CheckCircle2 v-if="testResults[testFunc.id].passed !== false" class="result-icon-small" />
-                <XCircle v-else class="result-icon-small" />
-                <span>{{ testResults[testFunc.id].passed !== false ? 'Passed' : 'Failed' }}</span>
               </div>
             </div>
           </div>
@@ -155,15 +132,7 @@ import {
   Edit,
   Trash2,
   Play,
-  CheckCircle2,
-  XCircle,
   FileText,
-  Server,
-  Shield,
-  Zap,
-  Lock,
-  FileX,
-  Network,
   AlertTriangle
 } from 'lucide-vue-next';
 import Dropdown from './Dropdown.vue';
@@ -184,16 +153,11 @@ const route = useRoute();
 
 const isExpanded = ref(false);
 const configurations = ref<any[]>([]);
-const selectedConfigId = ref<string>('');
-const running = ref(false);
-const lastResult = ref<any>(null);
 const recentResults = ref<any[]>([]);
 const showCreateConfig = ref(false);
 const loading = ref(false);
 const lastRunStatus = ref<string | undefined>(undefined);
 const lastRunTimestamp = ref<Date | undefined>(undefined);
-const currentTestFunction = ref<any>(null);
-const testResults = ref<Record<string, any>>({});
 
 // Define available test functions for each test type
 const availableTestFunctions = computed(() => {
@@ -218,23 +182,16 @@ const availableTestFunctions = computed(() => {
     ],
   };
   
-  return functions[props.type] || [{ id: 'default', name: 'Run Test', description: 'Run test with selected configuration', icon: Play, endpoint: `/api/test-configurations/${selectedConfigId.value}/test` }];
+  return functions[props.type] || [];
 });
 
-const configOptions = computed(() => {
-  return [
-    { label: 'Select configuration...', value: '' },
-    ...configurations.value.map(c => ({
-      label: c.name,
-      value: c.id
-    }))
-  ];
-});
+// Configuration selector removed - no longer needed for test execution
 
 const toggleExpand = async () => {
   isExpanded.value = !isExpanded.value;
   if (isExpanded.value && configurations.value.length === 0) {
     await loadConfigurations();
+    await loadRecentResults();
   }
 };
 
@@ -295,9 +252,7 @@ const loadLastRunStatus = async () => {
   }
 };
 
-const selectConfig = (id: string) => {
-  selectedConfigId.value = id;
-};
+// Config selection removed - no longer needed for test execution
 
 const editConfig = (config: any) => {
   // Emit event to parent to handle editing
@@ -317,100 +272,43 @@ const deleteConfig = async (id: string) => {
   }
 };
 
-const runTest = async () => {
-  if (!selectedConfigId.value) return;
-  
-  running.value = true;
-  lastResult.value = null;
-  
-  try {
-    const response = await axios.post(`/api/test-configurations/${selectedConfigId.value}/test`);
-    lastResult.value = response.data;
-    await loadRecentResults();
-    await loadLastRunStatus(); // Refresh last run status
-  } catch (err: any) {
-    lastResult.value = {
-      passed: false,
-      error: err.response?.data?.message || 'Test failed'
-    };
-  } finally {
-    running.value = false;
-  }
-};
-
-const runTestFunction = async (testFunc: any) => {
-  running.value = true;
-  currentTestFunction.value = testFunc;
-  testResults.value[testFunc.id] = null;
-  
-  try {
-    let payload: any = {};
-    
-    // Add configId if a configuration is selected
-    if (selectedConfigId.value) {
-      payload.configId = selectedConfigId.value;
-    }
-    
-    // Add type-specific default payloads
-    if (props.type === 'api-gateway') {
-      if (testFunc.id === 'policy') {
-        payload = { ...payload, policy: { id: 'test', name: 'Test Policy', endpoint: '/api/test', method: 'GET', rules: [] }, request: { endpoint: '/api/test', method: 'GET', headers: {}, user: {} } };
-      } else if (testFunc.id === 'rate-limit') {
-        payload = { ...payload, endpoint: '/api/test', requests: 150 };
-      } else if (testFunc.id === 'service-auth') {
-        payload = { ...payload, source: 'frontend', target: 'backend' };
-      }
-    } else if (props.type === 'dlp') {
-      if (testFunc.id === 'exfiltration') {
-        payload = { ...payload, user: { id: 'test-user', email: 'test@example.com', role: 'admin' }, dataOperation: { type: 'export', data: { sensitive: 'SSN: 123-45-6789' } } };
-      } else if (testFunc.id === 'api-validation') {
-        payload = { ...payload, apiResponse: {}, allowedFields: ['id', 'name'], piiFields: ['email', 'ssn'] };
-      } else if (testFunc.id === 'bulk-export') {
-        payload = { ...payload, user: { id: 'test-user', email: 'test@example.com', role: 'viewer' }, exportRequest: { type: 'csv', recordCount: 5000 } };
-      }
-    } else if (props.type === 'network-policy') {
-      if (testFunc.id === 'firewall') {
-        payload = { ...payload };
-      } else if (testFunc.id === 'service-to-service') {
-        payload = { ...payload, source: 'frontend', target: 'backend' };
-      } else if (testFunc.id === 'segmentation') {
-        payload = { ...payload };
-      }
-    }
-    
-    const response = await axios.post(testFunc.endpoint, payload);
-    testResults.value[testFunc.id] = response.data;
-    await loadRecentResults();
-    await loadLastRunStatus();
-  } catch (err: any) {
-    testResults.value[testFunc.id] = {
-      passed: false,
-      error: err.response?.data?.message || 'Test failed'
-    };
-  } finally {
-    running.value = false;
-    currentTestFunction.value = null;
-  }
-};
+// Test execution removed - tests run automatically in CI/CD during builds
 
 const loadRecentResults = async () => {
-  if (!selectedConfigId.value) return;
-  
+  // Load recent results for all configurations of this type
   try {
-    const response = await axios.get(`/api/test-results/test-configuration/${selectedConfigId.value}?limit=5`);
-    recentResults.value = response.data || [];
+    const configIds = configurations.value.map(c => c.id);
+    if (configIds.length === 0) {
+      recentResults.value = [];
+      return;
+    }
+    
+    // Get recent results for all configs and combine
+    const resultsPromises = configIds.map(async (configId) => {
+      try {
+        const response = await axios.get(`/api/test-results/test-configuration/${configId}?limit=2`);
+        return response.data || [];
+      } catch (err) {
+        return [];
+      }
+    });
+    
+    const allResults = await Promise.all(resultsPromises);
+    const combined = allResults.flat();
+    
+    // Sort by timestamp and take most recent 5
+    combined.sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return timeB - timeA;
+    });
+    
+    recentResults.value = combined.slice(0, 5);
   } catch (err) {
     console.error('Error loading recent results:', err);
     recentResults.value = [];
   }
 };
-
-// Load recent results when config is selected
-watch(selectedConfigId, (newId) => {
-  if (newId) {
-    loadRecentResults();
-  }
-});
 
 const handleCreateConfig = async (configData: any) => {
   try {
@@ -790,51 +688,28 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
   gap: 8px;
 }
 
-.config-selector-small {
-  flex: 1;
-  min-width: 150px;
-}
-
-.btn-run-function {
+.info-banner {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  border: none;
-  border-radius: 6px;
-  color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  color: #ffc107;
 }
 
-.btn-run-function:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+.info-banner .info-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
-.btn-run-function:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-icon-small {
-  width: 14px;
-  height: 14px;
-}
-
-.function-result {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(79, 172, 254, 0.1);
-}
-
-.result-icon-small {
-  width: 16px;
-  height: 16px;
+.info-banner p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .runner-controls {

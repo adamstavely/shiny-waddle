@@ -4,7 +4,7 @@
  * Main entry point for running compliance tests
  */
 
-import { Sentinel } from '../core/test-harness';
+import { TestOrchestrator } from '../core/test-harness';
 import { loadTestSuite } from '../tests/test-suite-loader';
 import { ComplianceReporter } from '../services/compliance-reporter';
 import { ComplianceDashboard } from '../dashboard/compliance-dashboard';
@@ -23,7 +23,7 @@ async function main() {
   console.log(`Loading test suite: ${suiteName}`);
   const testSuite = await loadTestSuite(suiteName);
 
-  console.log('Initializing Sentinel...');
+  console.log('Initializing TestOrchestrator...');
   
   // Load ABAC policies if available
   let abacPolicies = [];
@@ -74,12 +74,12 @@ async function main() {
     },
   };
 
-  const sentinel = new Sentinel(config);
+  const orchestrator = new TestOrchestrator(config);
   const reporter = new ComplianceReporter(config.reportingConfig);
   const dashboard = new ComplianceDashboard(reporter);
 
   console.log('Running test suite...');
-  const results = await sentinel.runTestSuite(testSuite);
+  const results = await orchestrator.runTestSuite(testSuite);
 
   console.log(`\nTest Results: ${results.filter(r => r.passed).length}/${results.length} passed`);
 
@@ -96,7 +96,7 @@ async function main() {
   await fs.writeFile(dashboardPath, JSON.stringify(dashboardData, null, 2));
 
   // Check compliance
-  const isCompliant = sentinel.isCompliant(results);
+  const isCompliant = orchestrator.isCompliant(results);
   console.log(`\nCompliance Status: ${isCompliant ? '✅ PASSED' : '❌ FAILED'}`);
 
   if (!isCompliant) {

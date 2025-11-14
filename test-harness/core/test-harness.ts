@@ -12,7 +12,7 @@ import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
 import { TestResult, TestSuite, TestConfiguration } from './types';
 
-export class Sentinel {
+export class TestOrchestrator {
   private userSimulator: UserSimulator;
   private accessControlTester: AccessControlTester;
   private dataBehaviorTester: DataBehaviorTester;

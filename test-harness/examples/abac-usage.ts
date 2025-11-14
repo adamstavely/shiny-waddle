@@ -1,10 +1,10 @@
 /**
  * ABAC Usage Example
  * 
- * Demonstrates how to use Sentinel with ABAC policies
+ * Demonstrates how to use TestOrchestrator with ABAC policies
  */
 
-import { Sentinel } from '../core/test-harness';
+import { TestOrchestrator } from '../core/test-harness';
 import { ABACPolicyLoader } from '../services/abac-policy-loader';
 import { TestConfiguration, TestSuite } from '../core/types';
 import * as path from 'path';
@@ -108,15 +108,15 @@ async function main() {
     },
   };
 
-  // 4. Initialize Sentinel
-  const sentinel = new Sentinel(config);
+  // 4. Initialize TestOrchestrator
+  const orchestrator = new TestOrchestrator(config);
 
   // 5. Run tests
   console.log('Running ABAC compliance tests...');
-  const results = await sentinel.runTestSuite(testSuite);
+  const results = await orchestrator.runTestSuite(testSuite);
 
   // 6. Check compliance
-  const isCompliant = sentinel.isCompliant(results);
+  const isCompliant = orchestrator.isCompliant(results);
   console.log(`Compliance: ${isCompliant ? 'PASSED' : 'FAILED'}`);
 
   // 7. Generate report

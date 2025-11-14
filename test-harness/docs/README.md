@@ -1,6 +1,6 @@
-# Sentinel Documentation
+# TestOrchestrator Documentation
 
-Welcome to the Sentinel documentation. This directory contains comprehensive guides for using the framework.
+Welcome to the TestOrchestrator documentation. This directory contains comprehensive guides for using the framework.
 
 ## Documentation Index
 
@@ -74,7 +74,7 @@ Both guides include troubleshooting sections:
 ## Examples
 
 See the [examples](../examples/) directory for complete working examples:
-- `basic-usage.ts`: Basic Sentinel usage
+- `basic-usage.ts`: Basic TestOrchestrator usage
 - `abac-usage.ts`: ABAC policy usage
 
 ## Additional Resources

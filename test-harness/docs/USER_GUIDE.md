@@ -559,12 +559,12 @@ validatorRegistry.register(validator);
 
 #### Step 3: Use Validator
 
-The `Sentinel` class automatically discovers and uses registered validators:
+The `TestOrchestrator` class automatically discovers and uses registered validators:
 
 ```typescript
-const sentinel = new Sentinel(config);
+const orchestrator = new TestOrchestrator(config);
 // Validators are automatically discovered and used
-const results = await sentinel.runTestSuite(suite);
+const results = await orchestrator.runTestSuite(suite);
 ```
 
 ### Validator Features
@@ -813,7 +813,7 @@ npm run test:compliance:watch
 ### Programmatic Usage
 
 ```typescript
-import { Sentinel } from './core/test-harness';
+import { TestOrchestrator } from './core/test-harness';
 import { loadTestSuite } from './tests/test-suite-loader';
 import { TestConfiguration } from './core/types';
 
@@ -849,14 +849,14 @@ const config: TestConfiguration = {
   },
 };
 
-// Initialize Sentinel
-const sentinel = new Sentinel(config);
+// Initialize TestOrchestrator
+const orchestrator = new TestOrchestrator(config);
 
 // Run tests
-const results = await sentinel.runTestSuite(suite);
+const results = await orchestrator.runTestSuite(suite);
 
 // Check compliance
-const isCompliant = sentinel.isCompliant(results);
+const isCompliant = orchestrator.isCompliant(results);
 console.log(`Compliance: ${isCompliant ? 'PASSED' : 'FAILED'}`);
 
 // Generate report

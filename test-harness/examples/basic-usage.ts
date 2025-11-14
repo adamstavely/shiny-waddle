@@ -1,10 +1,10 @@
 /**
  * Basic Usage Example
  * 
- * Demonstrates how to use the Sentinel framework
+ * Demonstrates how to use the TestOrchestrator framework
  */
 
-import { Sentinel } from '../core/test-harness';
+import { TestOrchestrator } from '../core/test-harness';
 import { TestConfiguration, TestSuite } from '../core/types';
 
 async function main() {
@@ -76,15 +76,15 @@ async function main() {
     },
   };
 
-  // 3. Initialize Sentinel
-  const sentinel = new Sentinel(config);
+  // 3. Initialize TestOrchestrator
+  const orchestrator = new TestOrchestrator(config);
 
   // 4. Run tests
   console.log('Running compliance tests...');
-  const results = await sentinel.runTestSuite(testSuite);
+  const results = await orchestrator.runTestSuite(testSuite);
 
   // 5. Check compliance
-  const isCompliant = sentinel.isCompliant(results);
+  const isCompliant = orchestrator.isCompliant(results);
   console.log(`Compliance: ${isCompliant ? 'PASSED' : 'FAILED'}`);
 
   // 6. Generate report

@@ -1,6 +1,6 @@
 # Implemented Features
 
-This document summarizes the newly implemented features in the Sentinel framework.
+This document summarizes the newly implemented features in the TestOrchestrator framework.
 
 ## 1. Integration with Real Systems
 
@@ -239,7 +239,7 @@ const validation = support.validate('cedar', cedarPolicy);
 ### Complete Workflow Example
 
 ```typescript
-import { Sentinel } from './core/test-harness';
+import { TestOrchestrator } from './core/test-harness';
 import { RealSystemIntegration } from './services/real-system-integration';
 import { AdvancedQueryAnalyzer } from './services/advanced-query-analyzer';
 import { RiskScorer } from './services/risk-scorer';

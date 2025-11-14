@@ -1,6 +1,6 @@
-# Sentinel Front-End UI Pages Requirements
+# TestOrchestrator Front-End UI Pages Requirements
 
-Based on the comprehensive functionality of the Sentinel framework, here are all the UI pages that need to be created:
+Based on the comprehensive functionality of the TestOrchestrator framework, here are all the UI pages that need to be created:
 
 ## Implementation Status Summary
 

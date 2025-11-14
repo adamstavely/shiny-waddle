@@ -80,6 +80,16 @@ export class ApplicationsController {
     return this.applicationsService.remove(id);
   }
 
+  @Get(':id/test-harnesses')
+  async getTestHarnesses(@Param('id') id: string): Promise<any[]> {
+    return this.applicationsService.getAssignedTestHarnesses(id);
+  }
+
+  @Get(':id/test-batteries')
+  async getTestBatteries(@Param('id') id: string): Promise<any[]> {
+    return this.applicationsService.getAssignedTestBatteries(id);
+  }
+
   @Post(':id/test')
   @HttpCode(HttpStatus.OK)
   async updateLastTest(@Param('id') id: string): Promise<Application> {

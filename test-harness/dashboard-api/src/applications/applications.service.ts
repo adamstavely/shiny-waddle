@@ -7,6 +7,8 @@ import { TestResultsService } from '../test-results/test-results.service';
 import { TestResultStatus } from '../test-results/entities/test-result.entity';
 import { SecurityAuditLogService, SecurityAuditEventType } from '../security/audit-log.service';
 import { ValidatorsService } from '../validators/validators.service';
+import { TestHarnessesService } from '../test-harnesses/test-harnesses.service';
+import { TestBatteriesService } from '../test-batteries/test-batteries.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -37,6 +39,10 @@ export class ApplicationsService {
     private readonly auditLogService: SecurityAuditLogService,
     @Inject(forwardRef(() => ValidatorsService))
     private readonly validatorsService: ValidatorsService,
+    @Inject(forwardRef(() => TestHarnessesService))
+    private readonly testHarnessesService: TestHarnessesService,
+    @Inject(forwardRef(() => TestBatteriesService))
+    private readonly testBatteriesService: TestBatteriesService,
   ) {
     // Load applications asynchronously
     this.loadApplications().then(() => {
@@ -895,6 +901,36 @@ export class ApplicationsService {
     }
 
     return application;
+  }
+
+  /**
+   * Get test harnesses assigned to an application
+   */
+  async getAssignedTestHarnesses(applicationId: string): Promise<any[]> {
+    await this.loadApplications();
+    // Verify application exists
+    await this.findOne(applicationId);
+    return this.testHarnessesService.findByApplication(applicationId);
+  }
+
+  /**
+   * Get test batteries that contain harnesses assigned to an application
+   */
+  async getAssignedTestBatteries(applicationId: string): Promise<any[]> {
+    await this.loadApplications();
+    // Verify application exists
+    await this.findOne(applicationId);
+    const assignedHarnesses = await this.getAssignedTestHarnesses(applicationId);
+    const assignedHarnessIds = assignedHarnesses.map(h => h.id);
+    
+    if (assignedHarnessIds.length === 0) {
+      return [];
+    }
+
+    const allBatteries = await this.testBatteriesService.findAll();
+    return allBatteries.filter(battery => 
+      battery.harnessIds && battery.harnessIds.some(harnessId => assignedHarnessIds.includes(harnessId))
+    );
   }
 }
 

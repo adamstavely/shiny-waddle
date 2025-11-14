@@ -122,19 +122,19 @@ export class EphemeralEnvironment {
   }
 
   /**
-   * Run full Sentinel test suite against ephemeral environment
+   * Run full TestOrchestrator test suite against ephemeral environment
    */
   async runTests(apiUrl: string): Promise<any> {
     // Set environment variables for tests
     process.env.TEST_API_URL = apiUrl;
     process.env.TEST_ENVIRONMENT_ID = this.environmentId;
 
-    // Import and run Sentinel
-    const { Sentinel } = await import('../core/test-harness');
+    // Import and run TestOrchestrator
+    const { TestOrchestrator } = await import('../core/test-harness');
     const { loadTestSuite } = await import('../tests/test-suite-loader');
 
     const testSuite = await loadTestSuite('default');
-    const sentinel = new Sentinel({
+    const orchestrator = new TestOrchestrator({
       userSimulationConfig: { roles: ['admin', 'researcher', 'analyst', 'viewer'], attributes: {} },
       accessControlConfig: { policyEngine: 'custom' },
       dataBehaviorConfig: {},
@@ -143,7 +143,7 @@ export class EphemeralEnvironment {
       reportingConfig: { outputFormat: 'json' },
     });
 
-    const results = await sentinel.runTestSuite(testSuite);
+    const results = await orchestrator.runTestSuite(testSuite);
     return results;
   }
 
