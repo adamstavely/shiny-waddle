@@ -5,7 +5,7 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Tests</h1>
-          <p class="page-description">Manage and run compliance test suites</p>
+          <p class="page-description">Manage and view compliance test suites</p>
         </div>
         <button @click="router.push({ name: 'TestSuiteCreate' })" class="btn-primary">
           <Plus class="btn-icon" />
@@ -282,7 +282,7 @@
               </div>
               <div class="relationship-content">
                 <h4>Test Suites</h4>
-                <p>Collections of configurations grouped together. Test suites allow you to run multiple tests together and track results.</p>
+                <p>Collections of configurations grouped together. Test suites allow you to organize multiple tests and track results automatically in CI/CD.</p>
               </div>
             </div>
           </div>
@@ -552,10 +552,6 @@
               <Edit class="action-icon" />
               Edit
             </button>
-            <button @click.stop="testConfiguration(config.id)" class="action-btn">
-              <Play class="action-icon" />
-              Test
-            </button>
             <button @click.stop="deleteConfiguration(config.id)" class="action-btn delete-btn">
               <Trash2 class="action-icon" />
               Delete
@@ -733,7 +729,7 @@
       <div v-if="filteredResults.length === 0" class="empty-state">
         <FileText class="empty-icon" />
         <h3>No test results found</h3>
-        <p>Run a test suite to see results here</p>
+        <p>Test results will appear here after CI/CD runs</p>
       </div>
       </div>
 
@@ -2245,19 +2241,7 @@ const editConfiguration = (config: any) => {
   showCreateConfigModal.value = true;
 };
 
-const testConfiguration = async (configId: string) => {
-  try {
-    const response = await axios.post(`/api/test-configurations/${configId}/test`);
-    // Refresh data after test
-    await loadConfigurations();
-    await loadLastRunStatusForTypes();
-    await loadTestResults();
-    // Show result or navigate to results
-    switchTab('results');
-  } catch (err: any) {
-    alert(err.response?.data?.message || 'Failed to run test');
-  }
-};
+// Test execution removed - tests run automatically in CI/CD
 
 const deleteConfiguration = async (id: string) => {
   if (!confirm('Are you sure you want to delete this configuration? This action cannot be undone.')) {

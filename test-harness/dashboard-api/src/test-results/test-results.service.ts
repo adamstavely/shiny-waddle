@@ -38,6 +38,19 @@ export class TestResultsService {
           ...r,
           timestamp: r.timestamp ? new Date(r.timestamp) : new Date(),
           createdAt: r.createdAt ? new Date(r.createdAt) : new Date(),
+          riskAcceptance: r.riskAcceptance ? {
+            ...r.riskAcceptance,
+            approvedAt: r.riskAcceptance.approvedAt ? new Date(r.riskAcceptance.approvedAt) : undefined,
+            expirationDate: r.riskAcceptance.expirationDate ? new Date(r.riskAcceptance.expirationDate) : undefined,
+          } : undefined,
+          remediation: r.remediation ? {
+            ...r.remediation,
+            targetDate: r.remediation.targetDate ? new Date(r.remediation.targetDate) : undefined,
+            steps: r.remediation.steps?.map((step: any) => ({
+              ...step,
+              completedAt: step.completedAt ? new Date(step.completedAt) : undefined,
+            })),
+          } : undefined,
         }));
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
@@ -439,6 +452,8 @@ export class TestResultsService {
   async query(filters: {
     applicationId?: string;
     testConfigurationId?: string;
+    testHarnessId?: string;
+    testBatteryId?: string;
     buildId?: string;
     branch?: string;
     status?: TestResultEntity['status'];
@@ -454,6 +469,20 @@ export class TestResultsService {
       }
 
       let filtered = [...this.results];
+
+      // Filter by harness or battery (requires loading related data)
+      if (filters.testHarnessId || filters.testBatteryId) {
+        const configIds = await this.getConfigurationIdsForHarnessOrBattery(
+          filters.testHarnessId,
+          filters.testBatteryId,
+        );
+        if (configIds.length > 0) {
+          filtered = filtered.filter(r => configIds.includes(r.testConfigurationId));
+        } else {
+          // No matching configs, return empty
+          return [];
+        }
+      }
 
       if (filters.applicationId) {
         filtered = filtered.filter(r => r.applicationId === filters.applicationId);
@@ -497,6 +526,210 @@ export class TestResultsService {
       this.logger.error('Error in query:', error);
       throw error;
     }
+  }
+
+  private async getConfigurationIdsForHarnessOrBattery(
+    harnessId?: string,
+    batteryId?: string,
+  ): Promise<string[]> {
+    const configIds = new Set<string>();
+
+    try {
+      if (batteryId) {
+        // Load battery data
+        const batteryFile = path.join(process.cwd(), 'dashboard-api', 'data', 'test-batteries.json');
+        const batteryData = await fs.readFile(batteryFile, 'utf-8');
+        const batteries = JSON.parse(batteryData);
+        const battery = Array.isArray(batteries) 
+          ? batteries.find((b: any) => b.id === batteryId)
+          : null;
+
+        if (!battery || !battery.harnessIds) {
+          return [];
+        }
+
+        // Get all harnesses in the battery
+        for (const hId of battery.harnessIds) {
+          const harnessConfigIds = await this.getConfigurationIdsForHarness(hId);
+          harnessConfigIds.forEach(id => configIds.add(id));
+        }
+      } else if (harnessId) {
+        // Get configs for single harness
+        const harnessConfigIds = await this.getConfigurationIdsForHarness(harnessId);
+        harnessConfigIds.forEach(id => configIds.add(id));
+      }
+    } catch (error) {
+      this.logger.error('Error loading harness/battery data:', error);
+      return [];
+    }
+
+    return Array.from(configIds);
+  }
+
+  private async getConfigurationIdsForHarness(harnessId: string): Promise<string[]> {
+    const configIds = new Set<string>();
+
+    try {
+      // Load harness data
+      const harnessFile = path.join(process.cwd(), 'dashboard-api', 'data', 'test-harnesses.json');
+      const harnessData = await fs.readFile(harnessFile, 'utf-8');
+      const harnesses = JSON.parse(harnessData);
+      const harness = Array.isArray(harnesses)
+        ? harnesses.find((h: any) => h.id === harnessId)
+        : null;
+
+      if (!harness || !harness.testSuiteIds) {
+        return [];
+      }
+
+      // Load suite data to get configuration IDs
+      const suiteFile = path.join(process.cwd(), 'dashboard-api', 'data', 'test-suites.json');
+      const suiteData = await fs.readFile(suiteFile, 'utf-8');
+      const suites = JSON.parse(suiteData);
+      const suiteArray = Array.isArray(suites) ? suites : [];
+
+      // Get all configs from suites in this harness
+      for (const suiteId of harness.testSuiteIds) {
+        const suite = suiteArray.find((s: any) => s.id === suiteId);
+        if (suite && suite.testConfigurationIds) {
+          suite.testConfigurationIds.forEach((id: string) => configIds.add(id));
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error loading harness/suite data:', error);
+      return [];
+    }
+
+    return Array.from(configIds);
+  }
+
+  async acceptRisk(
+    id: string,
+    data: {
+      reason: string;
+      approver: string;
+      expirationDate?: Date;
+      ticketLink?: string;
+    },
+  ): Promise<TestResultEntity> {
+    await this.loadResults();
+    const result = this.results.find(r => r.id === id);
+    if (!result) {
+      throw new NotFoundException(`Test result with ID "${id}" not found`);
+    }
+
+    result.riskAcceptance = {
+      accepted: true,
+      reason: data.reason,
+      approver: data.approver,
+      approvedAt: new Date(),
+      expirationDate: data.expirationDate,
+      ticketLink: data.ticketLink,
+      rejected: false,
+    };
+
+    await this.saveResults();
+    this.logger.log(`Risk accepted for test result: ${id} by ${data.approver}`);
+    return result;
+  }
+
+  async rejectRisk(
+    id: string,
+    data: {
+      reason: string;
+      approver: string;
+    },
+  ): Promise<TestResultEntity> {
+    await this.loadResults();
+    const result = this.results.find(r => r.id === id);
+    if (!result) {
+      throw new NotFoundException(`Test result with ID "${id}" not found`);
+    }
+
+    if (result.riskAcceptance) {
+      result.riskAcceptance.accepted = false;
+      result.riskAcceptance.rejected = true;
+      result.riskAcceptance.rejectionReason = data.reason;
+      result.riskAcceptance.approver = data.approver;
+    } else {
+      result.riskAcceptance = {
+        accepted: false,
+        rejected: true,
+        rejectionReason: data.reason,
+        approver: data.approver,
+      };
+    }
+
+    await this.saveResults();
+    this.logger.log(`Risk rejected for test result: ${id} by ${data.approver}`);
+    return result;
+  }
+
+  async updateRemediation(
+    id: string,
+    data: {
+      status?: 'not-started' | 'in-progress' | 'completed';
+      ticketLink?: string;
+      assignedTo?: string;
+      targetDate?: Date;
+      notes?: string;
+      progress?: number;
+      steps?: Array<{
+        step: string;
+        status: 'pending' | 'in-progress' | 'completed';
+        completedAt?: Date;
+      }>;
+    },
+  ): Promise<TestResultEntity> {
+    await this.loadResults();
+    const result = this.results.find(r => r.id === id);
+    if (!result) {
+      throw new NotFoundException(`Test result with ID "${id}" not found`);
+    }
+
+    if (!result.remediation) {
+      result.remediation = {
+        status: 'not-started',
+        progress: 0,
+      };
+    }
+
+    if (data.status !== undefined) {
+      result.remediation.status = data.status;
+    }
+    if (data.ticketLink !== undefined) {
+      result.remediation.ticketLink = data.ticketLink;
+    }
+    if (data.assignedTo !== undefined) {
+      result.remediation.assignedTo = data.assignedTo;
+    }
+    if (data.targetDate !== undefined) {
+      result.remediation.targetDate = data.targetDate;
+    }
+    if (data.notes !== undefined) {
+      result.remediation.notes = data.notes;
+    }
+    if (data.progress !== undefined) {
+      result.remediation.progress = data.progress;
+    }
+    if (data.steps !== undefined) {
+      result.remediation.steps = data.steps;
+    }
+
+    // Auto-update status based on progress
+    if (data.progress !== undefined) {
+      if (data.progress === 0) {
+        result.remediation.status = 'not-started';
+      } else if (data.progress === 100) {
+        result.remediation.status = 'completed';
+      } else if (result.remediation.status === 'not-started') {
+        result.remediation.status = 'in-progress';
+      }
+    }
+
+    await this.saveResults();
+    this.logger.log(`Remediation updated for test result: ${id}`);
+    return result;
   }
 }
 

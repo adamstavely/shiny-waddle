@@ -6,13 +6,17 @@
 2. [What is Heimdall?](#what-is-heimdall)
 3. [Current Features & Support](#current-features--support)
 4. [Getting Started](#getting-started)
-5. [Configuring Tests](#configuring-tests)
-6. [Configuring Validators](#configuring-validators)
-7. [Using the Dashboard API](#using-the-dashboard-api)
-8. [Running Tests](#running-tests)
-9. [Understanding Results](#understanding-results)
-10. [Best Practices](#best-practices)
-11. [Troubleshooting](#troubleshooting)
+5. [Test Management UI](#test-management-ui)
+6. [Test Batteries](#test-batteries)
+7. [Test Harnesses](#test-harnesses)
+8. [Configuring Tests](#configuring-tests)
+9. [Configuring Validators](#configuring-validators)
+10. [Using the Dashboard API](#using-the-dashboard-api)
+11. [Running Tests](#running-tests)
+12. [Understanding Results](#understanding-results)
+13. [Risk Acceptance Workflow](#risk-acceptance-workflow)
+14. [Best Practices](#best-practices)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -158,6 +162,132 @@ npm run dashboard:api
 # Terminal 2: Start Frontend
 npm run dashboard:frontend
 ```
+
+---
+
+## Test Management UI
+
+The Heimdall Dashboard provides a comprehensive UI for managing tests, viewing results, and tracking compliance. **Important**: The UI is for viewing and managing test configurations only - tests run automatically in CI/CD during builds.
+
+### Navigation Structure
+
+The dashboard is organized into the following main sections:
+
+1. **Dashboard** (`/` or `/insights`) - Overview, stats, recent findings, quick links
+2. **Applications** (`/applications`) - View applications and their assigned test harnesses
+3. **Tests** (`/tests`) - Test management with multiple tabs:
+   - **Test Batteries** - View and manage test batteries (collections of harnesses)
+   - **Test Harnesses** - View and manage test harnesses (collections of suites)
+   - **Test Suites** - View and manage test suites
+   - **Test Library** - Browse available test types and configurations
+   - **Findings** - Review test results, violations, risk acceptance
+4. **Reports** (`/reports`) - Generate and view compliance reports
+
+### Test Hierarchy
+
+Tests are organized in a hierarchical structure:
+
+```
+Test Battery (collection of harnesses with execution config)
+  └── Test Harness (collection of suites, assigned to applications)
+      └── Test Suite (collection of test configurations)
+          └── Test Configuration (test parameters)
+              └── Individual Tests (test functions)
+```
+
+**Key Relationships:**
+- **Test Harness**: Global entity, can be assigned to multiple applications
+- **Test Suite**: Can belong to multiple Test Harnesses (many-to-many)
+- **Application**: Has Test Harnesses assigned to it
+- **Test Battery**: Contains multiple Test Harnesses with execution configuration
+
+---
+
+## Test Batteries
+
+Test Batteries are collections of Test Harnesses with execution configuration. They allow you to group related harnesses together and configure how they should be executed.
+
+### Creating a Test Battery
+
+1. Navigate to **Tests** → **Test Batteries** tab
+2. Click **Create Test Battery**
+3. Fill in the form:
+   - **Name**: Descriptive name for the battery
+   - **Description**: Optional description
+   - **Team**: Team responsible for this battery
+   - **Test Harnesses**: Select one or more harnesses to include
+   - **Execution Config**:
+     - **Execution Mode**: `parallel` or `sequential`
+     - **Timeout**: Maximum execution time in milliseconds (optional)
+     - **Stop on Failure**: Whether to stop execution if a harness fails
+4. Click **Save**
+
+### Managing Test Batteries
+
+- **View Battery**: Click on a battery card to see details, associated harnesses, and execution configuration
+- **Edit Battery**: Click the **Edit** button on the battery detail page
+- **Add/Remove Harnesses**: Use the edit form to manage harnesses in the battery
+- **Delete Battery**: Use the delete button (be careful - this cannot be undone)
+
+### Execution Configuration
+
+- **Parallel Mode**: All harnesses in the battery run simultaneously (faster, but uses more resources)
+- **Sequential Mode**: Harnesses run one after another (slower, but uses fewer resources)
+- **Stop on Failure**: If enabled, execution stops when any harness fails (useful for critical batteries)
+
+---
+
+## Test Harnesses
+
+Test Harnesses are collections of Test Suites that can be assigned to applications. They provide a way to organize and group related test suites together.
+
+### Creating a Test Harness
+
+1. Navigate to **Tests** → **Test Harnesses** tab
+2. Click **Create Test Harness**
+3. Fill in the form:
+   - **Name**: Descriptive name for the harness
+   - **Description**: Optional description
+   - **Team**: Team responsible for this harness
+   - **Test Suites**: Select one or more test suites to include
+   - **Applications**: Select applications to assign this harness to
+4. Click **Save**
+
+### Managing Test Harnesses
+
+- **View Harness**: Click on a harness card to see details, associated suites, and assigned applications
+- **Edit Harness**: Click the **Edit** button on the harness detail page
+- **Add/Remove Suites**: Use the edit form to manage suites in the harness
+- **Assign to Applications**: Use the edit form or the Applications page to assign harnesses
+
+### Assignment Workflow
+
+#### Assigning Harnesses to Applications
+
+**Method 1: From Harness Detail Page**
+1. Navigate to **Tests** → **Test Harnesses**
+2. Click on a harness to view details
+3. Click **Edit**
+4. Select applications in the **Applications** multi-select
+5. Click **Save**
+
+**Method 2: From Application Page**
+1. Navigate to **Applications**
+2. Click on an application
+3. Click **Manage Assignments**
+4. In the **Test Harnesses** section, check/uncheck harnesses
+5. Click **Save**
+
+#### Viewing Assignments
+
+- **From Application Page**: See all harnesses and batteries assigned to an application
+- **From Harness Detail**: See all applications the harness is assigned to
+- **From Suite Detail**: See which harnesses contain the suite
+
+### Many-to-Many Relationships
+
+- **Suites ↔ Harnesses**: A test suite can belong to multiple harnesses, and a harness can contain multiple suites
+- **Harnesses ↔ Applications**: A harness can be assigned to multiple applications, and an application can have multiple harnesses
 
 ---
 
@@ -894,6 +1024,100 @@ jobs:
 ---
 
 ## Understanding Results
+
+### Viewing Test Results
+
+Test results are available in the **Tests** → **Findings** tab. You can:
+
+- **Filter Results**: Filter by test suite, harness, battery, application, status, or type
+- **View Details**: Click on a result to see detailed information
+- **Timeline View**: Switch to timeline view to see execution history chronologically
+- **List View**: Switch to list view for a traditional table layout
+
+### Result Status
+
+- **Passed**: All tests in the suite passed
+- **Failed**: One or more tests failed
+- **Partial**: Some tests passed, some failed
+- **Error**: Test execution encountered an error
+
+### Filtering Results
+
+The Findings tab supports multiple filters:
+
+- **Test Suite**: Filter by specific test suite
+- **Test Harness**: Filter by harness (shows results for all suites in the harness)
+- **Test Battery**: Filter by battery (shows results for all harnesses in the battery)
+- **Application**: Filter by application
+- **Status**: Filter by pass/fail status
+- **Type**: Filter by test type (access-control, data-behavior, etc.)
+
+---
+
+## Risk Acceptance Workflow
+
+When a test fails, you may need to accept the risk if it's a false positive or acceptable risk. The dashboard provides a workflow for requesting and approving risk acceptance.
+
+### Requesting Risk Acceptance
+
+1. Navigate to **Tests** → **Findings** tab
+2. Find a failed test result
+3. Click **Accept Risk** button
+4. Fill in the form:
+   - **Reason**: Explain why you're accepting this risk (required)
+   - **Justification**: Provide additional context (required)
+   - **Ticket Link**: Optional link to tracking ticket
+5. Click **Submit**
+
+The request will be sent to the appropriate approvers based on the finding severity:
+- **Critical**: Requires both Cyber Risk Manager and Data Steward approval
+- **High**: Requires Cyber Risk Manager approval
+- **Medium/Low**: Requires Cyber Risk Manager approval (Data Steward can also approve)
+
+### Approving Risk Acceptance
+
+1. Navigate to **Tests** → **Findings** tab
+2. Find results with pending risk acceptance requests
+3. Review the request details
+4. Click **Approve** or **Reject**
+5. Provide comments if rejecting
+
+### Remediation Tracking
+
+For findings that need to be fixed, you can track remediation progress:
+
+1. Navigate to **Tests** → **Findings** tab
+2. Find a failed test result
+3. Click **Start Remediation** button
+4. Fill in the form:
+   - **Status**: Current remediation status
+   - **Progress**: Percentage complete (0-100)
+   - **Current Step**: What step you're working on
+   - **Notes**: Additional notes about progress
+5. Click **Save**
+
+You can update remediation progress as you work:
+- Update the progress percentage
+- Mark steps as completed
+- Add notes about progress
+- Link to tracking tickets
+
+### Risk Status Indicators
+
+Results show risk status with badges:
+- **No Risk**: No risk acceptance requested
+- **Pending**: Risk acceptance request pending approval
+- **Accepted**: Risk has been accepted
+- **Rejected**: Risk acceptance was rejected
+
+### Remediation Status Indicators
+
+Results show remediation status with badges:
+- **Not Started**: No remediation tracking
+- **In Progress**: Remediation is in progress
+- **Completed**: Remediation is complete
+
+---
 
 ### Test Result Structure
 

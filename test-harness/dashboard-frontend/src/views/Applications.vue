@@ -36,7 +36,9 @@
               <span
                 v-for="battery in application.testBatteries"
                 :key="battery.id"
-                class="item-tag"
+                class="item-tag clickable"
+                @click.stop="viewBattery(battery.id)"
+                :title="`View ${battery.name} details`"
               >
                 {{ battery.name }}
               </span>
@@ -50,7 +52,9 @@
               <span
                 v-for="harness in application.testHarnesses"
                 :key="harness.id"
-                class="item-tag"
+                class="item-tag clickable"
+                @click.stop="viewHarness(harness.id)"
+                :title="`View ${harness.name} details`"
               >
                 {{ harness.name }}
               </span>
@@ -190,6 +194,14 @@ const manageAssignments = (id: string) => {
   router.push({ path: `/applications/${id}/assignments` });
 };
 
+const viewBattery = (id: string) => {
+  router.push({ path: `/tests/batteries/${id}` });
+};
+
+const viewHarness = (id: string) => {
+  router.push({ path: `/tests/harnesses/${id}` });
+};
+
 onMounted(() => {
   fetchApplications();
 });
@@ -317,6 +329,17 @@ onMounted(() => {
   background: #e3f2fd;
   border-radius: 4px;
   font-size: 0.875rem;
+}
+
+.item-tag.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.item-tag.clickable:hover {
+  background: #bbdefb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .empty-state {

@@ -26,6 +26,18 @@
                 />
               </div>
 
+              <!-- Report Type -->
+              <div class="form-group">
+                <label>Report Type</label>
+                <select v-model="form.reportType" class="form-input">
+                  <option value="compliance">Compliance Report</option>
+                  <option value="battery-coverage">Test Battery Coverage</option>
+                  <option value="harness-coverage">Test Harness Coverage</option>
+                  <option value="battery-execution">Battery Execution Report</option>
+                  <option value="harness-execution">Harness Execution Report</option>
+                </select>
+              </div>
+
               <!-- Format Selection -->
               <div class="form-group">
                 <label>Report Format</label>
@@ -107,8 +119,48 @@
                 </div>
               </div>
 
+              <!-- Test Battery Filter -->
+              <div class="form-group" v-if="testBatteries && testBatteries.length > 0 && (form.reportType === 'battery-coverage' || form.reportType === 'battery-execution' || form.reportType === 'compliance')">
+                <label>Test Batteries (Optional)</label>
+                <div class="checkbox-group">
+                  <label
+                    v-for="battery in testBatteries"
+                    :key="battery.id"
+                    class="checkbox-option"
+                  >
+                    <input
+                      v-model="form.selectedBatteries"
+                      type="checkbox"
+                      :value="battery.id"
+                      class="checkbox-input"
+                    />
+                    <span>{{ battery.name }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Test Harness Filter -->
+              <div class="form-group" v-if="testHarnesses && testHarnesses.length > 0 && (form.reportType === 'harness-coverage' || form.reportType === 'harness-execution' || form.reportType === 'compliance')">
+                <label>Test Harnesses (Optional)</label>
+                <div class="checkbox-group">
+                  <label
+                    v-for="harness in testHarnesses"
+                    :key="harness.id"
+                    class="checkbox-option"
+                  >
+                    <input
+                      v-model="form.selectedHarnesses"
+                      type="checkbox"
+                      :value="harness.id"
+                      class="checkbox-input"
+                    />
+                    <span>{{ harness.name }}</span>
+                  </label>
+                </div>
+              </div>
+
               <!-- Validators Filter -->
-              <div class="form-group" v-if="validators && validators.length > 0">
+              <div class="form-group" v-if="validators && validators.length > 0 && form.reportType === 'compliance'">
                 <label>Validators (Optional)</label>
                 <div class="checkbox-group">
                   <label
@@ -259,6 +311,8 @@ const props = defineProps<{
   applications?: string[];
   teams?: string[];
   validators?: any[];
+  testBatteries?: any[];
+  testHarnesses?: any[];
 }>();
 
 const emit = defineEmits<{
@@ -270,12 +324,15 @@ const isGenerating = ref(false);
 
 const form = ref({
   name: '',
+  reportType: 'compliance' as 'compliance' | 'battery-coverage' | 'harness-coverage' | 'battery-execution' | 'harness-execution',
   format: 'html' as 'json' | 'html' | 'xml',
   dateFrom: '',
   dateTo: '',
   selectedApplications: [] as string[],
   selectedTeams: [] as string[],
   selectedValidators: [] as string[],
+  selectedBatteries: [] as string[],
+  selectedHarnesses: [] as string[],
   includeCharts: true,
   includeDetails: true,
   scheduleEnabled: false,
@@ -321,6 +378,13 @@ const handleGenerate = async () => {
         validatorIds: form.value.selectedValidators.length > 0
           ? form.value.selectedValidators
           : undefined,
+        batteryIds: form.value.selectedBatteries.length > 0
+          ? form.value.selectedBatteries
+          : undefined,
+        harnessIds: form.value.selectedHarnesses.length > 0
+          ? form.value.selectedHarnesses
+          : undefined,
+        reportType: form.value.reportType,
         dateRange: form.value.dateFrom || form.value.dateTo
           ? {
               type: 'absolute' as const,
@@ -347,6 +411,7 @@ const handleGenerate = async () => {
       // Generate report immediately
       const response = await axios.post('/api/reports/generate', {
         name: form.value.name || undefined,
+        reportType: form.value.reportType,
         format: form.value.format,
         dateFrom: form.value.dateFrom || undefined,
         dateTo: form.value.dateTo || undefined,
@@ -358,6 +423,12 @@ const handleGenerate = async () => {
           : undefined,
         validatorIds: form.value.selectedValidators.length > 0
           ? form.value.selectedValidators
+          : undefined,
+        batteryIds: form.value.selectedBatteries.length > 0
+          ? form.value.selectedBatteries
+          : undefined,
+        harnessIds: form.value.selectedHarnesses.length > 0
+          ? form.value.selectedHarnesses
           : undefined,
         includeCharts: form.value.includeCharts,
         includeDetails: form.value.includeDetails,
@@ -371,12 +442,15 @@ const handleGenerate = async () => {
     // Reset form
     form.value = {
       name: '',
+      reportType: 'compliance',
       format: 'html',
       dateFrom: '',
       dateTo: '',
       selectedApplications: [],
       selectedTeams: [],
       selectedValidators: [],
+      selectedBatteries: [],
+      selectedHarnesses: [],
       includeCharts: true,
       includeDetails: true,
       scheduleEnabled: false,

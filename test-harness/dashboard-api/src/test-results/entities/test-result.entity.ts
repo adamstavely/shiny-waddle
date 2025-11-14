@@ -8,6 +8,31 @@ export interface TestResultError {
   details?: any;
 }
 
+export interface RiskAcceptance {
+  accepted: boolean;
+  reason?: string;
+  approver?: string;
+  approvedAt?: Date;
+  expirationDate?: Date;
+  ticketLink?: string;
+  rejected?: boolean;
+  rejectionReason?: string;
+}
+
+export interface RemediationTracking {
+  status?: 'not-started' | 'in-progress' | 'completed';
+  ticketLink?: string;
+  assignedTo?: string;
+  targetDate?: Date;
+  notes?: string;
+  progress?: number; // 0-100
+  steps?: Array<{
+    step: string;
+    status: 'pending' | 'in-progress' | 'completed';
+    completedAt?: Date;
+  }>;
+}
+
 export interface TestResultEntity {
   id: string;
   applicationId: string;
@@ -26,12 +51,16 @@ export interface TestResultEntity {
   result: any; // full test result object
   error?: TestResultError;
   metadata?: Record<string, any>;
+  riskAcceptance?: RiskAcceptance;
+  remediation?: RemediationTracking;
   createdAt: Date;
 }
 
 export interface QueryFilters {
   applicationId?: string;
   testConfigurationId?: string;
+  testHarnessId?: string;
+  testBatteryId?: string;
   status?: TestResultStatus;
   branch?: string;
   limit?: number;

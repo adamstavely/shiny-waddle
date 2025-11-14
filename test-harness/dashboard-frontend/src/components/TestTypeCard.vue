@@ -44,10 +44,43 @@
               class="config-item"
             >
             <div class="config-info">
-              <span class="config-name">{{ config.name }}</span>
-              <span class="config-status" :class="config.enabled ? 'enabled' : 'disabled'">
-                {{ config.enabled ? 'Enabled' : 'Disabled' }}
-              </span>
+              <div class="config-header">
+                <span class="config-name">{{ config.name }}</span>
+                <span class="config-status" :class="config.enabled ? 'enabled' : 'disabled'">
+                  {{ config.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </div>
+              <div v-if="configUsage[config.id]" class="config-usage">
+                <div v-if="configUsage[config.id].suites.length > 0" class="usage-item">
+                  <span class="usage-label">Used by:</span>
+                  <div class="usage-badges">
+                    <span
+                      v-for="suite in configUsage[config.id].suites"
+                      :key="suite.id"
+                      class="usage-badge suite-badge"
+                      :title="suite.name"
+                    >
+                      {{ suite.name }}
+                    </span>
+                  </div>
+                </div>
+                <div v-if="configUsage[config.id].harnesses.length > 0" class="usage-item">
+                  <span class="usage-label">In harnesses:</span>
+                  <div class="usage-badges">
+                    <span
+                      v-for="harness in configUsage[config.id].harnesses"
+                      :key="harness.id"
+                      class="usage-badge harness-badge"
+                      :title="harness.name"
+                    >
+                      {{ harness.name }}
+                    </span>
+                  </div>
+                </div>
+                <div v-if="configUsage[config.id].suites.length === 0 && configUsage[config.id].harnesses.length === 0" class="usage-item">
+                  <span class="usage-label muted">Not used by any test suites</span>
+                </div>
+              </div>
             </div>
             <div class="config-actions">
               <button @click.stop="editConfig(config)" class="icon-btn" title="Edit">
@@ -158,6 +191,9 @@ const showCreateConfig = ref(false);
 const loading = ref(false);
 const lastRunStatus = ref<string | undefined>(undefined);
 const lastRunTimestamp = ref<Date | undefined>(undefined);
+const configUsage = ref<Record<string, { suites: Array<{ id: string; name: string }>; harnesses: Array<{ id: string; name: string }> }>>({});
+const testSuites = ref<any[]>([]);
+const testHarnesses = ref<any[]>([]);
 
 // Define available test functions for each test type
 const availableTestFunctions = computed(() => {
@@ -192,6 +228,7 @@ const toggleExpand = async () => {
   if (isExpanded.value && configurations.value.length === 0) {
     await loadConfigurations();
     await loadRecentResults();
+    await loadUsageData();
   }
 };
 
@@ -263,9 +300,11 @@ const deleteConfig = async (id: string) => {
   if (!confirm('Are you sure you want to delete this configuration?')) {
     return;
   }
+  
   try {
     await axios.delete(`/api/test-configurations/${id}`);
     await loadConfigurations();
+    await loadUsageData();
   } catch (err) {
     console.error('Error deleting configuration:', err);
     alert('Failed to delete configuration');
@@ -273,6 +312,54 @@ const deleteConfig = async (id: string) => {
 };
 
 // Test execution removed - tests run automatically in CI/CD during builds
+
+const loadUsageData = async () => {
+  try {
+    // Load all test suites and harnesses
+    const [suitesResponse, harnessesResponse] = await Promise.all([
+      axios.get('/api/test-suites'),
+      axios.get('/api/test-harnesses'),
+    ]);
+    
+    testSuites.value = suitesResponse.data || [];
+    testHarnesses.value = harnessesResponse.data || [];
+    
+    // Build usage map for each configuration
+    const usage: Record<string, { suites: Array<{ id: string; name: string }>; harnesses: Array<{ id: string; name: string }> }> = {};
+    
+    configurations.value.forEach((config) => {
+      // Find suites that use this configuration
+      const suitesUsingConfig = testSuites.value.filter((suite: any) => 
+        suite.testConfigurationIds && suite.testConfigurationIds.includes(config.id)
+      );
+      
+      // Find harnesses that contain these suites
+      const harnessIds = new Set<string>();
+      suitesUsingConfig.forEach((suite: any) => {
+        testHarnesses.value.forEach((harness: any) => {
+          if (harness.testSuiteIds && harness.testSuiteIds.includes(suite.id)) {
+            harnessIds.add(harness.id);
+          }
+        });
+      });
+      
+      const harnesses = Array.from(harnessIds).map((id) => {
+        const harness = testHarnesses.value.find((h: any) => h.id === id);
+        return harness ? { id: harness.id, name: harness.name } : null;
+      }).filter((h): h is { id: string; name: string } => h !== null);
+      
+      usage[config.id] = {
+        suites: suitesUsingConfig.map((suite: any) => ({ id: suite.id, name: suite.name })),
+        harnesses,
+      };
+    });
+    
+    configUsage.value = usage;
+  } catch (err) {
+    console.error('Error loading usage data:', err);
+    configUsage.value = {};
+  }
+};
 
 const loadRecentResults = async () => {
   // Load recent results for all configurations of this type
@@ -319,6 +406,7 @@ const handleCreateConfig = async (configData: any) => {
     showCreateConfig.value = false;
     await loadConfigurations();
     await loadLastRunStatus();
+    await loadUsageData();
   } catch (err) {
     console.error('Error creating configuration:', err);
     alert('Failed to create configuration');
@@ -559,14 +647,79 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
 
 .config-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   flex: 1;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .config-name {
   font-weight: 500;
   color: #ffffff;
+}
+
+.config-usage {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.usage-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.usage-label {
+  color: #a0aec0;
+  font-weight: 500;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.usage-label.muted {
+  color: #718096;
+  font-style: italic;
+}
+
+.usage-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.usage-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.suite-badge {
+  background: rgba(79, 172, 254, 0.15);
+  color: #4facfe;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+}
+
+.harness-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .config-status {

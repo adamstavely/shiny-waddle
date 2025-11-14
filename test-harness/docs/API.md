@@ -1987,6 +1987,578 @@ GET /api/test-results/compliance/trends
 ]
 ```
 
+## Test Harness Endpoints
+
+Test Harnesses are collections of test suites that can be assigned to applications.
+
+### Create Test Harness
+
+Create a new test harness.
+
+```http
+POST /api/test-harnesses
+```
+
+**Request Body:**
+```json
+{
+  "name": "Production Security Tests",
+  "description": "Security test suite for production applications",
+  "testSuiteIds": ["suite-1", "suite-2"],
+  "applicationIds": ["app-1"],
+  "team": "Security Team"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "harness-123",
+  "name": "Production Security Tests",
+  "description": "Security test suite for production applications",
+  "testSuiteIds": ["suite-1", "suite-2"],
+  "applicationIds": ["app-1"],
+  "team": "Security Team",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### List Test Harnesses
+
+Get all test harnesses, optionally filtered by application or test suite.
+
+```http
+GET /api/test-harnesses
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter harnesses assigned to this application
+- `suiteId` (string, optional): Filter harnesses containing this test suite
+
+**Response:**
+```json
+[
+  {
+    "id": "harness-123",
+    "name": "Production Security Tests",
+    "description": "Security test suite for production applications",
+    "testSuiteIds": ["suite-1", "suite-2"],
+    "applicationIds": ["app-1"],
+    "team": "Security Team",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+### Get Test Harness
+
+Get a specific test harness by ID.
+
+```http
+GET /api/test-harnesses/:id
+```
+
+**Response:**
+```json
+{
+  "id": "harness-123",
+  "name": "Production Security Tests",
+  "description": "Security test suite for production applications",
+  "testSuiteIds": ["suite-1", "suite-2"],
+  "applicationIds": ["app-1"],
+  "team": "Security Team",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### Update Test Harness
+
+Update an existing test harness.
+
+```http
+PUT /api/test-harnesses/:id
+```
+
+**Request Body:**
+```json
+{
+  "name": "Updated Security Tests",
+  "description": "Updated description",
+  "testSuiteIds": ["suite-1", "suite-2", "suite-3"],
+  "applicationIds": ["app-1", "app-2"]
+}
+```
+
+### Delete Test Harness
+
+Delete a test harness.
+
+```http
+DELETE /api/test-harnesses/:id
+```
+
+**Response:** `204 No Content`
+
+### Add Test Suite to Harness
+
+Add a test suite to a harness.
+
+```http
+POST /api/test-harnesses/:id/test-suites
+```
+
+**Request Body:**
+```json
+{
+  "suiteId": "suite-3"
+}
+```
+
+### Remove Test Suite from Harness
+
+Remove a test suite from a harness.
+
+```http
+DELETE /api/test-harnesses/:id/test-suites/:suiteId
+```
+
+### Assign Harness to Application
+
+Assign a test harness to an application.
+
+```http
+POST /api/test-harnesses/:id/applications
+```
+
+**Request Body:**
+```json
+{
+  "applicationId": "app-2"
+}
+```
+
+### Unassign Harness from Application
+
+Remove a test harness assignment from an application.
+
+```http
+DELETE /api/test-harnesses/:id/applications/:applicationId
+```
+
+## Test Battery Endpoints
+
+Test Batteries are collections of test harnesses with execution configuration.
+
+### Create Test Battery
+
+Create a new test battery.
+
+```http
+POST /api/test-batteries
+```
+
+**Request Body:**
+```json
+{
+  "name": "Full Security Battery",
+  "description": "Complete security test battery for all applications",
+  "harnessIds": ["harness-1", "harness-2"],
+  "executionConfig": {
+    "executionMode": "parallel",
+    "timeout": 3600000,
+    "stopOnFailure": false
+  },
+  "team": "Security Team"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "battery-123",
+  "name": "Full Security Battery",
+  "description": "Complete security test battery for all applications",
+  "harnessIds": ["harness-1", "harness-2"],
+  "executionConfig": {
+    "executionMode": "parallel",
+    "timeout": 3600000,
+    "stopOnFailure": false
+  },
+  "team": "Security Team",
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### List Test Batteries
+
+Get all test batteries.
+
+```http
+GET /api/test-batteries
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "battery-123",
+    "name": "Full Security Battery",
+    "description": "Complete security test battery for all applications",
+    "harnessIds": ["harness-1", "harness-2"],
+    "executionConfig": {
+      "executionMode": "parallel",
+      "timeout": 3600000,
+      "stopOnFailure": false
+    },
+    "team": "Security Team",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+### Get Test Battery
+
+Get a specific test battery by ID.
+
+```http
+GET /api/test-batteries/:id
+```
+
+### Update Test Battery
+
+Update an existing test battery.
+
+```http
+PUT /api/test-batteries/:id
+```
+
+**Request Body:**
+```json
+{
+  "name": "Updated Battery",
+  "harnessIds": ["harness-1", "harness-2", "harness-3"],
+  "executionConfig": {
+    "executionMode": "sequential",
+    "stopOnFailure": true
+  }
+}
+```
+
+### Delete Test Battery
+
+Delete a test battery.
+
+```http
+DELETE /api/test-batteries/:id
+```
+
+**Response:** `204 No Content`
+
+### Add Harness to Battery
+
+Add a test harness to a battery.
+
+```http
+POST /api/test-batteries/:id/harnesses
+```
+
+**Request Body:**
+```json
+{
+  "harnessId": "harness-3"
+}
+```
+
+### Remove Harness from Battery
+
+Remove a test harness from a battery.
+
+```http
+DELETE /api/test-batteries/:id/harnesses/:harnessId
+```
+
+## Risk Acceptance Endpoints
+
+Manage risk acceptance for test findings.
+
+### Create Risk Acceptance Request
+
+Create a request to accept risk for a finding.
+
+```http
+POST /api/finding-approvals/request
+```
+
+**Request Body:**
+```json
+{
+  "findingId": "finding-123",
+  "requestType": "risk-acceptance",
+  "reason": "False positive - expected behavior",
+  "requestedBy": "user@example.com",
+  "expiresAt": "2024-12-31T23:59:59Z",
+  "ticketLink": "https://jira.example.com/ticket/123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "approval-123",
+  "findingId": "finding-123",
+  "requestType": "risk-acceptance",
+  "status": "pending",
+  "reason": "False positive - expected behavior",
+  "requestedBy": "user@example.com",
+  "requestedAt": "2024-01-15T10:00:00Z",
+  "expiresAt": "2024-12-31T23:59:59Z",
+  "ticketLink": "https://jira.example.com/ticket/123",
+  "approvals": []
+}
+```
+
+### Approve Risk Acceptance Request
+
+Approve a risk acceptance request.
+
+```http
+POST /api/finding-approvals/:id/approve
+```
+
+**Request Body:**
+```json
+{
+  "approverEmail": "approver@example.com",
+  "approverRole": "cyber-risk-manager",
+  "comments": "Approved - acceptable risk"
+}
+```
+
+### Reject Risk Acceptance Request
+
+Reject a risk acceptance request.
+
+```http
+POST /api/finding-approvals/:id/reject
+```
+
+**Request Body:**
+```json
+{
+  "approverEmail": "approver@example.com",
+  "approverRole": "cyber-risk-manager",
+  "reason": "Risk level too high"
+}
+```
+
+### Get Pending Requests
+
+Get all pending approval requests.
+
+```http
+GET /api/finding-approvals/pending
+```
+
+**Query Parameters:**
+- `requestType` (string, optional): Filter by request type (`risk-acceptance` or `false-positive`)
+- `findingId` (string, optional): Filter by finding ID
+
+### Get Approval Request for Finding
+
+Get approval request status for a specific finding.
+
+```http
+GET /api/finding-approvals/finding/:findingId
+```
+
+## Remediation Tracking Endpoints
+
+Track remediation progress for test findings.
+
+### Create Remediation Tracking
+
+Create a remediation tracking record for a finding.
+
+```http
+POST /api/remediation-tracking
+```
+
+**Request Body:**
+```json
+{
+  "findingId": "finding-123",
+  "status": "in-progress",
+  "assignedTo": "engineer@example.com",
+  "ticketLink": "https://jira.example.com/ticket/456",
+  "targetDate": "2024-02-01T00:00:00Z",
+  "notes": "Working on fix",
+  "steps": [
+    {
+      "step": "Identify root cause",
+      "status": "completed",
+      "completedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "step": "Implement fix",
+      "status": "in-progress"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "remediation-123",
+  "findingId": "finding-123",
+  "status": "in-progress",
+  "assignedTo": "engineer@example.com",
+  "ticketLink": "https://jira.example.com/ticket/456",
+  "targetDate": "2024-02-01T00:00:00Z",
+  "notes": "Working on fix",
+  "progress": 50,
+  "steps": [
+    {
+      "step": "Identify root cause",
+      "status": "completed",
+      "completedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "step": "Implement fix",
+      "status": "in-progress"
+    }
+  ],
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### Get Remediation Tracking
+
+Get remediation tracking for a specific finding.
+
+```http
+GET /api/remediation-tracking/finding/:findingId
+```
+
+### Update Remediation Tracking
+
+Update remediation progress.
+
+```http
+PUT /api/remediation-tracking/:id
+```
+
+**Request Body:**
+```json
+{
+  "status": "in-progress",
+  "progress": 75,
+  "notes": "Fix implemented, testing",
+  "steps": [
+    {
+      "step": "Identify root cause",
+      "status": "completed",
+      "completedAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "step": "Implement fix",
+      "status": "completed",
+      "completedAt": "2024-01-16T10:00:00Z"
+    },
+    {
+      "step": "Test fix",
+      "status": "in-progress"
+    }
+  ]
+}
+```
+
+### Get Remediation Metrics
+
+Get aggregated remediation metrics.
+
+```http
+GET /api/remediation-tracking/metrics
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application
+- `team` (string, optional): Filter by team
+- `status` (string, optional): Filter by status
+
+**Response:**
+```json
+{
+  "totalRemediations": 50,
+  "byStatus": {
+    "not-started": 10,
+    "in-progress": 25,
+    "completed": 15
+  },
+  "averageProgress": 45.5,
+  "onTrack": 30,
+  "atRisk": 15,
+  "overdue": 5
+}
+```
+
+## Updated Test Results Endpoints
+
+### Query Test Results (Enhanced)
+
+Query test results with enhanced filtering including harness and battery filters.
+
+```http
+GET /api/test-results
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application
+- `testConfigurationId` (string, optional): Filter by test configuration
+- `testHarnessId` (string, optional): Filter by test harness (returns results for all configurations in harness)
+- `testBatteryId` (string, optional): Filter by test battery (returns results for all configurations in battery's harnesses)
+- `buildId` (string, optional): Filter by build ID
+- `branch` (string, optional): Filter by branch
+- `status` (string, optional): Filter by status (`passed`, `failed`, `partial`, `error`)
+- `startDate` (string, optional): Start date (ISO 8601)
+- `endDate` (string, optional): End date (ISO 8601)
+- `limit` (number, optional): Limit number of results
+- `offset` (number, optional): Offset for pagination
+
+**Example:**
+```http
+GET /api/test-results?testHarnessId=harness-123&status=failed&limit=10
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "result-123",
+    "applicationId": "app-1",
+    "applicationName": "My Application",
+    "testConfigurationId": "config-1",
+    "testConfigurationName": "RLS Coverage Test",
+    "testConfigurationType": "rls-cls",
+    "status": "failed",
+    "passed": false,
+    "buildId": "build-456",
+    "branch": "main",
+    "timestamp": "2024-01-15T10:00:00Z",
+    "duration": 1250,
+    "result": {},
+    "error": null,
+    "createdAt": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
 ## Rate Limits
 
 Currently, there are no rate limits enforced. In production, rate limiting should be implemented based on user roles and endpoint criticality.

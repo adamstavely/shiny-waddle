@@ -161,6 +161,8 @@
       :applications="applications"
       :teams="teams"
       :validators="validators"
+      :test-batteries="testBatteries"
+      :test-harnesses="testHarnesses"
       @generated="handleReportGenerated"
     />
 
@@ -285,6 +287,8 @@ const filterDateFrom = ref('');
 const filterDateTo = ref('');
 const viewingReport = ref<any>(null);
 const validators = ref<any[]>([]);
+const testBatteries = ref<any[]>([]);
+const testHarnesses = ref<any[]>([]);
 const showGenerateModal = ref(false);
 const reports = ref<any[]>([]);
 const isLoading = ref(false);
@@ -447,8 +451,23 @@ const loadValidators = async () => {
   }
 };
 
+const loadBatteriesAndHarnesses = async () => {
+  try {
+    const [batteriesResponse, harnessesResponse] = await Promise.all([
+      axios.get('/api/test-batteries'),
+      axios.get('/api/test-harnesses'),
+    ]);
+    testBatteries.value = batteriesResponse.data || [];
+    testHarnesses.value = harnessesResponse.data || [];
+  } catch (err) {
+    console.error('Error loading batteries and harnesses:', err);
+    testBatteries.value = [];
+    testHarnesses.value = [];
+  }
+};
+
 onMounted(async () => {
-  await Promise.all([loadValidators(), loadReports()]);
+  await Promise.all([loadValidators(), loadReports(), loadBatteriesAndHarnesses()]);
 });
 </script>
 

@@ -1,13 +1,17 @@
 import {
   Controller,
   Get,
+  Post,
+  Put,
   Delete,
   Param,
   Query,
+  Body,
   HttpCode,
   HttpStatus,
   Logger,
   ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TestResultsService } from './test-results.service';
 import { TestResultEntity, TestResultStatus } from './entities/test-result.entity';
@@ -22,6 +26,8 @@ export class TestResultsController {
   async query(
     @Query('applicationId') applicationId?: string,
     @Query('testConfigurationId') testConfigurationId?: string,
+    @Query('testHarnessId') testHarnessId?: string,
+    @Query('testBatteryId') testBatteryId?: string,
     @Query('buildId') buildId?: string,
     @Query('branch') branch?: string,
     @Query('status') status?: TestResultStatus,
@@ -35,6 +41,8 @@ export class TestResultsController {
     const filters: any = {};
     if (applicationId) filters.applicationId = applicationId;
     if (testConfigurationId) filters.testConfigurationId = testConfigurationId;
+    if (testHarnessId) filters.testHarnessId = testHarnessId;
+    if (testBatteryId) filters.testBatteryId = testBatteryId;
     if (buildId) filters.buildId = buildId;
     if (branch) filters.branch = branch;
     if (status) filters.status = status;
@@ -130,6 +138,72 @@ export class TestResultsController {
   async delete(@Param('id') id: string): Promise<void> {
     this.logger.log(`Deleting test result: ${id}`);
     await this.testResultsService.delete(id);
+  }
+
+  @Post(':id/accept-risk')
+  async acceptRisk(
+    @Param('id') id: string,
+    @Body(ValidationPipe) body: {
+      reason: string;
+      approver: string;
+      expirationDate?: string;
+      ticketLink?: string;
+    },
+  ): Promise<TestResultEntity> {
+    this.logger.log(`Accepting risk for test result: ${id}`);
+    return this.testResultsService.acceptRisk(id, {
+      reason: body.reason,
+      approver: body.approver,
+      expirationDate: body.expirationDate ? new Date(body.expirationDate) : undefined,
+      ticketLink: body.ticketLink,
+    });
+  }
+
+  @Post(':id/reject-risk')
+  async rejectRisk(
+    @Param('id') id: string,
+    @Body(ValidationPipe) body: {
+      reason: string;
+      approver: string;
+    },
+  ): Promise<TestResultEntity> {
+    this.logger.log(`Rejecting risk for test result: ${id}`);
+    return this.testResultsService.rejectRisk(id, {
+      reason: body.reason,
+      approver: body.approver,
+    });
+  }
+
+  @Put(':id/remediation')
+  async updateRemediation(
+    @Param('id') id: string,
+    @Body(ValidationPipe) body: {
+      status?: 'not-started' | 'in-progress' | 'completed';
+      ticketLink?: string;
+      assignedTo?: string;
+      targetDate?: string;
+      notes?: string;
+      progress?: number;
+      steps?: Array<{
+        step: string;
+        status: 'pending' | 'in-progress' | 'completed';
+        completedAt?: string;
+      }>;
+    },
+  ): Promise<TestResultEntity> {
+    this.logger.log(`Updating remediation for test result: ${id}`);
+    return this.testResultsService.updateRemediation(id, {
+      status: body.status,
+      ticketLink: body.ticketLink,
+      assignedTo: body.assignedTo,
+      targetDate: body.targetDate ? new Date(body.targetDate) : undefined,
+      notes: body.notes,
+      progress: body.progress,
+      steps: body.steps?.map(step => ({
+        ...step,
+        completedAt: step.completedAt ? new Date(step.completedAt) : undefined,
+      })),
+    });
   }
 }
 

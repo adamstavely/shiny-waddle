@@ -42,6 +42,67 @@
         <ValidatorMetrics :validators="validators" />
       </div>
       
+      <!-- Test Battery & Harness Status -->
+      <div class="section">
+        <h2 class="section-title">
+          <Battery class="section-icon" />
+          Test Batteries & Harnesses
+        </h2>
+        <div class="battery-harness-grid">
+          <div class="status-card">
+            <div class="status-header">
+              <Battery class="status-icon" />
+              <h3>Test Batteries</h3>
+            </div>
+            <div class="status-content">
+              <div class="status-stat">
+                <span class="stat-value">{{ batteryStats.total }}</span>
+                <span class="stat-label">Total Batteries</span>
+              </div>
+              <div class="status-stat">
+                <span class="stat-value">{{ batteryStats.active }}</span>
+                <span class="stat-label">Active</span>
+              </div>
+              <div class="status-stat">
+                <span class="stat-value">{{ batteryStats.totalHarnesses }}</span>
+                <span class="stat-label">Total Harnesses</span>
+              </div>
+            </div>
+            <div class="status-actions">
+              <button @click="navigateTo('/tests?tab=batteries')" class="btn-link-small">
+                View All →
+              </button>
+            </div>
+          </div>
+          
+          <div class="status-card">
+            <div class="status-header">
+              <Layers class="status-icon" />
+              <h3>Test Harnesses</h3>
+            </div>
+            <div class="status-content">
+              <div class="status-stat">
+                <span class="stat-value">{{ harnessStats.total }}</span>
+                <span class="stat-label">Total Harnesses</span>
+              </div>
+              <div class="status-stat">
+                <span class="stat-value">{{ harnessStats.assigned }}</span>
+                <span class="stat-label">Assigned to Apps</span>
+              </div>
+              <div class="status-stat">
+                <span class="stat-value">{{ harnessStats.totalSuites }}</span>
+                <span class="stat-label">Total Suites</span>
+              </div>
+            </div>
+            <div class="status-actions">
+              <button @click="navigateTo('/tests?tab=harnesses')" class="btn-link-small">
+                View All →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Trends Section -->
       <div class="trends-section">
         <h2 class="section-title">
@@ -143,6 +204,14 @@
           Quick Actions
         </h2>
         <div class="actions-grid">
+          <button @click="navigateTo('/tests?tab=batteries')" class="action-card">
+            <Battery class="action-icon" />
+            <span class="action-label">Create Test Battery</span>
+          </button>
+          <button @click="navigateTo('/tests?tab=harnesses')" class="action-card">
+            <Layers class="action-icon" />
+            <span class="action-label">Create Test Harness</span>
+          </button>
           <button @click="navigateTo('/tests/builder')" class="action-card">
             <TestTube class="action-icon" />
             <span class="action-label">Create Test Suite</span>
@@ -155,10 +224,6 @@
             <Shield class="action-icon" />
             <span class="action-label">Manage Policies</span>
           </button>
-          <button @click="navigateTo('/insights?tab=reports')" class="action-card">
-            <FileText class="action-icon" />
-            <span class="action-label">View Reports</span>
-          </button>
         </div>
       </div>
     </div>
@@ -169,7 +234,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import { TestTube, FileText, Shield, BarChart3, TrendingUp, Grid3x3, Zap, Building2, Users } from 'lucide-vue-next';
+import { TestTube, FileText, Shield, BarChart3, TrendingUp, Grid3x3, Zap, Building2, Users, Battery, Layers } from 'lucide-vue-next';
 import ScoreCard from '../../components/ScoreCard.vue';
 import CategoryScores from '../../components/CategoryScores.vue';
 import TestResultsTable from '../../components/TestResultsTable.vue';
@@ -206,11 +271,27 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const dashboardData = ref<DashboardData | null>(null);
 const validators = ref<any[]>([]);
+const testBatteries = ref<any[]>([]);
+const testHarnesses = ref<any[]>([]);
 const executiveMetrics = ref({
   riskScore: 45,
   remediationVelocity: 12,
   velocityTrend: 15,
   roiSavings: 125000
+});
+
+const batteryStats = computed(() => {
+  const total = testBatteries.value.length;
+  const active = testBatteries.value.filter(b => b.executionConfig).length;
+  const totalHarnesses = testBatteries.value.reduce((sum, b) => sum + (b.harnessIds?.length || 0), 0);
+  return { total, active, totalHarnesses };
+});
+
+const harnessStats = computed(() => {
+  const total = testHarnesses.value.length;
+  const assigned = testHarnesses.value.filter(h => h.applicationIds && h.applicationIds.length > 0).length;
+  const totalSuites = testHarnesses.value.reduce((sum, h) => sum + (h.testSuiteIds?.length || 0), 0);
+  return { total, assigned, totalSuites };
 });
 
 const trendsData = ref({
@@ -238,6 +319,21 @@ const heatmapData = computed(() => {
   return heatmap;
 });
 
+const loadBatteriesAndHarnesses = async () => {
+  try {
+    const [batteriesResponse, harnessesResponse] = await Promise.all([
+      axios.get('/api/test-batteries'),
+      axios.get('/api/test-harnesses'),
+    ]);
+    testBatteries.value = batteriesResponse.data || [];
+    testHarnesses.value = harnessesResponse.data || [];
+  } catch (err) {
+    console.error('Error loading batteries and harnesses:', err);
+    testBatteries.value = [];
+    testHarnesses.value = [];
+  }
+};
+
 const loadDashboard = async () => {
   try {
     loading.value = true;
@@ -247,6 +343,9 @@ const loadDashboard = async () => {
     
     // Load trends data
     await loadTrends();
+    
+    // Load batteries and harnesses
+    await loadBatteriesAndHarnesses();
     
     // Load executive metrics
     await loadExecutiveMetrics();
@@ -615,6 +714,98 @@ onBeforeUnmount(() => {
   font-size: 0.95rem;
   font-weight: 500;
   color: #ffffff;
+}
+
+/* Battery & Harness Status Styles */
+.battery-harness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.status-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s;
+}
+
+.status-card:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.15);
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.status-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+}
+
+.status-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.status-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.status-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #4facfe;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-actions {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.btn-link-small {
+  background: transparent;
+  border: none;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.btn-link-small:hover {
+  color: #00f2fe;
 }
 </style>
 
