@@ -165,6 +165,14 @@
       <div v-if="activeCategory === 'insights'" class="drawer-category" data-category="insights">
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
+            href="/insights?tab=reports"
+            @click.prevent="handleNavClick('/insights?tab=reports')"
+            :class="['drawer-item', (currentPath.value === '/insights' || (currentPath.value && currentPath.value.startsWith('/insights'))) && route.query.tab === 'reports' ? 'drawer-item-active' : '']"
+          >
+            <FileText class="item-icon" />
+            <span>Reports</span>
+          </a>
+          <a
             href="/compliance-trends"
             @click.prevent="handleNavClick('/compliance-trends')"
             :class="['drawer-item', isActive('/compliance-trends') ? 'drawer-item-active' : '']"
@@ -239,7 +247,8 @@ import {
   Battery,
   Layers,
   List,
-  BookOpen
+  BookOpen,
+  FileText
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -274,7 +283,9 @@ const dataSecurityPages = [
 
 // Insights pages
 const insightsPages = [
-  '/compliance-trends'
+  '/insights',
+  '/compliance-trends',
+  '/reports'
 ];
 
 // Admin pages
@@ -377,6 +388,7 @@ onBeforeUnmount(() => {
 });
 
 const isActive = (path: string): boolean => {
+  if (!currentPath.value) return false;
   if (path === '/tests') {
     // For /tests, only match exactly /tests, not /tests/*
     return currentPath.value === '/tests';
