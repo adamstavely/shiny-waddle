@@ -2,112 +2,182 @@
   <div class="tests-overview-page">
     <Breadcrumb :items="breadcrumbItems" />
     
-    <!-- Hero Section with SVG Diagram -->
+    <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-card">
-        <div class="hero-header">
-          <h1 class="hero-title">Test Management Overview</h1>
-          <p class="hero-description">
-            Understand how test configurations, suites, harnesses, and batteries work together
-          </p>
-        </div>
+        <!-- Background texture/grain effect -->
+        <div class="hero-background"></div>
         
-        <!-- SVG Hierarchy Diagram -->
-        <div class="diagram-container">
-          <svg viewBox="0 0 1000 600" class="hierarchy-diagram">
-            <!-- Background -->
-            <rect width="1000" height="600" fill="transparent" />
-            
-            <!-- Level 1: Test Configurations -->
-            <g class="diagram-level" data-level="configs">
-              <rect x="50" y="50" width="180" height="100" rx="8" class="diagram-box config-box" />
-              <text x="140" y="95" text-anchor="middle" class="diagram-title">Test Configurations</text>
-              <text x="140" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.configurations }}</text>
-            </g>
-            
-            <!-- Level 2: Individual Tests -->
-            <g class="diagram-level" data-level="tests">
-              <rect x="300" y="50" width="180" height="100" rx="8" class="diagram-box test-box" />
-              <text x="390" y="95" text-anchor="middle" class="diagram-title">Individual Tests</text>
-              <text x="390" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.tests }}</text>
-            </g>
-            
-            <!-- Level 3: Test Suites -->
-            <g class="diagram-level" data-level="suites">
-              <rect x="550" y="50" width="180" height="100" rx="8" class="diagram-box suite-box" />
-              <text x="640" y="95" text-anchor="middle" class="diagram-title">Test Suites</text>
-              <text x="640" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.suites }}</text>
-            </g>
-            
-            <!-- Level 4: Test Harnesses -->
-            <g class="diagram-level" data-level="harnesses">
-              <rect x="300" y="250" width="180" height="100" rx="8" class="diagram-box harness-box" />
-              <text x="390" y="295" text-anchor="middle" class="diagram-title">Test Harnesses</text>
-              <text x="390" y="315" text-anchor="middle" class="diagram-subtitle">{{ stats.harnesses }}</text>
-            </g>
-            
-            <!-- Level 5: Test Batteries -->
-            <g class="diagram-level" data-level="batteries">
-              <rect x="550" y="250" width="180" height="100" rx="8" class="diagram-box battery-box" />
-              <text x="640" y="295" text-anchor="middle" class="diagram-title">Test Batteries</text>
-              <text x="640" y="315" text-anchor="middle" class="diagram-subtitle">{{ stats.batteries }}</text>
-            </g>
-            
-            <!-- Arrows -->
-            <!-- Configs → Tests -->
-            <path d="M 230 100 L 300 100" class="diagram-arrow" marker-end="url(#arrowhead)" />
-            
-            <!-- Tests → Suites -->
-            <path d="M 480 100 L 550 100" class="diagram-arrow" marker-end="url(#arrowhead)" />
-            
-            <!-- Suites → Harnesses -->
-            <path d="M 640 150 L 390 250" class="diagram-arrow" marker-end="url(#arrowhead)" />
-            
-            <!-- Harnesses → Batteries -->
-            <path d="M 480 300 L 550 300" class="diagram-arrow" marker-end="url(#arrowhead)" />
-            
-            <!-- Arrow marker definition -->
-            <defs>
-              <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <polygon points="0 0, 10 3, 0 6" class="arrow-fill" />
-              </marker>
-            </defs>
-          </svg>
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              Test Management
+              <span class="hero-subtitle">Comprehensive Testing Framework</span>
+            </h1>
+            <p class="hero-description">
+              Organize and manage your security tests through a hierarchical structure of configurations, 
+              suites, harnesses, and batteries. Track results, manage findings, and ensure continuous 
+              compliance with automated testing workflows.
+            </p>
+            <div class="hero-actions">
+              <button @click="navigateTo('/tests/suites')" class="btn-primary">View Test Suites</button>
+              <button @click="navigateTo('/tests/library')" class="btn-secondary">Browse Test Library</button>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="svg-container">
+              <svg viewBox="0 0 250 200" class="test-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  <linearGradient id="testGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                  </linearGradient>
+                  <linearGradient id="testGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
+                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                  </linearGradient>
+                </defs>
+                
+                <!-- Test Battery - outer layer -->
+                <rect x="20" y="20" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
+                <rect x="25" y="25" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                
+                <!-- Test Harness - middle layer -->
+                <rect x="85" y="35" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
+                <rect x="90" y="40" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                
+                <!-- Test Suite - inner layer -->
+                <rect x="150" y="50" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
+                <rect x="155" y="55" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                
+                <!-- Test Configuration - bottom -->
+                <rect x="85" y="120" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
+                <rect x="90" y="125" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                
+                <!-- Connection lines -->
+                <line x1="100" y1="45" x2="125" y2="60" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                <line x1="165" y1="60" x2="125" y2="75" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                <line x1="125" y1="145" x2="125" y2="90" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                
+                <!-- Checkmark symbols -->
+                <path d="M 40 40 L 50 50 L 65 30" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 105 55 L 115 65 L 130 45" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 170 70 L 180 80 L 195 60" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 105 140 L 115 150 L 130 130" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                
+                <!-- Accent dots -->
+                <circle cx="125" cy="100" r="3" fill="#00f2fe" opacity="0.8"/>
+                <circle cx="60" cy="45" r="2.5" fill="#4facfe" opacity="0.7"/>
+                <circle cx="190" cy="75" r="2.5" fill="#4facfe" opacity="0.7"/>
+                <circle cx="125" cy="145" r="2.5" fill="#00f2fe" opacity="0.6"/>
+              </svg>
+            </div>
+          </div>
         </div>
-        
-        <!-- Relationship Explanation -->
-        <div class="relationship-explanation">
-          <h3>How It Works</h3>
-          <div class="explanation-steps">
-            <div class="step">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <strong>Test Configurations</strong> define how tests should run (user roles, policies, settings)
-              </div>
+      </div>
+    </div>
+    
+    <!-- How It Works Section -->
+    <div class="how-it-works-section">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-description">
+        Understand the relationship between test configurations, suites, harnesses, and batteries
+      </p>
+      
+      <!-- Relationship Diagram -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 1000 600" class="hierarchy-diagram">
+          <!-- Background -->
+          <rect width="1000" height="600" fill="transparent" />
+          
+          <!-- Level 1: Test Configurations -->
+          <g class="diagram-level" data-level="configs">
+            <rect x="50" y="50" width="180" height="100" rx="8" class="diagram-box config-box" />
+            <text x="140" y="95" text-anchor="middle" class="diagram-title">Test Configurations</text>
+            <text x="140" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.configurations }}</text>
+          </g>
+          
+          <!-- Level 2: Individual Tests -->
+          <g class="diagram-level" data-level="tests">
+            <rect x="300" y="50" width="180" height="100" rx="8" class="diagram-box test-box" />
+            <text x="390" y="95" text-anchor="middle" class="diagram-title">Individual Tests</text>
+            <text x="390" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.tests }}</text>
+          </g>
+          
+          <!-- Level 3: Test Suites -->
+          <g class="diagram-level" data-level="suites">
+            <rect x="550" y="50" width="180" height="100" rx="8" class="diagram-box suite-box" />
+            <text x="640" y="95" text-anchor="middle" class="diagram-title">Test Suites</text>
+            <text x="640" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.suites }}</text>
+          </g>
+          
+          <!-- Level 4: Test Harnesses -->
+          <g class="diagram-level" data-level="harnesses">
+            <rect x="300" y="250" width="180" height="100" rx="8" class="diagram-box harness-box" />
+            <text x="390" y="295" text-anchor="middle" class="diagram-title">Test Harnesses</text>
+            <text x="390" y="315" text-anchor="middle" class="diagram-subtitle">{{ stats.harnesses }}</text>
+          </g>
+          
+          <!-- Level 5: Test Batteries -->
+          <g class="diagram-level" data-level="batteries">
+            <rect x="550" y="250" width="180" height="100" rx="8" class="diagram-box battery-box" />
+            <text x="640" y="295" text-anchor="middle" class="diagram-title">Test Batteries</text>
+            <text x="640" y="315" text-anchor="middle" class="diagram-subtitle">{{ stats.batteries }}</text>
+          </g>
+          
+          <!-- Arrows -->
+          <!-- Configs → Tests -->
+          <path d="M 230 100 L 300 100" class="diagram-arrow" marker-end="url(#arrowhead)" />
+          
+          <!-- Tests → Suites -->
+          <path d="M 480 100 L 550 100" class="diagram-arrow" marker-end="url(#arrowhead)" />
+          
+          <!-- Suites → Harnesses -->
+          <path d="M 640 150 L 390 250" class="diagram-arrow" marker-end="url(#arrowhead)" />
+          
+          <!-- Harnesses → Batteries -->
+          <path d="M 480 300 L 550 300" class="diagram-arrow" marker-end="url(#arrowhead)" />
+          
+          <!-- Arrow marker definition -->
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <polygon points="0 0, 10 3, 0 6" class="arrow-fill" />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      
+      <!-- Relationship Explanation -->
+      <div class="relationship-explanation">
+        <div class="explanation-steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <strong>Test Configurations</strong> define how tests should run (user roles, policies, settings)
             </div>
-            <div class="step">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <strong>Individual Tests</strong> use configurations to validate specific security requirements
-              </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <strong>Individual Tests</strong> use configurations to validate specific security requirements
             </div>
-            <div class="step">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <strong>Test Suites</strong> group related tests together for organized execution
-              </div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <strong>Test Suites</strong> group related tests together for organized execution
             </div>
-            <div class="step">
-              <div class="step-number">4</div>
-              <div class="step-content">
-                <strong>Test Harnesses</strong> collect suites and assign them to applications
-              </div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <strong>Test Harnesses</strong> collect suites and assign them to applications
             </div>
-            <div class="step">
-              <div class="step-number">5</div>
-              <div class="step-content">
-                <strong>Test Batteries</strong> execute multiple harnesses together with execution configuration
-              </div>
+          </div>
+          <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <strong>Test Batteries</strong> execute multiple harnesses together with execution configuration
             </div>
           </div>
         </div>
@@ -259,33 +329,145 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+/* Hero Section - matching Homepage style */
 .hero-section {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
 }
 
 .hero-card {
-  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  position: relative;
+  background: linear-gradient(135deg, rgba(26, 31, 46, 0.8) 0%, rgba(15, 20, 25, 0.9) 100%);
   border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 20px;
+  padding: 3rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-.hero-header {
-  text-align: center;
-  margin-bottom: 2rem;
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(79, 172, 254, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 242, 254, 0.1) 0%, transparent 50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  z-index: 1;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .hero-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #4facfe;
+  margin-top: 0.5rem;
 }
 
 .hero-description {
   font-size: 1.125rem;
   color: #a0aec0;
+  line-height: 1.6;
   margin: 0;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.875rem 1.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  color: #4facfe;
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
+}
+
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg-container {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+.test-svg {
+  width: 100%;
+  height: auto;
+}
+
+/* How It Works Section */
+.how-it-works-section {
+  margin-bottom: 4rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.section-description {
+  font-size: 1.125rem;
+  color: #a0aec0;
+  margin-bottom: 2rem;
 }
 
 .diagram-container {
@@ -295,6 +477,7 @@ onMounted(() => {
   padding: 2rem;
   background: rgba(15, 20, 25, 0.5);
   border-radius: 12px;
+  border: 1px solid rgba(79, 172, 254, 0.2);
 }
 
 .hierarchy-diagram {
@@ -358,15 +541,9 @@ onMounted(() => {
 }
 
 .relationship-explanation {
-  margin-top: 2rem;
+  margin-top: 3rem;
   padding-top: 2rem;
   border-top: 1px solid rgba(79, 172, 254, 0.2);
-}
-
-.relationship-explanation h3 {
-  color: #ffffff;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .explanation-steps {
@@ -407,16 +584,9 @@ onMounted(() => {
   margin-bottom: 0.25rem;
 }
 
-.stats-section,
-.actions-section {
-  margin-bottom: 3rem;
-}
-
-.section-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 1.5rem;
+/* Quick Stats Section */
+.stats-section {
+  margin-bottom: 4rem;
 }
 
 .stats-grid {
@@ -467,6 +637,11 @@ onMounted(() => {
   color: #a0aec0;
 }
 
+/* Quick Actions Section */
+.actions-section {
+  margin-bottom: 3rem;
+}
+
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -500,5 +675,19 @@ onMounted(() => {
   height: 32px;
   color: #4facfe;
 }
-</style>
 
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-visual {
+    order: -1;
+  }
+}
+</style>
