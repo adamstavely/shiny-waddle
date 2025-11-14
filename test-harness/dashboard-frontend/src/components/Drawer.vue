@@ -77,117 +77,115 @@
         <!-- Test Tools -->
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
-            href="/tests/policy-validation"
-            @click.prevent="handleNavClick('/tests/policy-validation')"
-            :class="['drawer-item', isActive('/tests/policy-validation') ? 'drawer-item-active' : '']"
+            href="/tests/configurations"
+            @click.prevent="handleNavClick('/tests/configurations')"
+            :class="['drawer-item', isActive('/tests/configurations') || isActive('/test-configurations') ? 'drawer-item-active' : '']"
           >
-            <FileSearch class="item-icon" />
-            <span>Policy Validation</span>
+            <Settings class="item-icon" />
+            <span>Test Configurations</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Access Control Category -->
+      <div v-if="activeCategory === 'access-control'" class="drawer-category" data-category="access-control">
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/policies"
+            @click.prevent="handleNavClick('/policies')"
+            :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
+          >
+            <Shield class="item-icon" />
+            <span>Policies</span>
+          </a>
+          <a
+            href="/resources"
+            @click.prevent="handleNavClick('/resources')"
+            :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
+          >
+            <Folder class="item-icon" />
+            <span>Resources</span>
           </a>
           <a
             href="/tests/user-simulation"
             @click.prevent="handleNavClick('/tests/user-simulation')"
-            :class="['drawer-item', isActive('/tests/user-simulation') ? 'drawer-item-active' : '']"
+            :class="['drawer-item', isActive('/tests/user-simulation') || isActive('/users') ? 'drawer-item-active' : '']"
           >
             <Users class="item-icon" />
             <span>User Simulation</span>
           </a>
+          <a
+            href="/tests/policy-validation"
+            @click.prevent="handleNavClick('/tests/policy-validation')"
+            :class="['drawer-item', isActive('/tests/policy-validation') || isActive('/policy-validation') ? 'drawer-item-active' : '']"
+          >
+            <FileSearch class="item-icon" />
+            <span>Policy Validation</span>
+          </a>
         </div>
       </div>
 
-      <!-- Configuration Category -->
-      <div v-if="activeCategory === 'configuration'" class="drawer-category" data-category="configuration">
-        <!-- Access Control Configuration -->
-        <div class="category-section">
-          <div class="section-header">
-            <Shield class="section-icon" />
-            <h3 class="section-title">Access Control</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/policies"
-              @click.prevent="handleNavClick('/policies')"
-              :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
-            >
-              <Shield class="item-icon" />
-              <span>Policies</span>
-            </a>
-            <a
-              href="/resources"
-              @click.prevent="handleNavClick('/resources')"
-              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-            >
-              <Folder class="item-icon" />
-              <span>Resources</span>
-            </a>
-            <a
-              href="/identity-providers"
-              @click.prevent="handleNavClick('/identity-providers')"
-              :class="['drawer-item', isActive('/identity-providers') ? 'drawer-item-active' : '']"
-            >
-              <UserCog class="item-icon" />
-              <span>Identity Providers</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Platform Config Configuration -->
-        <div class="category-section">
-          <div class="section-header">
-            <Settings class="section-icon" />
-            <h3 class="section-title">Platform Config</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/configuration-validation"
-              @click.prevent="handleNavClick('/configuration-validation')"
-              :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
-            >
-              <Shield class="item-icon" />
-              <span>Config Validator</span>
-            </a>
-            <a
-              href="/test-configurations"
-              @click.prevent="handleNavClick('/test-configurations')"
-              :class="['drawer-item', isActive('/test-configurations') ? 'drawer-item-active' : '']"
-            >
-              <Settings class="item-icon" />
-              <span>Test Configurations</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Data Security Configuration -->
-        <div class="category-section">
-          <div class="section-header">
-            <Database class="section-icon" />
-            <h3 class="section-title">Data Security</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/datasets"
-              @click.prevent="handleNavClick('/datasets')"
-              :class="['drawer-item', isActive('/datasets') ? 'drawer-item-active' : '']"
-            >
-              <Database class="item-icon" />
-              <span>Datasets</span>
-            </a>
-            <a
-              href="/contracts"
-              @click.prevent="handleNavClick('/contracts')"
-              :class="['drawer-item', isActive('/contracts') ? 'drawer-item-active' : '']"
-            >
-              <FileCheck class="item-icon" />
-              <span>Contracts</span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Compliance Category -->
-      <div v-if="activeCategory === 'compliance'" class="drawer-category" data-category="compliance">
-        <!-- Main Compliance Page -->
+      <!-- Platform Config Category -->
+      <div v-if="activeCategory === 'platform-config'" class="drawer-category" data-category="platform-config">
         <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/configuration-validation"
+            @click.prevent="handleNavClick('/configuration-validation')"
+            :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
+          >
+            <Shield class="item-icon" />
+            <span>Config Validator</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Data Security Category -->
+      <div v-if="activeCategory === 'data-security'" class="drawer-category" data-category="data-security">
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/datasets"
+            @click.prevent="handleNavClick('/datasets')"
+            :class="['drawer-item', isActive('/datasets') ? 'drawer-item-active' : '']"
+          >
+            <Database class="item-icon" />
+            <span>Datasets</span>
+          </a>
+          <a
+            href="/contracts"
+            @click.prevent="handleNavClick('/contracts')"
+            :class="['drawer-item', isActive('/contracts') ? 'drawer-item-active' : '']"
+          >
+            <FileCheck class="item-icon" />
+            <span>Contracts</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Insights Category -->
+      <div v-if="activeCategory === 'insights'" class="drawer-category" data-category="insights">
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/compliance-trends"
+            @click.prevent="handleNavClick('/compliance-trends')"
+            :class="['drawer-item', isActive('/compliance-trends') ? 'drawer-item-active' : '']"
+          >
+            <TrendingUp class="item-icon" />
+            <span>Compliance Trends</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Admin Category -->
+      <div v-if="activeCategory === 'admin'" class="drawer-category" data-category="admin">
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/identity-providers"
+            @click.prevent="handleNavClick('/identity-providers')"
+            :class="['drawer-item', isActive('/identity-providers') ? 'drawer-item-active' : '']"
+          >
+            <UserCog class="item-icon" />
+            <span>Identity Provider Integration</span>
+          </a>
           <a
             href="/compliance"
             @click.prevent="handleNavClick('/compliance')"
@@ -197,41 +195,16 @@
             <span>Compliance Overview</span>
           </a>
           <a
-            href="/compliance-trends"
-            @click.prevent="handleNavClick('/compliance-trends')"
-            :class="['drawer-item', isActive('/compliance-trends') ? 'drawer-item-active' : '']"
+            href="/compliance/nist-800-207"
+            @click.prevent="handleNavClick('/compliance/nist-800-207')"
+            :class="['drawer-item', isActive('/compliance/nist-800-207') ? 'drawer-item-active' : '']"
           >
-            <TrendingUp class="item-icon" />
-            <span>Compliance Trends</span>
+            <ShieldCheck class="item-icon" />
+            <span>NIST 800-207</span>
           </a>
-          <a
-            href="/violations"
-            @click.prevent="handleNavClick('/violations')"
-            :class="['drawer-item', isActive('/violations') ? 'drawer-item-active' : '']"
-          >
-            <AlertTriangle class="item-icon" />
-            <span>Violations</span>
-          </a>
-        </div>
-
-        <!-- Compliance Frameworks -->
-        <div class="category-section">
-          <div class="section-header">
-            <FileCheck class="section-icon" />
-            <h3 class="section-title">Compliance Frameworks</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/compliance/nist-800-207"
-              @click.prevent="handleNavClick('/compliance/nist-800-207')"
-              :class="['drawer-item', isActive('/compliance/nist-800-207') ? 'drawer-item-active' : '']"
-            >
-              <ShieldCheck class="item-icon" />
-              <span>NIST 800-207</span>
-            </a>
-          </div>
         </div>
       </div>
+
     </nav>
   </aside>
 </template>
@@ -280,23 +253,36 @@ const testPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/library', '/tests/findings', '/tests/configurations',
-  '/tests/history', '/tests/policy-validation', '/tests/user-simulation',
-  '/policy-validation', '/users'
+  '/tests/history', '/test-configurations'
 ];
 
-// Configuration pages
-const configPages = [
-  '/policies', '/resources', '/identity-providers',
-  '/configuration-validation', '/tests/configurations',
+// Access Control pages
+const accessControlPages = [
+  '/policies', '/resources', '/tests/user-simulation',
+  '/tests/policy-validation', '/policy-validation', '/users'
+];
+
+// Platform Config pages
+const platformConfigPages = [
+  '/configuration-validation'
+];
+
+// Data Security pages
+const dataSecurityPages = [
   '/datasets', '/contracts'
 ];
 
-// Compliance pages
-const compliancePages = [
+// Insights pages
+const insightsPages = [
+  '/compliance-trends'
+];
+
+// Admin pages
+const adminPages = [
+  '/admin',
+  '/identity-providers',
   '/compliance',
-  '/compliance-trends',
-  '/compliance/nist-800-207',
-  '/violations'
+  '/compliance/nist-800-207'
 ];
 
 // Determine active category based on current route
@@ -306,13 +292,27 @@ const getCategoryFromRoute = (path: string): string | null => {
       testPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'tests';
   }
-  // Check if it's a configuration page
-  if (configPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'configuration';
+  // Check if it's an access control page
+  if (accessControlPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'access-control';
   }
-  // Check if it's a compliance page
-  if (compliancePages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'compliance';
+  // Check if it's a platform config page
+  if (platformConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'platform-config';
+  }
+  // Check if it's a data security page
+  if (dataSecurityPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'data-security';
+  }
+  // Check if it's an insights page
+  if (path === '/insights' || path.startsWith('/insights') ||
+      insightsPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'insights';
+  }
+  // Check if it's an admin page
+  if (path === '/admin' || path.startsWith('/admin/') ||
+      adminPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'admin';
   }
   return null;
 };

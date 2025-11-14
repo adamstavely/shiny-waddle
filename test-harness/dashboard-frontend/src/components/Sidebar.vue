@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/tests', '/configuration'].includes(item.path)"
+            v-if="!['/tests', '/access-control', '/platform-config', '/data-security', '/insights', '/admin'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -44,8 +44,8 @@
     <!-- Admin Item - Pinned at Bottom -->
     <div class="nav-admin-section">
       <div class="nav-divider" aria-hidden="true"></div>
-      <router-link
-        to="/admin"
+      <button
+        @click="handleNavClick('/admin')"
         :class="[
           'nav-item',
           isActive('/admin') ? 'nav-item-active' : ''
@@ -54,7 +54,7 @@
       >
         <component :is="UserCog" class="nav-icon" />
         <span class="nav-label">Admin</span>
-      </router-link>
+      </button>
     </div>
   </aside>
 </template>
@@ -79,7 +79,8 @@ import {
   Folder,
   FileCheck,
   CheckCircle2,
-  UserCog
+  UserCog,
+  KeyRound
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -89,8 +90,9 @@ const currentPath = ref(route.path);
 const menuItems = [
   { path: '/insights', label: 'Insights', icon: LayoutDashboard, divider: false },
   { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
-  { path: '/configuration', label: 'Configuration', icon: Settings, divider: false },
-  { path: '/compliance', label: 'Compliance', icon: CheckCircle2, divider: true },
+  { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
+  { path: '/platform-config', label: 'Platform Config', icon: Settings, divider: false },
+  { path: '/data-security', label: 'Data Security', icon: Database, divider: true },
 ];
 
 // Test pages
@@ -101,10 +103,19 @@ const testPages = [
   '/rls-cls'
 ];
 
-// Configuration pages
-const configPages = [
-  '/policies', '/resources', '/identity-providers',
-  '/configuration-validation', '/test-configurations',
+// Access Control pages
+const accessControlPages = [
+  '/policies', '/resources', '/tests/user-simulation',
+  '/tests/policy-validation', '/policy-validation'
+];
+
+// Platform Config pages
+const platformConfigPages = [
+  '/configuration-validation'
+];
+
+// Data Security pages
+const dataSecurityPages = [
   '/datasets', '/contracts'
 ];
 
@@ -116,12 +127,14 @@ const isActive = (path: string): boolean => {
     return currentPath.value === '/tests' || currentPath.value.startsWith('/tests/') ||
            testPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/configuration') {
-    return configPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  if (path === '/access-control') {
+    return accessControlPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/compliance') {
-    return currentPath.value === '/compliance' || currentPath.value.startsWith('/compliance/') ||
-           currentPath.value === '/violations' || currentPath.value.startsWith('/violations/');
+  if (path === '/platform-config') {
+    return platformConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
+  if (path === '/data-security') {
+    return dataSecurityPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
@@ -130,8 +143,8 @@ const isActive = (path: string): boolean => {
 };
 
 const handleNavClick = (path: string) => {
-  // For Tests, Configuration, and Compliance, open the drawer with that category's content
-  if (['/tests', '/configuration', '/compliance'].includes(path)) {
+  // For drawer items, open the drawer with that category's content
+  if (['/tests', '/access-control', '/platform-config', '/data-security', '/insights', '/admin'].includes(path)) {
     // Emit event to open drawer with specific category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
     return;
