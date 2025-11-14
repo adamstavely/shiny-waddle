@@ -6,6 +6,12 @@ import ApplicationDetail from '../views/ApplicationDetail.vue';
 import Applications from '../views/Applications.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import Tests from '../views/Tests.vue';
+import TestsOverview from '../views/TestsOverview.vue';
+import TestBatteries from '../views/TestBatteries.vue';
+import TestHarnesses from '../views/TestHarnesses.vue';
+import TestSuites from '../views/TestSuites.vue';
+import TestLibrary from '../views/TestLibrary.vue';
+import Findings from '../views/Findings.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
 import TestSuiteDetail from '../views/TestSuiteDetail.vue';
 import TestBatteryDetail from '../views/TestBatteryDetail.vue';
@@ -97,18 +103,13 @@ const router = createRouter({
     },
     {
       path: '/tests',
-      name: 'Tests',
-      component: Tests,
+      name: 'TestsOverview',
+      component: TestsOverview,
     },
     {
-      path: '/tests/new',
-      name: 'TestSuiteCreate',
-      component: TestSuiteDetail,
-    },
-    {
-      path: '/tests/:id',
-      name: 'TestSuiteDetail',
-      component: TestSuiteDetail,
+      path: '/tests/batteries',
+      name: 'TestBatteries',
+      component: TestBatteries,
     },
     {
       path: '/tests/batteries/:id',
@@ -116,19 +117,82 @@ const router = createRouter({
       component: TestBatteryDetail,
     },
     {
+      path: '/tests/harnesses',
+      name: 'TestHarnesses',
+      component: TestHarnesses,
+    },
+    {
       path: '/tests/harnesses/:id',
       name: 'TestHarnessDetail',
       component: TestHarnessDetail,
     },
     {
-      path: '/tests/builder',
+      path: '/tests/suites',
+      name: 'TestSuites',
+      component: TestSuites,
+    },
+    {
+      path: '/tests/suites/new',
+      name: 'TestSuiteCreate',
+      component: TestSuiteDetail,
+    },
+    {
+      path: '/tests/suites/:id',
+      name: 'TestSuiteDetail',
+      component: TestSuiteDetail,
+    },
+    {
+      path: '/tests/suites/builder',
       name: 'TestSuiteBuilder',
       component: TestSuiteBuilder,
     },
     {
-      path: '/tests/builder/:id',
+      path: '/tests/suites/builder/:id',
       name: 'TestSuiteBuilderEdit',
       component: TestSuiteBuilder,
+    },
+    {
+      path: '/tests/library',
+      name: 'TestLibrary',
+      component: TestLibrary,
+    },
+    {
+      path: '/tests/findings',
+      name: 'Findings',
+      component: Findings,
+    },
+    {
+      path: '/tests/configurations',
+      name: 'TestConfigurations',
+      component: TestConfigurations,
+    },
+    {
+      path: '/tests/history',
+      name: 'TestHistory',
+      component: TestHistory,
+    },
+    {
+      path: '/tests/policy-validation',
+      name: 'PolicyValidation',
+      component: PolicyValidation,
+    },
+    {
+      path: '/tests/user-simulation',
+      name: 'UserSimulation',
+      component: UserSimulation,
+    },
+    // Legacy routes - redirects
+    {
+      path: '/tests/new',
+      redirect: '/tests/suites/new',
+    },
+    {
+      path: '/tests/:id',
+      redirect: (to) => ({ path: `/tests/suites/${to.params.id}` }),
+    },
+    {
+      path: '/tests/builder',
+      redirect: '/tests/suites/builder',
     },
     {
       path: '/reports',
@@ -181,8 +245,10 @@ const router = createRouter({
     },
     {
       path: '/distributed-systems',
-      name: 'DistributedSystems',
-      component: DistributedSystems,
+      redirect: () => {
+        console.warn('Route /distributed-systems is deprecated. Use /tests/library?type=distributed-systems instead.');
+        return { path: '/tests/library', query: { type: 'distributed-systems' } };
+      }
     },
     {
       path: '/pipelines',
@@ -228,8 +294,7 @@ const router = createRouter({
     },
     {
       path: '/users',
-      name: 'UserSimulation',
-      component: UserSimulation,
+      redirect: '/tests/user-simulation',
     },
     {
       path: '/resources',
@@ -268,13 +333,14 @@ const router = createRouter({
     },
     {
       path: '/rls-cls',
-      name: 'RLSCLS',
-      component: RLSCLS,
+      redirect: () => {
+        console.warn('Route /rls-cls is deprecated. Use /tests/library?type=rls-cls instead.');
+        return { path: '/tests/library', query: { type: 'rls-cls' } };
+      }
     },
     {
       path: '/policy-validation',
-      name: 'PolicyValidation',
-      component: PolicyValidation,
+      redirect: '/tests/policy-validation',
     },
     {
       path: '/identity-providers',
@@ -314,15 +380,11 @@ const router = createRouter({
     },
     {
       path: '/test-configurations',
-      redirect: () => {
-        console.warn('Route /test-configurations is deprecated. Use /tests?tab=configurations instead.');
-        return { path: '/tests', query: { tab: 'configurations' } };
-      }
+      redirect: '/tests/configurations',
     },
     {
       path: '/test-history',
-      name: 'TestHistory',
-      component: TestHistory,
+      redirect: '/tests/history',
     },
     {
       path: '/compliance-trends',

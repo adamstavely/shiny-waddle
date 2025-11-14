@@ -1,5 +1,26 @@
 [
   {
+    "id": "531543f7-d804-4a3b-8a3c-fff526744744",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/rls-cls/test-rls-coverage",
+    "description": "Data write operation: POST /api/rls-cls/test-rls-coverage",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/rls-cls/test-rls-coverage",
+    "timestamp": "2025-11-14T05:42:54.427Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/rls-cls/test-rls-coverage",
+      "query": {},
+      "bodySize": "52"
+    },
+    "requestId": "req-1763098974419-6prxffozp",
+    "responseCode": 200,
+    "duration": 7
+  },
+  {
     "id": "420540a0-edf9-44b3-859e-95e44b5d87ad",
     "type": "data-write",
     "severity": "medium",

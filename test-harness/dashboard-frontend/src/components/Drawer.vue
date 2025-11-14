@@ -19,84 +19,79 @@
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
       <!-- Tests Category -->
       <div v-if="activeCategory === 'tests'" class="drawer-category" data-category="tests">
-        <!-- Main Tests Page -->
+        <!-- Main Tests Pages -->
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
             href="/tests"
             @click.prevent="handleNavClick('/tests')"
             :class="['drawer-item', isActive('/tests') ? 'drawer-item-active' : '']"
           >
-            <TestTube class="item-icon" />
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
+          <a
+            href="/tests/batteries"
+            @click.prevent="handleNavClick('/tests/batteries')"
+            :class="['drawer-item', isActive('/tests/batteries') ? 'drawer-item-active' : '']"
+          >
+            <Battery class="item-icon" />
+            <span>Test Batteries</span>
+          </a>
+          <a
+            href="/tests/harnesses"
+            @click.prevent="handleNavClick('/tests/harnesses')"
+            :class="['drawer-item', isActive('/tests/harnesses') ? 'drawer-item-active' : '']"
+          >
+            <Layers class="item-icon" />
+            <span>Test Harnesses</span>
+          </a>
+          <a
+            href="/tests/suites"
+            @click.prevent="handleNavClick('/tests/suites')"
+            :class="['drawer-item', isActive('/tests/suites') ? 'drawer-item-active' : '']"
+          >
+            <List class="item-icon" />
             <span>Test Suites</span>
           </a>
           <a
-            href="/test-history"
-            @click.prevent="handleNavClick('/test-history')"
-            :class="['drawer-item', isActive('/test-history') ? 'drawer-item-active' : '']"
+            href="/tests/library"
+            @click.prevent="handleNavClick('/tests/library')"
+            :class="['drawer-item', isActive('/tests/library') ? 'drawer-item-active' : '']"
           >
-            <History class="item-icon" />
-            <span>Test History</span>
+            <BookOpen class="item-icon" />
+            <span>Test Library</span>
+          </a>
+          <a
+            href="/tests/findings"
+            @click.prevent="handleNavClick('/tests/findings')"
+            :class="['drawer-item', isActive('/tests/findings') ? 'drawer-item-active' : '']"
+          >
+            <AlertCircle class="item-icon" />
+            <span>Findings</span>
           </a>
         </div>
 
-        <!-- Access Control Tests -->
-        <div class="category-section">
-          <div class="section-header">
-            <Shield class="section-icon" />
-            <h3 class="section-title">Access Control</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/policy-validation"
-              @click.prevent="handleNavClick('/policy-validation')"
-              :class="['drawer-item', isActive('/policy-validation') ? 'drawer-item-active' : '']"
-            >
-              <FileSearch class="item-icon" />
-              <span>Policy Validation</span>
-            </a>
-          </div>
-        </div>
+        <!-- Separator -->
+        <div style="height: 1px; background: rgba(79, 172, 254, 0.2); margin: 16px 20px;"></div>
 
-        <!-- Tests -->
-        <div class="category-section">
-          <div class="section-header">
-            <TestTube class="section-icon" />
-            <h3 class="section-title">Tests</h3>
-          </div>
-          <div class="category-items">
-            <a
-              href="/tests"
-              @click.prevent="handleNavClick('/tests')"
-              :class="['drawer-item', isActive('/tests') ? 'drawer-item-active' : '']"
-            >
-              <TestTube class="item-icon" />
-              <span>All Tests</span>
-            </a>
-            <a
-              href="/users"
-              @click.prevent="handleNavClick('/users')"
-              :class="['drawer-item', isActive('/users') ? 'drawer-item-active' : '']"
-            >
-              <Users class="item-icon" />
-              <span>User Simulation</span>
-            </a>
-            <a
-              href="/distributed-systems"
-              @click.prevent="handleNavClick('/distributed-systems')"
-              :class="['drawer-item', isActive('/distributed-systems') ? 'drawer-item-active' : '']"
-            >
-              <Globe class="item-icon" />
-              <span>Distributed Systems</span>
-            </a>
-            <a
-              href="/rls-cls"
-              @click.prevent="handleNavClick('/rls-cls')"
-              :class="['drawer-item', isActive('/rls-cls') ? 'drawer-item-active' : '']"
-            >
-              <ShieldCheck class="item-icon" />
-              <span>RLS/CLS</span>
-            </a>
-          </div>
+        <!-- Test Tools -->
+        <div class="category-items" style="padding: 0 12px 16px;">
+          <a
+            href="/tests/policy-validation"
+            @click.prevent="handleNavClick('/tests/policy-validation')"
+            :class="['drawer-item', isActive('/tests/policy-validation') ? 'drawer-item-active' : '']"
+          >
+            <FileSearch class="item-icon" />
+            <span>Policy Validation</span>
+          </a>
+          <a
+            href="/tests/user-simulation"
+            @click.prevent="handleNavClick('/tests/user-simulation')"
+            :class="['drawer-item', isActive('/tests/user-simulation') ? 'drawer-item-active' : '']"
+          >
+            <Users class="item-icon" />
+            <span>User Simulation</span>
+          </a>
         </div>
       </div>
 
@@ -265,7 +260,13 @@ import {
   History,
   CheckCircle2,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  AlertCircle,
+  LayoutDashboard,
+  Battery,
+  Layers,
+  List,
+  BookOpen
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -276,16 +277,17 @@ const activeCategory = ref<string | null>(null);
 
 // Test pages
 const testPages = [
-  '/policy-validation',
-  '/api-security', '/users', '/api-gateway', '/dlp',
-  '/distributed-systems', '/network-policies',
-  '/rls-cls'
+  '/tests',
+  '/tests/batteries', '/tests/harnesses', '/tests/suites',
+  '/tests/library', '/tests/findings', '/tests/configurations',
+  '/tests/history', '/tests/policy-validation', '/tests/user-simulation',
+  '/policy-validation', '/users'
 ];
 
 // Configuration pages
 const configPages = [
   '/policies', '/resources', '/identity-providers',
-  '/configuration-validation', '/test-configurations',
+  '/configuration-validation', '/tests/configurations',
   '/datasets', '/contracts'
 ];
 
@@ -375,6 +377,10 @@ onBeforeUnmount(() => {
 });
 
 const isActive = (path: string): boolean => {
+  if (path === '/tests') {
+    // For /tests, only match exactly /tests, not /tests/*
+    return currentPath.value === '/tests';
+  }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };
 
