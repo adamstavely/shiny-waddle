@@ -1035,9 +1035,7 @@ import {
   AlertCircle,
   ExternalLink,
   CheckCircle,
-  X,
-  Wrench,
-  Clock
+  Wrench
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -1244,7 +1242,7 @@ const resultsFilterApplication = ref('');
 const resultsFilterStatus = ref('');
 const resultsFilterType = ref('');
 
-const applications = ref<any[]>([]);
+const applicationsList = ref<any[]>([]);
 
 const harnessFilterOptions = computed(() => {
   return [
@@ -1263,7 +1261,7 @@ const batteryFilterOptions = computed(() => {
 const applicationFilterOptions = computed(() => {
   return [
     { label: 'All Applications', value: '' },
-    ...applications.value.map(a => ({ label: a.name, value: a.id }))
+    ...applicationsList.value.map(a => ({ label: a.name, value: a.id }))
   ];
 });
 
@@ -1551,17 +1549,22 @@ const openRiskAcceptanceModal = (result: any) => {
 const closeRiskAcceptanceModal = () => {
   showRiskAcceptanceModal.value = false;
   selectedResultForRisk.value = null;
+  riskReason.value = '';
+  riskJustification.value = '';
 };
 
-const submitRiskAcceptance = async (reason: string, justification: string) => {
-  if (!selectedResultForRisk.value) return;
+const handleSubmitRiskAcceptance = async () => {
+  if (!selectedResultForRisk.value || !riskReason.value || !riskJustification.value) {
+    alert('Please provide both reason and justification');
+    return;
+  }
   
   try {
     await axios.post('/api/finding-approvals/request', {
       findingId: selectedResultForRisk.value.id,
       type: 'risk-acceptance',
-      reason,
-      justification,
+      reason: riskReason.value,
+      justification: riskJustification.value,
     });
     // Update local result
     const index = testResults.value.findIndex(r => r.id === selectedResultForRisk.value.id);
@@ -1576,6 +1579,12 @@ const submitRiskAcceptance = async (reason: string, justification: string) => {
     console.error('Error submitting risk acceptance:', err);
     alert(err.response?.data?.message || 'Failed to submit risk acceptance request');
   }
+};
+
+const submitRiskAcceptance = async (reason: string, justification: string) => {
+  riskReason.value = reason;
+  riskJustification.value = justification;
+  await handleSubmitRiskAcceptance();
 };
 
 const openTicketLinkModal = (result: any) => {
@@ -1634,6 +1643,16 @@ const getRemediationStatusLabel = (status: string): string => {
   };
   return labels[status] || status;
 };
+
+const showRiskAcceptanceModal = ref(false);
+const selectedResultForRisk = ref<any>(null);
+const riskReason = ref('');
+const riskJustification = ref('');
+
+const showTicketLinkModal = ref(false);
+const selectedResultForTicket = ref<any>(null);
+const ticketId = ref('');
+const ticketUrl = ref('');
 
 const showRemediationModal = ref(false);
 const selectedResultForRemediation = ref<any>(null);
@@ -1946,11 +1965,6 @@ const formatDate = (date: Date | undefined): string => {
   return date.toLocaleDateString();
 };
 
-const formatTime = (date: Date | undefined): string => {
-  if (!date) return 'N/A';
-  return date.toLocaleTimeString();
-};
-
 const formatRelativeTime = (date: Date | undefined): string => {
   if (!date) return 'Never';
   const now = new Date();
@@ -1985,10 +1999,10 @@ watch(() => route.query.tab, (newTab) => {
 const loadApplications = async () => {
   try {
     const response = await axios.get('/api/applications');
-    applications.value = response.data || [];
+    applicationsList.value = response.data || [];
   } catch (err) {
     console.error('Error loading applications:', err);
-    applications.value = [];
+    applicationsList.value = [];
   }
 };
 
