@@ -105,6 +105,97 @@ Heimdall is a comprehensive testing framework designed to:
 
 ### 📊 Dashboard API Support
 
+### ✅ Environment Configuration Testing
+
+#### Environment Variable Validation
+- **Hardcoded Secret Detection**: Automatically detects hardcoded secrets in environment variables
+- **Insecure Default Detection**: Identifies insecure default values
+- **Environment Mismatch Detection**: Detects when environment variables don't match the environment type
+- **Configuration File Security**: Validates file permissions and content security
+
+#### Secrets Management Validation
+- **Storage Security**: Validates encryption and access controls for secrets
+- **Rotation Policies**: Tests secret rotation configuration and enforcement
+- **Access Logging**: Validates audit trail for secret access
+- **Injection Security**: Tests secure secret injection methods
+
+#### Configuration Drift Detection
+- **Baseline Creation**: Creates configuration baselines for comparison
+- **Drift Detection**: Identifies unauthorized configuration changes
+- **Environment Comparison**: Compares configurations across environments
+- **Approval Workflow**: Validates configuration change approvals
+
+#### Environment Policy Validation
+- **Isolation Testing**: Tests environment isolation (e.g., prod cannot access dev)
+- **Promotion Policies**: Validates environment promotion rules
+- **Policy Inheritance**: Tests policy inheritance across environments
+
+### ✅ API Security Testing Enhancements
+
+#### API Versioning Security
+- **Deprecation Testing**: Tests API version deprecation policies
+- **Access Control**: Validates version-specific access controls
+- **Backward Compatibility**: Tests backward compatibility between versions
+- **Migration Security**: Validates secure migration paths
+
+#### API Gateway Policy Validation
+- **Routing Policies**: Tests gateway routing and policy enforcement
+- **Authentication**: Validates gateway-level authentication
+- **Rate Limiting**: Tests rate limiting and throttling policies
+- **Transformation Security**: Validates request/response transformation security
+
+#### Webhook Security
+- **Authentication**: Tests webhook authentication (signatures, tokens)
+- **Encryption**: Validates webhook payload encryption
+- **Replay Prevention**: Tests replay attack prevention mechanisms
+- **Rate Limiting**: Validates webhook rate limiting
+
+#### GraphQL Security
+- **Query Depth Limits**: Tests GraphQL query depth restrictions
+- **Complexity Limits**: Validates query complexity limits
+- **Introspection Security**: Tests GraphQL introspection security
+- **Field Authorization**: Validates field-level authorization
+
+#### API Contract Security
+- **Schema Security**: Detects sensitive fields in API schemas
+- **Versioning**: Tests API contract versioning security
+- **Backward Compatibility**: Validates contract backward compatibility
+- **Enforcement**: Tests contract validation and enforcement
+
+### ✅ ABAC Implementation Correctness Testing
+
+#### Attribute Validation
+- **Schema Validation**: Validates ABAC attribute definitions and schemas
+- **Source Trust**: Verifies attribute source integrity
+- **Freshness**: Tests attribute value freshness and staleness
+- **Access Control**: Validates attribute access controls
+
+#### Policy Completeness
+- **Coverage Testing**: Tests policy coverage for all resource types and user roles
+- **Gap Analysis**: Identifies missing policies and coverage gaps
+- **Edge Case Coverage**: Tests edge case policy coverage
+- **Completeness Metrics**: Provides coverage percentage metrics
+
+#### Performance Testing
+- **Evaluation Latency**: Tests ABAC policy evaluation performance
+- **Caching**: Validates policy evaluation caching effectiveness
+- **Load Testing**: Tests performance under load
+- **Optimization Recommendations**: Provides performance optimization suggestions
+
+#### Conflict Resolution
+- **Conflict Detection**: Detects conflicting ABAC policies
+- **Resolution Testing**: Tests policy conflict resolution strategies
+- **Priority Validation**: Validates policy priority resolution
+- **Override Testing**: Tests policy override mechanisms
+
+#### Attribute Propagation
+- **Inheritance Testing**: Tests attribute inheritance and propagation
+- **Cross-System Validation**: Validates attribute propagation across systems
+- **Transformation Testing**: Tests attribute transformation and mapping
+- **Consistency Validation**: Verifies attribute consistency across services
+
+### 📊 Dashboard API Support
+
 The Dashboard API provides REST endpoints for:
 
 - **Test Configurations**: Create, read, update, delete test configurations
@@ -901,6 +992,29 @@ POST /api/test-configurations/:id/test
 ```
 
 ### API Endpoints Reference
+
+#### Environment Configuration API
+
+- **POST `/api/environment-config/validate`** - Validate environment variables
+- **POST `/api/environment-config/validate-secrets`** - Validate secrets management
+- **POST `/api/environment-config/detect-drift`** - Detect configuration drift
+- **POST `/api/environment-config/validate-policies`** - Validate environment policies
+
+#### API Security Enhanced API
+
+- **POST `/api/api-security/versioning`** - Test API versioning security
+- **POST `/api/api-security/gateway-policies`** - Validate gateway policies
+- **POST `/api/api-security/webhooks`** - Test webhook security
+- **POST `/api/api-security/graphql`** - Test GraphQL security
+- **POST `/api/api-security/contracts`** - Validate contract security
+
+#### ABAC Correctness API
+
+- **POST `/api/abac-correctness/validate-attributes`** - Validate ABAC attributes
+- **POST `/api/abac-correctness/test-completeness`** - Test policy completeness
+- **POST `/api/abac-correctness/test-performance`** - Test ABAC performance
+- **POST `/api/abac-correctness/detect-conflicts`** - Detect policy conflicts
+- **POST `/api/abac-correctness/test-propagation`** - Test attribute propagation
 
 See `docs/API.md` for complete API documentation with all endpoints, request/response formats, and examples.
 

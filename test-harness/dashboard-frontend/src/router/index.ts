@@ -53,6 +53,9 @@ import DeveloperFindingsDashboard from '../views/DeveloperFindingsDashboard.vue'
 import PendingApprovals from '../views/PendingApprovals.vue';
 import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
+import EnvironmentConfigTesting from '../views/EnvironmentConfigTesting.vue';
+import APISecurityEnhanced from '../views/APISecurityEnhanced.vue';
+import ABACCorrectness from '../views/ABACCorrectness.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -329,6 +332,21 @@ const router = createRouter({
       path: '/settings/notifications',
       name: 'NotificationSettings',
       component: NotificationSettings,
+    },
+    {
+      path: '/environment-config-testing',
+      name: 'EnvironmentConfigTesting',
+      component: EnvironmentConfigTesting,
+    },
+    {
+      path: '/api-security-enhanced',
+      name: 'APISecurityEnhanced',
+      component: APISecurityEnhanced,
+    },
+    {
+      path: '/abac-correctness',
+      name: 'ABACCorrectness',
+      component: ABACCorrectness,
     },
     {
       path: '/:pathMatch(.*)*',

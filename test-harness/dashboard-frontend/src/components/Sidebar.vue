@@ -98,7 +98,7 @@ const menuItems = [
 // Test pages
 const testPages = [
   '/policy-validation',
-  '/api-security', '/users', '/api-gateway', '/dlp',
+  '/api-security', '/api-security-enhanced', '/users', '/api-gateway', '/dlp',
   '/distributed-systems', '/network-policies',
   '/rls-cls'
 ];
@@ -106,12 +106,14 @@ const testPages = [
 // Access Control pages
 const accessControlPages = [
   '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation'
+  '/tests/policy-validation', '/policy-validation',
+  '/abac-correctness'
 ];
 
 // Platform Config pages
 const platformConfigPages = [
-  '/configuration-validation'
+  '/configuration-validation',
+  '/environment-config-testing'
 ];
 
 // Data Security pages

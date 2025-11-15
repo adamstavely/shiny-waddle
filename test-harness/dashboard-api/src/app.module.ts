@@ -34,6 +34,9 @@ import { TestBatteriesModule } from './test-batteries/test-batteries.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FindingApprovalsModule } from './finding-approvals/finding-approvals.module';
 import { UsersModule } from './users/users.module';
+import { EnvironmentConfigModule } from './environment-config/environment-config.module';
+import { APISecurityEnhancedModule } from './api-security-enhanced/api-security-enhanced.module';
+import { ABACCorrectnessModule } from './abac-correctness/abac-correctness.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -73,6 +76,9 @@ import { AppController } from './app.controller';
     NotificationsModule,
     FindingApprovalsModule,
     UsersModule,
+    EnvironmentConfigModule,
+    APISecurityEnhancedModule,
+    ABACCorrectnessModule,
   ],
   controllers: [AppController],
 })

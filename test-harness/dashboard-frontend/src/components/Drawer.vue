@@ -84,6 +84,14 @@
             <Settings class="item-icon" />
             <span>Test Configurations</span>
           </a>
+          <a
+            href="/api-security-enhanced"
+            @click.prevent="handleNavClick('/api-security-enhanced')"
+            :class="['drawer-item', isActive('/api-security-enhanced') ? 'drawer-item-active' : '']"
+          >
+            <ShieldCheck class="item-icon" />
+            <span>API Security Enhanced</span>
+          </a>
         </div>
       </div>
 
@@ -130,6 +138,14 @@
             <FileSearch class="item-icon" />
             <span>Policy Validation</span>
           </a>
+          <a
+            href="/abac-correctness"
+            @click.prevent="handleNavClick('/abac-correctness')"
+            :class="['drawer-item', isActive('/abac-correctness') ? 'drawer-item-active' : '']"
+          >
+            <CheckCircle2 class="item-icon" />
+            <span>ABAC Correctness</span>
+          </a>
         </div>
       </div>
 
@@ -151,6 +167,14 @@
           >
             <Shield class="item-icon" />
             <span>Config Validator</span>
+          </a>
+          <a
+            href="/environment-config-testing"
+            @click.prevent="handleNavClick('/environment-config-testing')"
+            :class="['drawer-item', isActive('/environment-config-testing') ? 'drawer-item-active' : '']"
+          >
+            <KeyRound class="item-icon" />
+            <span>Environment Config Testing</span>
           </a>
         </div>
       </div>
@@ -311,18 +335,21 @@ const testPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/library', '/tests/findings', '/tests/configurations',
-  '/tests/history', '/test-configurations'
+  '/tests/history', '/test-configurations',
+  '/api-security-enhanced'
 ];
 
 // Access Control pages
 const accessControlPages = [
   '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation', '/users'
+  '/tests/policy-validation', '/policy-validation', '/users',
+  '/abac-correctness'
 ];
 
 // Platform Config pages
 const platformConfigPages = [
-  '/configuration-validation'
+  '/configuration-validation',
+  '/environment-config-testing'
 ];
 
 // Data Security pages

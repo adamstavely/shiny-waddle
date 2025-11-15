@@ -2559,6 +2559,690 @@ GET /api/test-results?testHarnessId=harness-123&status=failed&limit=10
 ]
 ```
 
+## Environment Configuration Endpoints
+
+### Validate Environment
+
+Validates environment variables for security issues.
+
+```http
+POST /api/environment-config/validate
+```
+
+**Request Body:**
+```json
+{
+  "environment": "prod",
+  "variables": {
+    "DATABASE_URL": "postgresql://...",
+    "API_KEY": "sk_live_..."
+  },
+  "configFiles": ["./config/prod.json"],
+  "secrets": ["DATABASE_URL", "API_KEY"]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": false,
+  "environment": "prod",
+  "issues": [
+    {
+      "type": "hardcoded-secret",
+      "severity": "critical",
+      "field": "API_KEY",
+      "message": "Hardcoded API Key detected in environment variable",
+      "recommendation": "Use a secrets management system instead of hardcoding secrets"
+    }
+  ],
+  "validatedVariables": 1,
+  "totalVariables": 2
+}
+```
+
+### Validate Secrets
+
+Validates secrets management configuration.
+
+```http
+POST /api/environment-config/validate-secrets
+```
+
+**Request Body:**
+```json
+{
+  "type": "vault",
+  "connection": {
+    "address": "https://vault.example.com",
+    "token": "vault-token"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "secretsTested": 0,
+  "issues": [],
+  "rotationPolicies": [],
+  "accessControls": []
+}
+```
+
+### Detect Drift
+
+Detects configuration drift from baseline.
+
+```http
+POST /api/environment-config/detect-drift
+```
+
+**Request Body:**
+```json
+{
+  "baselineEnvironment": "prod",
+  "currentEnvironment": "prod",
+  "variables": {
+    "DATABASE_URL": "postgresql://..."
+  },
+  "currentVariables": {
+    "DATABASE_URL": "postgresql://...",
+    "NEW_VAR": "new-value"
+  },
+  "configFiles": ["./config/prod.json"],
+  "currentConfigFiles": ["./config/prod.json"]
+}
+```
+
+**Response:**
+```json
+{
+  "hasDrift": true,
+  "environment": "prod",
+  "drifts": [
+    {
+      "type": "variable-added",
+      "field": "NEW_VAR",
+      "currentValue": "new-value",
+      "severity": "low",
+      "requiresApproval": false
+    }
+  ],
+  "driftScore": 2
+}
+```
+
+### Validate Environment Policies
+
+Validates environment-specific access policies.
+
+```http
+POST /api/environment-config/validate-policies
+```
+
+**Request Body:**
+```json
+{
+  "environment": "prod",
+  "policies": [],
+  "isolationRules": [
+    {
+      "fromEnvironment": "prod",
+      "toEnvironment": "dev",
+      "allowed": false
+    }
+  ],
+  "promotionRules": [
+    {
+      "fromEnvironment": "staging",
+      "toEnvironment": "prod",
+      "requiredApprovals": 2,
+      "requiredChecks": ["security-review", "compliance-check"]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "environment": "prod",
+  "policyIssues": [],
+  "isolationVerified": true,
+  "promotionRulesValid": true
+}
+```
+
+## API Security Enhanced Endpoints
+
+### Test API Versioning
+
+Tests API version deprecation and security.
+
+```http
+POST /api/api-security/versioning
+```
+
+**Request Body:**
+```json
+{
+  "version": "v1",
+  "endpoint": "/api/v1/users",
+  "deprecated": true,
+  "deprecationDate": "2024-01-01T00:00:00Z",
+  "sunsetDate": "2024-12-31T23:59:59Z",
+  "accessControl": {
+    "requiredRoles": ["admin", "user"],
+    "rateLimit": {
+      "requests": 100,
+      "window": 60
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "version": "v1",
+  "issues": [],
+  "backwardCompatibility": {
+    "compatible": true,
+    "breakingChanges": [],
+    "warnings": []
+  }
+}
+```
+
+### Validate Gateway Policies
+
+Validates API gateway policies.
+
+```http
+POST /api/api-security/gateway-policies
+```
+
+**Request Body:**
+```json
+{
+  "type": "aws-api-gateway",
+  "endpoint": "https://api.example.com",
+  "policies": [
+    {
+      "id": "auth-policy",
+      "name": "Authentication Policy",
+      "type": "authentication",
+      "config": {
+        "method": "jwt"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "path": "/api/v1/users",
+      "method": "GET",
+      "target": "users-service",
+      "policies": ["auth-policy"]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "gatewayType": "aws-api-gateway",
+  "policyIssues": [],
+  "routingIssues": [],
+  "authIssues": []
+}
+```
+
+### Test Webhook Security
+
+Tests webhook authentication and security.
+
+```http
+POST /api/api-security/webhooks
+```
+
+**Request Body:**
+```json
+{
+  "endpoint": "https://api.example.com/webhooks",
+  "authentication": {
+    "type": "signature",
+    "method": "hmac-sha256"
+  },
+  "encryption": {
+    "enabled": true,
+    "method": "tls"
+  },
+  "rateLimiting": {
+    "maxRequests": 100,
+    "windowSeconds": 60
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "endpoint": "https://api.example.com/webhooks",
+  "issues": [],
+  "authTest": {
+    "authenticated": true,
+    "authMethod": "hmac-sha256",
+    "secure": true,
+    "issues": []
+  },
+  "encryptionTest": {
+    "encrypted": true,
+    "method": "tls",
+    "secure": true,
+    "issues": []
+  },
+  "replayTest": {
+    "protected": true,
+    "method": "signature-with-timestamp",
+    "issues": []
+  }
+}
+```
+
+### Test GraphQL Security
+
+Tests GraphQL query depth limits and security.
+
+```http
+POST /api/api-security/graphql
+```
+
+**Request Body:**
+```json
+{
+  "endpoint": "https://api.example.com/graphql",
+  "schema": "type User { id: ID! name: String! }",
+  "maxDepth": 5,
+  "maxComplexity": 100,
+  "introspectionEnabled": false
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "endpoint": "https://api.example.com/graphql",
+  "issues": [],
+  "depthTest": {
+    "hasLimit": true,
+    "maxDepth": 5,
+    "tested": true,
+    "issues": []
+  },
+  "complexityTest": {
+    "hasLimit": true,
+    "maxComplexity": 100,
+    "tested": true,
+    "issues": []
+  },
+  "introspectionTest": {
+    "enabled": false,
+    "secure": true,
+    "issues": []
+  }
+}
+```
+
+### Validate Contract Security
+
+Validates API contract security.
+
+```http
+POST /api/api-security/contracts
+```
+
+**Request Body:**
+```json
+{
+  "version": "1.0.0",
+  "schema": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "User API",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/users": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "List of users"
+            }
+          }
+        }
+      }
+    }
+  },
+  "endpoints": [
+    {
+      "path": "/users",
+      "method": "GET",
+      "parameters": [],
+      "responses": [
+        {
+          "statusCode": "200"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "contractVersion": "1.0.0",
+  "issues": [],
+  "schemaSecurity": {
+    "secure": true,
+    "sensitiveFields": [],
+    "issues": []
+  },
+  "versioningSecurity": {
+    "hasVersioning": true,
+    "versioningMethod": "semantic",
+    "issues": []
+  }
+}
+```
+
+## ABAC Correctness Endpoints
+
+### Validate Attributes
+
+Validates ABAC attribute definitions.
+
+```http
+POST /api/abac-correctness/validate-attributes
+```
+
+**Request Body:**
+```json
+{
+  "attributes": [
+    {
+      "name": "clearanceLevel",
+      "type": "string",
+      "source": "ldap",
+      "validation": [
+        {
+          "type": "enum",
+          "value": ["low", "medium", "high", "top-secret"]
+        }
+      ],
+      "freshness": {
+        "maxAge": 24,
+        "unit": "hours"
+      }
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "results": [
+    {
+      "passed": true,
+      "attribute": "clearanceLevel",
+      "issues": [],
+      "schemaValid": true,
+      "sourceTrusted": true,
+      "freshnessValid": true
+    }
+  ]
+}
+```
+
+### Test Completeness
+
+Tests ABAC policy completeness.
+
+```http
+POST /api/abac-correctness/test-completeness
+```
+
+**Request Body:**
+```json
+{
+  "resourceTypes": ["dataset", "report", "database"],
+  "userRoles": ["admin", "researcher", "analyst", "viewer"],
+  "actions": ["read", "write", "delete", "create"],
+  "policies": [
+    {
+      "id": "policy-1",
+      "name": "Department Match Policy",
+      "effect": "allow",
+      "priority": 100,
+      "conditions": [
+        {
+          "attribute": "subject.department",
+          "operator": "equals",
+          "value": "{{resource.department}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": false,
+  "coverage": {
+    "resourceTypes": 66.67,
+    "userRoles": 50,
+    "actions": 75,
+    "edgeCases": 3
+  },
+  "gaps": [
+    {
+      "resourceType": "database",
+      "userRole": "viewer",
+      "action": "write",
+      "severity": "medium"
+    }
+  ],
+  "missingPolicies": [
+    {
+      "resourceType": "database",
+      "userRole": "viewer",
+      "action": "write",
+      "recommendedPolicy": "Policy for viewer to write on database",
+      "severity": "medium"
+    }
+  ]
+}
+```
+
+### Test Performance
+
+Tests ABAC evaluation performance.
+
+```http
+POST /api/abac-correctness/test-performance
+```
+
+**Request Body:**
+```json
+{
+  "policies": [
+    {
+      "id": "policy-1",
+      "effect": "allow",
+      "conditions": []
+    }
+  ],
+  "testRequests": [
+    {
+      "subject": {
+        "id": "user-1",
+        "attributes": {
+          "role": "researcher",
+          "department": "Research"
+        }
+      },
+      "resource": {
+        "id": "dataset-1",
+        "type": "dataset",
+        "attributes": {
+          "department": "Research"
+        }
+      },
+      "context": {},
+      "action": "read"
+    }
+  ],
+  "loadConfig": {
+    "concurrentRequests": 10,
+    "duration": 5000
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "averageLatency": 45,
+  "p50Latency": 42,
+  "p95Latency": 78,
+  "p99Latency": 95,
+  "throughput": 222.22,
+  "recommendations": [
+    {
+      "type": "enable-caching",
+      "description": "Enable policy caching to improve performance",
+      "impact": "high"
+    }
+  ]
+}
+```
+
+### Detect Conflicts
+
+Detects conflicting ABAC policies.
+
+```http
+POST /api/abac-correctness/detect-conflicts
+```
+
+**Request Body:**
+```json
+{
+  "policies": [
+    {
+      "id": "policy-1",
+      "effect": "allow",
+      "priority": 100,
+      "conditions": []
+    },
+    {
+      "id": "policy-2",
+      "effect": "deny",
+      "priority": 200,
+      "conditions": []
+    }
+  ],
+  "resolutionStrategy": "priority"
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "conflicts": [
+    {
+      "policy1": "policy-1",
+      "policy2": "policy-2",
+      "resource": "unknown",
+      "action": "unknown",
+      "conflictType": "allow-vs-deny",
+      "resolution": {
+        "strategy": "priority",
+        "resolved": true,
+        "resultingDecision": "deny",
+        "reason": "Policy policy-2 has higher priority"
+      }
+    }
+  ],
+  "resolutionValid": true
+}
+```
+
+### Test Propagation
+
+Tests attribute propagation across systems.
+
+```http
+POST /api/abac-correctness/test-propagation
+```
+
+**Request Body:**
+```json
+{
+  "sourceSystem": "ldap",
+  "targetSystems": ["api", "database"],
+  "attributes": [
+    {
+      "name": "clearanceLevel",
+      "type": "string",
+      "source": "ldap",
+      "validation": []
+    }
+  ],
+  "transformationRules": [
+    {
+      "sourceAttribute": "clearanceLevel",
+      "targetAttribute": "accessLevel",
+      "transformation": "map"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "passed": true,
+  "propagationResults": [
+    {
+      "source": "ldap",
+      "target": "api",
+      "attribute": "clearanceLevel",
+      "propagated": true,
+      "transformed": true,
+      "consistent": true,
+      "latency": 50
+    }
+  ],
+  "consistencyIssues": []
+}
+```
+
 ## Rate Limits
 
 Currently, there are no rate limits enforced. In production, rate limiting should be implemented based on user roles and endpoint criticality.
