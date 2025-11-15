@@ -18,6 +18,8 @@
             <option value="dlp">DLP</option>
             <option value="api-gateway">API Gateway</option>
             <option value="distributed-systems">Distributed Systems</option>
+            <option value="api-security">API Security</option>
+            <option value="data-pipeline">Data Pipeline</option>
           </select>
         </div>
 
@@ -55,6 +57,8 @@ import NetworkPolicyConfigForm from './NetworkPolicyConfigForm.vue';
 import DLPConfigForm from './DLPConfigForm.vue';
 import APIGatewayConfigForm from './APIGatewayConfigForm.vue';
 import DistributedSystemsConfigForm from './DistributedSystemsConfigForm.vue';
+import APISecurityConfigForm from './APISecurityConfigForm.vue';
+import DataPipelineConfigForm from './DataPipelineConfigForm.vue';
 
 const props = defineProps<{
   show: boolean;
@@ -83,6 +87,8 @@ const configFormComponent = computed(() => {
     'dlp': DLPConfigForm,
     'api-gateway': APIGatewayConfigForm,
     'distributed-systems': DistributedSystemsConfigForm,
+    'api-security': APISecurityConfigForm,
+    'data-pipeline': DataPipelineConfigForm,
   };
   return components[type || ''];
 });

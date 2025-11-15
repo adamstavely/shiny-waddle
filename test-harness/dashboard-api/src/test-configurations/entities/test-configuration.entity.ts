@@ -1,6 +1,6 @@
 import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, User, ServiceMeshConfig } from '../../../../core/types';
 
-export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems';
+export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems' | 'api-security' | 'data-pipeline';
 
 export interface BaseTestConfigurationEntity {
   id: string;
@@ -149,10 +149,79 @@ export interface DistributedSystemsConfigurationEntity extends BaseTestConfigura
   };
 }
 
+export interface APISecurityConfigurationEntity extends BaseTestConfigurationEntity {
+  type: 'api-security';
+  baseUrl: string;
+  authentication?: {
+    type: 'bearer' | 'basic' | 'oauth2' | 'api-key' | 'jwt';
+    credentials: Record<string, string>;
+  };
+  rateLimitConfig?: {
+    maxRequests?: number;
+    windowSeconds?: number;
+    strategy?: 'fixed' | 'sliding' | 'token-bucket';
+  };
+  headers?: Record<string, string>;
+  timeout?: number;
+  endpoints?: Array<{
+    id: string;
+    name: string;
+    endpoint: string;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+    apiType: 'rest' | 'graphql' | 'authentication' | 'authorization' | 'rate-limiting' | 'vulnerability';
+    expectedStatus?: number;
+    expectedAuthRequired?: boolean;
+    expectedRateLimit?: boolean;
+    body?: any;
+    headers?: Record<string, string>;
+  }>;
+  testLogic?: {
+    validateAuthentication?: boolean;
+    validateAuthorization?: boolean;
+    checkRateLimiting?: boolean;
+    selectedTestSuites?: string[];
+    customValidations?: Array<{
+      name: string;
+      condition: string;
+      description?: string;
+    }>;
+  };
+}
+
+export interface DataPipelineConfigurationEntity extends BaseTestConfigurationEntity {
+  type: 'data-pipeline';
+  pipelineType: 'etl' | 'streaming' | 'batch' | 'real-time';
+  connection?: {
+    type: 'kafka' | 'spark' | 'airflow' | 'dbt' | 'custom';
+    endpoint?: string;
+    credentials?: Record<string, string>;
+  };
+  dataSource?: {
+    type: 'database' | 'api' | 'file' | 'stream';
+    connectionString?: string;
+  };
+  dataDestination?: {
+    type: 'database' | 'data-warehouse' | 'data-lake' | 'api';
+    connectionString?: string;
+  };
+  testLogic?: {
+    validateAccessControl?: boolean;
+    checkDataQuality?: boolean;
+    validateTransformations?: boolean;
+    customValidations?: Array<{
+      name: string;
+      condition: string;
+      description?: string;
+    }>;
+  };
+}
+
 export type TestConfigurationEntity =
   | RLSCLSConfigurationEntity
   | NetworkPolicyConfigurationEntity
   | DLPConfigurationEntity
   | APIGatewayConfigurationEntity
-  | DistributedSystemsConfigurationEntity;
+  | DistributedSystemsConfigurationEntity
+  | APISecurityConfigurationEntity
+  | DataPipelineConfigurationEntity;
 

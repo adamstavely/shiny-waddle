@@ -18,6 +18,8 @@ import {
   DLPConfigurationEntity,
   APIGatewayConfigurationEntity,
   DistributedSystemsConfigurationEntity,
+  APISecurityConfigurationEntity,
+  DataPipelineConfigurationEntity,
   RegionConfig,
 } from '../entities/test-configuration.entity';
 import { DatabaseConfigDto } from '../../rls-cls/dto/rls-cls.dto';
@@ -461,10 +463,220 @@ export class CreateDistributedSystemsConfigurationDto extends BaseConfigurationD
   testLogic?: DistributedSystemsTestLogicDto;
 }
 
+class APISecurityEndpointDto {
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  endpoint: string;
+
+  @IsNotEmpty()
+  @IsEnum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'OPTIONS';
+
+  @IsNotEmpty()
+  @IsEnum(['rest', 'graphql', 'authentication', 'authorization', 'rate-limiting', 'vulnerability'])
+  apiType: 'rest' | 'graphql' | 'authentication' | 'authorization' | 'rate-limiting' | 'vulnerability';
+
+  @IsOptional()
+  @IsNumber()
+  expectedStatus?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  expectedAuthRequired?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  expectedRateLimit?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  body?: any;
+
+  @IsOptional()
+  @IsObject()
+  headers?: Record<string, string>;
+}
+
+class APISecurityTestLogicDto {
+  @IsOptional()
+  @IsBoolean()
+  validateAuthentication?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  validateAuthorization?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  checkRateLimiting?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  selectedTestSuites?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  customValidations?: Array<{
+    name: string;
+    condition: string;
+    description?: string;
+  }>;
+}
+
+export class CreateAPISecurityConfigurationDto extends BaseConfigurationDto {
+  @IsNotEmpty()
+  @IsEnum(['api-security'])
+  type: 'api-security';
+
+  @IsNotEmpty()
+  @IsString()
+  baseUrl: string;
+
+  @IsOptional()
+  @IsObject()
+  authentication?: {
+    type: 'bearer' | 'basic' | 'oauth2' | 'api-key' | 'jwt';
+    credentials: Record<string, string>;
+  };
+
+  @IsOptional()
+  @IsObject()
+  rateLimitConfig?: {
+    maxRequests?: number;
+    windowSeconds?: number;
+    strategy?: 'fixed' | 'sliding' | 'token-bucket';
+  };
+
+  @IsOptional()
+  @IsObject()
+  headers?: Record<string, string>;
+
+  @IsOptional()
+  @IsNumber()
+  timeout?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => APISecurityEndpointDto)
+  endpoints?: APISecurityEndpointDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => APISecurityTestLogicDto)
+  testLogic?: APISecurityTestLogicDto;
+}
+
+class DataPipelineConnectionDto {
+  @IsOptional()
+  @IsEnum(['kafka', 'spark', 'airflow', 'dbt', 'custom'])
+  type?: 'kafka' | 'spark' | 'airflow' | 'dbt' | 'custom';
+
+  @IsOptional()
+  @IsString()
+  endpoint?: string;
+
+  @IsOptional()
+  @IsObject()
+  credentials?: Record<string, string>;
+}
+
+class DataPipelineDataSourceDto {
+  @IsOptional()
+  @IsEnum(['database', 'api', 'file', 'stream'])
+  type?: 'database' | 'api' | 'file' | 'stream';
+
+  @IsOptional()
+  @IsString()
+  connectionString?: string;
+}
+
+class DataPipelineDataDestinationDto {
+  @IsOptional()
+  @IsEnum(['database', 'data-warehouse', 'data-lake', 'api'])
+  type?: 'database' | 'data-warehouse' | 'data-lake' | 'api';
+
+  @IsOptional()
+  @IsString()
+  connectionString?: string;
+}
+
+class DataPipelineTestLogicDto {
+  @IsOptional()
+  @IsBoolean()
+  validateAccessControl?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  checkDataQuality?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  validateTransformations?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  customValidations?: Array<{
+    name: string;
+    condition: string;
+    description?: string;
+  }>;
+}
+
+export class CreateDataPipelineConfigurationDto extends BaseConfigurationDto {
+  @IsNotEmpty()
+  @IsEnum(['data-pipeline'])
+  type: 'data-pipeline';
+
+  @IsNotEmpty()
+  @IsEnum(['etl', 'streaming', 'batch', 'real-time'])
+  pipelineType: 'etl' | 'streaming' | 'batch' | 'real-time';
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => DataPipelineConnectionDto)
+  connection?: DataPipelineConnectionDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => DataPipelineDataSourceDto)
+  dataSource?: DataPipelineDataSourceDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => DataPipelineDataDestinationDto)
+  dataDestination?: DataPipelineDataDestinationDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => DataPipelineTestLogicDto)
+  testLogic?: DataPipelineTestLogicDto;
+}
+
 export type CreateTestConfigurationDto =
   | CreateRLSCLSConfigurationDto
   | CreateNetworkPolicyConfigurationDto
   | CreateDLPConfigurationDto
   | CreateAPIGatewayConfigurationDto
-  | CreateDistributedSystemsConfigurationDto;
+  | CreateDistributedSystemsConfigurationDto
+  | CreateAPISecurityConfigurationDto
+  | CreateDataPipelineConfigurationDto;
 

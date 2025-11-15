@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
 import {
   CreateAPISecurityConfigDto,
   CreateAPIEndpointDto,
@@ -9,13 +9,18 @@ import {
   APISecurityTestConfigEntity,
   APIEndpointEntity,
   APISecurityTestResultEntity,
+  APITestType,
 } from './entities/api-security.entity';
+import { APISecurityTester, APISecurityTestConfig } from '../../../services/api-security-tester';
+import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
+import { APISecurityConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ApiSecurityService {
+  private readonly logger = new Logger(ApiSecurityService.name);
   private readonly configsFile = path.join(process.cwd(), '..', '..', 'data', 'api-security-configs.json');
   private readonly endpointsFile = path.join(process.cwd(), '..', '..', 'data', 'api-security-endpoints.json');
   private readonly resultsFile = path.join(process.cwd(), '..', '..', 'data', 'api-security-results.json');
@@ -24,7 +29,10 @@ export class ApiSecurityService {
   private endpoints: APIEndpointEntity[] = [];
   private results: APISecurityTestResultEntity[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => TestConfigurationsService))
+    private readonly testConfigurationsService?: TestConfigurationsService,
+  ) {
     this.loadData().catch(err => {
       console.error('Error loading API security data on startup:', err);
     });
@@ -247,25 +255,301 @@ export class ApiSecurityService {
 
   // Test Results
   async createTestResult(dto: CreateAPISecurityTestDto): Promise<APISecurityTestResultEntity> {
-    // In a real implementation, this would execute the actual test
-    // For now, we'll create a mock result
-    const result: APISecurityTestResultEntity = {
-      id: uuidv4(),
+    const config = await this.findOneConfig(dto.configId);
+    const endpoint = dto.endpointId 
+      ? await this.findOneEndpoint(dto.endpointId)
+      : null;
+
+    if (!endpoint && !dto.endpoint) {
+      throw new NotFoundException('Either endpointId or endpoint must be provided');
+    }
+
+    const endpointData = endpoint || {
+      id: '',
       configId: dto.configId,
-      endpointId: dto.endpointId,
-      testName: dto.testName,
-      endpoint: dto.endpoint,
+      name: dto.testName,
+      endpoint: dto.endpoint!,
       method: dto.method,
-      testType: dto.testType,
-      status: 'passed', // Mock status
-      timestamp: new Date(),
+      apiType: dto.testType,
       createdAt: new Date(),
+      updatedAt: new Date(),
     };
+
+    const result = await this.executeAPISecurityTest(
+      config,
+      endpointData,
+      dto.testType
+    );
 
     this.results.push(result);
     await this.saveResults();
 
     return result;
+  }
+
+  /**
+   * Run API Security test for test configuration system
+   */
+  async runTest(
+    configId: string,
+    context?: {
+      applicationId?: string;
+      buildId?: string;
+      runId?: string;
+      commitSha?: string;
+      branch?: string;
+    }
+  ): Promise<any> {
+    // First try to get config from test-configurations system
+    let config: APISecurityTestConfigEntity | null = null;
+    let endpoints: APIEndpointEntity[] = [];
+    let selectedTestSuites: string[] | undefined = undefined;
+    
+    if (this.testConfigurationsService) {
+      try {
+        const testConfig = await this.testConfigurationsService.findOne(configId);
+        if (testConfig.type === 'api-security') {
+          const apiConfig = testConfig as APISecurityConfigurationEntity;
+          // Convert test-configuration entity to API security config entity
+          config = {
+            id: apiConfig.id,
+            name: apiConfig.name,
+            baseUrl: apiConfig.baseUrl,
+            authentication: apiConfig.authentication,
+            rateLimitConfig: apiConfig.rateLimitConfig,
+            headers: apiConfig.headers,
+            timeout: apiConfig.timeout,
+            createdAt: apiConfig.createdAt,
+            updatedAt: apiConfig.updatedAt,
+          };
+          // Get selected test suites from testLogic
+          selectedTestSuites = apiConfig.testLogic?.selectedTestSuites;
+          // Convert endpoints if they exist
+          if (apiConfig.endpoints) {
+            endpoints = apiConfig.endpoints.map(ep => ({
+              id: ep.id || uuidv4(),
+              configId: apiConfig.id,
+              name: ep.name,
+              endpoint: ep.endpoint,
+              method: ep.method as any,
+              apiType: ep.apiType as any,
+              expectedStatus: ep.expectedStatus,
+              expectedAuthRequired: ep.expectedAuthRequired,
+              expectedRateLimit: ep.expectedRateLimit,
+              body: ep.body,
+              headers: ep.headers,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }));
+          }
+        }
+      } catch (error) {
+        // Config not found in test-configurations, try standalone storage
+        this.logger.debug(`Config ${configId} not found in test-configurations, trying standalone storage`);
+      }
+    }
+    
+    // Fallback to standalone storage if not found in test-configurations
+    if (!config) {
+      config = await this.findOneConfig(configId);
+      endpoints = await this.findAllEndpoints(configId);
+    }
+
+    if (endpoints.length === 0) {
+      throw new NotFoundException(`No endpoints found for API security config "${configId}"`);
+    }
+
+    // Run tests for all endpoints or just the first one
+    const results = [];
+    for (const endpoint of endpoints) {
+      try {
+        const result = await this.executeAPISecurityTest(config, endpoint, endpoint.apiType, selectedTestSuites);
+        results.push(result);
+      } catch (error: any) {
+        this.logger.error(`Error running test for endpoint ${endpoint.id}: ${error.message}`);
+        results.push({
+          id: uuidv4(),
+          configId: config.id,
+          endpointId: endpoint.id,
+          testName: endpoint.name,
+          endpoint: endpoint.endpoint,
+          method: endpoint.method,
+          testType: endpoint.apiType,
+          status: 'failed' as const,
+          error: error.message,
+          timestamp: new Date(),
+          createdAt: new Date(),
+        });
+      }
+    }
+
+    // Aggregate results
+    const passed = results.every(r => r.status === 'passed');
+    const overallResult = {
+      passed,
+      testType: 'api-security',
+      testName: `API Security Test: ${config.name}`,
+      timestamp: new Date(),
+      details: {
+        configId: config.id,
+        configName: config.name,
+        endpointCount: endpoints.length,
+        results,
+      },
+      ...context,
+    };
+
+    return overallResult;
+  }
+
+  /**
+   * Execute API Security test using APISecurityTester
+   */
+  private async executeAPISecurityTest(
+    config: APISecurityTestConfigEntity,
+    endpoint: APIEndpointEntity,
+    testType: APITestType,
+    selectedTestSuites?: string[]
+  ): Promise<APISecurityTestResultEntity> {
+    const testerConfig: APISecurityTestConfig = {
+      baseUrl: config.baseUrl,
+      authentication: config.authentication ? {
+        type: config.authentication.type as any,
+        credentials: config.authentication.credentials,
+      } : undefined,
+      rateLimitConfig: config.rateLimitConfig,
+      headers: config.headers,
+      timeout: config.timeout || 5000,
+    };
+
+    const tester = new APISecurityTester(testerConfig);
+
+    const test: any = {
+      name: endpoint.name,
+      endpoint: endpoint.endpoint,
+      method: endpoint.method as any,
+      expectedStatus: endpoint.expectedStatus,
+      expectedAuthRequired: endpoint.expectedAuthRequired,
+      body: endpoint.body,
+      headers: endpoint.headers,
+    };
+
+    let result: any;
+
+    try {
+      // If selectedTestSuites is provided and not empty, use test suites
+      if (selectedTestSuites && selectedTestSuites.length > 0) {
+        const allSuiteResults: any[] = [];
+        
+        // Run each selected test suite
+        for (const suiteName of selectedTestSuites) {
+          try {
+            const suiteResults = await tester.runTestSuite(
+              suiteName,
+              endpoint.endpoint,
+              endpoint.method as any,
+              test
+            );
+            allSuiteResults.push(...suiteResults);
+          } catch (error: any) {
+            this.logger.warn(`Error running test suite ${suiteName}: ${error.message}`);
+            // Create error result for failed suite
+            allSuiteResults.push({
+              testName: `${suiteName} Suite Error`,
+              endpoint: endpoint.endpoint,
+              method: endpoint.method,
+              testType: 'api-security',
+              passed: false,
+              timestamp: new Date(),
+              error: error.message,
+              details: { suite: suiteName, error: error.message },
+            });
+          }
+        }
+
+        // Aggregate suite results into a single result
+        const passed = allSuiteResults.every(r => r.passed !== false);
+        const aggregatedResult = {
+          testName: endpoint.name,
+          endpoint: endpoint.endpoint,
+          method: endpoint.method,
+          testType: testType,
+          passed,
+          timestamp: new Date(),
+          details: {
+            suiteResults: allSuiteResults,
+            suitesRun: selectedTestSuites,
+            totalSuites: selectedTestSuites.length,
+            passedSuites: allSuiteResults.filter(r => r.passed !== false).length,
+          },
+          // Aggregate common fields from first result if available
+          statusCode: allSuiteResults[0]?.statusCode,
+          responseTime: allSuiteResults[0]?.responseTime,
+          rateLimitInfo: allSuiteResults[0]?.rateLimitInfo,
+          authenticationResult: allSuiteResults[0]?.authenticationResult,
+          authorizationResult: allSuiteResults[0]?.authorizationResult,
+          securityIssues: allSuiteResults.flatMap(r => r.securityIssues || []),
+        };
+
+        result = aggregatedResult;
+      } else {
+        // Fall back to current behavior (switch on testType)
+        switch (testType) {
+          case APITestType.REST:
+            result = await tester.testRESTAPI(test);
+            break;
+
+          case APITestType.AUTHENTICATION:
+            result = await tester.testAuthentication(test);
+            break;
+
+          case APITestType.AUTHORIZATION:
+            const authzResults = await tester.testAuthorization([test]);
+            result = authzResults[0] || authzResults;
+            break;
+
+          case APITestType.RATE_LIMITING:
+            result = await tester.testRateLimiting(endpoint.endpoint, endpoint.method as any);
+            break;
+
+          case APITestType.GRAPHQL:
+            // For GraphQL, we'd need a query - using REST as fallback
+            result = await tester.testRESTAPI(test);
+            break;
+
+          default:
+            // Default to REST API test
+            result = await tester.testRESTAPI(test);
+        }
+      }
+
+      // Convert APISecurityTester result to APISecurityTestResultEntity
+      const resultEntity: APISecurityTestResultEntity = {
+        id: uuidv4(),
+        configId: config.id,
+        endpointId: endpoint.id,
+        testName: endpoint.name,
+        endpoint: endpoint.endpoint,
+        method: endpoint.method,
+        testType: testType,
+        status: result.passed ? 'passed' : 'failed',
+        statusCode: result.statusCode,
+        responseTime: result.responseTime,
+        rateLimitInfo: result.rateLimitInfo,
+        authenticationResult: result.authenticationResult,
+        authorizationResult: result.authorizationResult,
+        securityIssues: result.securityIssues,
+        details: result.details,
+        error: result.error,
+        timestamp: new Date(),
+        createdAt: new Date(),
+      };
+
+      return resultEntity;
+    } catch (error: any) {
+      this.logger.error(`Error executing API security test: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async findAllResults(

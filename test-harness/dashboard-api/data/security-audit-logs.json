@@ -1,5 +1,26 @@
 [
   {
+    "id": "d221bebc-226d-40a5-a4cf-5d1ec748f142",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/compliance/nist-800-207/assess",
+    "description": "Data write operation: POST /api/compliance/nist-800-207/assess",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/compliance/nist-800-207/assess",
+    "timestamp": "2025-11-14T06:13:06.218Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/compliance/nist-800-207/assess",
+      "query": {},
+      "bodySize": "2"
+    },
+    "requestId": "req-1763100786213-bxry84geb",
+    "responseCode": 200,
+    "duration": 4
+  },
+  {
     "id": "531543f7-d804-4a3b-8a3c-fff526744744",
     "type": "data-write",
     "severity": "medium",

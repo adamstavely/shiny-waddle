@@ -181,7 +181,7 @@
                   <input
                     v-model="dastConfig.toolEndpoint"
                     type="text"
-                    placeholder="http://localhost:8080"
+                    placeholder="https://example.com/api"
                     class="form-input"
                   />
                 </div>

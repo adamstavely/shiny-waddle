@@ -28,6 +28,8 @@ export class ApplicationsService {
     'dlp': ['dlp'],
     'api-gateway': ['api-gateway'],
     'distributed-systems': ['distributed-systems', 'access-control'],
+    'api-security': ['api-security'],
+    'data-pipeline': ['data-pipeline'],
   };
 
   constructor(

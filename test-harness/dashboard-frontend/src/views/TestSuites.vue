@@ -371,7 +371,8 @@ const testTypes = [
   { name: 'Network Policies', type: 'network-policy' },
   { name: 'API Security', type: 'api-security' },
   { name: 'RLS/CLS', type: 'rls-cls' },
-  { name: 'Distributed Systems', type: 'distributed-systems' }
+  { name: 'Distributed Systems', type: 'distributed-systems' },
+  { name: 'Data Pipeline', type: 'data-pipeline' }
 ];
 
 const testSuites = ref<any[]>([]);

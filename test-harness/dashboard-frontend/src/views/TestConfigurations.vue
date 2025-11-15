@@ -217,7 +217,7 @@ const breadcrumbItems = [
 interface TestConfiguration {
   id: string;
   name: string;
-  type: 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems';
+  type: 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems' | 'api-security' | 'data-pipeline';
   description?: string;
   enabled: boolean;
   createdAt: string;
@@ -245,6 +245,8 @@ const typeOptions = [
   { label: 'DLP', value: 'dlp' },
   { label: 'API Gateway', value: 'api-gateway' },
   { label: 'Distributed Systems', value: 'distributed-systems' },
+  { label: 'API Security', value: 'api-security' },
+  { label: 'Data Pipeline', value: 'data-pipeline' },
 ];
 
 const filteredConfigurations = computed(() => {

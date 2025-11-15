@@ -10,6 +10,8 @@ import {
   DLPConfigurationEntity,
   APIGatewayConfigurationEntity,
   DistributedSystemsConfigurationEntity,
+  APISecurityConfigurationEntity,
+  DataPipelineConfigurationEntity,
 } from './entities/test-configuration.entity';
 import {
   CreateTestConfigurationDto,
@@ -18,12 +20,16 @@ import {
   CreateDLPConfigurationDto,
   CreateAPIGatewayConfigurationDto,
   CreateDistributedSystemsConfigurationDto,
+  CreateAPISecurityConfigurationDto,
+  CreateDataPipelineConfigurationDto,
 } from './dto/create-test-configuration.dto';
 import { RLSCLSService } from '../rls-cls/rls-cls.service';
 import { DLPService } from '../dlp/dlp.service';
 import { APIGatewayService } from '../api-gateway/api-gateway.service';
 import { NetworkPolicyService } from '../network-policy/network-policy.service';
 import { DistributedSystemsService } from '../distributed-systems/distributed-systems.service';
+import { ApiSecurityService } from '../api-security/api-security.service';
+import { DataPipelineService } from '../data-pipeline/data-pipeline.service';
 import { ApplicationsService } from '../applications/applications.service';
 import { TestResultsService } from '../test-results/test-results.service';
 import { TestResultStatus } from '../test-results/entities/test-result.entity';
@@ -45,6 +51,10 @@ export class TestConfigurationsService {
     private readonly networkPolicyService: NetworkPolicyService,
     @Inject(forwardRef(() => DistributedSystemsService))
     private readonly distributedSystemsService: DistributedSystemsService,
+    @Inject(forwardRef(() => ApiSecurityService))
+    private readonly apiSecurityService: ApiSecurityService,
+    @Inject(forwardRef(() => DataPipelineService))
+    private readonly dataPipelineService: DataPipelineService,
     @Inject(forwardRef(() => ApplicationsService))
     private readonly applicationsService: ApplicationsService,
     @Inject(forwardRef(() => TestResultsService))
@@ -392,6 +402,46 @@ export class TestConfigurationsService {
         } as DistributedSystemsConfigurationEntity;
         break;
       }
+      case 'api-security': {
+        const apiDto = dto as CreateAPISecurityConfigurationDto;
+        newConfig = {
+          id: uuidv4(),
+          name: apiDto.name,
+          type: 'api-security',
+          description: apiDto.description,
+          tags: apiDto.tags || [],
+          baseUrl: apiDto.baseUrl,
+          authentication: apiDto.authentication,
+          rateLimitConfig: apiDto.rateLimitConfig,
+          headers: apiDto.headers,
+          timeout: apiDto.timeout,
+          endpoints: apiDto.endpoints,
+          testLogic: apiDto.testLogic,
+          enabled: apiDto.enabled !== undefined ? apiDto.enabled : true,
+          createdAt: now,
+          updatedAt: now,
+        } as APISecurityConfigurationEntity;
+        break;
+      }
+      case 'data-pipeline': {
+        const pipelineDto = dto as CreateDataPipelineConfigurationDto;
+        newConfig = {
+          id: uuidv4(),
+          name: pipelineDto.name,
+          type: 'data-pipeline',
+          description: pipelineDto.description,
+          tags: pipelineDto.tags || [],
+          pipelineType: pipelineDto.pipelineType,
+          connection: pipelineDto.connection,
+          dataSource: pipelineDto.dataSource,
+          dataDestination: pipelineDto.dataDestination,
+          testLogic: pipelineDto.testLogic,
+          enabled: pipelineDto.enabled !== undefined ? pipelineDto.enabled : true,
+          createdAt: now,
+          updatedAt: now,
+        } as DataPipelineConfigurationEntity;
+        break;
+      }
       default:
         throw new BadRequestException(`Unknown configuration type: ${(dto as any).type}`);
     }
@@ -545,6 +595,18 @@ export class TestConfigurationsService {
             testType: 'multi-region',
             configId: id,
           });
+          break;
+        }
+        case 'api-security': {
+          const apiConfig = config as APISecurityConfigurationEntity;
+          // Run API security test
+          result = await this.apiSecurityService.runTest(id, context);
+          break;
+        }
+        case 'data-pipeline': {
+          const pipelineConfig = config as DataPipelineConfigurationEntity;
+          // Run data pipeline test
+          result = await this.dataPipelineService.runTest(id, context);
           break;
         }
         default:

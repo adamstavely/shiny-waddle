@@ -56,6 +56,7 @@ const testTypes = [
   { name: 'API Security', type: 'api-security', description: 'Test REST and GraphQL API security', icon: Lock },
   { name: 'RLS/CLS', type: 'rls-cls', description: 'Test row-level and column-level security', icon: Database },
   { name: 'Distributed Systems', type: 'distributed-systems', description: 'Test distributed system policies, multi-region consistency, and synchronization', icon: Server },
+  { name: 'Data Pipeline', type: 'data-pipeline', description: 'Test ETL pipelines, streaming data, and pipeline security', icon: Server },
 ];
 
 const configurations = ref<any[]>([]);

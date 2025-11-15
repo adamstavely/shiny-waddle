@@ -190,7 +190,7 @@ const breadcrumbItems = [
   { label: 'Violations' }
 ];
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
 const violations = ref<ViolationEntity[]>([]);
 const loading = ref(true);

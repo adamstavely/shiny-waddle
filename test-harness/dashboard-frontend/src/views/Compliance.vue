@@ -293,6 +293,48 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Control Detail Modal with Evidence -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showControlModal && selectedControl" class="modal-overlay" @click="closeControlModal">
+          <div class="modal-content large" @click.stop>
+            <div class="modal-header">
+              <div>
+                <h2>{{ selectedControl.controlId }}</h2>
+                <p class="control-subtitle">{{ selectedControl.title }}</p>
+              </div>
+              <button @click="closeControlModal" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="control-detail-section">
+                <h3>Description</h3>
+                <p>{{ selectedControl.description }}</p>
+              </div>
+              <div class="control-detail-section">
+                <h3>Mapping Status</h3>
+                <div v-if="getControlStatus(selectedControl.controlId)" class="status-display">
+                  <span class="status-badge" :class="`status-${getControlStatus(selectedControl.controlId)}`">
+                    {{ formatStatus(getControlStatus(selectedControl.controlId)) }}
+                  </span>
+                </div>
+                <p v-else class="no-status">No mapping found for this control</p>
+              </div>
+              <div class="control-detail-section" v-if="getMappingForControl(selectedControl.controlId)">
+                <EvidenceManager
+                  :mapping-id="getMappingForControl(selectedControl.controlId)!.id"
+                  :evidence="getMappingForControl(selectedControl.controlId)!.evidence || []"
+                  @evidence-added="handleEvidenceAdded"
+                  @evidence-deleted="handleEvidenceDeleted"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -309,6 +351,7 @@ import {
   Loader,
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import EvidenceManager from '../components/compliance/EvidenceManager.vue';
 import {
   ComplianceFramework,
   type ComplianceControl,
@@ -640,6 +683,10 @@ const getControlStatus = (controlId: string): string | null => {
   return mapping?.status || null;
 };
 
+const getMappingForControl = (controlId: string): ComplianceMapping | null => {
+  return mappings.value.find(m => m.controlId === controlId) || null;
+};
+
 const formatStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
     compliant: 'Compliant',
@@ -698,9 +745,25 @@ const getFrameworkControlCount = (framework: ComplianceFramework): number => {
   return 0;
 };
 
+const selectedControl = ref<ComplianceControl | null>(null);
+const showControlModal = ref(false);
+
 const viewControl = (control: ComplianceControl) => {
-  // Navigate to control detail page
-  router.push(`/compliance/${selectedFramework.value}/controls/${control.controlId}`);
+  selectedControl.value = control;
+  showControlModal.value = true;
+};
+
+const closeControlModal = () => {
+  showControlModal.value = false;
+  selectedControl.value = null;
+};
+
+const handleEvidenceAdded = () => {
+  loadMappings();
+};
+
+const handleEvidenceDeleted = () => {
+  loadMappings();
 };
 
 const viewRoadmap = (roadmapId: string) => {
@@ -1444,6 +1507,10 @@ onMounted(() => {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
+.modal-content.large {
+  max-width: 1000px;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -1603,6 +1670,72 @@ onMounted(() => {
   background: rgba(255, 152, 0, 0.1);
   border-radius: 8px;
   color: #ffb74d;
+}
+
+.control-subtitle {
+  font-size: 1rem;
+  color: #a0aec0;
+  margin: 8px 0 0 0;
+}
+
+.control-detail-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.control-detail-section:last-child {
+  border-bottom: none;
+}
+
+.control-detail-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.control-detail-section p {
+  color: #a0aec0;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.status-display {
+  margin-top: 8px;
+}
+
+.no-status {
+  color: #718096;
+  font-style: italic;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
 

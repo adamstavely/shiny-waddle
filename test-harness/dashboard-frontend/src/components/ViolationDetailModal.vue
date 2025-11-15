@@ -127,10 +127,52 @@
               <div class="comments-list" v-if="violation.comments && violation.comments.length > 0">
                 <div v-for="comment in violation.comments" :key="comment.id" class="comment-item">
                   <div class="comment-header">
-                    <span class="comment-author">{{ comment.author }}</span>
-                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    <div class="comment-author-info">
+                      <span class="comment-author">{{ comment.author }}</span>
+                      <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    </div>
+                    <div v-if="comment.author === currentUser" class="comment-actions">
+                      <button
+                        v-if="editingCommentId !== comment.id"
+                        @click="startEditComment(comment)"
+                        class="comment-action-btn edit-btn"
+                        title="Edit comment"
+                      >
+                        <Edit class="action-icon-small" />
+                      </button>
+                      <button
+                        v-if="editingCommentId !== comment.id"
+                        @click="deleteComment(comment.id)"
+                        class="comment-action-btn delete-btn"
+                        title="Delete comment"
+                      >
+                        <Trash2 class="action-icon-small" />
+                      </button>
+                      <button
+                        v-if="editingCommentId === comment.id"
+                        @click="saveEditComment(comment.id)"
+                        class="comment-action-btn save-btn"
+                        title="Save changes"
+                      >
+                        <CheckCircle2 class="action-icon-small" />
+                      </button>
+                      <button
+                        v-if="editingCommentId === comment.id"
+                        @click="cancelEditComment"
+                        class="comment-action-btn cancel-btn"
+                        title="Cancel"
+                      >
+                        <X class="action-icon-small" />
+                      </button>
+                    </div>
                   </div>
-                  <p class="comment-content">{{ comment.content }}</p>
+                  <textarea
+                    v-if="editingCommentId === comment.id"
+                    v-model="editingCommentText"
+                    class="comment-edit-input"
+                    rows="3"
+                  ></textarea>
+                  <p v-else class="comment-content">{{ comment.content }}</p>
                 </div>
               </div>
               <div v-else class="no-comments">
@@ -143,8 +185,8 @@
                   class="comment-input"
                   rows="3"
                 ></textarea>
-                <button @click="addComment" class="comment-submit-btn" :disabled="!newComment.trim()">
-                  Add Comment
+                <button @click="addComment" class="comment-submit-btn" :disabled="!newComment.trim() || addingComment">
+                  {{ addingComment ? 'Adding...' : 'Add Comment' }}
                 </button>
               </div>
             </div>
@@ -214,8 +256,8 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { AlertTriangle, X, User, CheckCircle2, Ticket, ExternalLink } from 'lucide-vue-next';
-import type { ViolationEntity } from '../types/violation';
+import { AlertTriangle, X, User, CheckCircle2, Ticket, ExternalLink, Edit, Trash2 } from 'lucide-vue-next';
+import type { ViolationEntity, ViolationComment } from '../types/violation';
 import type { Ticket as TicketType, TicketingIntegration } from '../types/ticketing';
 
 interface Props {
@@ -236,6 +278,9 @@ const tickets = ref<TicketType[]>([]);
 const integrations = ref<TicketingIntegration[]>([]);
 const creatingTicket = ref(false);
 const hasEnabledIntegration = ref(false);
+const addingComment = ref(false);
+const editingCommentId = ref<string | null>(null);
+const editingCommentText = ref('');
 
 const formatType = (type: string): string => {
   return type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -255,8 +300,9 @@ const formatEventType = (type: string): string => {
 const addComment = async () => {
   if (!props.violation || !newComment.value.trim()) return;
 
+  addingComment.value = true;
   try {
-    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}/comments`, {
+    const response = await fetch(`/api/violations/${props.violation.id}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -266,9 +312,8 @@ const addComment = async () => {
     });
 
     if (response.ok) {
-      const comment = await response.json();
       // Reload violation to get updated comments
-      const violationResponse = await fetch(`http://localhost:3001/api/violations/${props.violation!.id}`);
+      const violationResponse = await fetch(`/api/violations/${props.violation!.id}`);
       if (violationResponse.ok) {
         const updatedViolation = await violationResponse.json();
         // Convert date strings to Date objects
@@ -279,13 +324,116 @@ const addComment = async () => {
           ignoredAt: updatedViolation.ignoredAt ? new Date(updatedViolation.ignoredAt) : undefined,
           createdAt: new Date(updatedViolation.createdAt),
           updatedAt: new Date(updatedViolation.updatedAt),
+          comments: updatedViolation.comments?.map((c: any) => ({
+            ...c,
+            createdAt: new Date(c.createdAt),
+            updatedAt: c.updatedAt ? new Date(c.updatedAt) : undefined,
+          })) || [],
         };
         emit('update', violation);
         newComment.value = '';
       }
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Failed to add comment');
     }
   } catch (error) {
     console.error('Error adding comment:', error);
+    alert('Failed to add comment');
+  } finally {
+    addingComment.value = false;
+  }
+};
+
+const startEditComment = (comment: ViolationComment) => {
+  editingCommentId.value = comment.id;
+  editingCommentText.value = comment.content;
+};
+
+const cancelEditComment = () => {
+  editingCommentId.value = null;
+  editingCommentText.value = '';
+};
+
+const saveEditComment = async (commentId: string) => {
+  if (!props.violation || !editingCommentText.value.trim()) return;
+
+  try {
+    const response = await fetch(`/api/violations/${props.violation.id}/comments/${commentId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: editingCommentText.value.trim(),
+      }),
+    });
+
+    if (response.ok) {
+      // Reload violation to get updated comments
+      const violationResponse = await fetch(`/api/violations/${props.violation!.id}`);
+      if (violationResponse.ok) {
+        const updatedViolation = await violationResponse.json();
+        const violation = {
+          ...updatedViolation,
+          detectedAt: new Date(updatedViolation.detectedAt),
+          resolvedAt: updatedViolation.resolvedAt ? new Date(updatedViolation.resolvedAt) : undefined,
+          ignoredAt: updatedViolation.ignoredAt ? new Date(updatedViolation.ignoredAt) : undefined,
+          createdAt: new Date(updatedViolation.createdAt),
+          updatedAt: new Date(updatedViolation.updatedAt),
+          comments: updatedViolation.comments?.map((c: any) => ({
+            ...c,
+            createdAt: new Date(c.createdAt),
+            updatedAt: c.updatedAt ? new Date(c.updatedAt) : undefined,
+          })) || [],
+        };
+        emit('update', violation);
+        editingCommentId.value = null;
+        editingCommentText.value = '';
+      }
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Failed to update comment');
+    }
+  } catch (error) {
+    console.error('Error updating comment:', error);
+    alert('Failed to update comment');
+  }
+};
+
+const deleteComment = async (commentId: string) => {
+  if (!props.violation || !confirm('Are you sure you want to delete this comment?')) return;
+
+  try {
+    const response = await fetch(`/api/violations/${props.violation.id}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      // Reload violation to get updated comments
+      const violationResponse = await fetch(`/api/violations/${props.violation!.id}`);
+      if (violationResponse.ok) {
+        const updatedViolation = await violationResponse.json();
+        const violation = {
+          ...updatedViolation,
+          detectedAt: new Date(updatedViolation.detectedAt),
+          resolvedAt: updatedViolation.resolvedAt ? new Date(updatedViolation.resolvedAt) : undefined,
+          ignoredAt: updatedViolation.ignoredAt ? new Date(updatedViolation.ignoredAt) : undefined,
+          createdAt: new Date(updatedViolation.createdAt),
+          updatedAt: new Date(updatedViolation.updatedAt),
+          comments: updatedViolation.comments?.map((c: any) => ({
+            ...c,
+            createdAt: new Date(c.createdAt),
+            updatedAt: c.updatedAt ? new Date(c.updatedAt) : undefined,
+          })) || [],
+        };
+        emit('update', violation);
+      }
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Failed to delete comment');
+    }
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    alert('Failed to delete comment');
   }
 };
 
@@ -296,7 +444,7 @@ const assignViolation = async () => {
   if (assignee === null) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
+    const response = await fetch(`/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -327,7 +475,7 @@ const resolveViolation = async () => {
   if (!props.violation || !confirm('Mark this violation as resolved?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
+    const response = await fetch(`/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -359,7 +507,7 @@ const ignoreViolation = async () => {
   if (!props.violation || !confirm('Ignore this violation?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/violations/${props.violation.id}`, {
+    const response = await fetch(`/api/violations/${props.violation.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -845,6 +993,12 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 
+.comment-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .comment-author {
   font-size: 0.875rem;
   font-weight: 600;
@@ -854,6 +1008,62 @@ onMounted(() => {
 .comment-date {
   font-size: 0.75rem;
   color: #718096;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.comment-action-btn {
+  background: transparent;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-action-btn:hover {
+  background: rgba(79, 172, 254, 0.1);
+  color: #4facfe;
+}
+
+.comment-action-btn.delete-btn:hover {
+  background: rgba(252, 129, 129, 0.1);
+  color: #fc8181;
+}
+
+.comment-action-btn.save-btn:hover {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.action-icon-small {
+  width: 14px;
+  height: 14px;
+}
+
+.comment-edit-input {
+  width: 100%;
+  padding: 8px;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.comment-edit-input:focus {
+  outline: none;
+  border-color: #4facfe;
+  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
 }
 
 .comment-content {

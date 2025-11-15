@@ -215,6 +215,10 @@ const availableTestFunctions = computed(() => {
     'api-security': [
       { id: 'full-suite', name: 'Full Security Suite', description: 'Run comprehensive API security tests', icon: Shield, endpoint: '/api/api-security/tests' },
     ],
+    'data-pipeline': [
+      { id: 'etl', name: 'ETL Pipeline', description: 'Test ETL pipeline access control and data transformations', icon: Server, endpoint: '/api/data-pipeline/configs/{configId}/test' },
+      { id: 'streaming', name: 'Streaming Data', description: 'Test streaming data pipeline security', icon: Zap, endpoint: '/api/data-pipeline/configs/{configId}/test' },
+    ],
   };
   
   return functions[props.type] || [];

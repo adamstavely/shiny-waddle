@@ -235,6 +235,14 @@
             <span>Identity Provider Integration</span>
           </a>
           <a
+            href="/admin/integrations/iam"
+            @click.prevent="handleNavClick('/admin/integrations/iam')"
+            :class="['drawer-item', isActive('/admin/integrations/iam') ? 'drawer-item-active' : '']"
+          >
+            <KeyRound class="item-icon" />
+            <span>IAM Integrations</span>
+          </a>
+          <a
             href="/compliance"
             @click.prevent="handleNavClick('/compliance')"
             :class="['drawer-item', isActive('/compliance') ? 'drawer-item-active' : '']"
@@ -288,7 +296,8 @@ import {
   Layers,
   List,
   BookOpen,
-  FileText
+  FileText,
+  KeyRound
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -332,6 +341,7 @@ const insightsPages = [
 const adminPages = [
   '/admin',
   '/identity-providers',
+  '/admin/integrations/iam',
   '/compliance',
   '/compliance/nist-800-207'
 ];

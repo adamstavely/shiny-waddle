@@ -74,6 +74,7 @@
           v-for="execution in filteredExecutions"
           :key="execution.id"
           class="timeline-item"
+          :class="{ 'selected-for-compare': selectedForCompare.includes(execution.id) }"
         >
           <div class="timeline-marker" :class="`status-${execution.status}`">
             <Play v-if="execution.status === 'running'" class="marker-icon" />
@@ -254,7 +255,7 @@ const breadcrumbItems = [
   { label: 'History' }
 ];
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = '/api';
 
 const activeTab = ref<'executions' | 'audit' | 'activity'>('executions');
 const searchQuery = ref('');
@@ -758,6 +759,13 @@ onMounted(() => {
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 12px;
   padding: 20px;
+  transition: all 0.2s;
+}
+
+.timeline-item.selected-for-compare .timeline-content {
+  border-color: rgba(79, 172, 254, 0.6);
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(79, 172, 254, 0.05) 100%);
+  box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.3);
 }
 
 .timeline-header {

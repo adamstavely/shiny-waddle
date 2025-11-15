@@ -6,6 +6,8 @@ import { DLPModule } from '../dlp/dlp.module';
 import { APIGatewayModule } from '../api-gateway/api-gateway.module';
 import { NetworkPolicyModule } from '../network-policy/network-policy.module';
 import { DistributedSystemsModule } from '../distributed-systems/distributed-systems.module';
+import { ApiSecurityModule } from '../api-security/api-security.module';
+import { DataPipelineModule } from '../data-pipeline/data-pipeline.module';
 import { ApplicationsModule } from '../applications/applications.module';
 import { TestResultsModule } from '../test-results/test-results.module';
 
@@ -16,6 +18,8 @@ import { TestResultsModule } from '../test-results/test-results.module';
     forwardRef(() => APIGatewayModule),
     forwardRef(() => NetworkPolicyModule),
     forwardRef(() => DistributedSystemsModule),
+    forwardRef(() => ApiSecurityModule),
+    forwardRef(() => DataPipelineModule),
     forwardRef(() => ApplicationsModule),
     forwardRef(() => TestResultsModule),
   ],
