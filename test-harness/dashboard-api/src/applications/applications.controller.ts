@@ -24,7 +24,7 @@ import { Application } from './entities/application.entity';
 import { AccessControlGuard, RequirePermission, Permission } from '../security/guards/access-control.guard';
 import { Request as ExpressRequest } from 'express';
 
-@Controller('api/applications')
+@Controller('api/v1/applications')
 @UseGuards(AccessControlGuard)
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}

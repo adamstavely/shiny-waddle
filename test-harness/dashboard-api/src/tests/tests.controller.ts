@@ -16,7 +16,7 @@ import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { TestEntity } from './entities/test.entity';
 
-@Controller('api/tests')
+@Controller('api/v1/tests')
 export class TestsController {
   constructor(private readonly testsService: TestsService) {}
 

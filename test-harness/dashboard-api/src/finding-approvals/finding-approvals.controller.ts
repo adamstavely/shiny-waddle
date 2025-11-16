@@ -19,7 +19,7 @@ import {
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserContext } from '../common/interfaces/user-context.interface';
 
-@Controller('api/finding-approvals')
+@Controller('api/v1/finding-approvals')
 export class FindingApprovalsController {
   constructor(private readonly approvalsService: FindingApprovalsService) {}
 

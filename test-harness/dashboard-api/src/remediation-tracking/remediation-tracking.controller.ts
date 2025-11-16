@@ -11,15 +11,19 @@ import {
   Query,
 } from '@nestjs/common';
 import { RemediationTrackingService } from './remediation-tracking.service';
+import { RemediationAutomationService } from './services/remediation-automation.service';
 import {
   RemediationTracking,
   CreateRemediationTrackingDto,
   RemediationMetrics,
 } from './entities/remediation-tracking.entity';
 
-@Controller('api/remediation-tracking')
+@Controller('api/v1/remediation-tracking')
 export class RemediationTrackingController {
-  constructor(private readonly trackingService: RemediationTrackingService) {}
+  constructor(
+    private readonly trackingService: RemediationTrackingService,
+    private readonly automationService: RemediationAutomationService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -136,6 +140,28 @@ export class RemediationTrackingController {
     @Body() updates: any
   ): Promise<RemediationTracking> {
     return this.trackingService.updateStep(id, stepId, updates);
+  }
+
+  @Get('automation/metrics')
+  async getAutomationMetrics(
+    @Query('applicationId') applicationId?: string,
+    @Query('teamName') teamName?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.automationService.getMetrics({
+      applicationId,
+      teamName,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  @Post('automation/check-deadlines')
+  @HttpCode(HttpStatus.OK)
+  async checkDeadlines() {
+    await this.automationService.checkDeadlines();
+    return { message: 'Deadline check completed' };
   }
 }
 

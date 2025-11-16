@@ -4,7 +4,7 @@ import { NotificationPreferences } from './entities/notification.entity';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserContext } from '../common/interfaces/user-context.interface';
 
-@Controller('api/notifications')
+@Controller('api/v1/notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 

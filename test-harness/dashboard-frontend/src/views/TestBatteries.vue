@@ -26,6 +26,7 @@
       <h3>No test batteries found</h3>
       <p>Create a test battery to organize your test harnesses</p>
       <button @click="createBattery" class="btn-primary">
+        <Plus class="btn-icon" />
         Create Test Battery
       </button>
     </div>
@@ -104,8 +105,7 @@ const loadTestBatteries = async () => {
 };
 
 const createBattery = () => {
-  editingBattery.value = null;
-  showBatteryModal.value = true;
+  router.push({ name: 'TestBatteryCreate' });
 };
 
 const editBattery = (battery: any) => {
@@ -134,8 +134,9 @@ onMounted(() => {
 <style scoped>
 .test-batteries-page {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {
@@ -217,7 +218,7 @@ onMounted(() => {
 
 .batteries-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 

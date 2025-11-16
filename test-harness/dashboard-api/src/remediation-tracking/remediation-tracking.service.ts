@@ -136,6 +136,17 @@ export class RemediationTrackingService {
     return tracking;
   }
 
+  async updateTracking(
+    id: string,
+    updates: Partial<RemediationTracking>
+  ): Promise<RemediationTracking> {
+    const tracking = await this.findOneTracking(id);
+    Object.assign(tracking, updates);
+    tracking.updatedAt = new Date();
+    await this.saveTrackings();
+    return tracking;
+  }
+
   async updateProgress(
     id: string,
     progress: number,

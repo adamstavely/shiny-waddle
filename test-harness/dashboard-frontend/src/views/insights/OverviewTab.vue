@@ -242,6 +242,7 @@ import ValidatorMetrics from '../../components/ValidatorMetrics.vue';
 import LineChart from '../../components/charts/LineChart.vue';
 import MultiLineChart from '../../components/charts/MultiLineChart.vue';
 import ExecutiveSummary from '../../components/insights/ExecutiveSummary.vue';
+import { useRealtimeUpdates } from '../../composables/useRealtimeUpdates';
 
 const props = defineProps<{
   sharedFilters: {
@@ -430,15 +431,51 @@ watch(() => props.sharedFilters.timeRange, () => {
   loadExecutiveMetrics();
 });
 
+// Real-time updates
+const { isConnected: isRealtimeConnected } = useRealtimeUpdates({
+  onUpdate: (update) => {
+    // Handle real-time updates
+    if (update.type === 'test-result') {
+      // Reload dashboard to get updated test results
+      loadDashboard();
+    } else if (update.type === 'compliance-score') {
+      // Update compliance scores
+      if (dashboardData.value) {
+        if (update.data.applicationId && dashboardData.value.scoresByApplication) {
+          const appData = dashboardData.value.scoresByApplication[update.data.applicationId];
+          if (appData) {
+            appData.overallScore = update.data.score;
+            appData.lastUpdated = new Date(update.timestamp);
+          }
+        }
+        if (update.data.overallCompliance !== undefined) {
+          dashboardData.value.overallCompliance = update.data.overallCompliance;
+        }
+      }
+    } else if (update.type === 'dashboard') {
+      // Full dashboard update
+      if (update.data) {
+        dashboardData.value = update.data;
+      }
+    }
+  },
+  onError: (error) => {
+    console.error('Real-time update error:', error);
+  },
+  autoReconnect: true,
+});
+
 let refreshInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   loadDashboard();
   loadValidators();
-  // Refresh every 30 seconds
+  // Refresh every 30 seconds (as fallback if SSE is not connected)
   refreshInterval = setInterval(() => {
-    loadDashboard();
-    loadValidators();
+    if (!isRealtimeConnected.value) {
+      loadDashboard();
+      loadValidators();
+    }
   }, 30000);
   
   // Listen for refresh event

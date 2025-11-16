@@ -43,120 +43,6 @@
           <div class="stat-label">Configurations</div>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrapper">
-          <CheckCircle2 class="stat-icon" />
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ testResults.length || 0 }}</div>
-          <div class="stat-label">Test Results</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <h3 class="section-title">Quick Actions</h3>
-      <div class="actions-grid">
-        <button @click="router.push({ name: 'TestSuiteCreate' })" class="action-card">
-          <Plus class="action-icon" />
-          <span>Create Test Suite</span>
-        </button>
-        <button @click="router.push('/tests/library')" class="action-card">
-          <BookOpen class="action-icon" />
-          <span>Browse Test Library</span>
-        </button>
-        <button @click="router.push('/tests/findings')" class="action-card">
-          <AlertCircle class="action-icon" />
-          <span>View Findings</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Recent Test Runs -->
-    <div class="recent-runs">
-      <h3 class="section-title">Recent Test Runs</h3>
-      <div v-if="!testResults || testResults.length === 0" class="empty-state-small">
-        <p>No recent test runs</p>
-      </div>
-      <div v-else class="runs-list">
-        <div
-          v-for="result in (testResults || []).slice(0, 5)"
-          :key="result.id"
-          class="run-item"
-          @click="viewResultDetails(result.id)"
-        >
-          <div class="run-info">
-            <span class="run-name">{{ result.testName }}</span>
-            <span class="run-type">{{ result.testType }}</span>
-          </div>
-          <span class="run-status" :class="result.passed ? 'passed' : 'failed'">
-            {{ result.passed ? 'Passed' : 'Failed' }}
-          </span>
-          <span class="run-time">{{ formatRelativeTime(result.timestamp) }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Test Health Dashboard -->
-    <div class="health-dashboard">
-      <h3 class="section-title">Test Health</h3>
-      <div class="health-stats">
-        <div class="health-item">
-          <div class="health-label">Pass Rate</div>
-          <div class="health-value" :class="getHealthClass(passRate)">
-            {{ passRate.toFixed(1) }}%
-          </div>
-        </div>
-        <div class="health-item">
-          <div class="health-label">Active Suites</div>
-          <div class="health-value">
-            {{ activeSuitesCount }}
-          </div>
-        </div>
-        <div class="health-item">
-          <div class="health-label">Last 24h Runs</div>
-          <div class="health-value">
-            {{ last24hRuns }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- How It Works -->
-    <div class="how-it-works">
-      <h3 class="section-title">How It Works</h3>
-      <div class="relationship-explanation">
-        <div class="relationship-item">
-          <div class="relationship-icon">
-            <TestTube class="icon" />
-          </div>
-          <div class="relationship-content">
-            <h4>Test Types</h4>
-            <p>Different categories of security tests (API Gateway, DLP, Network Policies, etc.). Each test type has specific test functions you can run.</p>
-          </div>
-        </div>
-        <div class="relationship-arrow">→</div>
-        <div class="relationship-item">
-          <div class="relationship-icon">
-            <Settings class="icon" />
-          </div>
-          <div class="relationship-content">
-            <h4>Configurations</h4>
-            <p>Test parameters and settings for each test type. Configurations define how tests should run and what to check for.</p>
-          </div>
-        </div>
-        <div class="relationship-arrow">→</div>
-        <div class="relationship-item">
-          <div class="relationship-icon">
-            <List class="icon" />
-          </div>
-          <div class="relationship-content">
-            <h4>Test Suites</h4>
-            <p>Collections of configurations grouped together. Test suites allow you to organize multiple tests and track results automatically in CI/CD.</p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Test Suites List -->
@@ -344,10 +230,7 @@ import {
   Edit,
   Plus,
   List,
-  CheckCircle2,
   Settings,
-  BookOpen,
-  AlertCircle,
   Power,
   Code,
   Trash2
@@ -378,7 +261,6 @@ const testTypes = [
 const testSuites = ref<any[]>([]);
 const loadingSuites = ref(false);
 const suitesError = ref<string | null>(null);
-const testResults = ref<any[]>([]);
 const configurations = ref<any[]>([]);
 const testHarnesses = ref<any[]>([]);
 const validators = ref<any[]>([]);
@@ -451,34 +333,6 @@ const filteredTestSuites = computed(() => {
 
 const configurationsCount = computed(() => configurations.value.length);
 
-const passRate = computed(() => {
-  if (!testResults.value || testResults.value.length === 0) return 0;
-  const passed = testResults.value.filter(r => r.passed).length;
-  return (passed / testResults.value.length) * 100;
-});
-
-const activeSuitesCount = computed(() => {
-  if (!testSuites.value) return 0;
-  return testSuites.value.filter(s => s.enabled).length;
-});
-
-const last24hRuns = computed(() => {
-  if (!testResults.value) return 0;
-  const now = new Date();
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  return testResults.value.filter(r => {
-    const timestamp = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
-    return timestamp >= yesterday;
-  }).length;
-});
-
-const getHealthClass = (rate: number): string => {
-  if (rate >= 90) return 'health-excellent';
-  if (rate >= 70) return 'health-good';
-  if (rate >= 50) return 'health-warning';
-  return 'health-poor';
-};
-
 const getScoreClass = (score: number): string => {
   if (score >= 90) return 'score-excellent';
   if (score >= 70) return 'score-good';
@@ -496,17 +350,6 @@ const formatDate = (date: Date | undefined): string => {
   return date.toLocaleDateString();
 };
 
-const formatRelativeTime = (date: Date | undefined): string => {
-  if (!date) return 'Never';
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMs / 3600000);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return date.toLocaleDateString();
-};
 
 const loadTestSuites = async () => {
   loadingSuites.value = true;
@@ -544,20 +387,6 @@ const loadTestSuites = async () => {
   }
 };
 
-const loadTestResults = async () => {
-  try {
-    const response = await axios.get('/api/test-results?limit=100');
-    if (response.data) {
-      testResults.value = response.data.map((r: any) => ({
-        ...r,
-        timestamp: r.timestamp ? new Date(r.timestamp) : new Date(),
-        passed: r.status === 'passed'
-      }));
-    }
-  } catch (err) {
-    console.error('Error loading test results:', err);
-  }
-};
 
 const loadConfigurations = async () => {
   try {
@@ -623,9 +452,6 @@ const viewResults = (id: string) => {
   router.push({ path: '/tests/findings', query: { suite: id } });
 };
 
-const viewResultDetails = (id: string) => {
-  router.push({ path: '/tests/findings', query: { result: id } });
-};
 
 const viewHarness = (id: string) => {
   router.push({ path: `/tests/harnesses/${id}` });
@@ -651,7 +477,6 @@ onMounted(async () => {
     loadValidators(),
     loadTestSuites(),
     loadConfigurations(),
-    loadTestResults(),
     loadTestHarnesses()
   ]);
 });
@@ -660,8 +485,9 @@ onMounted(async () => {
 <style scoped>
 .test-suites-page {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {
@@ -743,212 +569,7 @@ onMounted(async () => {
   color: #a0aec0;
 }
 
-.quick-actions,
-.recent-runs,
-.health-dashboard,
-.how-it-works {
-  margin-bottom: 2rem;
-}
 
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 1rem;
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.action-card {
-  background: rgba(26, 31, 46, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #ffffff;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.action-card:hover {
-  border-color: rgba(79, 172, 254, 0.4);
-  transform: translateY(-2px);
-}
-
-.action-icon {
-  width: 32px;
-  height: 32px;
-  color: #4facfe;
-}
-
-.runs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.run-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: rgba(26, 31, 46, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.run-item:hover {
-  border-color: rgba(79, 172, 254, 0.4);
-}
-
-.run-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.run-name {
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.run-type {
-  color: #a0aec0;
-  font-size: 0.875rem;
-}
-
-.run-status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  margin-right: 1rem;
-}
-
-.run-status.passed {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-}
-
-.run-status.failed {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-}
-
-.run-time {
-  color: #a0aec0;
-  font-size: 0.875rem;
-}
-
-.empty-state-small {
-  padding: 2rem;
-  text-align: center;
-  color: #a0aec0;
-}
-
-.health-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.health-item {
-  background: rgba(26, 31, 46, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
-  text-align: center;
-}
-
-.health-label {
-  color: #a0aec0;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-}
-
-.health-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.health-value.health-excellent {
-  color: #22c55e;
-}
-
-.health-value.health-good {
-  color: #4facfe;
-}
-
-.health-value.health-warning {
-  color: #f59e0b;
-}
-
-.health-value.health-poor {
-  color: #ef4444;
-}
-
-.relationship-explanation {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.relationship-item {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  flex: 1;
-  min-width: 200px;
-}
-
-.relationship-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: rgba(79, 172, 254, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.relationship-icon .icon {
-  width: 24px;
-  height: 24px;
-  color: #4facfe;
-}
-
-.relationship-content h4 {
-  color: #ffffff;
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-}
-
-.relationship-content p {
-  color: #a0aec0;
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.relationship-arrow {
-  color: #4facfe;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
 
 .filters {
   display: flex;
@@ -978,7 +599,7 @@ onMounted(async () => {
 
 .test-suites-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }

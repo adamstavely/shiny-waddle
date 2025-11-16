@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { TestResultEntity, QueryFilters, DateRange, ComplianceMetrics } from './entities/test-result.entity';
+import { DashboardSSEGateway } from '../dashboard/dashboard-sse.gateway';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +11,11 @@ export class TestResultsService {
   private readonly resultsFile = path.join(process.cwd(), 'data', 'test-results.json');
   private results: TestResultEntity[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => DashboardSSEGateway))
+    @Optional()
+    private readonly sseGateway?: DashboardSSEGateway,
+  ) {
     this.loadResults().catch(err => {
       this.logger.error('Error loading test results on startup:', err);
     });
@@ -96,6 +101,23 @@ export class TestResultsService {
     await this.saveResults();
 
     this.logger.log(`Saved test result: ${entity.id} for application ${entity.applicationId}`);
+    
+    // Broadcast real-time update
+    if (this.sseGateway) {
+      this.sseGateway.broadcast({
+        type: 'test-result',
+        data: {
+          id: entity.id,
+          applicationId: entity.applicationId,
+          applicationName: entity.applicationName,
+          status: entity.status,
+          passed: entity.passed,
+          timestamp: entity.timestamp,
+        },
+        timestamp: new Date(),
+      });
+    }
+    
     return entity;
   }
 
@@ -526,6 +548,231 @@ export class TestResultsService {
       this.logger.error('Error in query:', error);
       throw error;
     }
+  }
+
+  /**
+   * Advanced query with full-text search, complex filtering, and multi-field sorting
+   */
+  async advancedQuery(options: {
+    searchText?: string;
+    filters?: Array<{
+      field: string;
+      operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'in' | 'notIn';
+      value: any;
+      logic?: 'AND' | 'OR';
+    }>;
+    sort?: Array<{
+      field: string;
+      direction: 'asc' | 'desc';
+    }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<TestResultEntity[]> {
+    try {
+      if (this.results.length === 0) {
+        await this.loadResults();
+      }
+
+      let filtered = [...this.results];
+
+      // Full-text search
+      if (options.searchText) {
+        const searchLower = options.searchText.toLowerCase();
+        filtered = filtered.filter(result => {
+          const searchableText = [
+            result.testConfigurationName,
+            result.applicationName,
+            result.status,
+            result.branch,
+            result.buildId,
+            result.commitSha,
+            result.error?.message,
+            JSON.stringify(result.result),
+          ].join(' ').toLowerCase();
+          return searchableText.includes(searchLower);
+        });
+      }
+
+      // Advanced filtering
+      if (options.filters && options.filters.length > 0) {
+        filtered = filtered.filter(result => {
+          let matches = true;
+          let lastLogic: 'AND' | 'OR' = 'AND';
+
+          for (const filter of options.filters!) {
+            const fieldValue = this.getFieldValue(result, filter.field);
+            const filterMatches = this.evaluateFilter(fieldValue, filter.operator, filter.value);
+
+            if (lastLogic === 'AND') {
+              matches = matches && filterMatches;
+            } else {
+              matches = matches || filterMatches;
+            }
+
+            lastLogic = filter.logic || 'AND';
+          }
+
+          return matches;
+        });
+      }
+
+      // Multi-field sorting
+      if (options.sort && options.sort.length > 0) {
+        filtered.sort((a, b) => {
+          for (const sortOption of options.sort!) {
+            const aValue = this.getFieldValue(a, sortOption.field);
+            const bValue = this.getFieldValue(b, sortOption.field);
+            
+            let comparison = 0;
+            if (aValue < bValue) {
+              comparison = -1;
+            } else if (aValue > bValue) {
+              comparison = 1;
+            }
+
+            if (comparison !== 0) {
+              return sortOption.direction === 'asc' ? comparison : -comparison;
+            }
+          }
+          return 0;
+        });
+      } else {
+        // Default sort by timestamp descending
+        filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      }
+
+      // Pagination
+      const offset = options.offset || 0;
+      const limit = options.limit;
+
+      if (limit) {
+        return filtered.slice(offset, offset + limit);
+      }
+
+      return filtered.slice(offset);
+    } catch (error) {
+      this.logger.error('Error in advanced query:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get field value from result object (supports nested fields)
+   */
+  private getFieldValue(result: TestResultEntity, field: string): any {
+    const parts = field.split('.');
+    let value: any = result;
+    
+    for (const part of parts) {
+      if (value && typeof value === 'object' && part in value) {
+        value = value[part];
+      } else {
+        return undefined;
+      }
+    }
+    
+    return value;
+  }
+
+  /**
+   * Evaluate a filter condition
+   */
+  private evaluateFilter(fieldValue: any, operator: string, filterValue: any): boolean {
+    if (fieldValue === undefined || fieldValue === null) {
+      return false;
+    }
+
+    const fieldStr = String(fieldValue).toLowerCase();
+    const filterStr = String(filterValue).toLowerCase();
+
+    switch (operator) {
+      case 'equals':
+        return fieldValue === filterValue;
+      case 'contains':
+        return fieldStr.includes(filterStr);
+      case 'startsWith':
+        return fieldStr.startsWith(filterStr);
+      case 'endsWith':
+        return fieldStr.endsWith(filterStr);
+      case 'greaterThan':
+        return fieldValue > filterValue;
+      case 'lessThan':
+        return fieldValue < filterValue;
+      case 'in':
+        return Array.isArray(filterValue) && filterValue.includes(fieldValue);
+      case 'notIn':
+        return Array.isArray(filterValue) && !filterValue.includes(fieldValue);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Export test results to CSV
+   */
+  async exportToCSV(filters?: {
+    applicationId?: string;
+    testConfigurationId?: string;
+    status?: TestResultStatus;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<string> {
+    const results = filters ? await this.query(filters) : [...this.results];
+
+    const headers = [
+      'ID',
+      'Application ID',
+      'Application Name',
+      'Test Configuration ID',
+      'Test Configuration Name',
+      'Status',
+      'Passed',
+      'Build ID',
+      'Branch',
+      'Commit SHA',
+      'Timestamp',
+      'Duration (ms)',
+      'Error Message',
+    ];
+
+    const rows = results.map(result => [
+      result.id,
+      result.applicationId,
+      result.applicationName,
+      result.testConfigurationId,
+      result.testConfigurationName,
+      result.status,
+      result.passed ? 'true' : 'false',
+      result.buildId || '',
+      result.branch || '',
+      result.commitSha || '',
+      result.timestamp.toISOString(),
+      result.duration?.toString() || '',
+      result.error?.message || '',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    return csvContent;
+  }
+
+  /**
+   * Export test results to JSON
+   */
+  async exportToJSON(filters?: {
+    applicationId?: string;
+    testConfigurationId?: string;
+    status?: TestResultStatus;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<string> {
+    const results = filters ? await this.query(filters) : [...this.results];
+    return JSON.stringify(results, null, 2);
   }
 
   private async getConfigurationIdsForHarnessOrBattery(

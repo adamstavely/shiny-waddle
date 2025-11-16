@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { VersionMiddleware } from './common/middleware/version.middleware';
+import { HttpsRedirectMiddleware } from './common/middleware/https-redirect.middleware';
+import { SanitizeMiddleware } from './common/middleware/sanitize.middleware';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ValidatorsModule } from './validators/validators.module';
@@ -38,10 +43,20 @@ import { EnvironmentConfigModule } from './environment-config/environment-config
 import { APISecurityEnhancedModule } from './api-security-enhanced/api-security-enhanced.module';
 import { ABACCorrectnessModule } from './abac-correctness/abac-correctness.module';
 import { TestsModule } from './tests/tests.module';
+import { AuthModule } from './auth/auth.module';
+import { RiskScoringModule } from './risk-scoring/risk-scoring.module';
 import { AppController } from './app.controller';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+    ]),
+    AuthModule,
     DashboardModule,
     ApplicationsModule,
     ValidatorsModule,
@@ -81,7 +96,20 @@ import { AppController } from './app.controller';
     APISecurityEnhancedModule,
     ABACCorrectnessModule,
     TestsModule,
+    RiskScoringModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(HttpsRedirectMiddleware, SanitizeMiddleware, VersionMiddleware)
+      .forRoutes('*'); // Apply to all routes
+  }
+}

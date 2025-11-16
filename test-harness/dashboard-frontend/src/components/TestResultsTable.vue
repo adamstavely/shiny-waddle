@@ -1,34 +1,44 @@
 <template>
   <div class="table-container">
-    <h2>
-      <FileText class="title-icon" />
+    <h2 id="test-results-heading">
+      <FileText class="title-icon" aria-hidden="true" />
       Recent Test Results
     </h2>
-    <table v-if="results.length > 0">
-      <thead>
-        <tr>
-          <th>Test Name</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(result, index) in results.slice(0, 10)" :key="index">
-          <td>{{ result.testName }}</td>
-          <td>{{ result.testType }}</td>
-          <td>
-            <span
-              :class="['status-badge', result.passed ? 'status-passed' : 'status-failed']"
-            >
-              {{ result.passed ? 'PASSED' : 'FAILED' }}
-            </span>
-          </td>
-          <td>{{ formatDate(result.timestamp) }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else class="empty">No test results available</div>
+    <div v-if="results.length > 0" class="table-responsive" role="region" aria-labelledby="test-results-heading">
+      <table>
+        <caption class="sr-only">Table showing recent test results with test name, type, status, and timestamp</caption>
+        <thead>
+          <tr>
+            <th scope="col">Test Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Status</th>
+            <th scope="col">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(result, index) in results.slice(0, 10)" :key="index">
+            <td>{{ result.testName }}</td>
+            <td>{{ result.testType }}</td>
+            <td>
+              <span
+                :class="['status-badge', result.passed ? 'status-passed' : 'status-failed']"
+                :aria-label="`Test ${result.passed ? 'passed' : 'failed'}`"
+              >
+                {{ result.passed ? 'PASSED' : 'FAILED' }}
+              </span>
+            </td>
+            <td>
+              <time :datetime="getISODate(result.timestamp)">
+                {{ formatDate(result.timestamp) }}
+              </time>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else class="empty" role="status" aria-live="polite">
+      No test results available
+    </div>
   </div>
 </template>
 
@@ -42,6 +52,11 @@ defineProps<{
 const formatDate = (timestamp: string | Date): string => {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   return date.toLocaleString();
+};
+
+const getISODate = (timestamp: string | Date): string => {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+  return date.toISOString();
 };
 </script>
 

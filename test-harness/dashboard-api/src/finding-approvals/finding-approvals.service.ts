@@ -9,6 +9,7 @@ import {
   RejectRequestDto,
   ApprovalRequestStatus,
   ApproverRole,
+  ApprovalStage,
 } from './entities/finding-approval.entity';
 import { UnifiedFindingsService } from '../unified-findings/unified-findings.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -111,16 +112,42 @@ export class FindingApprovalsService {
       throw new BadRequestException('A pending approval request already exists for this finding');
     }
 
-    // Determine required approvers
+    // Determine required approvers (for legacy support)
     const requiredApprovers = dto.requiredApprovers || 
       this.determineRequiredApprovers(finding.severity, dto.type);
 
-    // Create approval entries for each required approver
+    // Create approval entries for each required approver (legacy)
     const approvals = requiredApprovers.map(role => ({
       approverId: '', // Will be set when approved
       approverRole: role,
       status: 'pending' as const,
     }));
+
+    // Create multi-stage workflow if stages are provided
+    let stages: ApprovalStage[] | undefined;
+    let currentStageId: string | undefined;
+
+    if (dto.stages && dto.stages.length > 0) {
+      stages = dto.stages.map((stageConfig, index) => {
+        const stageId = `stage-${index + 1}`;
+        return {
+          stageId,
+          stageName: stageConfig.stageName,
+          order: index + 1,
+          requiredApprovers: stageConfig.requiredApprovers,
+          approvals: stageConfig.requiredApprovers.map(role => ({
+            approverId: '',
+            approverRole: role,
+            status: 'pending' as const,
+          })),
+          status: index === 0 ? 'in-progress' : 'pending',
+          workflowType: stageConfig.workflowType,
+          conditions: stageConfig.conditions,
+          minApprovals: stageConfig.minApprovals,
+        };
+      });
+      currentStageId = stages[0].stageId;
+    }
 
     const request: FindingApprovalRequest = {
       id: uuidv4(),
@@ -130,8 +157,10 @@ export class FindingApprovalsService {
       requestedAt: new Date(),
       reason: dto.reason,
       status: 'pending',
-      approvals,
-      requiredApprovers,
+      approvals, // Legacy support
+      requiredApprovers, // Legacy support
+      stages, // New multi-stage workflow
+      currentStageId,
       expiresAt: dto.expiresAt,
       metadata: {
         applicationId: finding.asset.applicationId,
@@ -233,7 +262,7 @@ export class FindingApprovalsService {
   }
 
   /**
-   * Approve a request
+   * Approve a request (supports both legacy and multi-stage workflows)
    */
   async approveRequest(
     requestId: string,
@@ -245,7 +274,12 @@ export class FindingApprovalsService {
       throw new BadRequestException('Request is not pending');
     }
 
-    // Find the approval entry for this approver role
+    // Handle multi-stage workflow
+    if (request.stages && request.stages.length > 0) {
+      return this.approveMultiStageRequest(request, dto);
+    }
+
+    // Legacy single-stage workflow
     const approval = request.approvals.find(a => a.approverRole === dto.approverRole);
     if (!approval) {
       throw new BadRequestException('Approver role not found in request');
@@ -264,43 +298,89 @@ export class FindingApprovalsService {
     }
 
     // Check if all required approvers have approved
-    // For OR logic (either approver can approve), if any approver approves, it's approved
-    // For AND logic (both must approve), all must approve
     const allApproved = request.approvals
       .filter(a => request.requiredApprovers.includes(a.approverRole))
       .every(a => a.status === 'approved');
 
-    // For OR logic: if any required approver approves, approve the request
-    // For AND logic: all must approve
-    // We'll use OR logic by default (first approval wins for single-approver, both must approve for critical)
     const isCritical = request.metadata?.findingSeverity === 'critical';
     const shouldApprove = isCritical ? allApproved : approval.status === 'approved';
 
     if (shouldApprove) {
       request.status = 'approved';
-      
-      // Update finding status
-      const newStatus = request.type === 'risk-acceptance' ? 'risk-accepted' : 'false-positive';
-      try {
-        await this.findingsService.updateFinding(request.findingId, { status: newStatus });
-      } catch (err) {
-        // Log error but don't fail the approval - finding update can be retried
-        this.logger.error('Failed to update finding status after approval:', err);
-      }
+      await this.finalizeApproval(request);
+    }
 
-      // Notify requester
-      if (this.notificationsService) {
-        try {
-          await this.notificationsService.notifyApprovalStatusChanged(
-            request.requestedBy,
-            request.id,
-            request.findingId,
-            request.metadata?.findingTitle || 'Finding',
-            'approved'
-          );
-        } catch (err) {
-          // Log but don't fail - notification failures shouldn't break approval
-          this.logger.error('Failed to send approval notification:', err);
+    await this.saveApprovals();
+    return request;
+  }
+
+  /**
+   * Approve a multi-stage workflow request
+   */
+  private async approveMultiStageRequest(
+    request: FindingApprovalRequest,
+    dto: ApproveRequestDto
+  ): Promise<FindingApprovalRequest> {
+    if (!request.currentStageId || !request.stages) {
+      throw new BadRequestException('Invalid multi-stage workflow');
+    }
+
+    const currentStage = request.stages.find(s => s.stageId === request.currentStageId);
+    if (!currentStage) {
+      throw new BadRequestException('Current stage not found');
+    }
+
+    if (currentStage.status !== 'in-progress' && currentStage.status !== 'pending') {
+      throw new BadRequestException('Current stage is not active');
+    }
+
+    // Find approval in current stage
+    const approval = currentStage.approvals.find(a => a.approverRole === dto.approverRole);
+    if (!approval) {
+      throw new BadRequestException('Approver role not found in current stage');
+    }
+
+    if (approval.status !== 'pending') {
+      throw new BadRequestException('Approval already processed in this stage');
+    }
+
+    // Update approval
+    approval.status = 'approved';
+    approval.approverId = dto.approverId;
+    approval.approvedAt = new Date();
+    if (dto.comment) {
+      approval.comment = dto.comment;
+    }
+
+    // Check stage completion based on workflow type
+    const stageComplete = this.checkStageCompletion(currentStage);
+
+    if (stageComplete) {
+      currentStage.status = 'approved';
+
+      // Check conditional routing
+      const nextStageId = this.evaluateConditionalRouting(request, currentStage);
+      
+      if (nextStageId) {
+        // Route to next stage (could be conditional or sequential)
+        const nextStage = request.stages!.find(s => s.stageId === nextStageId);
+        if (nextStage) {
+          nextStage.status = 'in-progress';
+          request.currentStageId = nextStageId;
+        }
+      } else {
+        // Move to next sequential stage
+        const nextSequentialStage = request.stages!.find(
+          s => s.order === currentStage.order + 1
+        );
+
+        if (nextSequentialStage) {
+          nextSequentialStage.status = 'in-progress';
+          request.currentStageId = nextSequentialStage.stageId;
+        } else {
+          // All stages complete - approve the request
+          request.status = 'approved';
+          await this.finalizeApproval(request);
         }
       }
     }
@@ -310,7 +390,128 @@ export class FindingApprovalsService {
   }
 
   /**
-   * Reject a request
+   * Check if a stage is complete based on workflow type
+   */
+  private checkStageCompletion(stage: ApprovalStage): boolean {
+    switch (stage.workflowType) {
+      case 'parallel':
+        // Parallel: need minimum approvals (or all if minApprovals not specified)
+        const minApprovals = stage.minApprovals || stage.requiredApprovers.length;
+        const approvedCount = stage.approvals.filter(a => a.status === 'approved').length;
+        return approvedCount >= minApprovals;
+
+      case 'sequential':
+        // Sequential: all approvers must approve in order
+        // For simplicity, we'll require all to approve
+        return stage.approvals.every(a => a.status === 'approved');
+
+      case 'conditional':
+        // Conditional: evaluate conditions to determine completion
+        // For now, treat as parallel
+        const conditionalMin = stage.minApprovals || stage.requiredApprovers.length;
+        const conditionalApproved = stage.approvals.filter(a => a.status === 'approved').length;
+        return conditionalApproved >= conditionalMin;
+
+      default:
+        // Default: all must approve
+        return stage.approvals.every(a => a.status === 'approved');
+    }
+  }
+
+  /**
+   * Evaluate conditional routing
+   */
+  private evaluateConditionalRouting(
+    request: FindingApprovalRequest,
+    currentStage: ApprovalStage
+  ): string | null {
+    if (!currentStage.conditions || currentStage.conditions.length === 0) {
+      return null;
+    }
+
+    // Evaluate conditions against request metadata
+    for (const condition of currentStage.conditions) {
+      const fieldValue = this.getFieldValue(request, condition.field);
+      const conditionMet = this.evaluateCondition(fieldValue, condition.operator, condition.value);
+
+      if (conditionMet && condition.nextStageId) {
+        return condition.nextStageId;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get field value from request (supports nested fields)
+   */
+  private getFieldValue(request: FindingApprovalRequest, field: string): any {
+    const parts = field.split('.');
+    let value: any = request;
+
+    for (const part of parts) {
+      if (value && typeof value === 'object' && part in value) {
+        value = value[part];
+      } else {
+        return undefined;
+      }
+    }
+
+    return value;
+  }
+
+  /**
+   * Evaluate a condition
+   */
+  private evaluateCondition(fieldValue: any, operator: string, conditionValue: any): boolean {
+    if (fieldValue === undefined || fieldValue === null) {
+      return false;
+    }
+
+    switch (operator) {
+      case 'equals':
+        return fieldValue === conditionValue;
+      case 'greaterThan':
+        return fieldValue > conditionValue;
+      case 'lessThan':
+        return fieldValue < conditionValue;
+      case 'contains':
+        return String(fieldValue).toLowerCase().includes(String(conditionValue).toLowerCase());
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Finalize approval (update finding, send notifications)
+   */
+  private async finalizeApproval(request: FindingApprovalRequest): Promise<void> {
+    // Update finding status
+    const newStatus = request.type === 'risk-acceptance' ? 'risk-accepted' : 'false-positive';
+    try {
+      await this.findingsService.updateFinding(request.findingId, { status: newStatus });
+    } catch (err) {
+      this.logger.error('Failed to update finding status after approval:', err);
+    }
+
+    // Notify requester
+    if (this.notificationsService) {
+      try {
+        await this.notificationsService.notifyApprovalStatusChanged(
+          request.requestedBy,
+          request.id,
+          request.findingId,
+          request.metadata?.findingTitle || 'Finding',
+          'approved'
+        );
+      } catch (err) {
+        this.logger.error('Failed to send approval notification:', err);
+      }
+    }
+  }
+
+  /**
+   * Reject a request (supports both legacy and multi-stage workflows)
    */
   async rejectRequest(
     requestId: string,
@@ -322,40 +523,70 @@ export class FindingApprovalsService {
       throw new BadRequestException('Request is not pending');
     }
 
-    // Find the approval entry for this approver role
-    const approval = request.approvals.find(a => a.approverRole === dto.approverRole);
-    if (!approval) {
-      throw new BadRequestException('Approver role not found in request');
-    }
-
-    if (approval.status !== 'pending') {
-      throw new BadRequestException('Approval already processed');
-    }
-
-    // Update approval
-    approval.status = 'rejected';
-    approval.approverId = dto.approverId;
-    approval.approvedAt = new Date();
-    approval.comment = dto.comment;
-
-    // Reject the request (any rejection rejects the whole request)
-    request.status = 'rejected';
-
-      // Notify requester
-      if (this.notificationsService) {
-        try {
-          await this.notificationsService.notifyApprovalStatusChanged(
-            request.requestedBy,
-            request.id,
-            request.findingId,
-            request.metadata?.findingTitle || 'Finding',
-            'rejected'
-          );
-        } catch (err) {
-          // Log but don't fail - notification failures shouldn't break rejection
-          this.logger.error('Failed to send rejection notification:', err);
-        }
+    // Handle multi-stage workflow
+    if (request.stages && request.stages.length > 0) {
+      if (!request.currentStageId) {
+        throw new BadRequestException('Invalid multi-stage workflow');
       }
+
+      const currentStage = request.stages.find(s => s.stageId === request.currentStageId);
+      if (!currentStage) {
+        throw new BadRequestException('Current stage not found');
+      }
+
+      const approval = currentStage.approvals.find(a => a.approverRole === dto.approverRole);
+      if (!approval) {
+        throw new BadRequestException('Approver role not found in current stage');
+      }
+
+      if (approval.status !== 'pending') {
+        throw new BadRequestException('Approval already processed in this stage');
+      }
+
+      // Update approval
+      approval.status = 'rejected';
+      approval.approverId = dto.approverId;
+      approval.approvedAt = new Date();
+      approval.comment = dto.comment;
+
+      // Reject the stage and the whole request
+      currentStage.status = 'rejected';
+      request.status = 'rejected';
+    } else {
+      // Legacy workflow
+      const approval = request.approvals.find(a => a.approverRole === dto.approverRole);
+      if (!approval) {
+        throw new BadRequestException('Approver role not found in request');
+      }
+
+      if (approval.status !== 'pending') {
+        throw new BadRequestException('Approval already processed');
+      }
+
+      // Update approval
+      approval.status = 'rejected';
+      approval.approverId = dto.approverId;
+      approval.approvedAt = new Date();
+      approval.comment = dto.comment;
+
+      // Reject the request (any rejection rejects the whole request)
+      request.status = 'rejected';
+    }
+
+    // Notify requester
+    if (this.notificationsService) {
+      try {
+        await this.notificationsService.notifyApprovalStatusChanged(
+          request.requestedBy,
+          request.id,
+          request.findingId,
+          request.metadata?.findingTitle || 'Finding',
+          'rejected'
+        );
+      } catch (err) {
+        this.logger.error('Failed to send rejection notification:', err);
+      }
+    }
 
     await this.saveApprovals();
     return request;

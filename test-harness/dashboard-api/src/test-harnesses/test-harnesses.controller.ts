@@ -17,7 +17,7 @@ import { CreateTestHarnessDto } from './dto/create-test-harness.dto';
 import { UpdateTestHarnessDto } from './dto/update-test-harness.dto';
 import { TestHarnessEntity } from './entities/test-harness.entity';
 
-@Controller('api/test-harnesses')
+@Controller('api/v1/test-harnesses')
 export class TestHarnessesController {
   private readonly logger = new Logger(TestHarnessesController.name);
 

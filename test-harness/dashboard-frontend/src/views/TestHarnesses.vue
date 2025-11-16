@@ -106,8 +106,7 @@ const loadTestHarnesses = async () => {
 };
 
 const createHarness = () => {
-  editingHarness.value = null;
-  showHarnessModal.value = true;
+  router.push({ name: 'TestHarnessCreate' });
 };
 
 const editHarness = (harness: any) => {
@@ -136,8 +135,9 @@ onMounted(() => {
 <style scoped>
 .test-harnesses-page {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {
@@ -219,7 +219,7 @@ onMounted(() => {
 
 .harnesses-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 

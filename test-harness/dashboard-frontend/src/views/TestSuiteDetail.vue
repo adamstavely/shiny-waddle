@@ -89,7 +89,7 @@
       </div>
 
       <!-- Tab Content -->
-      <div class="tab-content-container">
+      <div class="tab-content-container" :class="{ 'creation-layout': isCreating }">
         <!-- Overview Tab (only for existing suites) -->
         <div v-if="!isCreating && activeTab === 'overview'" class="tab-content">
           <div class="overview-grid">
@@ -882,7 +882,7 @@ watch([() => route.params.id, () => route.name], () => {
 <style scoped>
 .test-suite-detail-page {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -1112,18 +1112,24 @@ watch([() => route.params.id, () => route.name], () => {
   min-height: 400px;
 }
 
+.tab-content-container.creation-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 1400px) {
+  .tab-content-container.creation-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .tab-content {
   animation: fadeIn 0.3s;
 }
 
 .single-page-section {
   margin-bottom: 0;
-}
-
-.single-page-section:not(:last-child) {
-  border-bottom: 2px solid rgba(79, 172, 254, 0.2);
-  padding-bottom: 2rem;
-  margin-bottom: 2rem;
 }
 
 /* Tests Section Styling - matches form-section */

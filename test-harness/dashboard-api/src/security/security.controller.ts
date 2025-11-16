@@ -14,7 +14,7 @@ import { SecretsService, CreateSecretDto, UpdateSecretDto } from './secrets.serv
 import { SecurityAuditLogService, SecurityAuditEventType } from './audit-log.service';
 import { AccessControlGuard, RequirePermission, Permission, RequireRole, UserRole } from './guards/access-control.guard';
 
-@Controller('api/security')
+@Controller('api/v1/security')
 @UseGuards(AccessControlGuard)
 export class SecurityController {
   constructor(
@@ -195,6 +195,73 @@ export class SecurityController {
   @RequirePermission(Permission.READ_AUDIT_LOGS)
   async getAuditLog(@Param('id') id: string) {
     return this.auditLogService.getLogById(id);
+  }
+
+  @Get('audit-logs/export/csv')
+  @RequirePermission(Permission.READ_AUDIT_LOGS)
+  async exportAuditLogsCSV(
+    @Query('type') type?: string,
+    @Query('severity') severity?: string,
+    @Query('userId') userId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const csv = await this.auditLogService.exportToCSV({
+      type: type as any,
+      severity: severity as any,
+      userId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return { format: 'csv', data: csv };
+  }
+
+  @Get('audit-logs/export/json')
+  @RequirePermission(Permission.READ_AUDIT_LOGS)
+  async exportAuditLogsJSON(
+    @Query('type') type?: string,
+    @Query('severity') severity?: string,
+    @Query('userId') userId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const json = await this.auditLogService.exportToJSON({
+      type: type as any,
+      severity: severity as any,
+      userId,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return { format: 'json', data: JSON.parse(json) };
+  }
+
+  @Get('audit-logs/suspicious-activity')
+  @RequirePermission(Permission.READ_AUDIT_LOGS)
+  async detectSuspiciousActivity() {
+    return this.auditLogService.detectSuspiciousActivity();
+  }
+
+  @Post('audit-logs/retention-policy/apply')
+  @RequirePermission(Permission.MANAGE_SYSTEM)
+  async applyRetentionPolicy(@Body('retentionDays') retentionDays?: number) {
+    const policy = this.auditLogService.getRetentionPolicy();
+    const days = retentionDays || policy.retentionDays;
+    const removedCount = await this.auditLogService.applyRetentionPolicy(days);
+    return {
+      message: `Retention policy applied. ${removedCount} log(s) removed.`,
+      removedCount,
+      retentionDays: days,
+    };
+  }
+
+  @Get('audit-logs/retention-policy')
+  @RequirePermission(Permission.READ_AUDIT_LOGS)
+  async getRetentionPolicy() {
+    return this.auditLogService.getRetentionPolicy();
   }
 }
 

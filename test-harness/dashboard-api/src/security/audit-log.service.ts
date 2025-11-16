@@ -344,6 +344,235 @@ export class SecurityAuditLogService {
   async getLogById(id: string): Promise<SecurityAuditLog | null> {
     return this.auditLogs.find(log => log.id === id) || null;
   }
+
+  /**
+   * Apply retention policy - remove logs older than specified days
+   */
+  async applyRetentionPolicy(retentionDays: number = 90): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+
+    const initialCount = this.auditLogs.length;
+    this.auditLogs = this.auditLogs.filter(log => log.timestamp >= cutoffDate);
+
+    const removedCount = initialCount - this.auditLogs.length;
+    
+    if (removedCount > 0) {
+      await this.saveAuditLogs();
+    }
+
+    return removedCount;
+  }
+
+  /**
+   * Export audit logs to CSV format
+   */
+  async exportToCSV(filters?: {
+    type?: SecurityAuditEventType;
+    severity?: SecurityAuditSeverity;
+    userId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<string> {
+    const logs = filters ? await this.queryLogs(filters) : [...this.auditLogs];
+
+    const headers = [
+      'ID',
+      'Type',
+      'Severity',
+      'Action',
+      'Description',
+      'User ID',
+      'Username',
+      'IP Address',
+      'Resource Type',
+      'Resource ID',
+      'Timestamp',
+      'Success',
+      'Error Message',
+    ];
+
+    const rows = logs.map(log => [
+      log.id,
+      log.type,
+      log.severity,
+      log.action,
+      log.description,
+      log.userId || '',
+      log.username || '',
+      log.ipAddress || '',
+      log.resourceType || '',
+      log.resourceId || '',
+      log.timestamp.toISOString(),
+      log.success ? 'true' : 'false',
+      log.errorMessage || '',
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n');
+
+    return csvContent;
+  }
+
+  /**
+   * Export audit logs to JSON format
+   */
+  async exportToJSON(filters?: {
+    type?: SecurityAuditEventType;
+    severity?: SecurityAuditSeverity;
+    userId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<string> {
+    const logs = filters ? await this.queryLogs(filters) : [...this.auditLogs];
+    return JSON.stringify(logs, null, 2);
+  }
+
+  /**
+   * Detect suspicious activity patterns
+   */
+  async detectSuspiciousActivity(): Promise<{
+    suspiciousLogs: SecurityAuditLog[];
+    patterns: Array<{
+      type: string;
+      description: string;
+      count: number;
+      severity: SecurityAuditSeverity;
+    }>;
+  }> {
+    const suspiciousLogs: SecurityAuditLog[] = [];
+    const patterns: Array<{
+      type: string;
+      description: string;
+      count: number;
+      severity: SecurityAuditSeverity;
+    }> = [];
+
+    // Pattern 1: Multiple failed login attempts from same IP
+    const failedLogins = this.auditLogs.filter(
+      log => log.type === SecurityAuditEventType.LOGIN_FAILURE
+    );
+    const loginAttemptsByIP = new Map<string, SecurityAuditLog[]>();
+    failedLogins.forEach(log => {
+      if (log.ipAddress) {
+        const attempts = loginAttemptsByIP.get(log.ipAddress) || [];
+        attempts.push(log);
+        loginAttemptsByIP.set(log.ipAddress, attempts);
+      }
+    });
+
+    loginAttemptsByIP.forEach((attempts, ip) => {
+      if (attempts.length >= 5) {
+        suspiciousLogs.push(...attempts);
+        patterns.push({
+          type: 'brute-force-attempt',
+          description: `Multiple failed login attempts (${attempts.length}) from IP ${ip}`,
+          count: attempts.length,
+          severity: SecurityAuditSeverity.HIGH,
+        });
+      }
+    });
+
+    // Pattern 2: Multiple access denied attempts
+    const accessDenied = this.auditLogs.filter(
+      log => log.type === SecurityAuditEventType.ACCESS_DENIED
+    );
+    const deniedByUser = new Map<string, SecurityAuditLog[]>();
+    accessDenied.forEach(log => {
+      if (log.userId) {
+        const attempts = deniedByUser.get(log.userId) || [];
+        attempts.push(log);
+        deniedByUser.set(log.userId, attempts);
+      }
+    });
+
+    deniedByUser.forEach((attempts, userId) => {
+      if (attempts.length >= 10) {
+        suspiciousLogs.push(...attempts);
+        patterns.push({
+          type: 'unauthorized-access-pattern',
+          description: `Multiple access denied attempts (${attempts.length}) for user ${userId}`,
+          count: attempts.length,
+          severity: SecurityAuditSeverity.MEDIUM,
+        });
+      }
+    });
+
+    // Pattern 3: Critical security events
+    const criticalEvents = this.auditLogs.filter(
+      log => log.severity === SecurityAuditSeverity.CRITICAL
+    );
+    if (criticalEvents.length > 0) {
+      suspiciousLogs.push(...criticalEvents);
+      patterns.push({
+        type: 'critical-security-events',
+        description: `${criticalEvents.length} critical security events detected`,
+        count: criticalEvents.length,
+        severity: SecurityAuditSeverity.CRITICAL,
+      });
+    }
+
+    // Pattern 4: Rapid token revocation (potential account compromise)
+    const tokenRevocations = this.auditLogs.filter(
+      log => log.type === SecurityAuditEventType.TOKEN_REVOKED
+    );
+    const revocationsByUser = new Map<string, SecurityAuditLog[]>();
+    tokenRevocations.forEach(log => {
+      if (log.userId) {
+        const revocations = revocationsByUser.get(log.userId) || [];
+        revocations.push(log);
+        revocationsByUser.set(log.userId, revocations);
+      }
+    });
+
+    revocationsByUser.forEach((revocations, userId) => {
+      // Check if revocations happened within a short time window (e.g., 1 hour)
+      const sorted = revocations.sort((a, b) => 
+        a.timestamp.getTime() - b.timestamp.getTime()
+      );
+      if (sorted.length >= 3) {
+        const timeSpan = sorted[sorted.length - 1].timestamp.getTime() - sorted[0].timestamp.getTime();
+        const oneHour = 60 * 60 * 1000;
+        if (timeSpan < oneHour) {
+          suspiciousLogs.push(...revocations);
+          patterns.push({
+            type: 'rapid-token-revocation',
+            description: `Rapid token revocations (${revocations.length}) for user ${userId} within ${Math.round(timeSpan / 1000 / 60)} minutes`,
+            count: revocations.length,
+            severity: SecurityAuditSeverity.HIGH,
+          });
+        }
+      }
+    });
+
+    // Remove duplicates
+    const uniqueSuspiciousLogs = Array.from(
+      new Map(suspiciousLogs.map(log => [log.id, log])).values()
+    );
+
+    return {
+      suspiciousLogs: uniqueSuspiciousLogs,
+      patterns,
+    };
+  }
+
+  /**
+   * Get retention policy configuration
+   */
+  getRetentionPolicy(): { enabled: boolean; retentionDays: number } {
+    const retentionDays = parseInt(
+      process.env.AUDIT_LOG_RETENTION_DAYS || '90',
+      10
+    );
+    return {
+      enabled: process.env.AUDIT_LOG_RETENTION_ENABLED !== 'false',
+      retentionDays,
+    };
+  }
 }
 
 

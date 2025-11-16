@@ -1,28 +1,42 @@
 <template>
-  <div class="card">
-    <h2>
-      <BarChart3 class="title-icon" />
+  <div class="card" role="region" aria-labelledby="category-scores-heading">
+    <h2 id="category-scores-heading">
+      <BarChart3 class="title-icon" aria-hidden="true" />
       By Category
     </h2>
-    <div v-if="Object.keys(categories).length === 0" class="empty">
+    <div v-if="Object.keys(categories).length === 0" class="empty" role="status" aria-live="polite">
       No category data available
     </div>
-    <div v-else>
+    <div v-else role="list" aria-label="Compliance scores by category">
       <div
         v-for="(score, category) in categories"
         :key="category"
         class="metric"
+        role="listitem"
       >
         <div class="metric-content">
-          <span class="metric-label">{{ formatCategory(category) }}</span>
-          <div class="progress-bar">
+          <span class="metric-label" :id="`category-${category}-label`">
+            {{ formatCategory(category) }}
+          </span>
+          <div 
+            class="progress-bar"
+            role="progressbar"
+            :aria-valuenow="score"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-labelledby="`category-${category}-label`"
+            :aria-label="`${formatCategory(category)} compliance score: ${score.toFixed(1)}%`"
+          >
             <div
               class="progress-fill"
               :style="{ width: `${score}%` }"
+              :aria-hidden="true"
             ></div>
           </div>
         </div>
-        <span class="metric-value">{{ score.toFixed(1) }}%</span>
+        <span class="metric-value" :aria-label="`${score.toFixed(1)} percent`">
+          {{ score.toFixed(1) }}%
+        </span>
       </div>
     </div>
   </div>

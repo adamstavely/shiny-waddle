@@ -7,6 +7,7 @@ import { SecurityModule } from '../security/security.module';
 import { ValidatorsModule } from '../validators/validators.module';
 import { TestHarnessesModule } from '../test-harnesses/test-harnesses.module';
 import { TestBatteriesModule } from '../test-batteries/test-batteries.module';
+import { CICDModule } from '../cicd/cicd.module';
 
 @Module({
   controllers: [ApplicationsController],
@@ -19,6 +20,7 @@ import { TestBatteriesModule } from '../test-batteries/test-batteries.module';
     forwardRef(() => ValidatorsModule),
     forwardRef(() => TestHarnessesModule),
     forwardRef(() => TestBatteriesModule),
+    CICDModule,
   ],
 })
 export class ApplicationsModule {}

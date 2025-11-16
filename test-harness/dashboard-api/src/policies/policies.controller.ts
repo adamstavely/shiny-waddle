@@ -16,7 +16,7 @@ import { CreatePolicyDto, PolicyType, PolicyStatus } from './dto/create-policy.d
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { Policy, PolicyVersion } from './entities/policy.entity';
 
-@Controller('api/policies')
+@Controller('api/v1/policies')
 export class PoliciesController {
   constructor(private readonly policiesService: PoliciesService) {}
 
@@ -97,6 +97,14 @@ export class PoliciesController {
   @Get(':id/audit')
   async getAuditLogs(@Param('id') id: string): Promise<any[]> {
     return this.policiesService.getAuditLogs(id);
+  }
+
+  @Get(':id/impact-analysis')
+  async analyzeImpact(
+    @Param('id') id: string,
+    @Query('version') version?: string,
+  ): Promise<any> {
+    return this.policiesService.analyzeImpact(id, version);
   }
 
   @Post(':id/test')

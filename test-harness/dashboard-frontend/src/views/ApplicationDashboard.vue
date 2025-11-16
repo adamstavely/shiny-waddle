@@ -808,5 +808,125 @@ onBeforeUnmount(() => {
   margin: 20px auto;
   max-width: 600px;
 }
+
+/* Responsive Styles */
+@media (max-width: 767px) {
+  .dashboard-header {
+    margin-bottom: 24px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .page-description {
+    font-size: 1rem;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .metric-card {
+    padding: 16px;
+  }
+  
+  .metric-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .metric-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .metric-value {
+    font-size: 1.25rem;
+  }
+  
+  .section {
+    margin-bottom: 32px;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+  
+  .trends-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .trend-card {
+    padding: 16px;
+  }
+  
+  .trend-chart {
+    height: 150px;
+  }
+  
+  .test-suites-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .suite-card {
+    padding: 16px;
+  }
+  
+  .violation-item {
+    padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .trends-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .test-suites-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .trends-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 </style>
 

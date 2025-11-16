@@ -16,7 +16,7 @@ import {
 import { TestResultsService } from './test-results.service';
 import { TestResultEntity, TestResultStatus } from './entities/test-result.entity';
 
-@Controller('api/test-results')
+@Controller('api/v1/test-results')
 export class TestResultsController {
   private readonly logger = new Logger(TestResultsController.name);
 
@@ -204,6 +204,70 @@ export class TestResultsController {
         completedAt: step.completedAt ? new Date(step.completedAt) : undefined,
       })),
     });
+  }
+
+  @Post('advanced-query')
+  async advancedQuery(
+    @Body(ValidationPipe) body: {
+      searchText?: string;
+      filters?: Array<{
+        field: string;
+        operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'in' | 'notIn';
+        value: any;
+        logic?: 'AND' | 'OR';
+      }>;
+      sort?: Array<{
+        field: string;
+        direction: 'asc' | 'desc';
+      }>;
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<TestResultEntity[]> {
+    this.logger.log('Advanced query for test results');
+    return this.testResultsService.advancedQuery(body);
+  }
+
+  @Get('export/csv')
+  async exportCSV(
+    @Query('applicationId') applicationId?: string,
+    @Query('testConfigurationId') testConfigurationId?: string,
+    @Query('status') status?: TestResultStatus,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ format: string; data: string }> {
+    this.logger.log('Exporting test results to CSV');
+    const csv = await this.testResultsService.exportToCSV({
+      applicationId,
+      testConfigurationId,
+      status,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return { format: 'csv', data: csv };
+  }
+
+  @Get('export/json')
+  async exportJSON(
+    @Query('applicationId') applicationId?: string,
+    @Query('testConfigurationId') testConfigurationId?: string,
+    @Query('status') status?: TestResultStatus,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('limit') limit?: string,
+  ): Promise<{ format: string; data: any }> {
+    this.logger.log('Exporting test results to JSON');
+    const json = await this.testResultsService.exportToJSON({
+      applicationId,
+      testConfigurationId,
+      status,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return { format: 'json', data: JSON.parse(json) };
   }
 }
 

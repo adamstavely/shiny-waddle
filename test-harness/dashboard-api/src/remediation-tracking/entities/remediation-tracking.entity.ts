@@ -3,7 +3,7 @@ export interface RemediationTracking {
   violationId: string;
   
   // Progress Tracking
-  status: 'not-started' | 'in-progress' | 'completed' | 'failed' | 'cancelled';
+  status: 'not-started' | 'in-progress' | 'completed' | 'failed' | 'cancelled' | 'overdue';
   progress: number; // 0-100
   milestones: RemediationMilestone[];
   currentStep?: string;
@@ -11,6 +11,7 @@ export interface RemediationTracking {
   // Time Tracking
   startedAt?: Date;
   completedAt?: Date;
+  targetDate?: Date; // Deadline for remediation
   timeToRemediation?: number; // in hours
   timeToStart?: number; // hours from detection to start
   
@@ -43,6 +44,7 @@ export interface RemediationMilestone {
   description?: string;
   status: 'pending' | 'in-progress' | 'completed' | 'skipped';
   completedAt?: Date;
+  targetDate?: Date; // Deadline for milestone
   estimatedHours?: number;
   actualHours?: number;
 }

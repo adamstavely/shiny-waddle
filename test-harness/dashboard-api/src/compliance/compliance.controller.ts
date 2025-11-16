@@ -22,7 +22,7 @@ import {
   CreateComplianceAssessmentDto,
 } from './entities/compliance.entity';
 
-@Controller('api/compliance')
+@Controller('api/v1/compliance')
 export class ComplianceController {
   constructor(private readonly complianceService: ComplianceService) {}
 

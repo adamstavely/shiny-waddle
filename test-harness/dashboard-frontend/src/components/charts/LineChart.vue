@@ -39,6 +39,12 @@
         r="4"
         :fill="color"
         class="data-point"
+        @mouseenter="handlePointHover(point, $event)"
+        @mouseleave="handlePointLeave"
+        @click="handlePointClick(point)"
+        role="button"
+        :aria-label="`Data point ${index + 1}: ${point.value} on ${point.date}`"
+        tabindex="0"
       />
       
       <!-- X-axis labels -->
@@ -54,11 +60,25 @@
         {{ point.label }}
       </text>
     </svg>
+    
+    <!-- Tooltip -->
+    <div
+      v-if="hoveredPoint"
+      class="chart-tooltip"
+      :style="tooltipStyle"
+    >
+      <div class="tooltip-header">
+        <strong>{{ formatDate(hoveredPoint.date) }}</strong>
+      </div>
+      <div class="tooltip-value">
+        Value: <strong>{{ hoveredPoint.value.toFixed(2) }}</strong>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 
 interface Props {
   data: Array<{ date: string; value: number }>;
@@ -119,6 +139,61 @@ const xAxisLabels = computed(() => {
       return { x: point.x, label };
     });
 });
+
+const emit = defineEmits<{
+  pointClick: [point: { x: number; y: number; value: number; date: string }];
+}>();
+
+const hoveredPoint = ref<{ x: number; y: number; value: number; date: string } | null>(null);
+const tooltipStyle = ref<{ top: string; left: string }>({ top: '0px', left: '0px' });
+
+const handlePointHover = (point: { x: number; y: number; value: number; date: string }, event: MouseEvent) => {
+  hoveredPoint.value = point;
+  updateTooltipPosition(event);
+};
+
+const handlePointLeave = () => {
+  hoveredPoint.value = null;
+};
+
+const handlePointClick = (point: { x: number; y: number; value: number; date: string }) => {
+  emit('pointClick', point);
+};
+
+const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
+const updateTooltipPosition = (event: MouseEvent) => {
+  const rect = (event.currentTarget as HTMLElement).closest('.line-chart')?.getBoundingClientRect();
+  if (!rect) return;
+  
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  
+  tooltipStyle.value = {
+    top: `${y - 50}px`,
+    left: `${x + 10}px`,
+  };
+};
+
+const handleMouseMove = (event: MouseEvent) => {
+  if (hoveredPoint.value) {
+    updateTooltipPosition(event);
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('mousemove', handleMouseMove);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', handleMouseMove);
+});
 </script>
 
 <style scoped>
@@ -144,6 +219,37 @@ const xAxisLabels = computed(() => {
 .data-point:hover {
   r: 6;
   opacity: 0.8;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  pointer-events: none;
+  z-index: 1000;
+  min-width: 150px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.tooltip-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4facfe;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  padding-bottom: 8px;
+}
+
+.tooltip-value {
+  font-size: 0.8rem;
+  color: #a0aec0;
+}
+
+.tooltip-value strong {
+  color: #ffffff;
+  font-weight: 600;
 }
 </style>
 

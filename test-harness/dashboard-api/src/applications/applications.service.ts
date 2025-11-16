@@ -9,6 +9,7 @@ import { SecurityAuditLogService, SecurityAuditEventType } from '../security/aud
 import { ValidatorsService } from '../validators/validators.service';
 import { TestHarnessesService } from '../test-harnesses/test-harnesses.service';
 import { TestBatteriesService } from '../test-batteries/test-batteries.service';
+import { ContextDetectorService } from '../cicd/context-detector.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -45,6 +46,7 @@ export class ApplicationsService {
     private readonly testHarnessesService: TestHarnessesService,
     @Inject(forwardRef(() => TestBatteriesService))
     private readonly testBatteriesService: TestBatteriesService,
+    private readonly contextDetector: ContextDetectorService,
   ) {
     // Load applications asynchronously
     this.loadApplications().then(() => {
@@ -318,6 +320,25 @@ export class ApplicationsService {
   }> {
     const application = await this.findOne(appId);
 
+    // Auto-detect CI/CD context if not provided
+    const detectedContext = this.contextDetector.detectContext();
+    const mergedContext = this.contextDetector.mergeContext(
+      metadata || {},
+      detectedContext
+    );
+
+    // Use merged context for metadata
+    const executionMetadata = {
+      buildId: mergedContext.buildId || metadata?.buildId,
+      runId: mergedContext.runId || metadata?.runId,
+      commitSha: mergedContext.commitSha || metadata?.commitSha,
+      branch: mergedContext.branch || metadata?.branch,
+    };
+
+    if (detectedContext.ciPlatform) {
+      this.logger.log(`Detected CI/CD platform: ${detectedContext.ciPlatform} for test execution`);
+    }
+
     if (!application.testConfigurationIds || application.testConfigurationIds.length === 0) {
       return {
         status: 'passed',
@@ -396,10 +417,10 @@ export class ApplicationsService {
         this.logger.log(`Running test configuration ${configId} (${configName}) for application ${appId}`);
         testResult = await this.testConfigurationsService.testConfiguration(configId, {
           applicationId: appId,
-          buildId: metadata?.buildId,
-          runId: metadata?.runId,
-          commitSha: metadata?.commitSha,
-          branch: metadata?.branch,
+          buildId: executionMetadata.buildId,
+          runId: executionMetadata.runId,
+          commitSha: executionMetadata.commitSha,
+          branch: executionMetadata.branch,
         });
         
         testPassed = testResult.passed !== false;
@@ -453,10 +474,10 @@ export class ApplicationsService {
             testConfigurationType: configType as any,
             status: testStatus,
             passed: testPassed,
-            buildId: metadata?.buildId,
-            runId: metadata?.runId,
-            commitSha: metadata?.commitSha,
-            branch: metadata?.branch,
+            buildId: executionMetadata.buildId,
+            runId: executionMetadata.runId,
+            commitSha: executionMetadata.commitSha,
+            branch: executionMetadata.branch,
             timestamp: new Date(),
             duration: testDuration,
             result: testResult,

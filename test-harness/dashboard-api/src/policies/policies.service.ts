@@ -3,6 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import { CreatePolicyDto, PolicyType, PolicyStatus, PolicyEffect } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { Policy, PolicyVersion, PolicyAuditLog } from './entities/policy.entity';
+import { PolicyVersioningService, VersionComparison, ImpactAnalysis } from './services/policy-versioning.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,7 +15,10 @@ export class PoliciesService {
   private policies: Policy[] = [];
   private auditLogs: PolicyAuditLog[] = [];
 
-  constructor(private readonly moduleRef: ModuleRef) {
+  constructor(
+    private readonly moduleRef: ModuleRef,
+    private readonly versioningService: PolicyVersioningService,
+  ) {
     this.loadPolicies().catch(err => {
       console.error('Error loading policies on startup:', err);
     });
@@ -236,24 +240,25 @@ export class PoliciesService {
 
   async getVersions(id: string): Promise<PolicyVersion[]> {
     const policy = await this.findOne(id);
-    return policy.versions;
+    return this.versioningService.getVersionHistory(policy);
   }
 
-  async compareVersions(id: string, version1: string, version2: string): Promise<any> {
+  async compareVersions(id: string, version1: string, version2: string): Promise<VersionComparison> {
     const policy = await this.findOne(id);
-    const v1 = policy.versions.find(v => v.version === version1);
-    const v2 = policy.versions.find(v => v.version === version2);
+    return this.versioningService.compareVersions(policy, version1, version2);
+  }
 
-    if (!v1 || !v2) {
-      throw new NotFoundException('One or both versions not found');
+  async analyzeImpact(id: string, version?: string): Promise<ImpactAnalysis> {
+    const policy = await this.findOne(id);
+    const targetVersion = version 
+      ? this.versioningService.getVersion(policy, version)
+      : policy.versions[0];
+    
+    if (!targetVersion) {
+      throw new NotFoundException(`Version ${version || 'latest'} not found`);
     }
 
-    // Simple diff - in a real implementation, you'd use a proper diff library
-    return {
-      version1: v1,
-      version2: v2,
-      differences: this.calculateDifferences(v1, v2),
-    };
+    return this.versioningService.analyzeImpact(policy, targetVersion);
   }
 
   private calculateDifferences(v1: PolicyVersion, v2: PolicyVersion): any {
@@ -298,23 +303,30 @@ export class PoliciesService {
 
   async rollback(id: string, targetVersion: string): Promise<Policy> {
     const policy = await this.findOne(id);
-    const targetVersionData = policy.versions.find(v => v.version === targetVersion);
+    const rollbackResult = this.versioningService.rollbackToVersion(policy, targetVersion);
 
-    if (!targetVersionData) {
-      throw new NotFoundException(`Version "${targetVersion}" not found`);
-    }
+    const rollbackVersion: PolicyVersion = {
+      version: rollbackResult.newVersion,
+      status: policy.status,
+      date: new Date(),
+      changes: [
+        {
+          type: 'fixed',
+          description: `Rollback to version ${targetVersion}`,
+        },
+      ],
+      notes: rollbackResult.message,
+    };
 
-    const previousVersion = policy.deployedVersion;
-    policy.deployedVersion = targetVersion;
-    policy.version = targetVersion;
-    policy.status = targetVersionData.status;
-    policy.lastDeployedAt = new Date();
+    policy.versions.unshift(rollbackVersion);
+    policy.version = rollbackVersion.version;
     policy.updatedAt = new Date();
 
     await this.savePolicies();
     await this.addAuditLog(id, 'rolled_back', {
-      from: previousVersion,
+      from: policy.version,
       to: targetVersion,
+      newVersion: rollbackResult.newVersion,
     });
 
     return policy;

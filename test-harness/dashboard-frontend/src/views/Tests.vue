@@ -14,6 +14,31 @@
       </div>
     </div>
 
+    <!-- Test Health Dashboard -->
+    <div class="health-dashboard">
+      <h3 class="section-title">Test Health</h3>
+      <div class="health-stats">
+        <div class="health-item">
+          <div class="health-label">Pass Rate</div>
+          <div class="health-value" :class="getHealthClass(passRate)">
+            {{ passRate.toFixed(1) }}%
+          </div>
+        </div>
+        <div class="health-item">
+          <div class="health-label">Active Suites</div>
+          <div class="health-value">
+            {{ activeSuitesCount }}
+          </div>
+        </div>
+        <div class="health-item">
+          <div class="health-label">Last 24h Runs</div>
+          <div class="health-value">
+            {{ last24hRuns }}
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Filters -->
     <div class="filters">
       <input
@@ -158,6 +183,8 @@ const breadcrumbItems = [
 
 const tests = ref<any[]>([]);
 const policies = ref<any[]>([]);
+const testResults = ref<any[]>([]);
+const testSuites = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const searchQuery = ref('');
@@ -250,6 +277,30 @@ const loadPolicies = async () => {
   }
 };
 
+const loadTestResults = async () => {
+  try {
+    const response = await axios.get('/api/test-results?limit=100');
+    if (response.data) {
+      testResults.value = response.data.map((r: any) => ({
+        ...r,
+        timestamp: r.timestamp ? new Date(r.timestamp) : new Date(),
+        passed: r.status === 'passed' || r.passed === true
+      }));
+    }
+  } catch (err) {
+    console.error('Error loading test results:', err);
+  }
+};
+
+const loadTestSuites = async () => {
+  try {
+    const response = await axios.get('/api/test-suites');
+    testSuites.value = response.data || [];
+  } catch (err) {
+    console.error('Error loading test suites:', err);
+  }
+};
+
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
@@ -265,6 +316,34 @@ const getTestTypeLabel = (type: string): string => {
 const getPolicyName = (policyId: string): string => {
   const policy = policies.value.find(p => p.id === policyId);
   return policy?.name || policyId;
+};
+
+const passRate = computed(() => {
+  if (!testResults.value || testResults.value.length === 0) return 0;
+  const passed = testResults.value.filter(r => r.passed).length;
+  return (passed / testResults.value.length) * 100;
+});
+
+const activeSuitesCount = computed(() => {
+  if (!testSuites.value) return 0;
+  return testSuites.value.filter(s => s.enabled).length;
+});
+
+const last24hRuns = computed(() => {
+  if (!testResults.value) return 0;
+  const now = new Date();
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return testResults.value.filter(r => {
+    const timestamp = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+    return timestamp >= yesterday;
+  }).length;
+});
+
+const getHealthClass = (rate: number): string => {
+  if (rate >= 90) return 'health-excellent';
+  if (rate >= 70) return 'health-good';
+  if (rate >= 50) return 'health-warning';
+  return 'health-poor';
 };
 
 const viewTest = (id: string) => {
@@ -310,7 +389,7 @@ const formatDate = (date: Date | string): string => {
 };
 
 onMounted(async () => {
-  await Promise.all([loadTests(), loadPolicies()]);
+  await Promise.all([loadTests(), loadPolicies(), loadTestResults(), loadTestSuites()]);
   
   // Check for policyId query parameter
   const policyId = route.query.policyId as string;
@@ -323,8 +402,9 @@ onMounted(async () => {
 <style scoped>
 .tests-page {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .page-header {
@@ -371,7 +451,7 @@ onMounted(async () => {
 
 .tests-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 1.5rem;
 }
 
@@ -541,6 +621,96 @@ onMounted(async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.health-dashboard {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.health-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.health-item {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.health-item:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.1);
+}
+
+.health-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.health-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.health-value.health-excellent {
+  color: #22c55e;
+}
+
+.health-value.health-good {
+  color: #4facfe;
+}
+
+.health-value.health-warning {
+  color: #f59e0b;
+}
+
+.health-value.health-poor {
+  color: #ef4444;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary .btn-icon {
+  width: 16px;
+  height: 16px;
 }
 </style>
 

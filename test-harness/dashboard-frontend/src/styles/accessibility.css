@@ -369,3 +369,244 @@ nav[aria-label="Breadcrumb"] ul {
   }
 }
 
+/* Progress bars accessibility */
+[role="progressbar"] {
+  position: relative;
+}
+
+[role="progressbar"]:focus {
+  outline: 3px solid #4facfe;
+  outline-offset: 2px;
+}
+
+/* Ensure tables have proper structure */
+table caption {
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+/* Ensure form fields have proper error association */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: #f56565;
+}
+
+input[aria-invalid="true"]:focus,
+select[aria-invalid="true"]:focus,
+textarea[aria-invalid="true"]:focus {
+  outline-color: #f56565;
+}
+
+/* Ensure live regions are properly announced */
+[aria-live] {
+  position: relative;
+}
+
+/* Ensure list items are properly structured */
+[role="list"] {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[role="listitem"] {
+  display: block;
+}
+
+/* Ensure regions have proper labels */
+[role="region"]:not([aria-labelledby]):not([aria-label]) {
+  outline: 2px dashed #fbbf24;
+  outline-offset: 2px;
+}
+
+/* Ensure time elements are properly formatted */
+time {
+  display: inline;
+}
+
+/* Ensure icons are properly hidden from screen readers when decorative */
+.icon-decorative,
+[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+/* Ensure skip links work properly */
+.skip-link:not(:focus) {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10000;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
+/* Ensure focus trap works properly */
+[data-focus-trap] {
+  position: relative;
+}
+
+/* Ensure dialog backdrop is properly styled */
+[role="dialog"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: -1;
+}
+
+/* Ensure breadcrumbs are properly structured */
+nav[aria-label*="breadcrumb" i] ol,
+nav[aria-label*="breadcrumb" i] ul {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav[aria-label*="breadcrumb" i] li {
+  display: inline;
+}
+
+nav[aria-label*="breadcrumb" i] li:not(:last-child)::after {
+  content: '/';
+  margin: 0 8px;
+  color: #a0aec0;
+}
+
+/* Ensure search inputs are properly labeled */
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Ensure color is not the only means of conveying information */
+.status-badge,
+.badge {
+  position: relative;
+}
+
+.status-badge::before,
+.badge::before {
+  content: attr(aria-label);
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Ensure sufficient touch target sizes on mobile */
+@media (max-width: 767px) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Ensure proper heading hierarchy is maintained */
+h1 + h3,
+h1 + h4,
+h1 + h5,
+h1 + h6,
+h2 + h4,
+h2 + h5,
+h2 + h6 {
+  position: relative;
+}
+
+/* Ensure proper landmark structure */
+main:focus,
+[role="main"]:focus {
+  outline: 3px solid #4facfe;
+  outline-offset: 2px;
+}
+
+/* Ensure proper form structure */
+fieldset {
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0 0 16px 0;
+}
+
+legend {
+  padding: 0 8px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Ensure proper button groups */
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.button-group [role="button"],
+.button-group button {
+  flex: 1;
+}
+
+/* Ensure proper tab navigation */
+[role="tablist"] {
+  display: flex;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+[role="tab"] {
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+[role="tab"]:hover {
+  color: #4facfe;
+}
+
+[role="tab"][aria-selected="true"] {
+  color: #4facfe;
+  border-bottom-color: #4facfe;
+}
+
+[role="tab"]:focus {
+  outline: 3px solid #4facfe;
+  outline-offset: -3px;
+}
+
+[role="tabpanel"] {
+  padding: 16px;
+}
+
+[role="tabpanel"]:focus {
+  outline: 3px solid #4facfe;
+  outline-offset: 2px;
+}
+

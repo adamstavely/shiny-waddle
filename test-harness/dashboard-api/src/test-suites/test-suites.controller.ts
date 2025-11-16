@@ -18,7 +18,7 @@ import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { TestSuiteEntity } from './entities/test-suite.entity';
 
-@Controller('api/test-suites')
+@Controller('api/v1/test-suites')
 export class TestSuitesController {
   private readonly logger = new Logger(TestSuitesController.name);
 

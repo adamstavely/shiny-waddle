@@ -148,6 +148,27 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .desktop-sidebar {
+    display: block;
+  }
+  
+  .desktop-drawer {
+    display: none; /* Hide drawer on tablet for more space */
+  }
+  
+  .content-wrapper {
+    margin-left: 80px;
+    transition: margin-left 0.3s ease;
+  }
+  
+  .content-wrapper.drawer-open {
+    margin-left: 80px; /* No drawer on tablet */
+  }
+}
+
+/* Desktop styles */
 @media (min-width: 1024px) {
   .desktop-sidebar {
     display: block;
@@ -198,6 +219,19 @@ onBeforeUnmount(() => {
   padding: 24px;
   overflow-y: auto;
   min-height: 0;
+}
+
+/* Responsive padding for content */
+@media (max-width: 767px) {
+  .content-wrapper > :deep(> *) {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .content-wrapper > :deep(> *) {
+    padding: 20px;
+  }
 }
 
 /* Prevent scrolling on home page */

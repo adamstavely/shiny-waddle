@@ -16,7 +16,7 @@ import { CreateTestBatteryDto } from './dto/create-test-battery.dto';
 import { UpdateTestBatteryDto } from './dto/update-test-battery.dto';
 import { TestBatteryEntity } from './entities/test-battery.entity';
 
-@Controller('api/test-batteries')
+@Controller('api/v1/test-batteries')
 export class TestBatteriesController {
   private readonly logger = new Logger(TestBatteriesController.name);
 

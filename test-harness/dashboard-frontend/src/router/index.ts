@@ -16,7 +16,9 @@ import Findings from '../views/Findings.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
 import TestSuiteDetail from '../views/TestSuiteDetail.vue';
 import TestBatteryDetail from '../views/TestBatteryDetail.vue';
+import TestBatteryCreate from '../views/TestBatteryCreate.vue';
 import TestHarnessDetail from '../views/TestHarnessDetail.vue';
+import TestHarnessCreate from '../views/TestHarnessCreate.vue';
 import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
@@ -109,6 +111,11 @@ const router = createRouter({
       component: TestBatteries,
     },
     {
+      path: '/tests/batteries/new',
+      name: 'TestBatteryCreate',
+      component: TestBatteryCreate,
+    },
+    {
       path: '/tests/batteries/:id',
       name: 'TestBatteryDetail',
       component: TestBatteryDetail,
@@ -117,6 +124,11 @@ const router = createRouter({
       path: '/tests/harnesses',
       name: 'TestHarnesses',
       component: TestHarnesses,
+    },
+    {
+      path: '/tests/harnesses/new',
+      name: 'TestHarnessCreate',
+      component: TestHarnessCreate,
     },
     {
       path: '/tests/harnesses/:id',
