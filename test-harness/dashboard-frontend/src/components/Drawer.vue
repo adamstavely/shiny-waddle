@@ -126,14 +126,6 @@
             <FileSearch class="item-icon" />
             <span>Policy Validation</span>
           </a>
-          <a
-            href="/abac-correctness"
-            @click.prevent="handleNavClick('/abac-correctness')"
-            :class="['drawer-item', isActive('/abac-correctness') ? 'drawer-item-active' : '']"
-          >
-            <CheckCircle2 class="item-icon" />
-            <span>ABAC Correctness</span>
-          </a>
         </div>
       </div>
 
@@ -299,8 +291,7 @@ const testPages = [
 // Access Control pages
 const accessControlPages = [
   '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation', '/users',
-  '/abac-correctness'
+  '/tests/policy-validation', '/policy-validation', '/users'
 ];
 
 // Platform Config pages

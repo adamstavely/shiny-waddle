@@ -7,10 +7,10 @@
           <h1 class="page-title">Tests</h1>
           <p class="page-description">Manage individual reusable tests that can be assigned to test suites</p>
         </div>
-        <button @click="showCreateModal = true" class="btn-primary">
+        <router-link to="/tests/individual/new" class="btn-primary">
           <Plus class="btn-icon" />
           Create Test
-        </button>
+        </router-link>
       </div>
     </div>
 
@@ -140,20 +140,11 @@
       <TestTube class="empty-icon" />
       <h3>No Tests Found</h3>
       <p>Create your first test to get started</p>
-      <button @click="showCreateModal = true" class="btn-primary">
+      <router-link to="/tests/individual/new" class="btn-primary">
         <Plus class="btn-icon" />
         Create Test
-      </button>
+      </router-link>
     </div>
-
-    <!-- Create/Edit Test Modal -->
-    <TestModal
-      v-if="showCreateModal || editingTestId"
-      :show="showCreateModal || !!editingTestId"
-      :test-id="editingTestId"
-      @close="closeModal"
-      @saved="handleTestSaved"
-    />
   </div>
 </template>
 
@@ -171,7 +162,6 @@ import {
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import Dropdown from '../components/Dropdown.vue';
-import TestModal from '../components/TestModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -190,16 +180,17 @@ const error = ref<string | null>(null);
 const searchQuery = ref('');
 const filterType = ref('');
 const filterPolicy = ref('');
-const showCreateModal = ref(false);
-const editingTestId = ref<string | null>(null);
 
 const typeOptions = [
   { value: '', label: 'All Types' },
   { value: 'access-control', label: 'Access Control' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'dataset-health', label: 'Dataset Health' },
+  { value: 'rls-cls', label: 'RLS/CLS' },
+  { value: 'network-policy', label: 'Network Policy' },
   { value: 'dlp', label: 'DLP' },
+  { value: 'api-gateway', label: 'API Gateway' },
+  { value: 'distributed-systems', label: 'Distributed Systems' },
   { value: 'api-security', label: 'API Security' },
+  { value: 'data-pipeline', label: 'Data Pipeline' },
 ];
 
 const policyOptions = computed(() => {
@@ -303,10 +294,13 @@ const loadTestSuites = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'contract': 'Contract',
-    'dataset-health': 'Dataset Health',
+    'rls-cls': 'RLS/CLS',
+    'network-policy': 'Network Policy',
     'dlp': 'DLP',
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
+    'data-pipeline': 'Data Pipeline',
   };
   return labels[type] || type;
 };
@@ -349,7 +343,7 @@ const viewTest = (id: string) => {
 };
 
 const editTest = (id: string) => {
-  editingTestId.value = id;
+  router.push(`/tests/individual/${id}/edit`);
 };
 
 const deleteTest = async (id: string) => {
@@ -370,13 +364,7 @@ const viewPolicy = (policyId: string) => {
   router.push(`/policies/${policyId}`);
 };
 
-const closeModal = () => {
-  showCreateModal.value = false;
-  editingTestId.value = null;
-};
-
 const handleTestSaved = () => {
-  closeModal();
   loadTests();
 };
 

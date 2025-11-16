@@ -53,7 +53,6 @@ import PendingApprovals from '../views/PendingApprovals.vue';
 import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
 import EnvironmentConfigTesting from '../views/EnvironmentConfigTesting.vue';
-import ABACCorrectness from '../views/ABACCorrectness.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -100,6 +99,16 @@ const router = createRouter({
       path: '/tests/individual',
       name: 'Tests',
       component: () => import('../views/Tests.vue'),
+    },
+    {
+      path: '/tests/individual/new',
+      name: 'TestCreate',
+      component: () => import('../views/TestCreate.vue'),
+    },
+    {
+      path: '/tests/individual/:id/edit',
+      name: 'TestEdit',
+      component: () => import('../views/TestCreate.vue'),
     },
     {
       path: '/tests/batteries',
@@ -340,11 +349,6 @@ const router = createRouter({
       path: '/environment-config-testing',
       name: 'EnvironmentConfigTesting',
       component: EnvironmentConfigTesting,
-    },
-    {
-      path: '/abac-correctness',
-      name: 'ABACCorrectness',
-      component: ABACCorrectness,
     },
     {
       path: '/:pathMatch(.*)*',

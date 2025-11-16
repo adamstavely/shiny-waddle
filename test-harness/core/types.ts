@@ -812,3 +812,75 @@ export interface TestBatteryResult {
   timestamp: Date;
 }
 
+// ABAC Correctness Configuration Types
+// These types are used for ABAC correctness testing within access control test suites
+
+export interface ABACAttribute {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+  source: 'ldap' | 'database' | 'api' | 'jwt' | 'custom';
+  validation: ABACValidationRule[];
+  freshness?: {
+    maxAge: number;
+    unit: 'seconds' | 'minutes' | 'hours';
+  };
+}
+
+export interface ABACValidationRule {
+  type: 'required' | 'format' | 'range' | 'enum' | 'regex' | 'custom';
+  value?: any;
+  message?: string;
+}
+
+export interface ABACPerformanceTestConfig {
+  policies: ABACPolicy[];
+  testRequests: Array<{
+    subject: {
+      id: string;
+      attributes: Record<string, any>;
+    };
+    resource: {
+      id: string;
+      type: string;
+      attributes: Record<string, any>;
+    };
+    context: {
+      ipAddress?: string;
+      timeOfDay?: string;
+      location?: string;
+      device?: string;
+      additionalAttributes?: Record<string, any>;
+    };
+    action?: string;
+  }>;
+  loadConfig?: {
+    concurrentRequests: number;
+    duration: number; // milliseconds
+  };
+}
+
+export interface ABACCorrectnessConfig {
+  attributes?: ABACAttribute[];
+  policies?: ABACPolicy[];
+  resourceTypes?: string[];
+  userRoles?: string[];
+  performanceConfig?: ABACPerformanceTestConfig;
+  conflictResolutionStrategy?: 'priority' | 'deny-override' | 'allow-override' | 'first-match';
+}
+
+// Access Control Test Suite Configuration
+// This interface represents the configuration shape used by validators
+// It extends the base test suite pattern with access-control specific fields
+export interface AccessControlTestSuiteConfig {
+  name: string;
+  application: string;
+  team: string;
+  testType: 'access-control';
+  userRoles: string[];
+  resources: Resource[];
+  contexts: Context[];
+  expectedDecisions?: Record<string, boolean>;
+  runtimeConfig?: RuntimeTestConfig;
+  abacCorrectnessConfig?: ABACCorrectnessConfig;
+}
+

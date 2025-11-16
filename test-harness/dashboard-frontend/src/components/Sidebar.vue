@@ -105,8 +105,7 @@ const testPages = [
 // Access Control pages
 const accessControlPages = [
   '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation',
-  '/abac-correctness'
+  '/tests/policy-validation', '/policy-validation'
 ];
 
 // Platform Config pages

@@ -1,5 +1,47 @@
 [
   {
+    "id": "6a76c9bf-9d13-40d0-81dc-0d9793c12a11",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "PUT /api/tests/56a0a43e-ce53-463a-a1d2-d0ab88dd3135",
+    "description": "Data write operation: PUT /api/tests/56a0a43e-ce53-463a-a1d2-d0ab88dd3135",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/tests/56a0a43e-ce53-463a-a1d2-d0ab88dd3135",
+    "timestamp": "2025-11-16T04:39:51.054Z",
+    "success": true,
+    "metadata": {
+      "method": "PUT",
+      "path": "/api/tests/56a0a43e-ce53-463a-a1d2-d0ab88dd3135",
+      "query": {},
+      "bodySize": "63"
+    },
+    "requestId": "req-1763267991049-u6n17s44x",
+    "responseCode": 200,
+    "duration": 4
+  },
+  {
+    "id": "9d4f15b4-a2c9-472c-bdd5-a66bd57c243f",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/tests",
+    "description": "Data write operation: POST /api/tests",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/tests",
+    "timestamp": "2025-11-16T04:39:44.890Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/tests",
+      "query": {},
+      "bodySize": "63"
+    },
+    "requestId": "req-1763267984885-aohekexke",
+    "responseCode": 201,
+    "duration": 4
+  },
+  {
     "id": "9caba932-27a8-4dcb-b4b5-2a2b2e449e6a",
     "type": "access-denied",
     "severity": "medium",

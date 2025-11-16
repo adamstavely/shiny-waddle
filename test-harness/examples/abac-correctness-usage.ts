@@ -8,7 +8,6 @@ import { ABACAttributeValidator, ABACAttribute } from '../services/abac-attribut
 import { ABACCompletenessTester, CompletenessTestConfig } from '../services/abac-completeness-tester';
 import { ABACPerformanceTester, PerformanceTestConfig } from '../services/abac-performance-tester';
 import { ABACConflictTester, ConflictTestConfig } from '../services/abac-conflict-tester';
-import { ABACPropagationTester, PropagationTestConfig } from '../services/abac-propagation-tester';
 import { PolicyDecisionPoint } from '../services/policy-decision-point';
 import { ABACPolicy } from '../core/types';
 import { ABACCorrectnessTestSuite } from '../services/test-suites/abac-correctness-test-suite';
@@ -152,29 +151,7 @@ async function main() {
   console.log(`Passed: ${conflictResult.passed}`);
   console.log(`Conflicts Found: ${conflictResult.conflicts.length}`);
 
-  // Example 5: Test attribute propagation
-  console.log('\n=== Example 5: Attribute Propagation Test ===');
-  const propagationTester = new ABACPropagationTester();
-  
-  const propagationConfig: PropagationTestConfig = {
-    sourceSystem: 'ldap',
-    targetSystems: ['api', 'database'],
-    attributes: [attribute],
-    transformationRules: [
-      {
-        sourceAttribute: 'clearanceLevel',
-        targetAttribute: 'accessLevel',
-        transformation: 'map',
-      },
-    ],
-  };
-
-  const propagationResult = await propagationTester.testAttributePropagation(propagationConfig);
-  console.log('Propagation Test Result:', propagationResult);
-  console.log(`Passed: ${propagationResult.passed}`);
-  console.log(`Propagation Results: ${propagationResult.propagationResults.length}`);
-
-  // Example 6: Run complete test suite
+  // Example 5: Run complete test suite
   console.log('\n=== Example 6: Complete Test Suite ===');
   const testSuite = new ABACCorrectnessTestSuite(pdp);
   
@@ -184,7 +161,6 @@ async function main() {
     resourceTypes: ['dataset', 'report'],
     userRoles: ['admin', 'researcher'],
     performanceConfig,
-    propagationConfig,
   };
 
   const suiteResults = await testSuite.runAllTests(suiteConfig);

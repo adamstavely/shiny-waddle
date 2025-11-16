@@ -40,7 +40,6 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FindingApprovalsModule } from './finding-approvals/finding-approvals.module';
 import { UsersModule } from './users/users.module';
 import { EnvironmentConfigModule } from './environment-config/environment-config.module';
-import { ABACCorrectnessModule } from './abac-correctness/abac-correctness.module';
 import { TestsModule } from './tests/tests.module';
 import { AuthModule } from './auth/auth.module';
 import { RiskScoringModule } from './risk-scoring/risk-scoring.module';
@@ -92,7 +91,6 @@ import { AppController } from './app.controller';
     FindingApprovalsModule,
     UsersModule,
     EnvironmentConfigModule,
-    ABACCorrectnessModule,
     TestsModule,
     RiskScoringModule,
   ],

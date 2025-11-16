@@ -31,10 +31,13 @@
                   <select v-model="form.testType" required :disabled="!!testId" class="form-select">
                     <option value="">Select a test type...</option>
                     <option value="access-control">Access Control</option>
-                    <option value="contract">Contract</option>
-                    <option value="dataset-health">Dataset Health</option>
+                    <option value="rls-cls">RLS/CLS</option>
+                    <option value="network-policy">Network Policy</option>
                     <option value="dlp">DLP</option>
+                    <option value="api-gateway">API Gateway</option>
+                    <option value="distributed-systems">Distributed Systems</option>
                     <option value="api-security">API Security</option>
+                    <option value="data-pipeline">Data Pipeline</option>
                   </select>
                   <small v-if="testId">Test type cannot be changed after creation</small>
                 </div>

@@ -277,14 +277,6 @@
       </div>
     </div>
 
-    <!-- Edit Modal -->
-    <TestModal
-      v-if="showEditModal"
-      :show="showEditModal"
-      :test-id="test?.id"
-      @close="showEditModal = false"
-      @saved="handleTestSaved"
-    />
   </div>
 </template>
 
@@ -302,7 +294,6 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
-import TestModal from '../components/TestModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -313,7 +304,6 @@ const suitesUsingTest = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const activeTab = ref('overview');
-const showEditModal = ref(false);
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Info },
@@ -365,10 +355,13 @@ const loadSuitesUsingTest = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'contract': 'Contract',
-    'dataset-health': 'Dataset Health',
+    'rls-cls': 'RLS/CLS',
+    'network-policy': 'Network Policy',
     'dlp': 'DLP',
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
+    'data-pipeline': 'Data Pipeline',
   };
   return labels[type] || type;
 };
@@ -397,7 +390,7 @@ const getTestConfiguration = (test: any): any => {
 };
 
 const editTest = () => {
-  showEditModal.value = true;
+  router.push(`/tests/individual/${test.value?.id}/edit`);
 };
 
 const deleteTest = async () => {
@@ -427,7 +420,6 @@ const viewVersions = () => {
 };
 
 const handleTestSaved = () => {
-  showEditModal.value = false;
   loadTest();
 };
 

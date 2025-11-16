@@ -1,12 +1,13 @@
 /**
  * Data Pipeline Testing Service
  * 
- * Test data pipeline access control, ETL pipelines, streaming data,
- * data transformations, and pipeline security
+ * Test data pipeline access control and security controls.
+ * Focuses exclusively on who can access pipeline resources and security enforcement.
  */
 
-import { User, Resource } from '../core/types';
+import { User, Resource, Context, AccessControlConfig } from '../core/types';
 import { TestResult } from '../core/types';
+import { PolicyDecisionPoint, PDPRequest } from './policy-decision-point';
 
 export interface PipelineTestConfig {
   pipelineType: 'etl' | 'streaming' | 'batch' | 'real-time';
@@ -23,6 +24,7 @@ export interface PipelineTestConfig {
     type: 'database' | 'data-warehouse' | 'data-lake' | 'api';
     connectionString?: string;
   };
+  accessControlConfig?: AccessControlConfig;
 }
 
 export interface PipelineTest {
@@ -31,12 +33,9 @@ export interface PipelineTest {
   stage: 'extract' | 'transform' | 'load' | 'all';
   user?: User;
   resource?: Resource;
+  context?: Context;
   expectedAccess?: boolean;
-  dataValidation?: {
-    schema?: Record<string, any>;
-    constraints?: string[];
-    qualityRules?: string[];
-  };
+  action?: 'read' | 'write' | 'execute';
 }
 
 export interface PipelineTestResult extends TestResult {
@@ -44,30 +43,32 @@ export interface PipelineTestResult extends TestResult {
   pipelineId: string;
   stage: string;
   accessGranted: boolean;
-  dataValidation?: {
-    passed: boolean;
-    errors: string[];
-    warnings: string[];
-  };
-  transformationResult?: {
-    inputRecords: number;
-    outputRecords: number;
-    transformations: string[];
-    errors: string[];
+  accessDecision?: {
+    allowed: boolean;
+    reason: string;
+    appliedRules: string[];
   };
   securityIssues?: string[];
-  performanceMetrics?: {
-    executionTime: number;
-    throughput: number;
-    latency: number;
+  securityControls?: {
+    encryptionInTransit?: { encrypted: boolean; protocol?: string };
+    encryptionAtRest?: { encrypted: boolean; method?: string };
+    accessLogging?: { logged: boolean; logLevel?: string };
+    dataMasking?: { masked: boolean; maskedFields?: string[] };
+    networkIsolation?: { isolated: boolean; network?: string };
+    authenticationRequired?: { required: boolean };
   };
+  details?: Record<string, any>;
 }
 
 export class DataPipelineTester {
   private config: PipelineTestConfig;
+  private pdp: PolicyDecisionPoint | null = null;
 
   constructor(config: PipelineTestConfig) {
     this.config = config;
+    if (config.accessControlConfig) {
+      this.pdp = new PolicyDecisionPoint(config.accessControlConfig);
+    }
   }
 
   /**
@@ -86,46 +87,52 @@ export class DataPipelineTester {
     };
 
     try {
+      const stageResults: Record<string, any> = {};
+
       // Test access to each stage
       if (test.stage === 'extract' || test.stage === 'all') {
         const extractResult = await this.testExtractStage(test);
+        stageResults.extract = extractResult;
         result.accessGranted = extractResult.accessGranted;
-        result.details = { ...result.details, extract: extractResult };
+        if (extractResult.accessDecision) {
+          result.accessDecision = extractResult.accessDecision;
+        }
       }
 
       if (test.stage === 'transform' || test.stage === 'all') {
         const transformResult = await this.testTransformStage(test);
-        result.transformationResult = transformResult;
-        result.details = { ...result.details, transform: transformResult };
+        stageResults.transform = transformResult;
+        // Transform stage access is critical
+        if (!transformResult.accessGranted) {
+          result.accessGranted = false;
+        }
+        if (transformResult.accessDecision) {
+          result.accessDecision = transformResult.accessDecision;
+        }
       }
 
       if (test.stage === 'load' || test.stage === 'all') {
         const loadResult = await this.testLoadStage(test);
-        result.accessGranted = loadResult.accessGranted;
-        result.details = { ...result.details, load: loadResult };
+        stageResults.load = loadResult;
+        if (!loadResult.accessGranted) {
+          result.accessGranted = false;
+        }
+        if (loadResult.accessDecision && !result.accessDecision) {
+          result.accessDecision = loadResult.accessDecision;
+        }
       }
 
-      // Validate data if validation rules provided
-      if (test.dataValidation) {
-        result.dataValidation = await this.validatePipelineData(
-          test,
-          result
-        );
-      }
+      result.details = { ...result.details, stages: stageResults };
 
       // Check for security issues
-      result.securityIssues = await this.detectPipelineSecurityIssues(
-        test,
-        result
-      );
-
-      // Collect performance metrics
-      result.performanceMetrics = await this.collectPerformanceMetrics(test);
+      result.securityIssues = await this.detectPipelineSecurityIssues(test, result);
+      
+      // Test security controls
+      result.securityControls = await this.testSecurityControls(test);
 
       // Determine if test passed
       result.passed =
-        result.accessGranted === test.expectedAccess &&
-        (!result.dataValidation || result.dataValidation.passed) &&
+        result.accessGranted === (test.expectedAccess !== false) &&
         (!result.securityIssues || result.securityIssues.length === 0);
 
       return result;
@@ -138,7 +145,7 @@ export class DataPipelineTester {
   }
 
   /**
-   * Test streaming data access
+   * Test streaming data access control
    */
   async testStreamingData(test: PipelineTest): Promise<PipelineTestResult> {
     const result: PipelineTestResult = {
@@ -160,8 +167,16 @@ export class DataPipelineTester {
       // Generic streaming test
       const streamResult = await this.testGenericStreaming(test);
       result.accessGranted = streamResult.accessGranted;
-      result.performanceMetrics = streamResult.performanceMetrics;
-      result.passed = streamResult.accessGranted === test.expectedAccess;
+      result.accessDecision = streamResult.accessDecision;
+      result.passed = streamResult.accessGranted === (test.expectedAccess !== false);
+
+      // Check security controls
+      result.securityControls = await this.testSecurityControls(test);
+      result.securityIssues = await this.detectPipelineSecurityIssues(test, result);
+
+      if (result.securityIssues && result.securityIssues.length > 0) {
+        result.passed = false;
+      }
 
       return result;
     } catch (error: any) {
@@ -172,7 +187,7 @@ export class DataPipelineTester {
   }
 
   /**
-   * Test data transformation access
+   * Test data transformation access control
    */
   async testDataTransformation(
     test: PipelineTest
@@ -189,32 +204,18 @@ export class DataPipelineTester {
     };
 
     try {
-      const startTime = Date.now();
-
-      // Simulate transformation process
-      const transformationResult = await this.executeTransformation(test);
-
-      result.transformationResult = {
-        inputRecords: transformationResult.inputRecords,
-        outputRecords: transformationResult.outputRecords,
-        transformations: transformationResult.transformations,
-        errors: transformationResult.errors,
-      };
-
-      result.performanceMetrics = {
-        executionTime: Date.now() - startTime,
-        throughput:
-          transformationResult.outputRecords /
-          ((Date.now() - startTime) / 1000),
-        latency: Date.now() - startTime,
-      };
-
       // Check if user has access to transformation
-      result.accessGranted = await this.checkTransformationAccess(test);
+      const transformResult = await this.testTransformStage(test);
+      result.accessGranted = transformResult.accessGranted;
+      result.accessDecision = transformResult.accessDecision;
+
+      // Check security controls
+      result.securityControls = await this.testSecurityControls(test);
+      result.securityIssues = await this.detectPipelineSecurityIssues(test, result);
 
       result.passed =
-        result.accessGranted === test.expectedAccess &&
-        transformationResult.errors.length === 0;
+        result.accessGranted === (test.expectedAccess !== false) &&
+        (!result.securityIssues || result.securityIssues.length === 0);
 
       return result;
     } catch (error: any) {
@@ -240,47 +241,42 @@ export class DataPipelineTester {
     };
 
     try {
+      // Test all security controls
+      result.securityControls = await this.testSecurityControls(test);
+      
       const securityIssues: string[] = [];
 
-      // Test 1: Encryption in transit
-      const encryptionTest = await this.testEncryptionInTransit(test);
-      if (!encryptionTest.encrypted) {
+      // Check encryption in transit
+      if (result.securityControls.encryptionInTransit && !result.securityControls.encryptionInTransit.encrypted) {
         securityIssues.push('Data not encrypted in transit');
       }
 
-      // Test 2: Encryption at rest
-      const atRestTest = await this.testEncryptionAtRest(test);
-      if (!atRestTest.encrypted) {
+      // Check encryption at rest
+      if (result.securityControls.encryptionAtRest && !result.securityControls.encryptionAtRest.encrypted) {
         securityIssues.push('Data not encrypted at rest');
       }
 
-      // Test 3: Access logging
-      const loggingTest = await this.testAccessLogging(test);
-      if (!loggingTest.logged) {
+      // Check access logging
+      if (result.securityControls.accessLogging && !result.securityControls.accessLogging.logged) {
         securityIssues.push('Access not logged');
       }
 
-      // Test 4: Data masking
-      const maskingTest = await this.testDataMasking(test);
-      if (!maskingTest.masked) {
+      // Check data masking
+      if (result.securityControls.dataMasking && !result.securityControls.dataMasking.masked) {
         securityIssues.push('PII not masked in pipeline');
       }
 
-      // Test 5: Network isolation
-      const isolationTest = await this.testNetworkIsolation(test);
-      if (!isolationTest.isolated) {
+      // Check network isolation
+      if (result.securityControls.networkIsolation && !result.securityControls.networkIsolation.isolated) {
         securityIssues.push('Pipeline not network isolated');
       }
 
-      result.securityIssues = securityIssues;
-      result.details = {
-        encryptionInTransit: encryptionTest,
-        encryptionAtRest: atRestTest,
-        accessLogging: loggingTest,
-        dataMasking: maskingTest,
-        networkIsolation: isolationTest,
-      };
+      // Check authentication
+      if (result.securityControls.authenticationRequired && !result.securityControls.authenticationRequired.required) {
+        securityIssues.push('Pipeline accessible without authentication');
+      }
 
+      result.securityIssues = securityIssues;
       result.passed = securityIssues.length === 0;
 
       return result;
@@ -292,59 +288,101 @@ export class DataPipelineTester {
   }
 
   /**
-   * Test extract stage
+   * Test extract stage access control
    */
   private async testExtractStage(
     test: PipelineTest
-  ): Promise<{ accessGranted: boolean; details: any }> {
-    // Simulate extract access check
-    const hasAccess = await this.checkPipelineAccess(test, 'extract');
+  ): Promise<{ accessGranted: boolean; accessDecision?: any; details: any }> {
+    const resource: Resource = test.resource || {
+      id: `${test.pipelineId}-source`,
+      type: this.config.dataSource?.type || 'data-source',
+      attributes: {
+        pipelineId: test.pipelineId,
+        stage: 'extract',
+        sourceType: this.config.dataSource?.type,
+      },
+    };
+
+    const accessDecision = await this.checkPipelineAccess(test, resource, 'read');
 
     return {
-      accessGranted: hasAccess,
+      accessGranted: accessDecision.allowed,
+      accessDecision: {
+        allowed: accessDecision.allowed,
+        reason: accessDecision.reason,
+        appliedRules: accessDecision.appliedRules,
+      },
       details: {
         source: this.config.dataSource?.type,
-        accessChecked: true,
+        action: 'read',
       },
     };
   }
 
   /**
-   * Test transform stage
+   * Test transform stage access control
    */
   private async testTransformStage(
     test: PipelineTest
-  ): Promise<{
-    inputRecords: number;
-    outputRecords: number;
-    transformations: string[];
-    errors: string[];
-  }> {
-    // Simulate transformation
-    const transformation = await this.executeTransformation(test);
+  ): Promise<{ accessGranted: boolean; accessDecision?: any; details: any }> {
+    const resource: Resource = test.resource || {
+      id: `${test.pipelineId}-transform`,
+      type: 'pipeline-transform',
+      attributes: {
+        pipelineId: test.pipelineId,
+        stage: 'transform',
+      },
+    };
 
-    return transformation;
-  }
-
-  /**
-   * Test load stage
-   */
-  private async testLoadStage(
-    test: PipelineTest
-  ): Promise<{ accessGranted: boolean; details: any }> {
-    const hasAccess = await this.checkPipelineAccess(test, 'load');
+    const accessDecision = await this.checkPipelineAccess(test, resource, 'execute');
 
     return {
-      accessGranted: hasAccess,
+      accessGranted: accessDecision.allowed,
+      accessDecision: {
+        allowed: accessDecision.allowed,
+        reason: accessDecision.reason,
+        appliedRules: accessDecision.appliedRules,
+      },
       details: {
-        destination: this.config.dataDestination?.type,
-        accessChecked: true,
+        action: 'execute',
       },
     };
   }
 
   /**
-   * Test Kafka streaming
+   * Test load stage access control
+   */
+  private async testLoadStage(
+    test: PipelineTest
+  ): Promise<{ accessGranted: boolean; accessDecision?: any; details: any }> {
+    const resource: Resource = test.resource || {
+      id: `${test.pipelineId}-destination`,
+      type: this.config.dataDestination?.type || 'data-destination',
+      attributes: {
+        pipelineId: test.pipelineId,
+        stage: 'load',
+        destinationType: this.config.dataDestination?.type,
+      },
+    };
+
+    const accessDecision = await this.checkPipelineAccess(test, resource, 'write');
+
+    return {
+      accessGranted: accessDecision.allowed,
+      accessDecision: {
+        allowed: accessDecision.allowed,
+        reason: accessDecision.reason,
+        appliedRules: accessDecision.appliedRules,
+      },
+      details: {
+        destination: this.config.dataDestination?.type,
+        action: 'write',
+      },
+    };
+  }
+
+  /**
+   * Test Kafka streaming access control
    */
   private async testKafkaStreaming(
     test: PipelineTest
@@ -361,22 +399,74 @@ export class DataPipelineTester {
     };
 
     try {
-      // Test Kafka topic access
       const kafkaEndpoint = this.config.connection?.endpoint || 'localhost:9092';
       const topic = test.pipelineId;
 
-      // Try to consume from topic
-      const consumeResult = await this.testKafkaConsume(kafkaEndpoint, topic);
-      result.accessGranted = consumeResult.allowed;
-
-      // Try to produce to topic
-      const produceResult = await this.testKafkaProduce(kafkaEndpoint, topic);
-      result.details = {
-        consume: consumeResult,
-        produce: produceResult,
+      // Test consume access
+      const consumeResource: Resource = test.resource || {
+        id: `kafka-topic-${topic}`,
+        type: 'kafka-topic',
+        attributes: {
+          topic,
+          action: 'consume',
+        },
       };
 
-      result.passed = result.accessGranted === test.expectedAccess;
+      const consumeDecision = await this.checkPipelineAccess(
+        test,
+        consumeResource,
+        'read'
+      );
+
+      // Test produce access
+      const produceResource: Resource = {
+        id: `kafka-topic-${topic}`,
+        type: 'kafka-topic',
+        attributes: {
+          topic,
+          action: 'produce',
+        },
+      };
+
+      const produceDecision = await this.checkPipelineAccess(
+        test,
+        produceResource,
+        'write'
+      );
+
+      // Both consume and produce must be allowed for full access
+      result.accessGranted = consumeDecision.allowed && produceDecision.allowed;
+      result.accessDecision = {
+        allowed: result.accessGranted,
+        reason: consumeDecision.allowed && produceDecision.allowed
+          ? 'Consume and produce access granted'
+          : `Consume: ${consumeDecision.allowed}, Produce: ${produceDecision.allowed}`,
+        appliedRules: [
+          ...consumeDecision.appliedRules,
+          ...produceDecision.appliedRules,
+        ],
+      };
+
+      result.details = {
+        consume: {
+          allowed: consumeDecision.allowed,
+          reason: consumeDecision.reason,
+        },
+        produce: {
+          allowed: produceDecision.allowed,
+          reason: produceDecision.reason,
+        },
+      };
+
+      result.passed = result.accessGranted === (test.expectedAccess !== false);
+
+      // Check security controls
+      result.securityControls = await this.testSecurityControls(test);
+      result.securityIssues = await this.detectPipelineSecurityIssues(test, result);
+
+      if (result.securityIssues && result.securityIssues.length > 0) {
+        result.passed = false;
+      }
 
       return result;
     } catch (error: any) {
@@ -387,129 +477,99 @@ export class DataPipelineTester {
   }
 
   /**
-   * Test generic streaming
+   * Test generic streaming access control
    */
   private async testGenericStreaming(
     test: PipelineTest
   ): Promise<{
     accessGranted: boolean;
-    performanceMetrics?: PipelineTestResult['performanceMetrics'];
+    accessDecision?: any;
   }> {
-    const hasAccess = await this.checkPipelineAccess(test, 'all');
+    const resource: Resource = test.resource || {
+      id: `${test.pipelineId}-stream`,
+      type: 'data-stream',
+      attributes: {
+        pipelineId: test.pipelineId,
+        streamType: this.config.connection?.type,
+      },
+    };
+
+    const accessDecision = await this.checkPipelineAccess(test, resource, test.action || 'read');
 
     return {
-      accessGranted: hasAccess,
-      performanceMetrics: {
-        executionTime: 0,
-        throughput: 0,
-        latency: 0,
+      accessGranted: accessDecision.allowed,
+      accessDecision: {
+        allowed: accessDecision.allowed,
+        reason: accessDecision.reason,
+        appliedRules: accessDecision.appliedRules,
       },
     };
   }
 
   /**
-   * Execute transformation
+   * Check pipeline access using PDP
    */
-  private async executeTransformation(
-    test: PipelineTest
-  ): Promise<{
-    inputRecords: number;
-    outputRecords: number;
-    transformations: string[];
-    errors: string[];
-  }> {
-    // Simulate transformation
-    const inputRecords = 1000;
-    const transformations = ['filter', 'aggregate', 'join'];
-    const errors: string[] = [];
-
-    // Simulate transformation errors based on access
-    if (!test.expectedAccess) {
-      errors.push('Access denied to transformation');
+  private async checkPipelineAccess(
+    test: PipelineTest,
+    resource: Resource,
+    action: 'read' | 'write' | 'execute'
+  ): Promise<{ allowed: boolean; reason: string; appliedRules: string[] }> {
+    // If no PDP configured, fall back to expectedAccess
+    if (!this.pdp || !test.user) {
+      return {
+        allowed: test.expectedAccess !== false,
+        reason: test.expectedAccess !== false
+          ? 'Access granted (no PDP configured)'
+          : 'Access denied (no PDP configured)',
+        appliedRules: [],
+      };
     }
 
+    // Build PDP request
+    const subjectAttributes = {
+      role: test.user.role,
+      ...test.user.attributes,
+      ...(test.user.abacAttributes || {}),
+    };
+
+    const request: PDPRequest = {
+      subject: {
+        id: test.user.id,
+        attributes: subjectAttributes,
+      },
+      resource: {
+        id: resource.id,
+        type: resource.type,
+        attributes: {
+          ...resource.attributes,
+          ...(resource.abacAttributes || {}),
+          action, // Include action in resource attributes
+        },
+      },
+      context: test.context || {},
+    };
+
+    // Evaluate with PDP
+    const decision = await this.pdp.evaluate(request);
+
     return {
-      inputRecords,
-      outputRecords: inputRecords - (errors.length > 0 ? 100 : 0),
-      transformations,
-      errors,
+      allowed: decision.allowed,
+      reason: decision.reason || (decision.allowed ? 'Access granted by policy' : 'Access denied by policy'),
+      appliedRules: decision.appliedRules || [],
     };
   }
 
   /**
-   * Check pipeline access
+   * Test all security controls
    */
-  private async checkPipelineAccess(
-    test: PipelineTest,
-    stage: string
-  ): Promise<boolean> {
-    // Simulate access check
-    // In real implementation, this would check against PDP
-    return test.expectedAccess !== false;
-  }
-
-  /**
-   * Check transformation access
-   */
-  private async checkTransformationAccess(
-    test: PipelineTest
-  ): Promise<boolean> {
-    return this.checkPipelineAccess(test, 'transform');
-  }
-
-  /**
-   * Validate pipeline data
-   */
-  private async validatePipelineData(
-    test: PipelineTest,
-    result: PipelineTestResult
-  ): Promise<{
-    passed: boolean;
-    errors: string[];
-    warnings: string[];
-  }> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    if (!test.dataValidation) {
-      return { passed: true, errors, warnings };
-    }
-
-    // Validate schema
-    if (test.dataValidation.schema) {
-      // Schema validation logic
-      warnings.push('Schema validation not fully implemented');
-    }
-
-    // Validate constraints
-    if (test.dataValidation.constraints) {
-      for (const constraint of test.dataValidation.constraints) {
-        // Constraint validation logic
-        if (constraint.includes('NOT NULL') && !result.transformationResult) {
-          errors.push(`Constraint violation: ${constraint}`);
-        }
-      }
-    }
-
-    // Validate quality rules
-    if (test.dataValidation.qualityRules) {
-      for (const rule of test.dataValidation.qualityRules) {
-        // Quality rule validation
-        if (rule.includes('completeness') && result.transformationResult) {
-          const completeness =
-            result.transformationResult.outputRecords /
-            result.transformationResult.inputRecords;
-          if (completeness < 0.9) {
-            warnings.push(`Data quality issue: ${rule}`);
-          }
-        }
-      }
-    }
-
+  private async testSecurityControls(test: PipelineTest): Promise<PipelineTestResult['securityControls']> {
     return {
-      passed: errors.length === 0,
-      errors,
-      warnings,
+      encryptionInTransit: await this.testEncryptionInTransit(test),
+      encryptionAtRest: await this.testEncryptionAtRest(test),
+      accessLogging: await this.testAccessLogging(test),
+      dataMasking: await this.testDataMasking(test),
+      networkIsolation: await this.testNetworkIsolation(test),
+      authenticationRequired: await this.testAuthenticationRequired(test),
     };
   }
 
@@ -522,44 +582,35 @@ export class DataPipelineTester {
   ): Promise<string[]> {
     const issues: string[] = [];
 
-    // Check for unencrypted data
-    if (!result.details?.encryption) {
-      issues.push('Data encryption status unknown');
-    }
-
     // Check for missing access controls
     if (result.accessGranted && !test.user) {
       issues.push('Pipeline accessible without authentication');
     }
 
-    // Check for data leakage
-    if (
-      result.transformationResult &&
-      result.transformationResult.outputRecords >
-        result.transformationResult.inputRecords * 1.1
-    ) {
-      issues.push('Potential data leakage: output exceeds input');
+    // Check if access was granted but expected to be denied
+    if (result.accessGranted && test.expectedAccess === false) {
+      issues.push('Access granted when it should have been denied');
+    }
+
+    // Check if access was denied but expected to be granted
+    if (!result.accessGranted && test.expectedAccess === true) {
+      issues.push('Access denied when it should have been granted');
+    }
+
+    // Check security controls
+    if (result.securityControls) {
+      if (result.securityControls.encryptionInTransit && !result.securityControls.encryptionInTransit.encrypted) {
+        issues.push('Data not encrypted in transit');
+      }
+      if (result.securityControls.encryptionAtRest && !result.securityControls.encryptionAtRest.encrypted) {
+        issues.push('Data not encrypted at rest');
+      }
+      if (result.securityControls.authenticationRequired && !result.securityControls.authenticationRequired.required) {
+        issues.push('Pipeline accessible without authentication');
+      }
     }
 
     return issues;
-  }
-
-  /**
-   * Collect performance metrics
-   */
-  private async collectPerformanceMetrics(
-    test: PipelineTest
-  ): Promise<{
-    executionTime: number;
-    throughput: number;
-    latency: number;
-  }> {
-    // Simulate metrics collection
-    return {
-      executionTime: 1000,
-      throughput: 100,
-      latency: 10,
-    };
   }
 
   /**
@@ -570,10 +621,12 @@ export class DataPipelineTester {
     protocol?: string;
   }> {
     // Check if connection uses TLS/SSL
-    const connectionString = this.config.dataSource?.connectionString || '';
+    const connectionString = this.config.dataSource?.connectionString || 
+                            this.config.dataDestination?.connectionString || '';
     const encrypted = connectionString.includes('ssl=true') ||
                      connectionString.includes('tls=true') ||
-                     connectionString.startsWith('https://');
+                     connectionString.startsWith('https://') ||
+                     (this.config.connection?.endpoint && this.config.connection.endpoint.startsWith('https://'));
 
     return {
       encrypted,
@@ -641,34 +694,15 @@ export class DataPipelineTester {
   }
 
   /**
-   * Test Kafka consume
+   * Test authentication required
    */
-  private async testKafkaConsume(
-    endpoint: string,
-    topic: string
-  ): Promise<{ allowed: boolean; error?: string }> {
-    try {
-      // Try to consume from Kafka topic
-      // In real implementation, use Kafka client
-      return { allowed: true };
-    } catch (error: any) {
-      return { allowed: false, error: error.message };
-    }
-  }
-
-  /**
-   * Test Kafka produce
-   */
-  private async testKafkaProduce(
-    endpoint: string,
-    topic: string
-  ): Promise<{ allowed: boolean; error?: string }> {
-    try {
-      // Try to produce to Kafka topic
-      return { allowed: true };
-    } catch (error: any) {
-      return { allowed: false, error: error.message };
-    }
+  private async testAuthenticationRequired(test: PipelineTest): Promise<{
+    required: boolean;
+  }> {
+    // Check if user is provided (authentication required)
+    return {
+      required: !!test.user,
+    };
   }
 }
 
