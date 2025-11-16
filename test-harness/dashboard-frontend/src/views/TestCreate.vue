@@ -32,17 +32,14 @@
             </div>
             <div class="form-group">
               <label>Test Type *</label>
-              <select v-model="form.testType" required :disabled="isEditMode" class="form-input form-select">
-                <option value="">Select a test type...</option>
-                <option value="access-control">Access Control</option>
-                <option value="rls-cls">RLS/CLS</option>
-                <option value="network-policy">Network Policy</option>
-                <option value="dlp">DLP</option>
-                <option value="api-gateway">API Gateway</option>
-                <option value="distributed-systems">Distributed Systems</option>
-                <option value="api-security">API Security</option>
-                <option value="data-pipeline">Data Pipeline</option>
-              </select>
+              <Dropdown
+                v-model="form.testType"
+                :options="testTypeOptions"
+                placeholder="Select a test type..."
+                :disabled="isEditMode"
+                required
+                class="form-input"
+              />
               <p v-if="isEditMode" class="field-help">Test type cannot be changed after creation</p>
             </div>
             <div v-if="isEditMode && test" class="form-group">
@@ -70,11 +67,16 @@
             <p class="form-help">Select one or more policies to test against</p>
             <div class="policy-selector">
               <div class="policy-filters">
-                <select v-model="policyFilter" class="form-input form-select">
-                  <option value="">All Policies</option>
-                  <option value="rbac">RBAC Only</option>
-                  <option value="abac">ABAC Only</option>
-                </select>
+                <Dropdown
+                  v-model="policyFilter"
+                  :options="[
+                    { label: 'All Policies', value: '' },
+                    { label: 'RBAC Only', value: 'rbac' },
+                    { label: 'ABAC Only', value: 'abac' }
+                  ]"
+                  placeholder="Filter policies..."
+                  class="form-input"
+                />
               </div>
               <div v-if="loading" class="loading">Loading policies...</div>
               <div v-else class="policies-list">
@@ -110,13 +112,13 @@
           <!-- Role -->
           <div class="form-group">
             <label>Role *</label>
-            <select v-model="form.role" required class="form-input form-select">
-              <option value="">Select a role...</option>
-              <option value="admin">Admin</option>
-              <option value="researcher">Researcher</option>
-              <option value="analyst">Analyst</option>
-              <option value="viewer">Viewer</option>
-            </select>
+            <Dropdown
+              v-model="form.role"
+              :options="roleOptions"
+              placeholder="Select a role..."
+              required
+              class="form-input"
+            />
           </div>
 
           <!-- Resource -->
@@ -134,12 +136,12 @@
                 </div>
                 <div class="form-group">
                   <label>Sensitivity</label>
-                  <select v-model="form.resource.sensitivity" class="form-input form-select">
-                    <option value="public">Public</option>
-                    <option value="internal">Internal</option>
-                    <option value="confidential">Confidential</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
+                  <Dropdown
+                    v-model="form.resource.sensitivity"
+                    :options="sensitivityOptions"
+                    placeholder="Select sensitivity..."
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -169,10 +171,13 @@
           <!-- Expected Decision -->
           <div class="form-group">
             <label>Expected Decision *</label>
-            <select v-model="form.expectedDecision" required class="form-input form-select">
-              <option :value="true">Allow</option>
-              <option :value="false">Deny</option>
-            </select>
+            <Dropdown
+              v-model="form.expectedDecision"
+              :options="expectedDecisionOptions"
+              placeholder="Select expected decision..."
+              required
+              class="form-input"
+            />
           </div>
         </div>
 
@@ -181,15 +186,12 @@
           <h3 class="section-title">DLP Configuration</h3>
           <div class="form-group">
             <label>Test Type</label>
-            <select v-model="dlpTestType" class="form-input form-select">
-              <option value="pattern">Pattern Detection</option>
-              <option value="bulk-export">Bulk Export Limit</option>
-              <option value="export-restrictions">Export Restrictions</option>
-              <option value="aggregation-requirements">Aggregation Requirements</option>
-              <option value="field-restrictions">Field Restrictions</option>
-              <option value="join-restrictions">Join Restrictions</option>
-              <option value="rls-cls">RLS/CLS</option>
-            </select>
+            <Dropdown
+              v-model="dlpTestType"
+              :options="dlpTestTypeOptions"
+              placeholder="Select DLP test type..."
+              class="form-input"
+            />
           </div>
 
           <!-- Pattern Test -->
@@ -202,13 +204,12 @@
               </div>
               <div class="form-group">
                 <label>Pattern Type</label>
-                <select v-model="form.pattern.type" class="form-input form-select">
-                  <option value="ssn">SSN</option>
-                  <option value="credit-card">Credit Card</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone</option>
-                  <option value="custom">Custom</option>
-                </select>
+                <Dropdown
+                  v-model="form.pattern.type"
+                  :options="patternTypeOptions"
+                  placeholder="Select pattern type..."
+                  class="form-input"
+                />
               </div>
             </div>
             <div class="form-group">
@@ -217,10 +218,12 @@
             </div>
             <div class="form-group">
               <label>Expected Detection</label>
-              <select v-model="form.expectedDetection" class="form-input form-select">
-                <option :value="true">Should Detect</option>
-                <option :value="false">Should Not Detect</option>
-              </select>
+              <Dropdown
+                v-model="form.expectedDetection"
+                :options="expectedDetectionOptions"
+                placeholder="Select expected detection..."
+                class="form-input"
+              />
             </div>
           </div>
 
@@ -230,12 +233,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Export Type</label>
-                <select v-model="form.bulkExportType" class="form-input form-select">
-                  <option value="csv">CSV</option>
-                  <option value="json">JSON</option>
-                  <option value="excel">Excel</option>
-                  <option value="api">API</option>
-                </select>
+                <Dropdown
+                  v-model="form.bulkExportType"
+                  :options="exportTypeOptions"
+                  placeholder="Select export type..."
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label>Limit</label>
@@ -248,10 +251,12 @@
             </div>
             <div class="form-group">
               <label>Expected Blocked</label>
-              <select v-model="form.expectedBlocked" class="form-input form-select">
-                <option :value="true">Should Block</option>
-                <option :value="false">Should Allow</option>
-              </select>
+              <Dropdown
+                v-model="form.expectedBlocked"
+                :options="expectedBlockedOptions"
+                placeholder="Select expected result..."
+                class="form-input"
+              />
             </div>
           </div>
 
@@ -363,14 +368,13 @@
               <div class="form-grid">
                 <div class="form-group">
                   <label>Database Type *</label>
-                  <select v-model="form.rlsCls.database.type" required class="form-input form-select">
-                    <option value="">Select database type...</option>
-                    <option value="postgresql">PostgreSQL</option>
-                    <option value="mysql">MySQL</option>
-                    <option value="mssql">SQL Server</option>
-                    <option value="oracle">Oracle</option>
-                    <option value="sqlite">SQLite</option>
-                  </select>
+                  <Dropdown
+                    v-model="form.rlsCls.database.type"
+                    :options="databaseTypeOptions"
+                    placeholder="Select database type..."
+                    required
+                    class="form-input"
+                  />
                 </div>
                 <div class="form-group">
                   <label>Host</label>
@@ -419,12 +423,12 @@
                   </div>
                   <div class="form-group">
                     <label>Method</label>
-                    <select v-model="query.method" class="form-input form-select">
-                      <option value="GET">GET</option>
-                      <option value="POST">POST</option>
-                      <option value="PUT">PUT</option>
-                      <option value="DELETE">DELETE</option>
-                    </select>
+                    <Dropdown
+                      v-model="query.method"
+                      :options="httpMethodOptions"
+                      placeholder="Select method..."
+                      class="form-input"
+                    />
                   </div>
                   <div class="form-group">
                     <button @click="removeQuery(index)" type="button" class="icon-btn-small">
@@ -475,12 +479,13 @@
                   </div>
                   <div class="form-group">
                     <label>Masking Type *</label>
-                    <select v-model="rule.maskingType" required class="form-input form-select">
-                      <option value="partial">Partial</option>
-                      <option value="full">Full</option>
-                      <option value="hash">Hash</option>
-                      <option value="redact">Redact</option>
-                    </select>
+                    <Dropdown
+                      v-model="rule.maskingType"
+                      :options="maskingTypeOptions"
+                      placeholder="Select masking type..."
+                      required
+                      class="form-input"
+                    />
                   </div>
                   <div class="form-group">
                     <label>Condition</label>
@@ -507,14 +512,13 @@
           <h3 class="section-title">API Security Configuration</h3>
           <div class="form-group">
             <label>Test Sub-Type *</label>
-            <select v-model="apiSecuritySubType" required class="form-input form-select">
-              <option value="apiVersion">API Versioning</option>
-              <option value="gatewayPolicy">Gateway Policy</option>
-              <option value="apiGateway">API Gateway</option>
-              <option value="webhook">Webhook Security</option>
-              <option value="graphql">GraphQL Security</option>
-              <option value="apiContract">API Contract</option>
-            </select>
+            <Dropdown
+              v-model="apiSecuritySubType"
+              :options="apiSecuritySubTypeOptions"
+              placeholder="Select API Security sub-type..."
+              required
+              class="form-input"
+            />
           </div>
 
           <!-- API Versioning Fields -->
@@ -547,80 +551,48 @@
             </div>
           </div>
 
-          <!-- API Gateway Fields -->
-          <div v-if="apiSecuritySubType === 'apiGateway'" class="api-security-config">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Gateway Type *</label>
-                <select v-model="form.apiGateway.gatewayType" required class="form-input form-select">
-                  <option value="aws-api-gateway">AWS API Gateway</option>
-                  <option value="azure-api-management">Azure API Management</option>
-                  <option value="kong">Kong</option>
-                  <option value="istio">Istio</option>
-                  <option value="envoy">Envoy</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Endpoint *</label>
-                <input v-model="form.apiGateway.endpoint" type="text" required placeholder="https://api.example.com" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Method *</label>
-                <select v-model="form.apiGateway.method" required class="form-input form-select">
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                  <option value="PATCH">PATCH</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Policy ID</label>
-                <input v-model="form.apiGateway.policyId" type="text" class="form-input" />
-                <p class="field-help">Reference to gateway policy (optional)</p>
-              </div>
-              <div class="form-group">
-                <label>Policy Type</label>
-                <select v-model="form.apiGateway.policyType" class="form-input form-select">
-                  <option value="">Select policy type...</option>
-                  <option value="authentication">Authentication</option>
-                  <option value="authorization">Authorization</option>
-                  <option value="rate-limit">Rate Limit</option>
-                  <option value="transformation">Transformation</option>
-                  <option value="caching">Caching</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           <!-- Gateway Policy Fields -->
           <div v-if="apiSecuritySubType === 'gatewayPolicy'" class="api-security-config">
             <div class="form-grid">
               <div class="form-group">
                 <label>Gateway Type *</label>
-                <select v-model="form.gatewayPolicy.gatewayType" required class="form-input form-select">
-                  <option value="aws-api-gateway">AWS API Gateway</option>
-                  <option value="azure-api-management">Azure API Management</option>
-                  <option value="kong">Kong</option>
-                  <option value="istio">Istio</option>
-                  <option value="envoy">Envoy</option>
-                </select>
+                <Dropdown
+                  v-model="form.gatewayPolicy.gatewayType"
+                  :options="gatewayTypeOptions"
+                  placeholder="Select gateway type..."
+                  required
+                  class="form-input"
+                />
               </div>
+              <div class="form-group">
+                <label>Endpoint *</label>
+                <input v-model="form.gatewayPolicy.endpoint" type="text" required placeholder="https://api.example.com" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label>Method *</label>
+                <Dropdown
+                  v-model="form.gatewayPolicy.method"
+                  :options="httpMethodOptions"
+                  placeholder="Select method..."
+                  required
+                  class="form-input"
+                />
+              </div>
+            </div>
+            <div class="form-grid">
               <div class="form-group">
                 <label>Policy ID *</label>
                 <input v-model="form.gatewayPolicy.policyId" type="text" required class="form-input" />
               </div>
               <div class="form-group">
                 <label>Policy Type *</label>
-                <select v-model="form.gatewayPolicy.policyType" required class="form-input form-select">
-                  <option value="authentication">Authentication</option>
-                  <option value="authorization">Authorization</option>
-                  <option value="rate-limit">Rate Limit</option>
-                  <option value="transformation">Transformation</option>
-                  <option value="caching">Caching</option>
-                </select>
+                <Dropdown
+                  v-model="form.gatewayPolicy.policyType"
+                  :options="policyTypeOptions"
+                  placeholder="Select policy type..."
+                  required
+                  class="form-input"
+                />
               </div>
             </div>
             <div class="form-grid">
@@ -629,15 +601,13 @@
                 <input v-model="form.gatewayPolicy.route.path" type="text" placeholder="/api/v1/users" class="form-input" />
               </div>
               <div class="form-group">
-                <label>Route Method (optional)</label>
-                <select v-model="form.gatewayPolicy.route.method" class="form-input form-select">
-                  <option value="">Select method...</option>
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                  <option value="PATCH">PATCH</option>
-                </select>
+                <label>Route HTTP Method (optional)</label>
+                <Dropdown
+                  v-model="form.gatewayPolicy.route.method"
+                  :options="httpMethodOptions"
+                  placeholder="Select route method..."
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label>Route Target (optional)</label>
@@ -653,14 +623,16 @@
               <input v-model="form.webhook.endpoint" type="text" required placeholder="https://webhook.example.com/callback" class="form-input" />
             </div>
             <div class="form-grid">
-              <div class="form-group">
-                <label>Authentication Type *</label>
-                <select v-model="form.webhook.authentication.type" required class="form-input form-select">
-                  <option value="signature">Signature</option>
-                  <option value="token">Token</option>
-                  <option value="oauth2">OAuth2</option>
-                </select>
-              </div>
+                    <div class="form-group">
+                      <label>Authentication Type *</label>
+                      <Dropdown
+                        v-model="form.webhook.authentication.type"
+                        :options="webhookAuthTypeOptions"
+                        placeholder="Select authentication type..."
+                        required
+                        class="form-input"
+                      />
+                    </div>
               <div class="form-group">
                 <label>Authentication Method *</label>
                 <input v-model="form.webhook.authentication.method" type="text" required placeholder="HMAC-SHA256" class="form-input" />
@@ -707,12 +679,13 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Test Type *</label>
-                <select v-model="form.graphql.testType" required class="form-input form-select">
-                  <option value="depth">Depth</option>
-                  <option value="complexity">Complexity</option>
-                  <option value="introspection">Introspection</option>
-                  <option value="full">Full</option>
-                </select>
+                <Dropdown
+                  v-model="form.graphql.testType"
+                  :options="graphqlTestTypeOptions"
+                  placeholder="Select test type..."
+                  required
+                  class="form-input"
+                />
               </div>
               <div v-if="form.graphql.testType === 'depth'" class="form-group">
                 <label>Max Depth</label>
@@ -753,13 +726,12 @@
                   </div>
                   <div class="form-group">
                     <label>Method</label>
-                    <select v-model="endpoint.method" class="form-input form-select">
-                      <option value="GET">GET</option>
-                      <option value="POST">POST</option>
-                      <option value="PUT">PUT</option>
-                      <option value="DELETE">DELETE</option>
-                      <option value="PATCH">PATCH</option>
-                    </select>
+                    <Dropdown
+                      v-model="endpoint.method"
+                      :options="httpMethodOptions"
+                      placeholder="Select method..."
+                      class="form-input"
+                    />
                   </div>
                   <div class="form-group">
                     <button @click="removeEndpoint(index)" type="button" class="icon-btn-small">
@@ -793,12 +765,13 @@
             </div>
             <div class="form-group">
               <label>Protocol *</label>
-              <select v-model="form.networkPolicy.protocol" required class="form-input form-select">
-                <option value="tcp">TCP</option>
-                <option value="udp">UDP</option>
-                <option value="icmp">ICMP</option>
-                <option value="all">All</option>
-              </select>
+              <Dropdown
+                v-model="form.networkPolicy.protocol"
+                :options="protocolOptions"
+                placeholder="Select protocol..."
+                required
+                class="form-input"
+              />
             </div>
             <div class="form-group">
               <label>Port</label>
@@ -808,10 +781,13 @@
           </div>
           <div class="form-group">
             <label>Expected Allowed *</label>
-            <select v-model="form.networkPolicy.expectedAllowed" required class="form-input form-select">
-              <option :value="true">Should Allow</option>
-              <option :value="false">Should Deny</option>
-            </select>
+            <Dropdown
+              v-model="form.networkPolicy.expectedAllowed"
+              :options="expectedDecisionOptions"
+              placeholder="Select expected result..."
+              required
+              class="form-input"
+            />
           </div>
         </div>
 
@@ -819,10 +795,22 @@
         <div v-if="form.testType === 'distributed-systems'" class="form-section form-section-full">
           <h3 class="section-title">Distributed Systems Configuration</h3>
           
-          <!-- Regions -->
+          <!-- Sub-Test Type -->
           <div class="form-group">
-            <label>Regions *</label>
-            <p class="form-help">Configure multiple regions for distributed systems testing</p>
+            <label>Test Type *</label>
+            <Dropdown
+              v-model="form.distributedSystems.testType"
+              :options="distributedSystemsSubTypeOptions"
+              placeholder="Select test type..."
+              required
+              class="form-input"
+            />
+            <p class="field-help">Select the type of distributed systems test to run</p>
+          </div>
+          
+          <!-- Regions -->
+          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Regions</h4>
             <div v-for="(region, index) in form.distributedSystems.regions" :key="index" class="endpoint-item">
               <div class="form-grid">
                 <div class="form-group">
@@ -872,11 +860,12 @@
               </div>
               <div class="form-group">
                 <label>Consistency Level</label>
-                <select v-model="form.distributedSystems.policySync.consistencyLevel" class="form-input form-select">
-                  <option value="strong">Strong</option>
-                  <option value="eventual">Eventual</option>
-                  <option value="weak">Weak</option>
-                </select>
+                <Dropdown
+                  v-model="form.distributedSystems.policySync.consistencyLevel"
+                  :options="consistencyLevelOptions"
+                  placeholder="Select consistency level..."
+                  class="form-input"
+                />
               </div>
             </div>
           </div>
@@ -887,13 +876,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Coordination Type</label>
-                <select v-model="form.distributedSystems.coordination.type" class="form-input form-select">
-                  <option value="">None</option>
-                  <option value="consul">Consul</option>
-                  <option value="etcd">etcd</option>
-                  <option value="zookeeper">Zookeeper</option>
-                  <option value="custom">Custom</option>
-                </select>
+                <Dropdown
+                  v-model="form.distributedSystems.coordination.type"
+                  :options="coordinationTypeOptions"
+                  placeholder="Select coordination type..."
+                  class="form-input"
+                />
               </div>
               <div v-if="form.distributedSystems.coordination.type" class="form-group">
                 <label>Coordination Endpoint</label>
@@ -909,13 +897,13 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Pipeline Type *</label>
-              <select v-model="form.dataPipeline.pipelineType" required class="form-input form-select">
-                <option value="">Select pipeline type...</option>
-                <option value="etl">ETL</option>
-                <option value="streaming">Streaming</option>
-                <option value="batch">Batch</option>
-                <option value="real-time">Real-time</option>
-              </select>
+              <Dropdown
+                v-model="form.dataPipeline.pipelineType"
+                :options="pipelineTypeOptions"
+                placeholder="Select pipeline type..."
+                required
+                class="form-input"
+              />
             </div>
           </div>
 
@@ -925,13 +913,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Source Type</label>
-                <select v-model="form.dataPipeline.dataSource.type" class="form-input form-select">
-                  <option value="">Select source type...</option>
-                  <option value="database">Database</option>
-                  <option value="api">API</option>
-                  <option value="file">File</option>
-                  <option value="stream">Stream</option>
-                </select>
+                <Dropdown
+                  v-model="form.dataPipeline.dataSource.type"
+                  :options="dataSourceTypeOptions"
+                  placeholder="Select source type..."
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label>Connection String</label>
@@ -946,13 +933,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Destination Type</label>
-                <select v-model="form.dataPipeline.dataDestination.type" class="form-input form-select">
-                  <option value="">Select destination type...</option>
-                  <option value="database">Database</option>
-                  <option value="data-warehouse">Data Warehouse</option>
-                  <option value="data-lake">Data Lake</option>
-                  <option value="api">API</option>
-                </select>
+                <Dropdown
+                  v-model="form.dataPipeline.dataDestination.type"
+                  :options="dataDestinationTypeOptions"
+                  placeholder="Select destination type..."
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label>Connection String</label>
@@ -967,14 +953,12 @@
             <div class="form-grid">
               <div class="form-group">
                 <label>Connection Type</label>
-                <select v-model="form.dataPipeline.connection.type" class="form-input form-select">
-                  <option value="">Select connection type...</option>
-                  <option value="kafka">Kafka</option>
-                  <option value="spark">Spark</option>
-                  <option value="airflow">Airflow</option>
-                  <option value="dbt">dbt</option>
-                  <option value="custom">Custom</option>
-                </select>
+                <Dropdown
+                  v-model="form.dataPipeline.connection.type"
+                  :options="connectionTypeOptions"
+                  placeholder="Select connection type..."
+                  class="form-input"
+                />
               </div>
               <div class="form-group">
                 <label>Endpoint</label>
@@ -1009,6 +993,7 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import Dropdown from '../components/Dropdown.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -1081,6 +1066,189 @@ const updateRequiredPolicies = () => {
 };
 
 const apiSecuritySubType = ref('apiVersion');
+const distributedSystemsSubType = ref('policy-consistency');
+
+// Options for dropdowns
+const testTypeOptions = [
+  { label: 'Access Control', value: 'access-control' },
+  { label: 'Network Policy', value: 'network-policy' },
+  { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
+  { label: 'Distributed Systems', value: 'distributed-systems' },
+  { label: 'API Security', value: 'api-security' },
+  { label: 'Data Pipeline', value: 'data-pipeline' },
+];
+
+const dlpTestTypeOptions = [
+  { label: 'Pattern Detection', value: 'pattern' },
+  { label: 'Bulk Export Limit', value: 'bulk-export' },
+  { label: 'Export Restrictions', value: 'export-restrictions' },
+  { label: 'Aggregation Requirements', value: 'aggregation-requirements' },
+  { label: 'Field Restrictions', value: 'field-restrictions' },
+  { label: 'Join Restrictions', value: 'join-restrictions' },
+  { label: 'RLS/CLS', value: 'rls-cls' },
+];
+
+const apiSecuritySubTypeOptions = [
+  { label: 'API Versioning', value: 'apiVersion' },
+  { label: 'Gateway Policy', value: 'gatewayPolicy' },
+  { label: 'Webhook Security', value: 'webhook' },
+  { label: 'GraphQL Security', value: 'graphql' },
+  { label: 'API Contract', value: 'apiContract' },
+];
+
+const distributedSystemsSubTypeOptions = [
+  { label: 'Policy Consistency', value: 'policy-consistency' },
+  { label: 'Multi-Region', value: 'multi-region' },
+  { label: 'Synchronization', value: 'synchronization' },
+  { label: 'Transaction', value: 'transaction' },
+  { label: 'Eventual Consistency', value: 'eventual-consistency' },
+];
+
+const roleOptions = [
+  { label: 'Admin', value: 'admin' },
+  { label: 'Researcher', value: 'researcher' },
+  { label: 'Analyst', value: 'analyst' },
+  { label: 'Viewer', value: 'viewer' },
+];
+
+const sensitivityOptions = [
+  { label: 'Public', value: 'public' },
+  { label: 'Internal', value: 'internal' },
+  { label: 'Confidential', value: 'confidential' },
+  { label: 'Restricted', value: 'restricted' },
+];
+
+const databaseTypeOptions = [
+  { label: 'PostgreSQL', value: 'postgresql' },
+  { label: 'MySQL', value: 'mysql' },
+  { label: 'SQL Server', value: 'mssql' },
+  { label: 'Oracle', value: 'oracle' },
+  { label: 'SQLite', value: 'sqlite' },
+];
+
+const maskingTypeOptions = [
+  { label: 'Partial', value: 'partial' },
+  { label: 'Full', value: 'full' },
+  { label: 'Hash', value: 'hash' },
+  { label: 'Redact', value: 'redact' },
+];
+
+const protocolOptions = [
+  { label: 'TCP', value: 'tcp' },
+  { label: 'UDP', value: 'udp' },
+  { label: 'ICMP', value: 'icmp' },
+  { label: 'All', value: 'all' },
+];
+
+const consistencyLevelOptions = [
+  { label: 'Strong', value: 'strong' },
+  { label: 'Eventual', value: 'eventual' },
+  { label: 'Weak', value: 'weak' },
+];
+
+const coordinationTypeOptions = [
+  { label: 'None', value: '' },
+  { label: 'Consul', value: 'consul' },
+  { label: 'etcd', value: 'etcd' },
+  { label: 'Zookeeper', value: 'zookeeper' },
+  { label: 'Custom', value: 'custom' },
+];
+
+const pipelineTypeOptions = [
+  { label: 'ETL', value: 'etl' },
+  { label: 'Streaming', value: 'streaming' },
+  { label: 'Batch', value: 'batch' },
+  { label: 'Real-time', value: 'real-time' },
+];
+
+const dataSourceTypeOptions = [
+  { label: 'Database', value: 'database' },
+  { label: 'API', value: 'api' },
+  { label: 'File', value: 'file' },
+  { label: 'Stream', value: 'stream' },
+];
+
+const dataDestinationTypeOptions = [
+  { label: 'Database', value: 'database' },
+  { label: 'Data Warehouse', value: 'data-warehouse' },
+  { label: 'Data Lake', value: 'data-lake' },
+  { label: 'API', value: 'api' },
+];
+
+const connectionTypeOptions = [
+  { label: 'Kafka', value: 'kafka' },
+  { label: 'Spark', value: 'spark' },
+  { label: 'Airflow', value: 'airflow' },
+  { label: 'dbt', value: 'dbt' },
+  { label: 'Custom', value: 'custom' },
+];
+
+const gatewayTypeOptions = [
+  { label: 'AWS API Gateway', value: 'aws-api-gateway' },
+  { label: 'Azure API Management', value: 'azure-api-management' },
+  { label: 'Kong', value: 'kong' },
+  { label: 'Istio', value: 'istio' },
+  { label: 'Envoy', value: 'envoy' },
+];
+
+const policyTypeOptions = [
+  { label: 'Authentication', value: 'authentication' },
+  { label: 'Authorization', value: 'authorization' },
+  { label: 'Rate Limit', value: 'rate-limit' },
+  { label: 'Transformation', value: 'transformation' },
+  { label: 'Caching', value: 'caching' },
+];
+
+const httpMethodOptions = [
+  { label: 'GET', value: 'GET' },
+  { label: 'POST', value: 'POST' },
+  { label: 'PUT', value: 'PUT' },
+  { label: 'DELETE', value: 'DELETE' },
+  { label: 'PATCH', value: 'PATCH' },
+];
+
+const patternTypeOptions = [
+  { label: 'SSN', value: 'ssn' },
+  { label: 'Credit Card', value: 'credit-card' },
+  { label: 'Email', value: 'email' },
+  { label: 'Phone', value: 'phone' },
+  { label: 'Custom', value: 'custom' },
+];
+
+const exportTypeOptions = [
+  { label: 'CSV', value: 'csv' },
+  { label: 'JSON', value: 'json' },
+  { label: 'Excel', value: 'excel' },
+  { label: 'API', value: 'api' },
+];
+
+const webhookAuthTypeOptions = [
+  { label: 'Signature', value: 'signature' },
+  { label: 'Token', value: 'token' },
+  { label: 'OAuth2', value: 'oauth2' },
+];
+
+const graphqlTestTypeOptions = [
+  { label: 'Depth', value: 'depth' },
+  { label: 'Complexity', value: 'complexity' },
+  { label: 'Introspection', value: 'introspection' },
+  { label: 'Full', value: 'full' },
+];
+
+const expectedDecisionOptions = [
+  { label: 'Allow', value: true },
+  { label: 'Deny', value: false },
+];
+
+const expectedDetectionOptions = [
+  { label: 'Should Detect', value: true },
+  { label: 'Should Not Detect', value: false },
+];
+
+const expectedBlockedOptions = [
+  { label: 'Should Block', value: true },
+  { label: 'Should Allow', value: false },
+];
 
 const form = ref({
   name: '',
@@ -1140,6 +1308,8 @@ const form = ref({
   },
   gatewayPolicy: {
     gatewayType: 'aws-api-gateway' as 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy',
+    endpoint: '',
+    method: 'GET' as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     policyId: '',
     policyType: 'authentication' as 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching',
     route: {
@@ -1177,14 +1347,6 @@ const form = ref({
     schemaText: '',
     endpoints: [] as Array<{ path: string; method: string }>,
   },
-  // API Gateway fields (separate from gatewayPolicy)
-  apiGateway: {
-    gatewayType: 'aws-api-gateway' as 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy',
-    endpoint: '',
-    method: 'GET' as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
-    policyId: '',
-    policyType: '' as '' | 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching',
-  },
   // RLS/CLS fields
   rlsCls: {
     database: {
@@ -1214,6 +1376,7 @@ const form = ref({
   },
   // Distributed Systems fields
   distributedSystems: {
+    testType: 'policy-consistency' as 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency',
     regions: [] as Array<{ id: string; name: string; endpoint: string; pdpEndpoint: string }>,
     policySync: {
       enabled: false,
@@ -1368,14 +1531,28 @@ const loadTest = async () => {
           deprecationDate: test.value.apiVersion.deprecationDate ? new Date(test.value.apiVersion.deprecationDate).toISOString().split('T')[0] : '',
           sunsetDate: test.value.apiVersion.sunsetDate ? new Date(test.value.apiVersion.sunsetDate).toISOString().split('T')[0] : '',
         };
-      } else if (test.value.gatewayPolicy) {
+      } else if (test.value.gatewayPolicy || test.value.apiGateway) {
         apiSecuritySubType.value = 'gatewayPolicy';
-        form.value.gatewayPolicy = {
-          gatewayType: test.value.gatewayPolicy.gatewayType || 'aws-api-gateway',
-          policyId: test.value.gatewayPolicy.policyId || '',
-          policyType: test.value.gatewayPolicy.policyType || 'authentication',
-          route: test.value.gatewayPolicy.route || { path: '', method: '', target: '' },
-        };
+        // Handle backward compatibility: map apiGateway to gatewayPolicy format
+        if (test.value.apiGateway) {
+          form.value.gatewayPolicy = {
+            gatewayType: test.value.apiGateway.gatewayType || 'aws-api-gateway',
+            endpoint: test.value.apiGateway.endpoint || '',
+            method: test.value.apiGateway.method || 'GET',
+            policyId: test.value.apiGateway.policyId || '',
+            policyType: test.value.apiGateway.policyType || 'authentication',
+            route: { path: '', method: '', target: '' },
+          };
+        } else {
+          form.value.gatewayPolicy = {
+            gatewayType: test.value.gatewayPolicy.gatewayType || 'aws-api-gateway',
+            endpoint: test.value.gatewayPolicy.endpoint || '',
+            method: test.value.gatewayPolicy.method || 'GET',
+            policyId: test.value.gatewayPolicy.policyId || '',
+            policyType: test.value.gatewayPolicy.policyType || 'authentication',
+            route: test.value.gatewayPolicy.route || { path: '', method: '', target: '' },
+          };
+        }
       } else if (test.value.webhook) {
         apiSecuritySubType.value = 'webhook';
         form.value.webhook = {
@@ -1407,15 +1584,6 @@ const loadTest = async () => {
           schemaText: JSON.stringify(test.value.apiContract.schema || {}, null, 2),
           endpoints: test.value.apiContract.endpoints || [],
         };
-      } else if (test.value.apiGateway) {
-        apiSecuritySubType.value = 'apiGateway';
-        form.value.apiGateway = {
-          gatewayType: test.value.apiGateway.gatewayType || 'aws-api-gateway',
-          endpoint: test.value.apiGateway.endpoint || '',
-          method: test.value.apiGateway.method || 'GET',
-          policyId: test.value.apiGateway.policyId || '',
-          policyType: test.value.apiGateway.policyType || '',
-        };
       }
     } else if (test.value.testType === 'network-policy') {
       form.value.networkPolicy = {
@@ -1426,8 +1594,10 @@ const loadTest = async () => {
         expectedAllowed: test.value.expectedAllowed !== undefined ? test.value.expectedAllowed : true,
       };
     } else if (test.value.testType === 'distributed-systems') {
+      const subTestType = (test.value as any).distributedTestType || 'policy-consistency';
       form.value.distributedSystems = {
-        regions: test.value.regions || test.value.region ? [test.value.region] : [],
+        testType: subTestType,
+        regions: test.value.regions || (test.value.region ? [test.value.region] : []),
         policySync: test.value.policySync || {
           enabled: false,
           syncInterval: undefined,
@@ -1438,6 +1608,7 @@ const loadTest = async () => {
           endpoint: '',
         },
       };
+      distributedSystemsSubType.value = subTestType;
     } else if (test.value.testType === 'data-pipeline') {
       form.value.dataPipeline = {
         pipelineType: test.value.pipelineType || '',
@@ -1518,8 +1689,8 @@ const validate = (): boolean => {
         validationErrors.value.push('Version and Endpoint are required for API Versioning test');
       }
     } else if (apiSecuritySubType.value === 'gatewayPolicy') {
-      if (!form.value.gatewayPolicy.gatewayType || !form.value.gatewayPolicy.policyId || !form.value.gatewayPolicy.policyType) {
-        validationErrors.value.push('Gateway Type, Policy ID, and Policy Type are required for Gateway Policy test');
+      if (!form.value.gatewayPolicy.gatewayType || !form.value.gatewayPolicy.endpoint || !form.value.gatewayPolicy.method || !form.value.gatewayPolicy.policyId || !form.value.gatewayPolicy.policyType) {
+        validationErrors.value.push('Gateway Type, Endpoint, Method, Policy ID, and Policy Type are required for Gateway Policy test');
       }
     } else if (apiSecuritySubType.value === 'webhook') {
       if (!form.value.webhook.endpoint || !form.value.webhook.authentication.type || !form.value.webhook.authentication.method) {
@@ -1535,10 +1706,6 @@ const validate = (): boolean => {
     } else if (apiSecuritySubType.value === 'apiContract') {
       if (!form.value.apiContract.version || !form.value.apiContract.schemaText) {
         validationErrors.value.push('Contract Version and Schema are required for API Contract test');
-      }
-    } else if (apiSecuritySubType.value === 'apiGateway') {
-      if (!form.value.apiGateway.gatewayType || !form.value.apiGateway.endpoint || !form.value.apiGateway.method) {
-        validationErrors.value.push('Gateway Type, Endpoint, and Method are required for API Gateway test');
       }
     }
   }
@@ -1666,6 +1833,8 @@ const save = async () => {
       } else if (apiSecuritySubType.value === 'gatewayPolicy') {
         payload.gatewayPolicy = {
           gatewayType: form.value.gatewayPolicy.gatewayType,
+          endpoint: form.value.gatewayPolicy.endpoint,
+          method: form.value.gatewayPolicy.method,
           policyId: form.value.gatewayPolicy.policyId,
           policyType: form.value.gatewayPolicy.policyType,
           route: form.value.gatewayPolicy.route.path || form.value.gatewayPolicy.route.method || form.value.gatewayPolicy.route.target
@@ -1716,14 +1885,6 @@ const save = async () => {
           saving.value = false;
           return;
         }
-      } else if (apiSecuritySubType.value === 'apiGateway') {
-        payload.apiGateway = {
-          gatewayType: form.value.apiGateway.gatewayType,
-          endpoint: form.value.apiGateway.endpoint,
-          method: form.value.apiGateway.method,
-          policyId: form.value.apiGateway.policyId || undefined,
-          policyType: form.value.apiGateway.policyType || undefined,
-        };
       }
     } else if (form.value.testType === 'network-policy') {
       payload.source = form.value.networkPolicy.source;
@@ -1732,6 +1893,7 @@ const save = async () => {
       payload.port = form.value.networkPolicy.port;
       payload.expectedAllowed = form.value.networkPolicy.expectedAllowed;
     } else if (form.value.testType === 'distributed-systems') {
+      payload.distributedTestType = form.value.distributedSystems.testType;
       payload.regions = form.value.distributedSystems.regions;
       payload.policySync = form.value.distributedSystems.policySync.enabled ? {
         enabled: true,
@@ -1787,6 +1949,8 @@ watch(() => form.value.testType, (newType) => {
   } else if (newType === 'api-security') {
     apiSecuritySubType.value = 'apiVersion';
   } else if (newType === 'distributed-systems') {
+    distributedSystemsSubType.value = 'policy-consistency';
+    form.value.distributedSystems.testType = 'policy-consistency';
     // Initialize with one region if empty
     if (form.value.distributedSystems.regions.length === 0) {
       addRegion();
