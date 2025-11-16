@@ -98,7 +98,7 @@ const menuItems = [
 // Test pages
 const testPages = [
   '/policy-validation',
-  '/api-security', '/api-security-enhanced', '/users', '/api-gateway', '/dlp',
+  '/api-security', '/users', '/api-gateway', '/dlp',
   '/distributed-systems', '/network-policies',
   '/rls-cls'
 ];

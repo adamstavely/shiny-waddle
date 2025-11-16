@@ -1008,14 +1008,6 @@ POST /api/test-configurations/:id/test
 - **POST `/api/environment-config/detect-drift`** - Detect configuration drift
 - **POST `/api/environment-config/validate-policies`** - Validate environment policies
 
-#### API Security Enhanced API
-
-- **POST `/api/api-security/versioning`** - Test API versioning security
-- **POST `/api/api-security/gateway-policies`** - Validate gateway policies
-- **POST `/api/api-security/webhooks`** - Test webhook security
-- **POST `/api/api-security/graphql`** - Test GraphQL security
-- **POST `/api/api-security/contracts`** - Validate contract security
-
 #### ABAC Correctness API
 
 - **POST `/api/abac-correctness/validate-attributes`** - Validate ABAC attributes

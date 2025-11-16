@@ -81,18 +81,6 @@
 
         <!-- Separator -->
         <div style="height: 1px; background: rgba(79, 172, 254, 0.2); margin: 16px 20px;"></div>
-
-        <!-- Test Tools -->
-        <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/api-security-enhanced"
-            @click.prevent="handleNavClick('/api-security-enhanced')"
-            :class="['drawer-item', isActive('/api-security-enhanced') ? 'drawer-item-active' : '']"
-          >
-            <ShieldCheck class="item-icon" />
-            <span>API Security Enhanced</span>
-          </a>
-        </div>
       </div>
 
       <!-- Access Control Category -->
@@ -335,7 +323,7 @@ const testPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/individual', '/tests/library', '/tests/findings',
-  '/tests/history', '/api-security-enhanced'
+  '/tests/history'
 ];
 
 // Access Control pages
