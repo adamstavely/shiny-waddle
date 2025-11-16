@@ -695,13 +695,19 @@ onMounted(async () => {
 }
 
 .stat-card {
-  background: rgba(26, 31, 46, 0.6);
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.1);
 }
 
 .stat-icon-wrapper {
@@ -978,7 +984,7 @@ onMounted(async () => {
 }
 
 .test-suite-card {
-  background: rgba(26, 31, 46, 0.6);
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
@@ -989,6 +995,7 @@ onMounted(async () => {
 .test-suite-card:hover {
   border-color: rgba(79, 172, 254, 0.4);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
 }
 
 .suite-header {
@@ -1239,5 +1246,37 @@ onMounted(async () => {
 .error {
   color: #fc8181;
 }
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
 </style>
 

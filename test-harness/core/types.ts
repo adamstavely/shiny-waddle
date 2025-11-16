@@ -63,36 +63,260 @@ export interface ReportingConfig {
   includeDetails?: boolean;
 }
 
+// Test Type Union - all supported test types
+export type TestType = 
+  | 'access-control' 
+  | 'data-behavior' 
+  | 'contract' 
+  | 'dataset-health'
+  | 'rls-cls'
+  | 'network-policy'
+  | 'dlp'
+  | 'api-gateway'
+  | 'distributed-systems'
+  | 'api-security'
+  | 'data-pipeline';
+
+// TestSuite - collection of tests (no configuration, tests are pre-made)
 export interface TestSuite {
+  id: string;
   name: string;
   application: string;
   team: string;
-  includeAccessControlTests: boolean;
-  includeDataBehaviorTests: boolean;
-  includeContractTests: boolean;
-  includeDatasetHealthTests: boolean;
-  userRoles: string[];
-  resources: Resource[];
-  contexts: Context[];
-  expectedDecisions?: Record<string, boolean>;
-  testQueries?: TestQuery[];
-  allowedFields?: Record<string, string[]>;
-  requiredFilters?: Record<string, Filter[]>;
-  disallowedJoins?: Record<string, string[]>;
-  contracts?: Contract[];
-  datasets?: Dataset[];
-  privacyThresholds?: PrivacyThreshold[];
-  statisticalFidelityTargets?: StatisticalFidelityTarget[];
+  testType: TestType; // All tests in suite must match this type
+  testIds: string[]; // References to Test entities
+  description?: string;
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TestResult {
-  testType: 'access-control' | 'data-behavior' | 'contract' | 'dataset-health';
+  testType: TestType;
   testName: string;
   passed: boolean;
   details: any;
   timestamp: Date;
   error?: string;
+  testId?: string;
+  testVersion?: number;
+  policyIds?: string[];
 }
+
+// Test Version History
+export interface TestVersion {
+  version: number;
+  testConfiguration: any; // Snapshot of test config at this version
+  changedBy?: string;
+  changeReason?: string;
+  changedAt: Date;
+  changes?: string[]; // List of what changed
+}
+
+// Base Test Interface
+export interface BaseTest {
+  id: string;
+  name: string;
+  description?: string;
+  testType: TestType;
+  version: number;
+  versionHistory?: TestVersion[];
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string;
+  lastModifiedBy?: string;
+}
+
+// Access Control Test - references policies
+export interface AccessControlTest extends BaseTest {
+  testType: 'access-control';
+  policyIds: string[]; // References to Policy entities (RBAC/ABAC)
+  role: string; // Role to test
+  resource: Resource; // Resource to test access to
+  context?: Context; // Context for testing
+  expectedDecision: boolean; // What the policy should decide
+  policyRuleId?: string; // Optional: test specific policy rule
+}
+
+// Data Behavior Test
+export interface DataBehaviorTest extends BaseTest {
+  testType: 'data-behavior';
+  testQuery: TestQuery;
+  allowedFields?: string[];
+  requiredFilters?: Filter[];
+  disallowedJoins?: string[];
+  expectedResult?: any;
+}
+
+// Contract Test
+export interface ContractTest extends BaseTest {
+  testType: 'contract';
+  contract: Contract;
+  expectedCompliance: boolean;
+}
+
+// Dataset Health Test
+export interface DatasetHealthTest extends BaseTest {
+  testType: 'dataset-health';
+  dataset: Dataset;
+  privacyThresholds?: PrivacyThreshold[];
+  statisticalFidelityTargets?: StatisticalFidelityTarget[];
+  expectedResult?: any;
+}
+
+// RLS/CLS Test
+export interface RLSCLSTest extends BaseTest {
+  testType: 'rls-cls';
+  database: DatabaseConfig;
+  testQuery: TestQuery;
+  maskingRules?: Array<{
+    table: string;
+    column: string;
+    maskingType: 'partial' | 'full' | 'hash' | 'redact';
+    condition?: string;
+  }>;
+  expectedResult?: any;
+}
+
+// Network Policy Test
+export interface NetworkPolicyTest extends BaseTest {
+  testType: 'network-policy';
+  source: string;
+  target: string;
+  protocol: 'tcp' | 'udp' | 'icmp' | 'all';
+  port?: number;
+  expectedAllowed: boolean;
+}
+
+// DLP Test - one per pattern/rule
+export interface DLPTest extends BaseTest {
+  testType: 'dlp';
+  // Pattern-based test
+  pattern?: DLPPattern;
+  testData?: any; // Sample data to test against pattern
+  expectedDetection?: boolean; // Should pattern detect or not?
+  // OR Bulk export test
+  bulkExportType?: 'csv' | 'json' | 'excel' | 'api';
+  bulkExportLimit?: number;
+  testRecordCount?: number; // Test with this many records
+  expectedBlocked?: boolean; // Should it block if over limit?
+  // OR PII detection rule test
+  piiDetectionRule?: {
+    fieldName: string;
+    pattern: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+  };
+  // OR Custom check test
+  customCheck?: {
+    name: string;
+    condition: string;
+    description?: string;
+  };
+}
+
+// API Gateway Test
+export interface APIGatewayTest extends BaseTest {
+  testType: 'api-gateway';
+  gatewayType: 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy';
+  endpoint: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  policyId?: string; // Reference to gateway policy
+  policyType?: 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching';
+  expectedResult?: any;
+}
+
+// Distributed Systems Test
+export interface DistributedSystemsTest extends BaseTest {
+  testType: 'distributed-systems';
+  region: {
+    id: string;
+    name: string;
+    endpoint: string;
+    pdpEndpoint?: string;
+  };
+  expectedResult?: any;
+}
+
+// API Security Enhanced Test
+export interface APISecurityTest extends BaseTest {
+  testType: 'api-security';
+  // API Versioning test
+  apiVersion?: {
+    version: string;
+    endpoint: string;
+    deprecated?: boolean;
+    deprecationDate?: Date;
+    sunsetDate?: Date;
+  };
+  // OR Gateway Policy test
+  gatewayPolicy?: {
+    gatewayType: 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy';
+    policyId: string;
+    policyType: 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching';
+    route?: { path: string; method: string; target: string };
+  };
+  // OR Webhook test
+  webhook?: {
+    endpoint: string;
+    authentication: { type: 'signature' | 'token' | 'oauth2'; method: string };
+    encryption: { enabled: boolean; method?: string };
+    rateLimiting?: { maxRequests: number; windowSeconds: number };
+  };
+  // OR GraphQL test
+  graphql?: {
+    endpoint: string;
+    schema: string;
+    testType: 'depth' | 'complexity' | 'introspection' | 'full';
+    maxDepth?: number;
+    maxComplexity?: number;
+    introspectionEnabled?: boolean;
+  };
+  // OR API Contract test
+  apiContract?: {
+    version: string;
+    schema: any;
+    endpoints?: Array<{
+      path: string;
+      method: string;
+      parameters?: Array<{
+        name: string;
+        in: 'query' | 'header' | 'path' | 'body';
+        type: string;
+        required: boolean;
+      }>;
+    }>;
+  };
+  expectedResult?: any;
+}
+
+// Data Pipeline Test
+export interface DataPipelineTest extends BaseTest {
+  testType: 'data-pipeline';
+  pipelineType: 'etl' | 'streaming' | 'batch' | 'real-time';
+  dataSource?: {
+    type: 'database' | 'api' | 'file' | 'stream';
+    connectionString?: string;
+  };
+  dataDestination?: {
+    type: 'database' | 'data-warehouse' | 'data-lake' | 'api';
+    connectionString?: string;
+  };
+  expectedResult?: any;
+}
+
+// Discriminated union for Test
+export type Test =
+  | AccessControlTest
+  | DataBehaviorTest
+  | ContractTest
+  | DatasetHealthTest
+  | RLSCLSTest
+  | NetworkPolicyTest
+  | DLPTest
+  | APIGatewayTest
+  | DistributedSystemsTest
+  | APISecurityTest
+  | DataPipelineTest;
 
 export interface User {
   id: string;
@@ -570,7 +794,8 @@ export interface TestHarness {
   id: string;
   name: string;
   description: string;
-  testSuiteIds: string[]; // Many-to-many: suites can be in multiple harnesses
+  testType: TestType; // Required: all suites in harness must have this type
+  testSuiteIds: string[]; // Many-to-many: suites can be in multiple harnesses (all must match testType)
   applicationIds: string[]; // Assigned to applications
   team?: string;
   createdAt: Date;

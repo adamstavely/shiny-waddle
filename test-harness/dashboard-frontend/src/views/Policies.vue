@@ -92,6 +92,10 @@
             <span class="stat-value">{{ policy.ruleCount }}</span>
           </div>
           <div class="stat">
+            <span class="stat-label">Tests</span>
+            <span class="stat-value">{{ getTestCount(policy.id) }}</span>
+          </div>
+          <div class="stat">
             <span class="stat-label">Last Updated</span>
             <span class="stat-value">{{ formatDate(policy.lastUpdated) }}</span>
           </div>
@@ -109,6 +113,10 @@
           <button @click.stop="testPolicy(policy.id)" class="action-btn test-btn">
             <TestTube class="action-icon" />
             Test
+          </button>
+          <button @click.stop="viewTestsUsingPolicy(policy.id)" class="action-btn view-btn" v-if="getTestCount(policy.id) > 0">
+            <TestTube class="action-icon" />
+            View Tests ({{ getTestCount(policy.id) }})
           </button>
           <button @click.stop="deletePolicy(policy.id)" class="action-btn delete-btn">
             <Trash2 class="action-icon" />
@@ -466,6 +474,8 @@ const error = ref<string | null>(null);
 
 // Policies data from API
 const policies = ref<any[]>([]);
+const tests = ref<any[]>([]);
+const testCountsByPolicy = ref<Record<string, number>>({});
 
 const tabs = computed(() => [
   { id: 'all', label: 'All Policies', icon: FileText, badge: policies.value.length },
@@ -564,6 +574,10 @@ const testPolicy = (id: string) => {
   // In a real app, this might trigger a test modal or navigate to tests page
 };
 
+const viewTestsUsingPolicy = (policyId: string) => {
+  router.push(`/tests/individual?policyId=${policyId}`);
+};
+
 const loadPolicies = async () => {
   try {
     loading.value = true;
@@ -574,12 +588,37 @@ const loadPolicies = async () => {
       lastUpdated: new Date(p.updatedAt),
       ruleCount: p.ruleCount || (p.type === 'rbac' ? (p.rules?.length || 0) : (p.conditions?.length || 0))
     }));
+    await loadTests();
   } catch (err: any) {
     error.value = err.message || 'Failed to load policies';
     console.error('Error loading policies:', err);
   } finally {
     loading.value = false;
   }
+};
+
+const loadTests = async () => {
+  try {
+    const response = await axios.get('/api/tests?testType=access-control');
+    tests.value = response.data;
+    
+    // Count tests per policy
+    testCountsByPolicy.value = {};
+    policies.value.forEach(policy => {
+      const count = tests.value.filter(test => 
+        test.testType === 'access-control' && 
+        test.policyIds && 
+        test.policyIds.includes(policy.id)
+      ).length;
+      testCountsByPolicy.value[policy.id] = count;
+    });
+  } catch (err) {
+    console.error('Error loading tests:', err);
+  }
+};
+
+const getTestCount = (policyId: string): number => {
+  return testCountsByPolicy.value[policyId] || 0;
 };
 
 const savePolicy = async () => {

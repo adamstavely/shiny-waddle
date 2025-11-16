@@ -85,29 +85,22 @@
             </div>
 
             <div class="form-group">
-              <label>Test Types *</label>
-              <p class="form-help">Select which types of tests to include in this suite</p>
-              <div class="test-types-grid">
-                <label
-                  v-for="testType in testTypes"
-                  :key="testType.id"
-                  class="test-type-card"
-                  :class="{ selected: form[testType.field] }"
-                >
-                  <input
-                    v-model="form[testType.field]"
-                    type="checkbox"
-                    class="test-type-checkbox"
-                  />
-                  <div class="test-type-content">
-                    <component :is="testType.icon" class="test-type-icon" />
-                    <div class="test-type-info">
-                      <div class="test-type-name">{{ testType.name }}</div>
-                      <div class="test-type-desc">{{ testType.description }}</div>
-                    </div>
-                  </div>
-                </label>
-              </div>
+              <label>Test Type *</label>
+              <p class="form-help">Select the type of tests for this suite. Each suite must have exactly one test type.</p>
+              <select v-model="form.testType" required class="form-input form-select">
+                <option value="">Select a test type...</option>
+                <option value="access-control">Access Control</option>
+                <option value="data-behavior">Data Behavior</option>
+                <option value="contract">Contract</option>
+                <option value="dataset-health">Dataset Health</option>
+                <option value="rls-cls">RLS/CLS</option>
+                <option value="network-policy">Network Policy</option>
+                <option value="dlp">DLP</option>
+                <option value="api-gateway">API Gateway</option>
+                <option value="distributed-systems">Distributed Systems</option>
+                <option value="api-security">API Security</option>
+                <option value="data-pipeline">Data Pipeline</option>
+              </select>
             </div>
           </div>
         </div>
@@ -247,11 +240,17 @@
         <!-- Step 5: Test Type Configurations -->
         <div v-if="currentStep === 4" class="wizard-step">
           <h2 class="step-heading">Test Type Configurations</h2>
-          <p class="step-subheading">Configure specific settings for each test type</p>
+          <p class="step-subheading">Configure specific settings for the selected test type</p>
           
-          <div class="form-section">
+          <div v-if="!form.testType" class="form-section">
+            <div class="empty-state-small">
+              <p>Please select a test type in Step 1 to configure settings.</p>
+            </div>
+          </div>
+          
+          <div v-else class="form-section">
             <!-- Access Control Configuration -->
-            <div v-if="form.includeAccessControlTests" class="config-section">
+            <div v-if="form.testType === 'access-control'" class="config-section">
               <h3 class="config-title">
                 <Shield class="config-icon" />
                 Access Control Tests
@@ -283,7 +282,7 @@
             </div>
 
             <!-- Data Behavior Configuration -->
-            <div v-if="form.includeDataBehaviorTests" class="config-section">
+            <div v-if="form.testType === 'data-behavior'" class="config-section">
               <h3 class="config-title">
                 <Database class="config-icon" />
                 Data Behavior Tests
@@ -366,7 +365,7 @@
             </div>
 
             <!-- Contract Configuration -->
-            <div v-if="form.includeContractTests" class="config-section">
+            <div v-if="form.testType === 'contract'" class="config-section">
               <h3 class="config-title">
                 <FileText class="config-icon" />
                 Contract Tests
@@ -399,7 +398,7 @@
             </div>
 
             <!-- Dataset Health Configuration -->
-            <div v-if="form.includeDatasetHealthTests" class="config-section">
+            <div v-if="form.testType === 'dataset-health'" class="config-section">
               <h3 class="config-title">
                 <Activity class="config-icon" />
                 Dataset Health Tests
@@ -455,16 +454,8 @@
                   <span class="preview-value">{{ form.team || 'Not set' }}</span>
                 </div>
                 <div class="preview-item">
-                  <span class="preview-label">Test Types:</span>
-                  <div class="preview-badges">
-                    <span
-                      v-for="testType in enabledTestTypes"
-                      :key="testType"
-                      class="preview-badge"
-                    >
-                      {{ testType }}
-                    </span>
-                  </div>
+                  <span class="preview-label">Test Type:</span>
+                  <span class="preview-value">{{ form.testType || 'Not set' }}</span>
                 </div>
               </div>
 
@@ -619,45 +610,11 @@ const steps = [
   { id: 'preview', title: 'Preview', description: 'Review and validate' }
 ];
 
-const testTypes = [
-  {
-    id: 'access-control',
-    name: 'Access Control',
-    description: 'Test PDP decisions for user/resource/context combinations',
-    field: 'includeAccessControlTests',
-    icon: Shield
-  },
-  {
-    id: 'data-behavior',
-    name: 'Data Behavior',
-    description: 'Test query compliance, field access, and joins',
-    field: 'includeDataBehaviorTests',
-    icon: Database
-  },
-  {
-    id: 'contract',
-    name: 'Contract',
-    description: 'Test data owner contracts and requirements',
-    field: 'includeContractTests',
-    icon: FileText
-  },
-  {
-    id: 'dataset-health',
-    name: 'Dataset Health',
-    description: 'Test privacy thresholds and statistical fidelity',
-    field: 'includeDatasetHealthTests',
-    icon: Activity
-  }
-];
-
 const form = ref({
   name: '',
   application: '',
   team: '',
-  includeAccessControlTests: false,
-  includeDataBehaviorTests: false,
-  includeContractTests: false,
-  includeDatasetHealthTests: false,
+  testType: '' as string,
   userRoles: [] as string[],
   resources: [] as any[],
   contexts: [] as any[],
@@ -668,21 +625,10 @@ const form = ref({
   datasets: [] as any[]
 });
 
-const enabledTestTypes = computed(() => {
-  const types: string[] = [];
-  if (form.value.includeAccessControlTests) types.push('Access Control');
-  if (form.value.includeDataBehaviorTests) types.push('Data Behavior');
-  if (form.value.includeContractTests) types.push('Contract');
-  if (form.value.includeDatasetHealthTests) types.push('Dataset Health');
-  return types;
-});
-
 const canProceed = computed(() => {
   switch (currentStep.value) {
     case 0:
-      return form.value.name && form.value.application && form.value.team &&
-             (form.value.includeAccessControlTests || form.value.includeDataBehaviorTests ||
-              form.value.includeContractTests || form.value.includeDatasetHealthTests);
+      return form.value.name && form.value.application && form.value.team && form.value.testType;
     case 1:
       return form.value.userRoles.length > 0;
     default:
@@ -701,16 +647,15 @@ const validationErrors = computed(() => {
   if (!form.value.application) errors.push('Application is required');
   if (!form.value.team) errors.push('Team is required');
   
-  if (!form.value.includeAccessControlTests && !form.value.includeDataBehaviorTests &&
-      !form.value.includeContractTests && !form.value.includeDatasetHealthTests) {
-    errors.push('At least one test type must be selected');
+  if (!form.value.testType) {
+    errors.push('Test type must be selected');
   }
   
   if (form.value.userRoles.length === 0) {
     errors.push('At least one user role is required');
   }
   
-  if (form.value.includeAccessControlTests && form.value.resources.length === 0) {
+  if (form.value.testType === 'access-control' && form.value.resources.length === 0) {
     errors.push('At least one resource is required for access control tests');
   }
   
@@ -828,16 +773,42 @@ const removeExpectedDecision = (key: string) => {
 };
 
 const saveDraft = async () => {
+  if (!form.value.testType) {
+    alert('Please select a test type');
+    return;
+  }
+
   saving.value = true;
   try {
-    // Save as draft
-    await axios.post('/api/test-suites', {
-      ...form.value,
+    // Build type-specific suite object
+    const suiteData: any = {
+      name: form.value.name,
+      application: form.value.application,
+      team: form.value.team,
+      testType: form.value.testType,
+      userRoles: form.value.userRoles,
+      resources: form.value.resources,
+      contexts: form.value.contexts,
       status: 'draft'
-    });
+    };
+
+    // Add type-specific fields
+    if (form.value.testType === 'access-control') {
+      suiteData.expectedDecisions = form.value.expectedDecisions;
+    } else if (form.value.testType === 'data-behavior') {
+      suiteData.testQueries = form.value.testQueries;
+      suiteData.allowedFields = form.value.allowedFields;
+    } else if (form.value.testType === 'contract') {
+      suiteData.contracts = form.value.contracts;
+    } else if (form.value.testType === 'dataset-health') {
+      suiteData.datasets = form.value.datasets;
+    }
+
+    await axios.post('/api/test-suites', suiteData);
     // In a real app, show success message
   } catch (error) {
     console.error('Error saving draft:', error);
+    alert('Failed to save draft. Please check the console for details.');
   } finally {
     saving.value = false;
   }
@@ -845,16 +816,42 @@ const saveDraft = async () => {
 
 const publish = async () => {
   if (!canPublish.value) return;
+  if (!form.value.testType) {
+    alert('Please select a test type');
+    return;
+  }
   
   saving.value = true;
   try {
-    await axios.post('/api/test-suites', {
-      ...form.value,
+    // Build type-specific suite object
+    const suiteData: any = {
+      name: form.value.name,
+      application: form.value.application,
+      team: form.value.team,
+      testType: form.value.testType,
+      userRoles: form.value.userRoles,
+      resources: form.value.resources,
+      contexts: form.value.contexts,
       status: 'published'
-    });
+    };
+
+    // Add type-specific fields
+    if (form.value.testType === 'access-control') {
+      suiteData.expectedDecisions = form.value.expectedDecisions;
+    } else if (form.value.testType === 'data-behavior') {
+      suiteData.testQueries = form.value.testQueries;
+      suiteData.allowedFields = form.value.allowedFields;
+    } else if (form.value.testType === 'contract') {
+      suiteData.contracts = form.value.contracts;
+    } else if (form.value.testType === 'dataset-health') {
+      suiteData.datasets = form.value.datasets;
+    }
+
+    await axios.post('/api/test-suites', suiteData);
     router.push('/tests');
   } catch (error) {
     console.error('Error publishing test suite:', error);
+    alert('Failed to publish test suite. Please check the console for details.');
   } finally {
     saving.value = false;
   }
@@ -1058,6 +1055,14 @@ onMounted(() => {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234facfe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
 }
 
 .form-row {

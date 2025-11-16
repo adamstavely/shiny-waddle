@@ -96,12 +96,14 @@
                     v-for="harness in availableHarnesses"
                     :key="harness.id"
                     class="harness-option"
+                    :class="{ 'duplicate-type': isDuplicateType(harness) }"
                   >
                     <label class="checkbox-label">
                       <input 
                         type="checkbox"
                         :value="harness.id"
                         v-model="form.harnessIds"
+                        :disabled="isDuplicateType(harness)"
                       />
                       <div class="harness-info">
                         <span class="harness-name">{{ harness.name }}</span>
@@ -111,10 +113,18 @@
                         <span class="harness-meta">
                           {{ harness.testSuiteIds?.length || 0 }} suites
                           <span v-if="harness.team"> • {{ harness.team }}</span>
+                          <span v-if="harness.testType" class="harness-type-badge"> • Type: {{ harness.testType }}</span>
+                        </span>
+                        <span v-if="isDuplicateType(harness)" class="duplicate-warning">
+                          ⚠️ Another harness with type "{{ harness.testType }}" is already selected
                         </span>
                       </div>
                     </label>
                   </div>
+                </div>
+                <div v-if="hasDuplicateTypes" class="validation-warning">
+                  <strong>⚠️ Warning:</strong> All harnesses in a battery must have different types. 
+                  Please remove duplicate types.
                 </div>
               </div>
 
@@ -171,6 +181,39 @@ const loadingHarnesses = ref(false);
 const harnessesError = ref<string | null>(null);
 const saving = ref(false);
 
+const selectedHarnessTypes = computed(() => {
+  const types = new Set<string>();
+  form.value.harnessIds.forEach(harnessId => {
+    const harness = availableHarnesses.value.find(h => h.id === harnessId);
+    if (harness && harness.testType) {
+      types.add(harness.testType);
+    }
+  });
+  return types;
+});
+
+const hasDuplicateTypes = computed(() => {
+  const typeCounts = new Map<string, number>();
+  form.value.harnessIds.forEach(harnessId => {
+    const harness = availableHarnesses.value.find(h => h.id === harnessId);
+    if (harness && harness.testType) {
+      typeCounts.set(harness.testType, (typeCounts.get(harness.testType) || 0) + 1);
+    }
+  });
+  return Array.from(typeCounts.values()).some(count => count > 1);
+});
+
+const isDuplicateType = (harness: any) => {
+  if (!harness.testType || !form.value.harnessIds.includes(harness.id)) {
+    return false;
+  }
+  const selectedCount = form.value.harnessIds.filter(id => {
+    const h = availableHarnesses.value.find(har => har.id === id);
+    return h && h.testType === harness.testType;
+  }).length;
+  return selectedCount > 1;
+};
+
 const loadHarnesses = async () => {
   loadingHarnesses.value = true;
   harnessesError.value = null;
@@ -214,6 +257,12 @@ const populateForm = (battery: TestBattery) => {
 };
 
 const save = async () => {
+  if (hasDuplicateTypes.value) {
+    alert('All harnesses in a battery must have different types. Please remove duplicate types.');
+    saving.value = false;
+    return;
+  }
+
   saving.value = true;
   try {
     const payload: any = {
@@ -481,6 +530,33 @@ onMounted(() => {
 .harness-meta {
   font-size: 0.75rem;
   color: #718096;
+}
+
+.harness-type-badge {
+  color: #4facfe;
+  font-weight: 500;
+}
+
+.duplicate-warning {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #fc8181;
+}
+
+.harness-option.duplicate-type {
+  border-color: rgba(252, 129, 129, 0.3);
+  background: rgba(252, 129, 129, 0.05);
+}
+
+.validation-warning {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 6px;
+  color: #fbbf24;
+  font-size: 0.875rem;
 }
 
 .loading,

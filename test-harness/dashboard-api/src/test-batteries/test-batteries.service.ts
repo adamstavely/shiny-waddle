@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { TestBatteryEntity } from './entities/test-battery.entity';
 import { CreateTestBatteryDto } from './dto/create-test-battery.dto';
 import { UpdateTestBatteryDto } from './dto/update-test-battery.dto';
+import { TestHarnessesService } from '../test-harnesses/test-harnesses.service';
 
 @Injectable()
 export class TestBatteriesService {
@@ -12,7 +13,10 @@ export class TestBatteriesService {
   private readonly batteriesFile = path.join(process.cwd(), 'data', 'test-batteries.json');
   private batteries: TestBatteryEntity[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => TestHarnessesService))
+    private readonly testHarnessesService: TestHarnessesService,
+  ) {
     this.loadBatteries().catch(err => {
       this.logger.error('Error loading test batteries on startup:', err);
     });
@@ -72,6 +76,27 @@ export class TestBatteriesService {
   async create(dto: CreateTestBatteryDto): Promise<TestBatteryEntity> {
     await this.loadBatteries();
 
+    // Validate that all harnesses have different types
+    if (dto.harnessIds && dto.harnessIds.length > 0) {
+      const harnesses = await this.testHarnessesService.findAll();
+      const harnessTypes = new Set<string>();
+      
+      for (const harnessId of dto.harnessIds) {
+        const harness = harnesses.find(h => h.id === harnessId);
+        if (!harness) {
+          throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
+        }
+        
+        if (harnessTypes.has(harness.testType)) {
+          throw new BadRequestException(
+            `Battery contains multiple harnesses with the same type "${harness.testType}". ` +
+            `All harnesses in a battery must have different types.`
+          );
+        }
+        harnessTypes.add(harness.testType);
+      }
+    }
+
     // Check for duplicate name
     const existing = this.batteries.find(b => b.name === dto.name);
     if (existing) {
@@ -118,16 +143,40 @@ export class TestBatteriesService {
       throw new NotFoundException(`Test battery with ID "${id}" not found`);
     }
 
+    const existing = this.batteries[index];
+    const harnessIdsToCheck = dto.harnessIds !== undefined ? dto.harnessIds : existing.harnessIds;
+
+    // Validate that all harnesses have different types
+    if (harnessIdsToCheck.length > 0) {
+      const harnesses = await this.testHarnessesService.findAll();
+      const harnessTypes = new Set<string>();
+      
+      for (const harnessId of harnessIdsToCheck) {
+        const harness = harnesses.find(h => h.id === harnessId);
+        if (!harness) {
+          throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
+        }
+        
+        if (harnessTypes.has(harness.testType)) {
+          throw new BadRequestException(
+            `Battery contains multiple harnesses with the same type "${harness.testType}". ` +
+            `All harnesses in a battery must have different types.`
+          );
+        }
+        harnessTypes.add(harness.testType);
+      }
+    }
+
     // Check for duplicate name if name is being updated
-    if (dto.name && dto.name !== this.batteries[index].name) {
-      const existing = this.batteries.find(b => b.name === dto.name && b.id !== id);
-      if (existing) {
+    if (dto.name && dto.name !== existing.name) {
+      const duplicate = this.batteries.find(b => b.name === dto.name && b.id !== id);
+      if (duplicate) {
         throw new BadRequestException(`Test battery with name "${dto.name}" already exists`);
       }
     }
 
     const updated: TestBatteryEntity = {
-      ...this.batteries[index],
+      ...existing,
       ...dto,
       updatedAt: new Date(),
     };
@@ -157,6 +206,25 @@ export class TestBatteriesService {
     const battery = await this.findOne(batteryId);
     
     if (!battery.harnessIds.includes(harnessId)) {
+      // Validate that the new harness has a different type than existing ones
+      const harnesses = await this.testHarnessesService.findAll();
+      const newHarness = harnesses.find(h => h.id === harnessId);
+      if (!newHarness) {
+        throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
+      }
+
+      // Check existing harnesses in battery
+      for (const existingHarnessId of battery.harnessIds) {
+        const existingHarness = harnesses.find(h => h.id === existingHarnessId);
+        if (existingHarness && existingHarness.testType === newHarness.testType) {
+          throw new BadRequestException(
+            `Cannot add harness "${newHarness.name}" (${newHarness.testType}) to battery. ` +
+            `Battery already contains a harness with type "${newHarness.testType}". ` +
+            `All harnesses in a battery must have different types.`
+          );
+        }
+      }
+
       battery.harnessIds.push(harnessId);
       battery.updatedAt = new Date();
       await this.saveBatteries();

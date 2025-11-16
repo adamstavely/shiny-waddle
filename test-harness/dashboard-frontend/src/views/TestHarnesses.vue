@@ -224,7 +224,7 @@ onMounted(() => {
 }
 
 .harness-card {
-  background: rgba(26, 31, 46, 0.6);
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 12px;
   padding: 1.5rem;
@@ -236,6 +236,7 @@ onMounted(() => {
 .harness-card:hover {
   border-color: rgba(79, 172, 254, 0.4);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
 }
 
 .harness-content {
@@ -301,6 +302,37 @@ onMounted(() => {
   border-top: 1px solid rgba(79, 172, 254, 0.1);
 }
 
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .btn-icon {
   background: transparent;
   border: 1px solid rgba(79, 172, 254, 0.2);
@@ -309,6 +341,9 @@ onMounted(() => {
   cursor: pointer;
   color: #4facfe;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
@@ -320,5 +355,6 @@ onMounted(() => {
   width: 16px;
   height: 16px;
 }
+
 </style>
 

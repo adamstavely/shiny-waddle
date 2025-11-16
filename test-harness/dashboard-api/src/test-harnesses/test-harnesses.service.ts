@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { TestHarnessEntity } from './entities/test-harness.entity';
 import { CreateTestHarnessDto } from './dto/create-test-harness.dto';
 import { UpdateTestHarnessDto } from './dto/update-test-harness.dto';
+import { TestSuitesService } from '../test-suites/test-suites.service';
 
 @Injectable()
 export class TestHarnessesService {
@@ -12,7 +13,10 @@ export class TestHarnessesService {
   private readonly harnessesFile = path.join(process.cwd(), 'data', 'test-harnesses.json');
   private harnesses: TestHarnessEntity[] = [];
 
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => TestSuitesService))
+    private readonly testSuitesService: TestSuitesService,
+  ) {
     this.loadHarnesses().catch(err => {
       this.logger.error('Error loading test harnesses on startup:', err);
     });
@@ -73,6 +77,43 @@ export class TestHarnessesService {
   async create(dto: CreateTestHarnessDto): Promise<TestHarnessEntity> {
     await this.loadHarnesses();
 
+    // Validate testType
+    const validTestTypes = [
+      'access-control',
+      'data-behavior',
+      'contract',
+      'dataset-health',
+      'rls-cls',
+      'network-policy',
+      'dlp',
+      'api-gateway',
+      'distributed-systems',
+      'api-security',
+      'data-pipeline',
+    ];
+    if (!validTestTypes.includes(dto.testType)) {
+      throw new BadRequestException(
+        `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
+      );
+    }
+
+    // Validate that all suites match the harness type
+    if (dto.testSuiteIds && dto.testSuiteIds.length > 0) {
+      const suites = await this.testSuitesService.findAll();
+      for (const suiteId of dto.testSuiteIds) {
+        const suite = suites.find(s => s.id === suiteId);
+        if (!suite) {
+          throw new BadRequestException(`Test suite with ID "${suiteId}" not found`);
+        }
+        if (suite.testType !== dto.testType) {
+          throw new BadRequestException(
+            `Test suite "${suite.name}" (${suite.testType}) does not match harness type "${dto.testType}". ` +
+            `All suites in a harness must have the same type.`
+          );
+        }
+      }
+    }
+
     // Check for duplicate name
     const existing = this.harnesses.find(h => h.name === dto.name);
     if (existing) {
@@ -84,6 +125,7 @@ export class TestHarnessesService {
       id: uuidv4(),
       name: dto.name,
       description: dto.description,
+      testType: dto.testType,
       testSuiteIds: dto.testSuiteIds || [],
       applicationIds: dto.applicationIds || [],
       team: dto.team,
@@ -119,17 +161,61 @@ export class TestHarnessesService {
       throw new NotFoundException(`Test harness with ID "${id}" not found`);
     }
 
+    const existing = this.harnesses[index];
+    const testType = dto.testType || existing.testType;
+
+    // Validate testType if provided
+    if (dto.testType) {
+      const validTestTypes = [
+        'access-control',
+        'data-behavior',
+        'contract',
+        'dataset-health',
+        'rls-cls',
+        'network-policy',
+        'dlp',
+        'api-gateway',
+        'distributed-systems',
+        'api-security',
+        'data-pipeline',
+      ];
+      if (!validTestTypes.includes(dto.testType)) {
+        throw new BadRequestException(
+          `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
+        );
+      }
+    }
+
+    // Validate that all suites match the harness type
+    const suiteIdsToCheck = dto.testSuiteIds !== undefined ? dto.testSuiteIds : existing.testSuiteIds;
+    if (suiteIdsToCheck.length > 0) {
+      const suites = await this.testSuitesService.findAll();
+      for (const suiteId of suiteIdsToCheck) {
+        const suite = suites.find(s => s.id === suiteId);
+        if (!suite) {
+          throw new BadRequestException(`Test suite with ID "${suiteId}" not found`);
+        }
+        if (suite.testType !== testType) {
+          throw new BadRequestException(
+            `Test suite "${suite.name}" (${suite.testType}) does not match harness type "${testType}". ` +
+            `All suites in a harness must have the same type.`
+          );
+        }
+      }
+    }
+
     // Check for duplicate name if name is being updated
-    if (dto.name && dto.name !== this.harnesses[index].name) {
-      const existing = this.harnesses.find(h => h.name === dto.name && h.id !== id);
-      if (existing) {
+    if (dto.name && dto.name !== existing.name) {
+      const duplicate = this.harnesses.find(h => h.name === dto.name && h.id !== id);
+      if (duplicate) {
         throw new BadRequestException(`Test harness with name "${dto.name}" already exists`);
       }
     }
 
     const updated: TestHarnessEntity = {
-      ...this.harnesses[index],
+      ...existing,
       ...dto,
+      testType: testType,
       updatedAt: new Date(),
     };
 

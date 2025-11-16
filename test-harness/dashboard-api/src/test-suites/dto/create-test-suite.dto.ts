@@ -8,8 +8,24 @@ import {
   IsEnum,
   Min,
   Max,
+  IsIn,
 } from 'class-validator';
 import { TestSuiteStatus } from '../entities/test-suite.entity';
+
+// Valid test types
+const VALID_TEST_TYPES = [
+  'access-control',
+  'data-behavior',
+  'contract',
+  'dataset-health',
+  'rls-cls',
+  'network-policy',
+  'dlp',
+  'api-gateway',
+  'distributed-systems',
+  'api-security',
+  'data-pipeline',
+] as const;
 
 export class CreateTestSuiteDto {
   @IsNotEmpty()
@@ -23,6 +39,11 @@ export class CreateTestSuiteDto {
   @IsNotEmpty()
   @IsString()
   team: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsIn(VALID_TEST_TYPES)
+  testType: string;
 
   @IsOptional()
   @IsString()
@@ -46,7 +67,7 @@ export class CreateTestSuiteDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  testTypes?: string[];
+  testTypes?: string[]; // Deprecated: kept for backward compatibility
 
   @IsOptional()
   @IsBoolean()

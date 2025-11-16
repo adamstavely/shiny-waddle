@@ -2,7 +2,23 @@ import {
   IsOptional,
   IsString,
   IsArray,
+  IsIn,
 } from 'class-validator';
+
+// Valid test types
+const VALID_TEST_TYPES = [
+  'access-control',
+  'data-behavior',
+  'contract',
+  'dataset-health',
+  'rls-cls',
+  'network-policy',
+  'dlp',
+  'api-gateway',
+  'distributed-systems',
+  'api-security',
+  'data-pipeline',
+] as const;
 
 export class UpdateTestHarnessDto {
   @IsOptional()
@@ -12,6 +28,11 @@ export class UpdateTestHarnessDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(VALID_TEST_TYPES)
+  testType?: string;
 
   @IsOptional()
   @IsArray()

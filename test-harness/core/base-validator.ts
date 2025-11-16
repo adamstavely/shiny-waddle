@@ -80,20 +80,8 @@ export abstract class BaseValidator implements Validator {
    * Override this to provide custom logic
    */
   protected shouldRun(suite: TestSuite): boolean {
-    // Default: check suite flags
-    switch (this.testType) {
-      case 'access-control':
-        return suite.includeAccessControlTests === true;
-      case 'data-behavior':
-        return suite.includeDataBehaviorTests === true;
-      case 'contract':
-        return suite.includeContractTests === true;
-      case 'dataset-health':
-        return suite.includeDatasetHealthTests === true;
-      default:
-        // For custom test types, check if suite has corresponding flag
-        return (suite as any)[`include${this.capitalize(this.testType)}Tests`] === true;
-    }
+    // Check if suite testType matches this validator's testType
+    return suite.testType === this.testType;
   }
 
   /**

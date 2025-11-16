@@ -84,6 +84,26 @@ export class TestSuitesService {
   async create(dto: CreateTestSuiteDto): Promise<TestSuiteEntity> {
     await this.loadSuites();
 
+    // Validate testType
+    const validTestTypes = [
+      'access-control',
+      'data-behavior',
+      'contract',
+      'dataset-health',
+      'rls-cls',
+      'network-policy',
+      'dlp',
+      'api-gateway',
+      'distributed-systems',
+      'api-security',
+      'data-pipeline',
+    ];
+    if (!validTestTypes.includes(dto.testType)) {
+      throw new BadRequestException(
+        `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
+      );
+    }
+
     // Check for duplicate name
     const existing = this.suites.find(s => s.name === dto.name && s.applicationId === dto.applicationId);
     if (existing) {
@@ -100,7 +120,8 @@ export class TestSuitesService {
       status: dto.status || 'pending',
       testCount: dto.testCount || 0,
       score: dto.score || 0,
-      testTypes: dto.testTypes || [],
+      testType: dto.testType,
+      testTypes: dto.testTypes || [dto.testType], // Set testTypes to match testType for backward compatibility
       enabled: dto.enabled !== undefined ? dto.enabled : true,
       testConfigurationIds: dto.testConfigurationIds || [],
       createdAt: now,
@@ -323,6 +344,28 @@ export class TestSuitesService {
 
     const existing = this.suites[index];
 
+    // Validate testType if provided
+    if (dto.testType) {
+      const validTestTypes = [
+        'access-control',
+        'data-behavior',
+        'contract',
+        'dataset-health',
+        'rls-cls',
+        'network-policy',
+        'dlp',
+        'api-gateway',
+        'distributed-systems',
+        'api-security',
+        'data-pipeline',
+      ];
+      if (!validTestTypes.includes(dto.testType)) {
+        throw new BadRequestException(
+          `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
+        );
+      }
+    }
+
     // Check for duplicate name if name is being changed
     if (dto.name && dto.name !== existing.name) {
       const duplicate = this.suites.find(
@@ -337,6 +380,8 @@ export class TestSuitesService {
       ...existing,
       ...dto,
       id: existing.id, // Don't allow ID changes
+      testType: dto.testType || existing.testType, // Keep existing if not provided
+      testTypes: dto.testTypes || (dto.testType ? [dto.testType] : existing.testTypes), // Update testTypes if testType changed
       updatedAt: new Date(),
     };
 

@@ -1,19 +1,16 @@
 /**
- * ABAC Test Suite Example
+ * ABAC Access Control Test Suite
  * 
- * Demonstrates how to configure test suites for ABAC (Attribute-Based Access Control)
+ * Demonstrates how to configure ABAC (Attribute-Based Access Control) test suites
  */
 
-import { TestSuite } from '../core/types';
+import { AccessControlTestSuite } from '../core/types';
 
-export const abacTestSuite: TestSuite = {
-  name: 'ABAC Compliance Tests',
+export const abacAccessControlSuite: AccessControlTestSuite = {
+  name: 'ABAC Access Control Tests',
   application: 'research-tracker-api',
   team: 'research-platform',
-  includeAccessControlTests: true,
-  includeDataBehaviorTests: true,
-  includeContractTests: false,
-  includeDatasetHealthTests: false,
+  testType: 'access-control',
   userRoles: ['admin', 'researcher', 'analyst', 'viewer'],
   resources: [
     {
@@ -76,28 +73,6 @@ export const abacTestSuite: TestSuite = {
     'analyst-research-data-alpha': false, // No project access
     'viewer-restricted-financial-data': false, // Insufficient clearance
     'researcher-public-research': true, // Public resource
-  },
-  testQueries: [
-    {
-      name: 'Access research data with department match',
-      sql: 'SELECT * FROM research_data WHERE department = \'Research\'',
-    },
-    {
-      name: 'Access restricted data without clearance',
-      sql: 'SELECT * FROM financial_data WHERE classification = \'restricted\'',
-    },
-  ],
-  allowedFields: {
-    viewer: ['id', 'title'],
-    analyst: ['id', 'title', 'summary'],
-    researcher: ['id', 'title', 'summary', 'data'],
-    admin: ['*'],
-  },
-  requiredFilters: {
-    researcher: [
-      { field: 'department', operator: '=', value: 'user_department' },
-      { field: 'project', operator: 'IN', value: 'user_projects' },
-    ],
   },
 };
 

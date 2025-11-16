@@ -37,6 +37,7 @@ import { UsersModule } from './users/users.module';
 import { EnvironmentConfigModule } from './environment-config/environment-config.module';
 import { APISecurityEnhancedModule } from './api-security-enhanced/api-security-enhanced.module';
 import { ABACCorrectnessModule } from './abac-correctness/abac-correctness.module';
+import { TestsModule } from './tests/tests.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -79,6 +80,7 @@ import { AppController } from './app.controller';
     EnvironmentConfigModule,
     APISecurityEnhancedModule,
     ABACCorrectnessModule,
+    TestsModule,
   ],
   controllers: [AppController],
 })

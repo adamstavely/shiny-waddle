@@ -109,6 +109,72 @@
         </div>
       </div>
 
+      <!-- Tests Using This Policy Section -->
+      <div class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <TestTube class="title-icon" />
+            Tests Using This Policy
+          </h2>
+          <div class="section-actions">
+            <button @click="createTestFromPolicy" class="btn-small btn-primary">
+              <Plus class="btn-icon-small" />
+              Create Test
+            </button>
+            <button @click="viewAllTests" class="btn-small btn-secondary">
+              View All Tests
+            </button>
+          </div>
+        </div>
+        <div v-if="loadingTests" class="loading">Loading tests...</div>
+        <div v-else-if="testsUsingPolicy.length === 0" class="empty-tests">
+          <TestTube class="empty-icon" />
+          <p>No tests are currently using this policy</p>
+          <button @click="createTestFromPolicy" class="btn-primary">
+            <Plus class="btn-icon" />
+            Create Test from Policy
+          </button>
+        </div>
+        <div v-else class="tests-list">
+          <div
+            v-for="test in testsUsingPolicy"
+            :key="test.id"
+            class="test-item"
+            @click="viewTest(test.id)"
+          >
+            <div class="test-info">
+              <div class="test-name-row">
+                <h4 class="test-name">{{ test.name }}</h4>
+                <span class="version-badge">v{{ test.version }}</span>
+              </div>
+              <p v-if="test.description" class="test-description">{{ test.description }}</p>
+              <div class="test-meta">
+                <span class="meta-item">
+                  <span class="meta-label">Role:</span>
+                  <span class="meta-value">{{ test.role }}</span>
+                </span>
+                <span class="meta-item">
+                  <span class="meta-label">Resource:</span>
+                  <span class="meta-value">{{ test.resource?.type || test.resource?.id }}</span>
+                </span>
+                <span class="meta-item">
+                  <span class="meta-label">Expected:</span>
+                  <span class="meta-value" :class="test.expectedDecision ? 'allowed' : 'denied'">
+                    {{ test.expectedDecision ? 'Allow' : 'Deny' }}
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="test-actions">
+              <button @click.stop="viewTest(test.id)" class="action-btn view-btn">
+                <Eye class="action-icon" />
+                View
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Validator Information Section -->
       <div class="content-section" v-if="validatorsUsingPolicy.length > 0">
         <div class="section-header">
@@ -552,6 +618,8 @@ const showVersionModal = ref(false);
 
 const policy = ref<any>(null);
 const validators = ref<any[]>([]);
+const testsUsingPolicy = ref<any[]>([]);
+const loadingTests = ref(false);
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
@@ -845,9 +913,39 @@ const formatDateTime = (date: Date): string => {
   });
 };
 
+const loadTestsUsingPolicy = async () => {
+  if (!policyId.value) return;
+  
+  loadingTests.value = true;
+  try {
+    const response = await axios.get(`/api/policies/${policyId.value}/tests`);
+    testsUsingPolicy.value = response.data;
+  } catch (err: any) {
+    console.error('Error loading tests:', err);
+  } finally {
+    loadingTests.value = false;
+  }
+};
+
+const viewTest = (testId: string) => {
+  router.push(`/tests/test/${testId}`);
+};
+
+const viewAllTests = () => {
+  router.push(`/tests/individual?policyId=${policyId.value}`);
+};
+
+const createTestFromPolicy = () => {
+  router.push({
+    path: '/tests/individual',
+    query: { createFromPolicy: policyId.value },
+  });
+};
+
 onMounted(() => {
   loadPolicy();
   loadValidators();
+  loadTestsUsingPolicy();
 });
 </script>
 

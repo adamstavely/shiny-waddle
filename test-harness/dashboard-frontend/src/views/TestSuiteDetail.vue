@@ -55,13 +55,29 @@
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs-container">
+      <!-- Creation Guide Banner -->
+      <div v-if="isCreating" class="creation-guide">
+        <div class="guide-content">
+          <Info class="guide-icon" />
+          <div class="guide-text">
+            <h3>Creating a Test Suite</h3>
+            <p><strong>How it works:</strong> Test Suites are collections of pre-made tests. Create individual tests first, then assign them to this suite.</p>
+            <ol class="guide-steps">
+              <li>Enter basic information (name, application, team, test type)</li>
+              <li>Go to the Tests tab to assign existing tests to this suite</li>
+              <li>All tests must match the suite's test type</li>
+              <li>Save your test suite</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs (only show when editing existing suite) -->
+      <div v-if="!isCreating" class="tabs-container">
         <div class="tabs">
           <button
-            v-for="tab in tabs"
+            v-for="tab in visibleTabs"
             :key="tab.id"
-            v-show="!isCreating || tab.id !== 'source'"
             @click="activeTab = tab.id"
             class="tab-button"
             :class="{ active: activeTab === tab.id }"
@@ -74,14 +90,9 @@
 
       <!-- Tab Content -->
       <div class="tab-content-container">
-        <!-- Overview Tab -->
-        <div v-if="activeTab === 'overview'" class="tab-content">
-          <div v-if="isCreating" class="empty-state">
-            <Info class="empty-icon" />
-            <h3>Create a New Test Suite</h3>
-            <p>Use the Configuration tab to set up your test suite details.</p>
-          </div>
-          <div v-else class="overview-grid">
+        <!-- Overview Tab (only for existing suites) -->
+        <div v-if="!isCreating && activeTab === 'overview'" class="tab-content">
+          <div class="overview-grid">
             <div class="info-card">
               <h3 class="card-title">
                 <Info class="title-icon" />
@@ -163,8 +174,8 @@
           </div>
         </div>
 
-        <!-- Configuration Tab -->
-        <div v-if="activeTab === 'configuration'" class="tab-content">
+        <!-- Configuration Tab (show always when creating, or when tab is active when editing) -->
+        <div v-if="isCreating || activeTab === 'configuration'" class="tab-content" :class="{ 'single-page-section': isCreating }">
           <div class="form-section">
             <div class="section-header">
               <h2 class="section-title">Basic Configuration</h2>
@@ -185,374 +196,174 @@
             </div>
 
             <div class="section-header">
-              <h2 class="section-title">Test Types</h2>
+              <h2 class="section-title">Test Type</h2>
             </div>
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input v-model="form.includeAccessControlTests" type="checkbox" />
-                Access Control Tests
-              </label>
-              <label class="checkbox-label">
-                <input v-model="form.includeDataBehaviorTests" type="checkbox" />
-                Data Behavior Tests
-              </label>
-              <label class="checkbox-label">
-                <input v-model="form.includeContractTests" type="checkbox" />
-                Contract Tests
-              </label>
-              <label class="checkbox-label">
-                <input v-model="form.includeDatasetHealthTests" type="checkbox" />
-                Dataset Health Tests
+            <div class="form-group">
+              <label>Test Type *</label>
+              <select v-model="form.testType" required class="form-input form-select">
+                <option value="">Select a test type...</option>
+                <option value="access-control">Access Control</option>
+                <option value="data-behavior">Data Behavior</option>
+                <option value="contract">Contract</option>
+                <option value="dataset-health">Dataset Health</option>
+                <option value="rls-cls">RLS/CLS</option>
+                <option value="network-policy">Network Policy</option>
+                <option value="dlp">DLP</option>
+                <option value="api-gateway">API Gateway</option>
+                <option value="distributed-systems">Distributed Systems</option>
+                <option value="api-security">API Security</option>
+                <option value="data-pipeline">Data Pipeline</option>
+              </select>
+              <small style="color: #718096; font-size: 0.75rem; margin-top: 4px; display: block;">
+                Each test suite must have exactly one test type. All tests in this suite will be of the selected type.
+              </small>
+              <div v-if="form.testType" class="test-type-info">
+                <p><strong>Selected:</strong> {{ getTestTypeLabel(form.testType) }}</p>
+                <p class="test-generation-note">
+                  <Info class="info-icon-small" />
+                  All tests assigned to this suite must be of type: <strong>{{ getTestTypeLabel(form.testType) }}</strong>
+                </p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea v-model="form.description" rows="3" class="form-input"></textarea>
+            </div>
+            <div class="form-group">
+              <label>
+                <input v-model="form.enabled" type="checkbox" />
+                Enabled
               </label>
             </div>
 
+          </div>
+        </div>
+
+        <!-- Tests Tab (show always when creating, or when tab is active when editing) -->
+        <div v-if="isCreating || activeTab === 'tests'" class="tab-content" :class="{ 'single-page-section': isCreating }">
+          <div class="tests-section">
             <div class="section-header">
-              <h2 class="section-title">User Roles</h2>
-              <button @click="addRole" class="btn-small">
-                <Plus class="btn-icon-small" />
-                Add Role
+              <h2 class="section-title">Assigned Tests</h2>
+              <button @click="showAddTestModal = true" class="btn-primary" :disabled="!form.testType">
+                <Plus class="btn-icon" />
+                Add Test
               </button>
             </div>
-            <div class="tags-input">
-              <span
-                v-for="(role, index) in form.userRoles"
-                :key="index"
-                class="tag"
+            <div v-if="!form.testType" class="info-message">
+              <Info class="info-icon" />
+              <p>Please select a test type above before adding tests.</p>
+            </div>
+            <div v-else-if="assignedTests.length === 0" class="empty-state">
+              <TestTube class="empty-icon" />
+              <h3>No Tests Assigned</h3>
+              <p>Add tests to this suite to get started. All tests must be of type: <strong>{{ getTestTypeLabel(form.testType) }}</strong></p>
+              <button @click="showAddTestModal = true" class="btn-primary">
+                <Plus class="btn-icon" />
+                Add Test
+              </button>
+            </div>
+            <div v-else class="tests-list">
+              <div
+                v-for="test in assignedTests"
+                :key="test.id"
+                class="test-item"
               >
-                {{ role }}
-                <button type="button" @click="removeRole(index)" class="tag-remove">
-                  <X class="tag-icon" />
-                </button>
-              </span>
-              <input
-                v-model="newRole"
-                type="text"
-                placeholder="Add role and press Enter"
-                @keydown.enter.prevent="addRole"
-                class="tag-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Resources Tab -->
-        <div v-if="activeTab === 'resources'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Resources</h2>
-            <button @click="addResource" class="btn-small">
-              <Plus class="btn-icon-small" />
-              Add Resource
-            </button>
-          </div>
-          <div class="resources-list">
-            <div v-for="(resource, index) in form.resources" :key="index" class="resource-card">
-              <div class="resource-header">
-                <h4>Resource {{ index + 1 }}</h4>
-                <button @click="removeResource(index)" class="btn-icon-only">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Resource ID</label>
-                  <input v-model="resource.id" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Type</label>
-                  <input v-model="resource.type" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Sensitivity</label>
-                  <select v-model="resource.sensitivity" class="form-input">
-                    <option value="">None</option>
-                    <option value="public">Public</option>
-                    <option value="internal">Internal</option>
-                    <option value="confidential">Confidential</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div v-if="form.resources.length === 0" class="empty-state">
-              <p>No resources configured. Click "Add Resource" to get started.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contexts Tab -->
-        <div v-if="activeTab === 'contexts'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Contexts</h2>
-            <button @click="addContext" class="btn-small">
-              <Plus class="btn-icon-small" />
-              Add Context
-            </button>
-          </div>
-          <div class="contexts-list">
-            <div v-for="(context, index) in form.contexts" :key="index" class="context-card">
-              <div class="context-header">
-                <h4>Context {{ index + 1 }}</h4>
-                <button @click="removeContext(index)" class="btn-icon-only">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>IP Address</label>
-                  <input v-model="context.ipAddress" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Time of Day</label>
-                  <input v-model="context.timeOfDay" type="text" placeholder="HH:MM" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Location</label>
-                  <input v-model="context.location" type="text" class="form-input" />
-                </div>
-              </div>
-            </div>
-            <div v-if="form.contexts.length === 0" class="empty-state">
-              <p>No contexts configured. Click "Add Context" to get started.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Test Queries Tab -->
-        <div v-if="activeTab === 'queries'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Test Queries</h2>
-            <button @click="addQuery" class="btn-small">
-              <Plus class="btn-icon-small" />
-              Add Query
-            </button>
-          </div>
-          <div class="queries-list">
-            <div v-for="(query, index) in form.testQueries" :key="index" class="query-card">
-              <div class="query-header">
-                <h4>Query {{ index + 1 }}</h4>
-                <button @click="removeQuery(index)" class="btn-icon-only">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Query Name</label>
-                  <input v-model="query.name" type="text" class="form-input" />
-                </div>
-                <div class="form-group full-width">
-                  <label>SQL</label>
-                  <textarea v-model="query.sql" class="form-input" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>API Endpoint</label>
-                  <input v-model="query.apiEndpoint" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>HTTP Method</label>
-                  <input v-model="query.httpMethod" type="text" class="form-input" />
-                </div>
-              </div>
-            </div>
-            <div v-if="form.testQueries.length === 0" class="empty-state">
-              <p>No test queries configured. Click "Add Query" to get started.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Data Behavior Tab -->
-        <div v-if="activeTab === 'data-behavior'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Allowed Fields</h2>
-          </div>
-          <div class="data-behavior-section">
-            <div v-for="role in form.userRoles" :key="role" class="role-fields-card">
-              <h4>{{ role }}</h4>
-              <div class="form-group">
-                <label>Allowed Fields (comma-separated)</label>
-                <input
-                  v-model="allowedFieldsInput[role]"
-                  type="text"
-                  class="form-input"
-                  :placeholder="`e.g., id, name, email`"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="section-header">
-            <h2 class="section-title">Required Filters</h2>
-          </div>
-          <div class="filters-section">
-            <div v-for="role in form.userRoles" :key="role" class="role-filters-card">
-              <div class="role-filters-header">
-                <h4>{{ role }}</h4>
-                <button @click="addFilter(role)" class="btn-small">
-                  <Plus class="btn-icon-small" />
-                  Add Filter
-                </button>
-              </div>
-              <div v-for="(filter, index) in (requiredFiltersInput[role] || [])" :key="index" class="filter-item">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Field</label>
-                    <input v-model="filter.field" type="text" class="form-input" />
+                <div class="test-info">
+                  <div class="test-name-row">
+                    <h4 class="test-name">{{ test.name }}</h4>
+                    <span class="version-badge">v{{ test.version }}</span>
                   </div>
-                  <div class="form-group">
-                    <label>Operator</label>
-                    <select v-model="filter.operator" class="form-input">
-                      <option value="=">=</option>
-                      <option value="!=">!=</option>
-                      <option value=">">&gt;</option>
-                      <option value="<">&lt;</option>
-                      <option value=">=">&gt;=</option>
-                      <option value="<=">&lt;=</option>
-                      <option value="IN">IN</option>
-                      <option value="NOT IN">NOT IN</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Value</label>
-                    <input v-model="filter.value" type="text" class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <button @click="removeFilter(role, index)" class="btn-icon-only">
-                      <Trash2 class="icon" />
-                    </button>
+                  <p v-if="test.description" class="test-description">{{ test.description }}</p>
+                  <div v-if="test.testType === 'access-control' && test.policyIds && test.policyIds.length > 0" class="test-policies">
+                    <span class="policies-label">Policies:</span>
+                    <span
+                      v-for="policyId in test.policyIds"
+                      :key="policyId"
+                      class="policy-badge"
+                      @click.stop="viewPolicy(policyId)"
+                    >
+                      {{ getPolicyName(policyId) }}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contracts Tab -->
-        <div v-if="activeTab === 'contracts'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Contracts</h2>
-            <button @click="addContract" class="btn-small">
-              <Plus class="btn-icon-small" />
-              Add Contract
-            </button>
-          </div>
-          <div class="contracts-list">
-            <div v-for="(contract, index) in form.contracts" :key="index" class="contract-card">
-              <div class="contract-header">
-                <h4>{{ contract.name || `Contract ${index + 1}` }}</h4>
-                <button @click="removeContract(index)" class="btn-icon-only">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Contract Name</label>
-                  <input v-model="contract.name" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Data Owner</label>
-                  <input v-model="contract.dataOwner" type="text" class="form-input" />
-                </div>
-              </div>
-            </div>
-            <div v-if="form.contracts.length === 0" class="empty-state">
-              <p>No contracts configured. Click "Add Contract" to get started.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Datasets Tab -->
-        <div v-if="activeTab === 'datasets'" class="tab-content">
-          <div class="section-header">
-            <h2 class="section-title">Datasets</h2>
-            <button @click="addDataset" class="btn-small">
-              <Plus class="btn-icon-small" />
-              Add Dataset
-            </button>
-          </div>
-          <div class="datasets-list">
-            <div v-for="(dataset, index) in form.datasets" :key="index" class="dataset-card">
-              <div class="dataset-header">
-                <h4>{{ dataset.name || `Dataset ${index + 1}` }}</h4>
-                <button @click="removeDataset(index)" class="btn-icon-only">
-                  <Trash2 class="icon" />
-                </button>
-              </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Dataset Name</label>
-                  <input v-model="dataset.name" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Type</label>
-                  <select v-model="dataset.type" class="form-input">
-                    <option value="raw">Raw</option>
-                    <option value="masked">Masked</option>
-                    <option value="synthetic">Synthetic</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div v-if="form.datasets.length === 0" class="empty-state">
-              <p>No datasets configured. Click "Add Dataset" to get started.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Source Code Tab (TypeScript only) -->
-        <div v-if="activeTab === 'source' && suite.sourceType === 'typescript'" class="tab-content">
-          <div class="source-editor-embedded">
-            <div v-if="sourceLoading" class="loading-state">
-              <p>Loading source file...</p>
-            </div>
-            
-            <div v-else-if="sourceError" class="error-state">
-              <p>{{ sourceError }}</p>
-            </div>
-            
-            <div v-else class="editor-container">
-              <div class="editor-toolbar">
-                <span class="file-type-badge typescript">
-                  TypeScript
-                </span>
-                <div class="toolbar-actions">
-                  <button @click="formatSourceCode" class="toolbar-btn" title="Format code">
-                    <FileText class="icon" />
-                    Format
+                <div class="test-actions">
+                  <button @click.stop="viewTest(test.id)" class="action-btn">
+                    <Eye class="action-icon" />
+                    View
                   </button>
-                  <button @click="reloadSource" class="toolbar-btn" title="Reload from file">
-                    <RefreshCw class="icon" />
-                    Reload
+                  <button @click.stop="removeTest(test.id)" class="action-btn delete-btn">
+                    <X class="action-icon" />
+                    Remove
                   </button>
                 </div>
-              </div>
-              
-              <textarea
-                v-model="sourceContent"
-                class="source-editor typescript"
-                spellcheck="false"
-                @input="onSourceChange"
-              ></textarea>
-              
-              <div v-if="hasSourceChanges" class="unsaved-indicator">
-                <AlertCircle class="icon" />
-                <span>Unsaved changes</span>
-              </div>
-              <div class="source-editor-actions">
-                <button @click="saveSource" class="btn-primary" :disabled="sourceLoading || !hasSourceChanges">
-                  <Save class="icon" />
-                  Save Source
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Add Test Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showAddTestModal" class="modal-overlay" @click="showAddTestModal = false">
+          <div class="modal-content" @click.stop>
+            <div class="modal-header">
+              <h2>Add Tests to Suite</h2>
+              <button @click="showAddTestModal = false" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <div v-if="!form.testType" class="info-message">
+                <Info class="info-icon" />
+                <p>Please select a test type in the Configuration tab first.</p>
+              </div>
+              <div v-else>
+                <p class="modal-help">Select tests of type: <strong>{{ getTestTypeLabel(form.testType) }}</strong></p>
+                <div v-if="loadingTests" class="loading">Loading available tests...</div>
+                <div v-else-if="availableTests.length === 0" class="empty-state">
+                  <p>No available tests found. <router-link to="/tests/individual">Create a test first</router-link></p>
+                </div>
+                <div v-else class="tests-selector">
+                  <div
+                    v-for="test in availableTests"
+                    :key="test.id"
+                    class="test-option"
+                    :class="{ selected: form.testIds.includes(test.id) }"
+                    @click="toggleTest(test.id)"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="form.testIds.includes(test.id)"
+                      @change="toggleTest(test.id)"
+                    />
+                    <div class="test-option-info">
+                      <div class="test-option-name-row">
+                        <span class="test-option-name">{{ test.name }}</span>
+                        <span class="version-badge-small">v{{ test.version }}</span>
+                      </div>
+                      <p v-if="test.description" class="test-option-description">{{ test.description }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button @click="showAddTestModal = false" class="btn-secondary">Cancel</button>
+                  <button @click="handleTestsAdded" class="btn-primary">Add Selected Tests</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { Teleport } from 'vue';
 import {
   TestTube,
   Save,
@@ -564,13 +375,7 @@ import {
   X,
   Trash2,
   FileText,
-  User,
-  Database,
-  Globe,
-  Code,
-  Shield,
-  RefreshCw,
-  AlertCircle,
+  Eye,
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
@@ -590,53 +395,57 @@ const error = ref<string | null>(null);
 const saving = ref(false);
 const suite = ref<any>(null);
 const activeTab = ref('overview');
-const newRole = ref('');
+const showAddTestModal = ref(false);
+const assignedTests = ref<any[]>([]);
+const availableTests = ref<any[]>([]);
+const policies = ref<any[]>([]);
+const loadingTests = ref(false);
 
-// Set default tab to configuration when creating
+// Set default tab to overview when editing (tabs only shown when editing)
 watch(isCreating, (creating) => {
-  if (creating) {
-    activeTab.value = 'configuration';
+  if (!creating) {
+    activeTab.value = 'overview';
   }
 }, { immediate: true });
 
 const tabs = ref([
   { id: 'overview', label: 'Overview', icon: Info },
   { id: 'configuration', label: 'Configuration', icon: FileText },
-  { id: 'resources', label: 'Resources', icon: Database },
-  { id: 'contexts', label: 'Contexts', icon: Globe },
-  { id: 'queries', label: 'Test Queries', icon: Code },
-  { id: 'data-behavior', label: 'Data Behavior', icon: Shield },
-  { id: 'contracts', label: 'Contracts', icon: FileText },
-  { id: 'datasets', label: 'Datasets', icon: BarChart3 },
+  { id: 'tests', label: 'Tests', icon: TestTube },
 ]);
 
 const form = ref({
   name: '',
   application: '',
   team: '',
-  includeAccessControlTests: true,
-  includeDataBehaviorTests: true,
-  includeContractTests: false,
-  includeDatasetHealthTests: false,
-  userRoles: [] as string[],
-  resources: [] as any[],
-  contexts: [] as any[],
-  testQueries: [] as any[],
-  allowedFields: {} as Record<string, string[]>,
-  requiredFilters: {} as Record<string, any[]>,
-  contracts: [] as any[],
-  datasets: [] as any[],
+  testType: '' as string,
+  testIds: [] as string[],
+  description: '',
+  enabled: true,
 });
 
-const allowedFieldsInput = ref<Record<string, string>>({});
-const requiredFiltersInput = ref<Record<string, any[]>>({});
+// Filter tabs - only show overview, configuration, and tests
+const visibleTabs = computed(() => {
+  return tabs.value.filter(t => ['overview', 'configuration', 'tests'].includes(t.id));
+});
 
-// Source editor state
-const sourceLoading = ref(false);
-const sourceError = ref<string | null>(null);
-const sourceContent = ref('');
-const originalSourceContent = ref('');
-const hasSourceChanges = computed(() => sourceContent.value !== originalSourceContent.value);
+const getTestTypeLabel = (testType: string): string => {
+  const labels: Record<string, string> = {
+    'access-control': 'Access Control',
+    'data-behavior': 'Data Behavior',
+    'contract': 'Contract',
+    'dataset-health': 'Dataset Health',
+    'rls-cls': 'RLS/CLS',
+    'network-policy': 'Network Policy',
+    'dlp': 'DLP',
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems',
+    'api-security': 'API Security',
+    'data-pipeline': 'Data Pipeline',
+  };
+  return labels[testType] || testType;
+};
+
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
@@ -649,25 +458,17 @@ const loadSuite = async () => {
   if (isCreating.value) {
     loading.value = false;
     error.value = null;
-    // Initialize form with default values
     form.value = {
       name: '',
       application: '',
       team: '',
-      includeAccessControlTests: true,
-      includeDataBehaviorTests: true,
-      includeContractTests: false,
-      includeDatasetHealthTests: false,
-      userRoles: [],
-      resources: [],
-      contexts: [],
-      testQueries: [],
-      allowedFields: {},
-      requiredFilters: {},
-      contracts: [],
-      datasets: [],
+      testType: '',
+      testIds: [],
+      description: '',
+      enabled: true,
     };
     suite.value = null;
+    assignedTests.value = [];
     return;
   }
 
@@ -675,59 +476,78 @@ const loadSuite = async () => {
   error.value = null;
   try {
     const response = await axios.get(`/api/test-suites/${suiteId.value}`);
-    let suiteData = response.data;
-
-    // If it's a TypeScript suite, extract the full config
-    if (suiteData.sourceType === 'typescript' && suiteData.sourcePath) {
-      try {
-        const extractResponse = await axios.get(`/api/test-suites/${suiteId.value}/extract-config`);
-        const extractedConfig = extractResponse.data.config;
-        suiteData = {
-          ...suiteData,
-          ...extractedConfig,
-          application: extractedConfig.application || suiteData.application || suiteData.applicationId,
-        };
-      } catch (err: any) {
-        console.warn('Could not extract full config from TypeScript source:', err);
-      }
-    }
+    const suiteData = response.data;
 
     suite.value = suiteData;
-    
+
     // Populate form
     form.value = {
       name: suiteData.name || '',
       application: suiteData.application || suiteData.applicationId || '',
       team: suiteData.team || '',
-      includeAccessControlTests: suiteData.includeAccessControlTests ?? true,
-      includeDataBehaviorTests: suiteData.includeDataBehaviorTests ?? true,
-      includeContractTests: suiteData.includeContractTests ?? false,
-      includeDatasetHealthTests: suiteData.includeDatasetHealthTests ?? false,
-      userRoles: suiteData.userRoles || [],
-      resources: suiteData.resources || [],
-      contexts: suiteData.contexts || [],
-      testQueries: suiteData.testQueries || [],
-      allowedFields: suiteData.allowedFields || {},
-      requiredFilters: suiteData.requiredFilters || {},
-      contracts: suiteData.contracts || [],
-      datasets: suiteData.datasets || [],
+      testType: suiteData.testType || '',
+      testIds: suiteData.testIds || [],
+      description: suiteData.description || '',
+      enabled: suiteData.enabled !== false,
     };
 
-    // Initialize input fields
-    form.value.userRoles.forEach(role => {
-      allowedFieldsInput.value[role] = (suiteData.allowedFields?.[role] || []).join(', ');
-      requiredFiltersInput.value[role] = suiteData.requiredFilters?.[role] || [];
-    });
-
-    // Add source tab if TypeScript
-    if (suiteData.sourceType === 'typescript' && !tabs.value.find(t => t.id === 'source')) {
-      tabs.value.push({ id: 'source', label: 'Source Code', icon: Code });
-    }
+    // Load assigned tests
+    await loadAssignedTests();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to load test suite';
     console.error('Error loading test suite:', err);
   } finally {
     loading.value = false;
+  }
+};
+
+const loadAssignedTests = async () => {
+  if (!form.value.testIds || form.value.testIds.length === 0) {
+    assignedTests.value = [];
+    return;
+  }
+
+  loadingTests.value = true;
+  try {
+    const testPromises = form.value.testIds.map(id => 
+      axios.get(`/api/tests/${id}`).catch(() => null)
+    );
+    const responses = await Promise.all(testPromises);
+    assignedTests.value = responses
+      .filter(r => r !== null)
+      .map(r => r.data)
+      .filter(t => t.testType === form.value.testType); // Filter by suite type
+  } catch (err) {
+    console.error('Error loading assigned tests:', err);
+    assignedTests.value = [];
+  } finally {
+    loadingTests.value = false;
+  }
+};
+
+const loadAvailableTests = async () => {
+  if (!form.value.testType) {
+    availableTests.value = [];
+    return;
+  }
+
+  try {
+    const response = await axios.get(`/api/tests?testType=${form.value.testType}`);
+    availableTests.value = response.data.filter((test: any) => 
+      !form.value.testIds.includes(test.id)
+    );
+  } catch (err) {
+    console.error('Error loading available tests:', err);
+    availableTests.value = [];
+  }
+};
+
+const loadPolicies = async () => {
+  try {
+    const response = await axios.get('/api/policies');
+    policies.value = response.data;
+  } catch (err) {
+    console.error('Error loading policies:', err);
   }
 };
 
@@ -807,68 +627,34 @@ const saveSource = async () => {
 };
 
 const saveSuite = async () => {
+  if (!form.value.name || !form.value.application || !form.value.team || !form.value.testType) {
+    alert('Please fill in all required fields (name, application, team, test type)');
+    return;
+  }
+
   saving.value = true;
   try {
-    // Process allowed fields
-    const allowedFields: Record<string, string[]> = {};
-    form.value.userRoles.forEach(role => {
-      const input = allowedFieldsInput.value[role];
-      if (input) {
-        allowedFields[role] = input.split(',').map(f => f.trim()).filter(f => f);
-      }
-    });
-    form.value.allowedFields = allowedFields;
-    form.value.requiredFilters = requiredFiltersInput.value;
-
-    const suiteData = { ...form.value };
-    const testTypes = getTestTypes(suiteData);
     const payload = {
-      ...suiteData,
-      applicationId: suiteData.applicationId || suiteData.application,
-      testTypes,
+      name: form.value.name,
+      application: form.value.application,
+      team: form.value.team,
+      testType: form.value.testType,
+      testIds: form.value.testIds,
+      description: form.value.description,
+      enabled: form.value.enabled,
     };
 
     // If creating new suite
     if (isCreating.value) {
-      const response = await axios.post('/api/test-suites', {
-        ...payload,
-        status: 'pending',
-        testCount: 0,
-        score: 0,
-      });
-      // Navigate to the new suite's detail page
+      const response = await axios.post('/api/test-suites', payload);
       const newSuiteId = response.data.id || response.data._id;
       await router.push({ name: 'TestSuiteDetail', params: { id: newSuiteId } });
-      alert('Test suite created successfully!');
       return;
     }
 
-    // If TypeScript suite, convert to TypeScript and update source
-    if (suite.value?.sourceType === 'typescript' && suite.value.sourcePath) {
-      try {
-        const sourceResponse = await axios.get(`/api/test-suites/${suiteId.value}/source`);
-        const originalContent = sourceResponse.data.content;
-        
-        const tsContent = convertJSONToTypeScript(suiteData, suite.value.sourcePath, originalContent);
-        
-        await axios.put(`/api/test-suites/${suiteId.value}/source`, {
-          content: tsContent,
-        });
-        
-        await loadSuite();
-        alert('Test suite saved successfully!');
-        return;
-      } catch (err: any) {
-        console.error('Error updating TypeScript source:', err);
-        alert('Failed to update TypeScript source file. Please use the source code editor instead.');
-        return;
-      }
-    }
-
-    // For JSON-based suites, use regular update
+    // Update existing suite
     await axios.put(`/api/test-suites/${suiteId.value}`, payload);
     await loadSuite();
-    alert('Test suite saved successfully!');
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to save test suite';
     console.error('Error saving test suite:', err);
@@ -892,18 +678,15 @@ const convertJSONToTypeScript = (json: any, sourcePath: string, originalContent?
     }
   }
 
-  const config: any = {
-    name: json.name,
-    application: json.application || json.applicationId,
-    team: json.team,
-    includeAccessControlTests: json.includeAccessControlTests || false,
-    includeDataBehaviorTests: json.includeDataBehaviorTests || false,
-    includeContractTests: json.includeContractTests || false,
-    includeDatasetHealthTests: json.includeDatasetHealthTests || false,
-    userRoles: json.userRoles || [],
-    resources: json.resources || [],
-    contexts: json.contexts || [],
-  };
+    const config: any = {
+      name: json.name,
+      application: json.application || json.applicationId,
+      team: json.team,
+      testType: json.testType || 'access-control',
+      userRoles: json.userRoles || [],
+      resources: json.resources || [],
+      contexts: json.contexts || [],
+    };
 
   if (json.expectedDecisions) config.expectedDecisions = json.expectedDecisions;
   if (json.testQueries) config.testQueries = json.testQueries;
@@ -929,6 +712,24 @@ export const ${varName}: TestSuite = ${configStr};
 };
 
 const getTestTypes = (suiteData: any): string[] => {
+  // Return array with single test type for backward compatibility
+  if (suiteData.testType) {
+    const typeMap: Record<string, string> = {
+      'access-control': 'Access Control',
+      'data-behavior': 'Data Behavior',
+      'contract': 'Contract',
+      'dataset-health': 'Dataset Health',
+      'rls-cls': 'RLS/CLS',
+      'network-policy': 'Network Policy',
+      'dlp': 'DLP',
+      'api-gateway': 'API Gateway',
+      'distributed-systems': 'Distributed Systems',
+      'api-security': 'API Security',
+      'data-pipeline': 'Data Pipeline',
+    };
+    return [typeMap[suiteData.testType] || suiteData.testType];
+  }
+  // Backward compatibility: infer from old boolean flags
   const types: string[] = [];
   if (suiteData.includeAccessControlTests) types.push('Access Control');
   if (suiteData.includeDataBehaviorTests) types.push('Data Behavior');
@@ -1055,19 +856,26 @@ const getScoreClass = (score: number): string => {
   return 'score-poor';
 };
 
-onMounted(() => {
-  loadSuite();
+// Watch for testType changes to load available tests
+watch(() => form.value.testType, (newType) => {
+  if (newType) {
+    loadAvailableTests();
+  }
+});
+
+// Watch for showAddTestModal to load available tests when opened
+watch(showAddTestModal, (show) => {
+  if (show && form.value.testType) {
+    loadAvailableTests();
+  }
+});
+
+onMounted(async () => {
+  await Promise.all([loadSuite(), loadPolicies()]);
 });
 
 watch([() => route.params.id, () => route.name], () => {
   loadSuite();
-});
-
-watch(() => activeTab.value, (newTab) => {
-  // Load source content when switching to source tab
-  if (newTab === 'source' && suite.value?.sourceType === 'typescript' && !sourceContent.value) {
-    loadSourceContent();
-  }
 });
 </script>
 
@@ -1308,6 +1116,220 @@ watch(() => activeTab.value, (newTab) => {
   animation: fadeIn 0.3s;
 }
 
+.single-page-section {
+  margin-bottom: 0;
+}
+
+.single-page-section:not(:last-child) {
+  border-bottom: 2px solid rgba(79, 172, 254, 0.2);
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Tests Section Styling - matches form-section */
+.tests-section {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.tests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.test-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  background: rgba(26, 31, 46, 0.5);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.test-item:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  background: rgba(26, 31, 46, 0.7);
+}
+
+.test-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.test-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.test-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.test-description {
+  font-size: 0.875rem;
+  color: #cbd5e0;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.test-policies {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.policies-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #a0aec0;
+}
+
+.policy-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.policy-badge:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.test-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.test-actions .action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 6px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.test-actions .action-btn:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.test-actions .action-btn.delete-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.test-actions .action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.test-actions .action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  margin-top: 24px;
+}
+
+.info-message .info-icon {
+  width: 20px;
+  height: 20px;
+  color: #4facfe;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-message p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #cbd5e0;
+  line-height: 1.5;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  margin-top: 24px;
+  color: #a0aec0;
+}
+
+.empty-state .empty-icon {
+  width: 64px;
+  height: 64px;
+  color: rgba(79, 172, 254, 0.4);
+  margin: 0 auto 16px;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.empty-state .btn-primary {
+  margin: 0 auto;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1442,6 +1464,37 @@ watch(() => activeTab.value, (newTab) => {
   margin-bottom: 24px;
 }
 
+.section-header .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.section-header .btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.section-header .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.section-header .btn-primary .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .section-title {
   font-size: 1.5rem;
   font-weight: 600;
@@ -1486,6 +1539,14 @@ watch(() => activeTab.value, (newTab) => {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234facfe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
 }
 
 .checkbox-group {
@@ -1638,10 +1699,122 @@ watch(() => activeTab.value, (newTab) => {
   height: 16px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #a0aec0;
+/* Empty state styling is defined below in tests section */
+
+.empty-state-info {
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.empty-state-info ol {
+  margin: 12px 0 0 0;
+  padding-left: 24px;
+}
+
+.empty-state-info li {
+  margin-bottom: 8px;
+  color: #cbd5e0;
+}
+
+.empty-state-help {
+  margin-top: 12px;
+  font-size: 0.875rem;
+  color: #718096;
+  font-style: italic;
+}
+
+.creation-guide {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.05) 100%);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 12px;
+}
+
+.guide-content {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.guide-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.guide-text {
+  flex: 1;
+}
+
+.guide-text h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.guide-text > p {
+  margin: 0 0 16px 0;
+  color: #cbd5e0;
+  font-size: 0.9rem;
+}
+
+.guide-steps {
+  margin: 0;
+  padding-left: 24px;
+  color: #cbd5e0;
+}
+
+.guide-steps li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.test-type-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+}
+
+.test-type-info p {
+  margin: 0 0 8px 0;
+  color: #cbd5e0;
+  font-size: 0.875rem;
+}
+
+.test-type-info p:last-child {
+  margin-bottom: 0;
+}
+
+.test-generation-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px !important;
+  padding-top: 8px;
+  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  font-size: 0.8rem !important;
+  color: #a0aec0 !important;
+}
+
+.info-icon-small {
+  width: 16px;
+  height: 16px;
+  color: #4facfe;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .data-behavior-section,

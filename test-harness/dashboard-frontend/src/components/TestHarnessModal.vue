@@ -44,8 +44,30 @@
                 />
               </div>
 
+              <div class="form-group">
+                <label>Test Type *</label>
+                <select v-model="form.testType" required class="form-select">
+                  <option value="">Select a test type...</option>
+                  <option value="access-control">Access Control</option>
+                  <option value="data-behavior">Data Behavior</option>
+                  <option value="contract">Contract</option>
+                  <option value="dataset-health">Dataset Health</option>
+                  <option value="rls-cls">RLS/CLS</option>
+                  <option value="network-policy">Network Policy</option>
+                  <option value="dlp">DLP</option>
+                  <option value="api-gateway">API Gateway</option>
+                  <option value="distributed-systems">Distributed Systems</option>
+                  <option value="api-security">API Security</option>
+                  <option value="data-pipeline">Data Pipeline</option>
+                </select>
+                <small>All test suites in this harness must have the same test type.</small>
+              </div>
+
               <div class="form-section">
                 <h3 class="section-title">Test Suites</h3>
+                <div v-if="form.testType" class="type-filter-info">
+                  <small>Showing only suites with type: <strong>{{ form.testType }}</strong></small>
+                </div>
                 <div v-if="loadingSuites" class="loading">Loading test suites...</div>
                 <div v-else-if="suitesError" class="error">{{ suitesError }}</div>
                 <div v-else-if="availableSuites.length === 0" class="empty-state">
@@ -53,24 +75,30 @@
                 </div>
                 <div v-else class="selection-list">
                   <div
-                    v-for="suite in availableSuites"
+                    v-for="suite in filteredSuites"
                     :key="suite.id"
                     class="selection-option"
+                    :class="{ 'type-mismatch': form.testType && suite.testType !== form.testType }"
                   >
                     <label class="checkbox-label">
                       <input 
                         type="checkbox"
                         :value="suite.id"
                         v-model="form.testSuiteIds"
+                        :disabled="form.testType && suite.testType !== form.testType"
                       />
                       <div class="option-info">
                         <span class="option-name">{{ suite.name }}</span>
                         <span class="option-meta">
                           {{ suite.application }}
                           <span v-if="suite.team"> • {{ suite.team }}</span>
+                          <span v-if="suite.testType" class="suite-type-badge"> • Type: {{ suite.testType }}</span>
                         </span>
                       </div>
                     </label>
+                  </div>
+                  <div v-if="form.testType && filteredSuites.length === 0" class="empty-state">
+                    <p>No test suites found with type "{{ form.testType }}". Create a test suite with this type first.</p>
                   </div>
                 </div>
               </div>
@@ -123,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Teleport } from 'vue';
 import { Layers, X } from 'lucide-vue-next';
 import axios from 'axios';
@@ -145,6 +173,7 @@ const form = ref({
   name: '',
   description: '',
   team: '',
+  testType: '' as string,
   testSuiteIds: [] as string[],
   applicationIds: [] as string[],
 });
@@ -152,6 +181,13 @@ const form = ref({
 const availableSuites = ref<any[]>([]);
 const loadingSuites = ref(false);
 const suitesError = ref<string | null>(null);
+
+const filteredSuites = computed(() => {
+  if (!form.value.testType) {
+    return availableSuites.value;
+  }
+  return availableSuites.value.filter(suite => suite.testType === form.value.testType);
+});
 
 const availableApplications = ref<any[]>([]);
 const loadingApplications = ref(false);
@@ -192,6 +228,7 @@ const resetForm = () => {
     name: '',
     description: '',
     team: '',
+    testType: '',
     testSuiteIds: [],
     applicationIds: [],
   };
@@ -202,18 +239,26 @@ const populateForm = (harness: TestHarness) => {
     name: harness.name,
     description: harness.description,
     team: harness.team || '',
+    testType: (harness as any).testType || '',
     testSuiteIds: harness.testSuiteIds || [],
     applicationIds: harness.applicationIds || [],
   };
 };
 
 const save = async () => {
+  if (!form.value.testType) {
+    alert('Please select a test type');
+    saving.value = false;
+    return;
+  }
+
   saving.value = true;
   try {
     const payload: any = {
       name: form.value.name,
       description: form.value.description,
       team: form.value.team || undefined,
+      testType: form.value.testType,
       testSuiteIds: form.value.testSuiteIds,
       applicationIds: form.value.applicationIds,
     };
@@ -373,7 +418,8 @@ onMounted(() => {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   padding: 0.75rem;
   background: rgba(15, 20, 25, 0.6);
   border: 1px solid rgba(79, 172, 254, 0.2);
@@ -383,8 +429,17 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234facfe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
   border-color: #4facfe;
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
@@ -400,6 +455,29 @@ onMounted(() => {
   background: rgba(15, 20, 25, 0.3);
   border-radius: 8px;
   border: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.type-filter-info {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: rgba(79, 172, 254, 0.1);
+  border-radius: 6px;
+  color: #4facfe;
+  font-size: 0.75rem;
+}
+
+.type-filter-info strong {
+  text-transform: capitalize;
+}
+
+.suite-type-badge {
+  color: #4facfe;
+  font-weight: 500;
+}
+
+.selection-option.type-mismatch {
+  opacity: 0.5;
+  background: rgba(15, 20, 25, 0.2);
 }
 
 .section-title {

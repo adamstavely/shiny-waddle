@@ -10,7 +10,23 @@ import { DataBehaviorTester } from '../services/data-behavior-tester';
 import { ContractTester } from '../services/contract-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
-import { TestResult, TestSuite, TestConfiguration } from './types';
+import { 
+  TestResult, 
+  TestSuite, 
+  TestConfiguration,
+  Test,
+  AccessControlTest,
+  DataBehaviorTest,
+  ContractTest,
+  DatasetHealthTest,
+  ABACPolicy,
+} from './types';
+
+// Test loader interface - implementations should load tests by IDs
+export interface TestLoader {
+  loadTests(testIds: string[]): Promise<Test[]>;
+  loadPolicies(policyIds: string[]): Promise<ABACPolicy[]>;
+}
 
 export class TestOrchestrator {
   private userSimulator: UserSimulator;
@@ -19,104 +35,57 @@ export class TestOrchestrator {
   private contractTester: ContractTester;
   private datasetHealthTester: DatasetHealthTester;
   private complianceReporter: ComplianceReporter;
+  private testLoader?: TestLoader;
 
-  constructor(config: TestConfiguration) {
+  constructor(config: TestConfiguration, testLoader?: TestLoader) {
     this.userSimulator = new UserSimulator(config.userSimulationConfig);
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
     this.dataBehaviorTester = new DataBehaviorTester(config.dataBehaviorConfig);
     this.contractTester = new ContractTester(config.contractTestConfig);
     this.datasetHealthTester = new DatasetHealthTester(config.datasetHealthConfig);
     this.complianceReporter = new ComplianceReporter(config.reportingConfig);
+    this.testLoader = testLoader;
   }
 
   /**
-   * Run a complete test suite
+   * Run a complete test suite by loading and executing individual tests
    */
-  async runTestSuite(suite: TestSuite): Promise<TestResult[]> {
-    const results: TestResult[] = [];
-
-    // Run access control tests
-    if (suite.includeAccessControlTests) {
-      const accessControlResults = await this.runAccessControlTests(suite);
-      results.push(...accessControlResults);
+  async runTestSuite(suite: TestSuite, tests?: Test[]): Promise<TestResult[]> {
+    if (!this.testLoader && !tests) {
+      throw new Error('TestLoader must be provided or tests must be passed directly');
     }
 
-    // Run data behavior tests
-    if (suite.includeDataBehaviorTests) {
-      const dataBehaviorResults = await this.runDataBehaviorTests(suite);
-      results.push(...dataBehaviorResults);
+    // Load tests if not provided
+    let testEntities: Test[] = tests || [];
+    if (!tests && this.testLoader) {
+      testEntities = await this.testLoader.loadTests(suite.testIds);
     }
 
-    // Run contract tests
-    if (suite.includeContractTests) {
-      const contractResults = await this.runContractTests(suite);
-      results.push(...contractResults);
-    }
-
-    // Run dataset health tests
-    if (suite.includeDatasetHealthTests) {
-      const healthResults = await this.runDatasetHealthTests(suite);
-      results.push(...healthResults);
-    }
-
-    return results;
-  }
-
-  /**
-   * Run access control tests for representative identities, attributes, resources, and contexts
-   */
-  async runAccessControlTests(suite: TestSuite): Promise<TestResult[]> {
-    const results: TestResult[] = [];
-    const testUsers = await this.userSimulator.generateTestUsers(suite.userRoles);
-
-    for (const user of testUsers) {
-      for (const resource of suite.resources) {
-        for (const context of suite.contexts) {
-          const result = await this.accessControlTester.testPDPDecision({
-            user,
-            resource,
-            context,
-            expectedDecision: suite.expectedDecisions?.[`${user.role}-${resource.type}`],
-          });
-
-          results.push({
-            testType: 'access-control',
-            testName: `PDP Decision: ${user.role} accessing ${resource.type}`,
-            passed: result.allowed === result.expectedAllowed,
-            details: result,
-            timestamp: new Date(),
-          });
-        }
+    // Validate all tests match suite type
+    for (const test of testEntities) {
+      if (test.testType !== suite.testType) {
+        throw new Error(
+          `Test ${test.id} (${test.testType}) does not match suite type ${suite.testType}`
+        );
       }
     }
 
-    return results;
-  }
-
-  /**
-   * Run data behavior tests to verify queries only use permitted fields,
-   * apply required filters/aggregations, and block disallowed joins
-   */
-  async runDataBehaviorTests(suite: TestSuite): Promise<TestResult[]> {
+    // Execute each test
     const results: TestResult[] = [];
-    const testUsers = await this.userSimulator.generateTestUsers(suite.userRoles);
-
-    for (const user of testUsers) {
-      for (const query of suite.testQueries) {
-        const result = await this.dataBehaviorTester.testQuery({
-          user,
-          query,
-          expectedFields: suite.allowedFields?.[user.role],
-          requiredFilters: suite.requiredFilters?.[user.role],
-          disallowedJoins: suite.disallowedJoins?.[user.role],
-        });
-
+    for (const test of testEntities) {
+      try {
+        const result = await this.runTest(test, suite);
+        results.push(result);
+      } catch (error: any) {
         results.push({
-          testType: 'data-behavior',
-          testName: `Query Validation: ${user.role} executing ${query.name}`,
-          passed: result.compliant,
-          details: result,
+          testType: test.testType,
+          testName: test.name,
+          passed: false,
+          details: { error: error.message },
           timestamp: new Date(),
+          error: error.message,
+          testId: test.id,
+          testVersion: test.version,
         });
       }
     }
@@ -125,49 +94,137 @@ export class TestOrchestrator {
   }
 
   /**
-   * Run contract tests based on machine-readable requirements
+   * Run a single test
    */
-  async runContractTests(suite: TestSuite): Promise<TestResult[]> {
-    const results: TestResult[] = [];
-
-    for (const contract of suite.contracts) {
-      const result = await this.contractTester.testContract(contract);
-
-      results.push({
-        testType: 'contract',
-        testName: `Contract: ${contract.name}`,
-        passed: result.compliant,
-        details: result,
-        timestamp: new Date(),
-      });
+  async runTest(test: Test, suite: TestSuite): Promise<TestResult> {
+    switch (test.testType) {
+      case 'access-control':
+        return this.runAccessControlTest(test as AccessControlTest, suite);
+      case 'data-behavior':
+        return this.runDataBehaviorTest(test as DataBehaviorTest, suite);
+      case 'contract':
+        return this.runContractTest(test as ContractTest, suite);
+      case 'dataset-health':
+        return this.runDatasetHealthTest(test as DatasetHealthTest, suite);
+      default:
+        throw new Error(`Test type ${test.testType} execution not yet implemented`);
     }
-
-    return results;
   }
 
   /**
-   * Run dataset health tests to assert masked/synthetic data meets privacy thresholds
+   * Run a single access control test
    */
-  async runDatasetHealthTests(suite: TestSuite): Promise<TestResult[]> {
-    const results: TestResult[] = [];
-
-    for (const dataset of suite.datasets) {
-      const result = await this.datasetHealthTester.testDataset({
-        dataset,
-        privacyThresholds: suite.privacyThresholds,
-        statisticalFidelityTargets: suite.statisticalFidelityTargets,
-      });
-
-      results.push({
-        testType: 'dataset-health',
-        testName: `Dataset Health: ${dataset.name}`,
-        passed: result.compliant,
-        details: result,
-        timestamp: new Date(),
-      });
+  async runAccessControlTest(test: AccessControlTest, suite: TestSuite): Promise<TestResult> {
+    // Load policies referenced by test
+    let policies: ABACPolicy[] = [];
+    if (this.testLoader && test.policyIds && test.policyIds.length > 0) {
+      policies = await this.testLoader.loadPolicies(test.policyIds);
+      // Configure access control tester with these policies
+      // Note: This assumes AccessControlTester can be reconfigured
+      // In a real implementation, you'd update the config or create a new tester
     }
 
-    return results;
+    // Create user from test role
+    const testUsers = await this.userSimulator.generateTestUsers([test.role]);
+    const user = testUsers[0] || {
+      id: 'test-user',
+      email: 'test@example.com',
+      role: test.role as any,
+      attributes: {},
+    };
+
+    // Execute test
+    const result = await this.accessControlTester.testPDPDecision({
+      user,
+      resource: test.resource,
+      context: test.context || {},
+      expectedDecision: test.expectedDecision,
+    });
+
+    return {
+      testType: 'access-control',
+      testName: test.name,
+      passed: result.allowed === result.expectedAllowed,
+      details: {
+        ...result,
+        policiesTested: test.policyIds,
+        appliedPolicies: result.policyRules,
+      },
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyIds: test.policyIds,
+    };
+  }
+
+  /**
+   * Run a single data behavior test
+   */
+  async runDataBehaviorTest(test: DataBehaviorTest, suite: TestSuite): Promise<TestResult> {
+    // Create a test user (role would need to be extracted from test or suite)
+    const testUsers = await this.userSimulator.generateTestUsers(['researcher']);
+    const user = testUsers[0] || {
+      id: 'test-user',
+      email: 'test@example.com',
+      role: 'researcher' as any,
+      attributes: {},
+    };
+
+    const result = await this.dataBehaviorTester.testQuery({
+      user,
+      query: test.testQuery,
+      expectedFields: test.allowedFields,
+      requiredFilters: test.requiredFilters,
+      disallowedJoins: test.disallowedJoins,
+    });
+
+    return {
+      testType: 'data-behavior',
+      testName: test.name,
+      passed: result.compliant,
+      details: result,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+    };
+  }
+
+  /**
+   * Run a single contract test
+   */
+  async runContractTest(test: ContractTest, suite: TestSuite): Promise<TestResult> {
+    const result = await this.contractTester.testContract(test.contract);
+
+    return {
+      testType: 'contract',
+      testName: test.name,
+      passed: result.compliant === test.expectedCompliance,
+      details: result,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+    };
+  }
+
+  /**
+   * Run a single dataset health test
+   */
+  async runDatasetHealthTest(test: DatasetHealthTest, suite: TestSuite): Promise<TestResult> {
+    const result = await this.datasetHealthTester.testDataset({
+      dataset: test.dataset,
+      privacyThresholds: test.privacyThresholds,
+      statisticalFidelityTargets: test.statisticalFidelityTargets,
+    });
+
+    return {
+      testType: 'dataset-health',
+      testName: test.name,
+      passed: result.compliant,
+      details: result,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+    };
   }
 
   /**

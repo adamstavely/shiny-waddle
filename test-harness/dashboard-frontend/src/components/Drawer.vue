@@ -54,6 +54,14 @@
             <span>Test Suites</span>
           </a>
           <a
+            href="/tests/individual"
+            @click.prevent="handleNavClick('/tests/individual')"
+            :class="['drawer-item', isActive('/tests/individual') ? 'drawer-item-active' : '']"
+          >
+            <TestTube class="item-icon" />
+            <span>Tests</span>
+          </a>
+          <a
             href="/tests/library"
             @click.prevent="handleNavClick('/tests/library')"
             :class="['drawer-item', isActive('/tests/library') ? 'drawer-item-active' : '']"
@@ -76,14 +84,6 @@
 
         <!-- Test Tools -->
         <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/tests/configurations"
-            @click.prevent="handleNavClick('/tests/configurations')"
-            :class="['drawer-item', isActive('/tests/configurations') || isActive('/test-configurations') ? 'drawer-item-active' : '']"
-          >
-            <Settings class="item-icon" />
-            <span>Test Configurations</span>
-          </a>
           <a
             href="/api-security-enhanced"
             @click.prevent="handleNavClick('/api-security-enhanced')"
@@ -334,9 +334,8 @@ const activeCategory = ref<string | null>(null);
 const testPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
-  '/tests/library', '/tests/findings', '/tests/configurations',
-  '/tests/history', '/test-configurations',
-  '/api-security-enhanced'
+  '/tests/individual', '/tests/library', '/tests/findings',
+  '/tests/history', '/api-security-enhanced'
 ];
 
 // Access Control pages

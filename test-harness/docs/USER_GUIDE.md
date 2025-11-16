@@ -279,18 +279,25 @@ The dashboard is organized into the following main sections:
 Tests are organized in a hierarchical structure:
 
 ```
-Test Battery (collection of harnesses with execution config)
-  └── Test Harness (collection of suites, assigned to applications)
-      └── Test Suite (collection of test configurations)
-          └── Test Configuration (test parameters)
-              └── Individual Tests (test functions)
+Test Battery (collection of different types of harnesses with execution config)
+  └── Test Harness (collection of suites of the same type, assigned to applications)
+      └── Test Suite (tests of a single type, e.g., all ABAC read tests)
+          └── Individual Tests (test functions)
 ```
 
 **Key Relationships:**
+- **Test**: Smallest unit (individual test function)
+- **Test Suite**: Contains tests of the same type (e.g., all ABAC read tests, all API security tests)
+- **Test Harness**: Contains test suites of the same type (e.g., all ABAC test suites)
+- **Test Battery**: Contains different types of test harnesses (e.g., ABAC harness + API Security harness)
+- **Test Suite**: Can belong to multiple Test Harnesses (many-to-many, but all must match harness type)
 - **Test Harness**: Global entity, can be assigned to multiple applications
-- **Test Suite**: Can belong to multiple Test Harnesses (many-to-many)
 - **Application**: Has Test Harnesses assigned to it
-- **Test Battery**: Contains multiple Test Harnesses with execution configuration
+
+**Type-Based Organization:**
+- Each Test Suite has exactly one `testType` (e.g., 'access-control', 'data-behavior', 'api-security')
+- Each Test Harness has exactly one `testType`, and all suites in it must match that type
+- Each Test Battery must contain harnesses with different types (no duplicate types allowed)
 
 ---
 
@@ -386,24 +393,21 @@ Test Harnesses are collections of Test Suites that can be assigned to applicatio
 
 ### Test Suite Structure
 
-A test suite defines what to test, who to test, what resources to test against, and how to validate results.
+A test suite defines what to test, who to test, what resources to test against, and how to validate results. **Each test suite must have exactly one test type.**
 
 #### Basic Test Suite
 
-Create a test suite file in `tests/` directory (TypeScript or JSON):
+Create a test suite file in `tests/` directory (TypeScript or JSON). Each suite must specify a single `testType`:
 
-**TypeScript** (`tests/my-test-suite.ts`):
+**TypeScript** (`tests/my-access-control-suite.ts`):
 ```typescript
-import { TestSuite } from '../core/types';
+import { AccessControlTestSuite } from '../core/types';
 
-export const myTestSuite: TestSuite = {
-  name: 'My Application Tests',
+export const myAccessControlSuite: AccessControlTestSuite = {
+  name: 'My Application Access Control Tests',
   application: 'my-app',
   team: 'my-team',
-  includeAccessControlTests: true,
-  includeDataBehaviorTests: true,
-  includeContractTests: false,
-  includeDatasetHealthTests: false,
+  testType: 'access-control', // Required: single test type
   userRoles: ['admin', 'viewer'],
   resources: [
     {
@@ -416,6 +420,10 @@ export const myTestSuite: TestSuite = {
   contexts: [
     { ipAddress: '192.168.1.1', timeOfDay: '14:00' },
   ],
+  expectedDecisions: {
+    'admin-resource-1': true,
+    'viewer-resource-1': true,
+  },
 };
 ```
 

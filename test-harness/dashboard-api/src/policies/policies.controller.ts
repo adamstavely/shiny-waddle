@@ -107,5 +107,10 @@ export class PoliciesController {
   ): Promise<any> {
     return this.policiesService.testPolicy(id, testData);
   }
+
+  @Get(':id/tests')
+  async getTestsUsingPolicy(@Param('id') id: string): Promise<any[]> {
+    return this.policiesService.findTestsUsingPolicy(id);
+  }
 }
 

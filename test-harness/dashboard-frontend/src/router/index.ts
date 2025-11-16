@@ -99,6 +99,11 @@ const router = createRouter({
       component: TestsOverview,
     },
     {
+      path: '/tests/individual',
+      name: 'Tests',
+      component: () => import('../views/Tests.vue'),
+    },
+    {
       path: '/tests/batteries',
       name: 'TestBatteries',
       component: TestBatteries,
@@ -152,6 +157,11 @@ const router = createRouter({
       path: '/tests/findings',
       name: 'Findings',
       component: Findings,
+    },
+    {
+      path: '/tests/test/:id',
+      name: 'TestDetail',
+      component: () => import('../views/TestDetail.vue'),
     },
     {
       path: '/tests/configurations',

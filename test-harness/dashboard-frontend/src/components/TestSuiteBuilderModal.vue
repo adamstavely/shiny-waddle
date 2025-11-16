@@ -59,24 +59,58 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label>Test Types *</label>
-                  <div class="checkbox-group">
-                    <label class="checkbox-label">
-                      <input v-model="form.includeAccessControlTests" type="checkbox" />
-                      Access Control Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input v-model="form.includeDataBehaviorTests" type="checkbox" />
-                      Data Behavior Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input v-model="form.includeContractTests" type="checkbox" />
-                      Contract Tests
-                    </label>
-                    <label class="checkbox-label">
-                      <input v-model="form.includeDatasetHealthTests" type="checkbox" />
-                      Dataset Health Tests
-                    </label>
+                  <label>Test Type *</label>
+                  <select v-model="form.testType" required class="form-select">
+                    <option value="">Select a test type...</option>
+                    <option value="access-control">Access Control</option>
+                    <option value="data-behavior">Data Behavior</option>
+                    <option value="contract">Contract</option>
+                    <option value="dataset-health">Dataset Health</option>
+                    <option value="rls-cls">RLS/CLS</option>
+                    <option value="network-policy">Network Policy</option>
+                    <option value="dlp">DLP</option>
+                    <option value="api-gateway">API Gateway</option>
+                    <option value="distributed-systems">Distributed Systems</option>
+                    <option value="api-security">API Security</option>
+                    <option value="data-pipeline">Data Pipeline</option>
+                  </select>
+                  <small>Each test suite must have exactly one test type. All tests in this suite will be of the selected type.</small>
+                </div>
+              </div>
+
+              <!-- Expected Decisions Tab (only for access-control type) -->
+              <div v-if="activeTab === 'expected-decisions' && form.testType === 'access-control'" class="tab-panel">
+                <div class="section-header">
+                  <h3>Expected Decisions</h3>
+                  <p class="form-help">Define expected access control decisions for user/resource combinations</p>
+                </div>
+                <div v-if="form.userRoles.length === 0 || form.resources.length === 0" class="info-message">
+                  <p>Please add user roles and resources first to define expected decisions.</p>
+                </div>
+                <div v-else class="decisions-grid">
+                  <div
+                    v-for="role in form.userRoles"
+                    :key="role"
+                    class="role-decisions"
+                  >
+                    <h4>{{ role }}</h4>
+                    <div
+                      v-for="resource in form.resources"
+                      :key="resource.id"
+                      class="decision-item"
+                    >
+                      <label class="decision-label">
+                        <span class="resource-name">{{ resource.id }} ({{ resource.type }})</span>
+                        <select
+                          v-model="form.expectedDecisions[`${role}-${resource.type}`]"
+                          class="decision-select"
+                        >
+                          <option :value="undefined">Not Set</option>
+                          <option :value="true">Allow</option>
+                          <option :value="false">Deny</option>
+                        </select>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -174,8 +208,8 @@
                 </div>
               </div>
 
-              <!-- Test Queries Tab -->
-              <div v-if="activeTab === 'queries'" class="tab-panel">
+              <!-- Test Queries Tab (only for data-behavior type) -->
+              <div v-if="activeTab === 'queries' && form.testType === 'data-behavior'" class="tab-panel">
                 <div class="section-header">
                   <h3>Test Queries</h3>
                   <button type="button" @click="addQuery" class="btn-small">
@@ -214,8 +248,8 @@
                 </div>
               </div>
 
-              <!-- Data Behavior Config Tab -->
-              <div v-if="activeTab === 'data-behavior'" class="tab-panel">
+              <!-- Data Behavior Config Tab (only for data-behavior type) -->
+              <div v-if="activeTab === 'data-behavior' && form.testType === 'data-behavior'" class="tab-panel">
                 <div class="form-group">
                   <label>Allowed Fields by Role</label>
                   <div v-for="role in form.userRoles" :key="role" class="role-fields">
@@ -254,8 +288,8 @@
                 </div>
               </div>
 
-              <!-- Contracts Tab -->
-              <div v-if="activeTab === 'contracts'" class="tab-panel">
+              <!-- Contracts Tab (only for contract type) -->
+              <div v-if="activeTab === 'contracts' && form.testType === 'contract'" class="tab-panel">
                 <div class="section-header">
                   <h3>Contracts</h3>
                   <button type="button" @click="addContract" class="btn-small">
@@ -278,8 +312,8 @@
                 </div>
               </div>
 
-              <!-- Datasets Tab -->
-              <div v-if="activeTab === 'datasets'" class="tab-panel">
+              <!-- Datasets Tab (only for dataset-health type) -->
+              <div v-if="activeTab === 'datasets' && form.testType === 'dataset-health'" class="tab-panel">
                 <div class="section-header">
                   <h3>Datasets</h3>
                   <button type="button" @click="addDataset" class="btn-small">
@@ -406,6 +440,7 @@ const tabs = [
   { id: 'users', label: 'User Roles', icon: User },
   { id: 'resources', label: 'Resources', icon: Database },
   { id: 'contexts', label: 'Contexts', icon: Globe },
+  { id: 'expected-decisions', label: 'Expected Decisions', icon: Shield },
   { id: 'queries', label: 'Test Queries', icon: Code },
   { id: 'data-behavior', label: 'Data Behavior', icon: Shield },
   { id: 'contracts', label: 'Contracts', icon: FileText },
@@ -416,18 +451,18 @@ const form = ref({
   name: '',
   application: '',
   team: '',
-  includeAccessControlTests: true,
-  includeDataBehaviorTests: true,
-  includeContractTests: false,
-  includeDatasetHealthTests: false,
+  testType: '' as string,
   userRoles: [] as string[],
   resources: [] as Resource[],
   contexts: [] as Context[],
+  expectedDecisions: {} as Record<string, boolean>,
   testQueries: [] as TestQuery[],
   allowedFields: {} as Record<string, string[]>,
   requiredFilters: {} as Record<string, Filter[]>,
   contracts: [] as Contract[],
-  datasets: [] as Dataset[]
+  datasets: [] as Dataset[],
+  privacyThresholds: [] as any[],
+  statisticalFidelityTargets: [] as any[]
 });
 
 const allowedFieldsInput = ref<Record<string, string>>({});
@@ -435,22 +470,33 @@ const requiredFiltersInput = ref<Record<string, Filter[]>>({});
 
 watch(() => props.editingSuite, (suite) => {
   if (suite) {
+    // Determine testType from suite (check testType first, then infer from old structure)
+    let testType = suite.testType;
+    if (!testType) {
+      // Backward compatibility: infer from old boolean flags
+      if (suite.includeAccessControlTests) testType = 'access-control';
+      else if (suite.includeDataBehaviorTests) testType = 'data-behavior';
+      else if (suite.includeContractTests) testType = 'contract';
+      else if (suite.includeDatasetHealthTests) testType = 'dataset-health';
+      else testType = 'access-control'; // default
+    }
+
     form.value = {
       name: suite.name || '',
-      application: suite.application || '',
+      application: suite.application || suite.applicationId || '',
       team: suite.team || '',
-      includeAccessControlTests: suite.includeAccessControlTests ?? true,
-      includeDataBehaviorTests: suite.includeDataBehaviorTests ?? true,
-      includeContractTests: suite.includeContractTests ?? false,
-      includeDatasetHealthTests: suite.includeDatasetHealthTests ?? false,
+      testType: testType,
       userRoles: suite.userRoles || [],
       resources: suite.resources || [],
       contexts: suite.contexts || [],
+      expectedDecisions: suite.expectedDecisions || {},
       testQueries: suite.testQueries || [],
       allowedFields: suite.allowedFields || {},
       requiredFilters: suite.requiredFilters || {},
       contracts: suite.contracts || [],
-      datasets: suite.datasets || []
+      datasets: suite.datasets || [],
+      privacyThresholds: suite.privacyThresholds || [],
+      statisticalFidelityTargets: suite.statisticalFidelityTargets || []
     };
     
     // Initialize input fields
@@ -474,18 +520,18 @@ function resetForm() {
     name: '',
     application: '',
     team: '',
-    includeAccessControlTests: true,
-    includeDataBehaviorTests: true,
-    includeContractTests: false,
-    includeDatasetHealthTests: false,
+    testType: '',
     userRoles: [],
     resources: [],
     contexts: [],
+    expectedDecisions: {},
     testQueries: [],
     allowedFields: {},
     requiredFilters: {},
     contracts: [],
-    datasets: []
+    datasets: [],
+    privacyThresholds: [],
+    statisticalFidelityTargets: []
   };
   allowedFieldsInput.value = {};
   requiredFiltersInput.value = {};
@@ -588,6 +634,11 @@ function close() {
 }
 
 function save() {
+  if (!form.value.testType) {
+    alert('Please select a test type');
+    return;
+  }
+
   // Process allowed fields
   const allowedFields: Record<string, string[]> = {};
   form.value.userRoles.forEach(role => {
@@ -601,7 +652,33 @@ function save() {
   // Process required filters
   form.value.requiredFilters = requiredFiltersInput.value;
 
-  emit('save', { ...form.value });
+  // Build suite object based on testType
+  const suiteData: any = {
+    name: form.value.name,
+    application: form.value.application,
+    team: form.value.team,
+    testType: form.value.testType,
+    userRoles: form.value.userRoles,
+    resources: form.value.resources,
+    contexts: form.value.contexts,
+  };
+
+  // Add type-specific fields
+  if (form.value.testType === 'access-control') {
+    suiteData.expectedDecisions = form.value.expectedDecisions;
+  } else if (form.value.testType === 'data-behavior') {
+    suiteData.testQueries = form.value.testQueries;
+    suiteData.allowedFields = form.value.allowedFields;
+    suiteData.requiredFilters = form.value.requiredFilters;
+  } else if (form.value.testType === 'contract') {
+    suiteData.contracts = form.value.contracts;
+  } else if (form.value.testType === 'dataset-health') {
+    suiteData.datasets = form.value.datasets;
+    suiteData.privacyThresholds = form.value.privacyThresholds;
+    suiteData.statisticalFidelityTargets = form.value.statisticalFidelityTargets;
+  }
+
+  emit('save', suiteData);
 }
 
 function saveAsDraft() {
@@ -969,6 +1046,14 @@ function saveAsDraft() {
   transition: all 0.2s;
 }
 
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234facfe' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
@@ -1058,6 +1143,60 @@ function saveAsDraft() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.info-message {
+  padding: 1rem;
+  background: rgba(79, 172, 254, 0.1);
+  border-radius: 8px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.decisions-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.role-decisions {
+  padding: 1rem;
+  background: rgba(15, 20, 25, 0.4);
+  border-radius: 8px;
+}
+
+.role-decisions h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4facfe;
+}
+
+.decision-item {
+  margin-bottom: 0.75rem;
+}
+
+.decision-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.resource-name {
+  flex: 1;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.decision-select {
+  padding: 0.5rem 0.75rem;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  min-width: 120px;
 }
 </style>
 

@@ -11,7 +11,8 @@ export interface TestSuiteEntity {
   lastRun?: Date;
   testCount: number;
   score: number;
-  testTypes: string[];
+  testType: string; // Required: single test type (e.g., 'access-control', 'data-behavior')
+  testTypes: string[]; // Deprecated: kept for backward compatibility, should match testType
   enabled: boolean;
   createdAt: Date;
   updatedAt: Date;

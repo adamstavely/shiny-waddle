@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { CreatePolicyDto, PolicyType, PolicyStatus, PolicyEffect } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { Policy, PolicyVersion, PolicyAuditLog } from './entities/policy.entity';
@@ -13,7 +14,7 @@ export class PoliciesService {
   private policies: Policy[] = [];
   private auditLogs: PolicyAuditLog[] = [];
 
-  constructor() {
+  constructor(private readonly moduleRef: ModuleRef) {
     this.loadPolicies().catch(err => {
       console.error('Error loading policies on startup:', err);
     });
@@ -337,6 +338,22 @@ export class PoliciesService {
       decisions: [],
       timestamp: new Date(),
     };
+  }
+
+  async findTestsUsingPolicy(policyId: string): Promise<any[]> {
+    try {
+      // Use ModuleRef to get TestsService (avoiding circular dependency)
+      // Import dynamically to avoid circular dependency at module level
+      const { TestsService } = await import('../tests/tests.service');
+      const testsService = this.moduleRef.get(TestsService, { strict: false });
+      if (testsService && typeof testsService.findByPolicy === 'function') {
+        return await testsService.findByPolicy(policyId);
+      }
+      return [];
+    } catch (error) {
+      // TestsService may not be available, return empty array
+      return [];
+    }
   }
 }
 

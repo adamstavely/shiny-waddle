@@ -21,20 +21,37 @@ A test suite defines:
 
 ### Test Suite Structure
 
+Each test suite must have exactly one test type. The structure varies based on the test type:
+
 ```typescript
-interface TestSuite {
-  name: string;                    // Suite name
-  application: string;              // Application being tested
-  team: string;                     // Team owning the application
-  includeAccessControlTests: boolean;
-  includeDataBehaviorTests: boolean;
-  includeContractTests: boolean;
-  includeDatasetHealthTests: boolean;
-  userRoles: string[];              // Roles to test
-  resources: Resource[];           // Resources to test
-  contexts: Context[];              // Contexts to test
-  // ... additional configuration
+// Access Control Test Suite
+interface AccessControlTestSuite {
+  name: string;
+  application: string;
+  team: string;
+  testType: 'access-control';      // Required: single test type
+  userRoles: string[];
+  resources: Resource[];
+  contexts: Context[];
+  expectedDecisions?: Record<string, boolean>;
 }
+
+// Data Behavior Test Suite
+interface DataBehaviorTestSuite {
+  name: string;
+  application: string;
+  team: string;
+  testType: 'data-behavior';       // Required: single test type
+  userRoles: string[];
+  resources: Resource[];
+  contexts: Context[];
+  testQueries: TestQuery[];        // Required for data-behavior
+  allowedFields?: Record<string, string[]>;
+  requiredFilters?: Record<string, Filter[]>;
+  disallowedJoins?: Record<string, string[]>;
+}
+
+// Other test types follow similar pattern with type-specific fields
 ```
 
 ## Creating a Test Suite

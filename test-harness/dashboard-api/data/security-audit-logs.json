@@ -1,5 +1,117 @@
 [
   {
+    "id": "6616077e-0c9f-4bf0-9638-079ccf85c3cf",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/tests",
+    "description": "Data write operation: POST /api/tests",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/tests",
+    "timestamp": "2025-11-16T02:43:49.679Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/tests",
+      "query": {},
+      "bodySize": "57"
+    },
+    "requestId": "req-1763261029672-g38nz4lj4",
+    "responseCode": 201,
+    "duration": 6
+  },
+  {
+    "id": "8d4cd846-9652-4fb2-add1-0aceb6a9d60c",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/api-security/versioning",
+    "description": "Data write operation: POST /api/api-security/versioning",
+    "ipAddress": "::1",
+    "userAgent": "curl/8.7.1",
+    "resourceType": "endpoint",
+    "resourceId": "/api/api-security/versioning",
+    "timestamp": "2025-11-15T22:10:07.910Z",
+    "success": true,
+    "metadata": {
+      "method": "POST",
+      "path": "/api/api-security/versioning",
+      "query": {},
+      "bodySize": "35"
+    },
+    "requestId": "req-1763244607902-bdhuwmnys",
+    "responseCode": 200,
+    "duration": 6
+  },
+  {
+    "id": "504de37a-6028-4ceb-9687-42f00b87bfc6",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/environment-config/validate",
+    "description": "Data write operation: POST /api/environment-config/validate",
+    "ipAddress": "::1",
+    "userAgent": "curl/8.7.1",
+    "resourceType": "endpoint",
+    "resourceId": "/api/environment-config/validate",
+    "timestamp": "2025-11-15T22:09:53.978Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/environment-config/validate",
+      "query": {},
+      "bodySize": "2"
+    },
+    "requestId": "req-1763244593978-8n5li9mwl",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
+    "id": "16c70655-4797-4075-b9b3-5b68facbc14a",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/api-security/versioning",
+    "description": "Data write operation: POST /api/api-security/versioning",
+    "ipAddress": "::1",
+    "userAgent": "curl/8.7.1",
+    "resourceType": "endpoint",
+    "resourceId": "/api/api-security/versioning",
+    "timestamp": "2025-11-15T22:09:39.532Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/api-security/versioning",
+      "query": {},
+      "bodySize": "35"
+    },
+    "requestId": "req-1763244579532-1vedgqdnu",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
+    "id": "e84dc2ed-63fc-4d29-9d33-a040b2fc0ead",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/api-security/versioning",
+    "description": "Data write operation: POST /api/api-security/versioning",
+    "ipAddress": "::1",
+    "userAgent": "curl/8.7.1",
+    "resourceType": "endpoint",
+    "resourceId": "/api/api-security/versioning",
+    "timestamp": "2025-11-15T22:09:20.298Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/api-security/versioning",
+      "query": {},
+      "bodySize": "35"
+    },
+    "requestId": "req-1763244560294-k227orxf4",
+    "responseCode": 404,
+    "duration": 2
+  },
+  {
     "id": "d221bebc-226d-40a5-a4cf-5d1ec748f142",
     "type": "data-write",
     "severity": "medium",
