@@ -30,12 +30,6 @@ async function main() {
       policyMode: 'abac', // Use ABAC mode
       abacPolicies: abacPolicies,
     },
-    dataBehaviorConfig: {
-      enableQueryLogging: true,
-      piiDetectionRules: [
-        { fieldPattern: '.*email.*', piiType: 'email' },
-      ],
-    },
     datasetHealthConfig: {},
     reportingConfig: {
       outputFormat: 'json',
@@ -50,7 +44,6 @@ async function main() {
     application: 'my-app',
     team: 'my-team',
     includeAccessControlTests: true,
-    includeDataBehaviorTests: true,
     includeDatasetHealthTests: false,
     userRoles: ['researcher', 'analyst'],
     resources: [

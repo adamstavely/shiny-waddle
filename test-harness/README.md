@@ -8,7 +8,6 @@ Heimdall is an automated testing framework that validates applications are adher
 
 - **User Simulation**: Simulate users with different roles/attributes
 - **Access Control Tests**: Evaluate Policy Decision Point (PDP) decisions for representative identities, attributes, resources, and contexts
-- **Data Behavior Tests**: Verify queries only use permitted fields, apply required filters/aggregations, and block disallowed joins
 - **Contract Tests**: Machine-readable requirements → generated tests (e.g., "No raw email export," "Min aggregation ≥ k=10")
 - **Dataset Health Tests**: Assert masked/synthetic data meets privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy) and statistical fidelity targets
 - **Ephemeral Environments**: Spin up per-PR with seeded masked/synthetic data; run full harness before merge
@@ -52,7 +51,6 @@ heimdall/
 ├── services/                # Test service implementations
 │   ├── user-simulator.ts    # User role/attribute simulation
 │   ├── access-control-tester.ts  # PDP decision evaluation
-│   ├── data-behavior-tester.ts   # Query validation
 │   ├── contract-tester.ts       # Contract requirement testing
 │   ├── dataset-health-tester.ts  # Privacy & statistical tests
 │   ├── compliance-reporter.ts   # Report generation
@@ -150,7 +148,7 @@ The documentation is organized into several guides:
 
 5. **Test Creation Guide**: Step-by-step instructions for creating test suites
    - Test suite structure
-   - All four test types (access control, data behavior, contracts, dataset health)
+   - All test types (access control, contracts, dataset health)
    - Configuration options
    - Best practices and examples
 
@@ -170,7 +168,6 @@ Create a test suite configuration file in `tests/suites/`:
   "application": "my-app",
   "team": "my-team",
   "includeAccessControlTests": true,
-  "includeDataBehaviorTests": true,
   "userRoles": ["admin", "viewer"],
   "resources": [...],
   "testQueries": [...]
@@ -186,15 +183,7 @@ Tests Policy Decision Point (PDP) decisions for:
 - Various resource types and sensitivity levels
 - Different contexts (IP address, time of day, location)
 
-### 2. Data Behavior Tests
-
-Validates:
-- Queries only access permitted fields
-- Required filters are applied (e.g., workspace filtering)
-- Disallowed joins are blocked
-- PII fields are properly masked
-
-### 3. Contract Tests
+### 2. Contract Tests
 
 Tests machine-readable requirements from data owners:
 - Field restrictions (e.g., "No raw email export")
@@ -390,7 +379,6 @@ Tests generate:
 ✅ Integration with CI/CD to block merges on access violations  
 ✅ Dashboard to show compliance score by application, team, dataset  
 ✅ Access-control tests: Evaluate PDP decisions  
-✅ Data-behavior tests: Verify queries, filters, aggregations, joins  
 ✅ Contract tests with data owners: Machine-readable requirements → generated tests  
 ✅ Dataset health & risk tests: Privacy thresholds and statistical fidelity  
 ✅ Ephemeral environments: Per-PR with seeded data  

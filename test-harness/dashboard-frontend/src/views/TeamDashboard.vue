@@ -255,7 +255,6 @@ const loadDashboard = async () => {
       openViolations: 5,
       scoresByCategory: {
         'Access Control': 92,
-        'Data Behavior': 88,
         'Contract': 85,
         'Dataset Health': 90
       },

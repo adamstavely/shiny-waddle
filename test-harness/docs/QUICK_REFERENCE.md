@@ -89,7 +89,6 @@ Quick reference for common tasks when creating policies and tests.
   application: 'my-app',
   team: 'my-team',
   includeAccessControlTests: true,
-  includeDataBehaviorTests: false,
   includeDatasetHealthTests: false,
   userRoles: ['admin', 'viewer'],
   resources: [
@@ -117,29 +116,6 @@ Quick reference for common tasks when creating policies and tests.
   expectedDecisions: {
     'admin-public': true,
     'viewer-restricted': false
-  }
-}
-```
-
-### Data Behavior Test
-
-```typescript
-{
-  includeDataBehaviorTests: true,
-  testQueries: [
-    { name: 'Get reports', sql: 'SELECT id, title FROM reports' }
-  ],
-  allowedFields: {
-    viewer: ['id', 'title'],
-    admin: ['*']
-  },
-  requiredFilters: {
-    viewer: [
-      { field: 'workspace_id', operator: '=', value: 'user_workspace' }
-    ]
-  },
-  disallowedJoins: {
-    viewer: ['users']
   }
 }
 ```

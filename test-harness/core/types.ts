@@ -2,10 +2,11 @@
  * Type definitions for the Heimdall framework
  */
 
+import { RuntimeTestConfig } from './runtime-config';
+
 export interface TestConfiguration {
   userSimulationConfig: UserSimulationConfig;
   accessControlConfig: AccessControlConfig;
-  dataBehaviorConfig: DataBehaviorConfig;
   datasetHealthConfig: DatasetHealthConfig;
   reportingConfig: ReportingConfig;
 }
@@ -40,13 +41,6 @@ export interface ABACCondition {
   logicalOperator?: 'AND' | 'OR'; // For combining multiple conditions
 }
 
-export interface DataBehaviorConfig {
-  queryInterceptor?: boolean;
-  enableQueryLogging?: boolean;
-  piiDetectionRules?: PiiDetectionRule[];
-}
-
-
 export interface DatasetHealthConfig {
   privacyMetrics?: PrivacyMetric[];
   statisticalTests?: StatisticalTest[];
@@ -61,7 +55,6 @@ export interface ReportingConfig {
 // Test Type Union - all supported test types
 export type TestType = 
   | 'access-control' 
-  | 'data-behavior' 
   | 'dataset-health'
   | 'rls-cls'
   | 'network-policy'
@@ -83,6 +76,11 @@ export interface TestSuite {
   enabled: boolean;
   createdAt: Date;
   updatedAt: Date;
+  /**
+   * Runtime configuration that overrides hardcoded values in tests
+   * This allows tests to be environment-agnostic
+   */
+  runtimeConfig?: RuntimeTestConfig;
 }
 
 export interface TestResult {
@@ -131,17 +129,6 @@ export interface AccessControlTest extends BaseTest {
   expectedDecision: boolean; // What the policy should decide
   policyRuleId?: string; // Optional: test specific policy rule
 }
-
-// Data Behavior Test
-export interface DataBehaviorTest extends BaseTest {
-  testType: 'data-behavior';
-  testQuery: TestQuery;
-  allowedFields?: string[];
-  requiredFilters?: Filter[];
-  disallowedJoins?: string[];
-  expectedResult?: any;
-}
-
 
 // Dataset Health Test
 export interface DatasetHealthTest extends BaseTest {
@@ -295,7 +282,6 @@ export interface DataPipelineTest extends BaseTest {
 // Discriminated union for Test
 export type Test =
   | AccessControlTest
-  | DataBehaviorTest
   | DatasetHealthTest
   | RLSCLSTest
   | NetworkPolicyTest
@@ -440,7 +426,6 @@ export interface ComplianceScore {
   overallScore: number;
   scoresByCategory: {
     accessControl: number;
-    dataBehavior: number;
     contracts: number;
     datasetHealth: number;
   };

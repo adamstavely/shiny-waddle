@@ -37,9 +37,6 @@ export function parseTypeScriptTestSuite(tsContent: string, filePath: string): P
       if (configStr.includes('includeAccessControlTests') && configStr.match(/includeAccessControlTests\s*:\s*true/)) {
         testTypes.push('access-control');
       }
-      if (configStr.includes('includeDataBehaviorTests') && configStr.match(/includeDataBehaviorTests\s*:\s*true/)) {
-        testTypes.push('data-behavior');
-      }
       if (configStr.includes('includeDatasetHealthTests') && configStr.match(/includeDatasetHealthTests\s*:\s*true/)) {
         testTypes.push('dataset-health');
       }
@@ -353,7 +350,6 @@ function extractTestSuiteProperties(tsContent: string): TestSuite | null {
 
     // Extract boolean flags
     suite.includeAccessControlTests = /includeAccessControlTests\s*:\s*true/.test(tsContent);
-    suite.includeDataBehaviorTests = /includeDataBehaviorTests\s*:\s*true/.test(tsContent);
     suite.includeDatasetHealthTests = /includeDatasetHealthTests\s*:\s*true/.test(tsContent);
 
     // Extract userRoles array

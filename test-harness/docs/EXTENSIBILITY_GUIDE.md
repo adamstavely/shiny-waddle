@@ -2,7 +2,7 @@
 
 ## Overview
 
-TestOrchestrator is designed to be extensible for different types of compliance and configuration validation. While the current implementation focuses on access control testing (RBAC/ABAC), data behavior validation, and contract testing, the architecture supports adding new test types and custom validators.
+TestOrchestrator is designed to be extensible for different types of compliance and configuration validation. While the current implementation focuses on access control testing (RBAC/ABAC) and contract testing, the architecture supports adding new test types and custom validators.
 
 ## Current Architecture
 
@@ -15,12 +15,7 @@ The framework currently supports four main test types:
    - Tests user permissions against resources
    - Uses Policy Decision Point (PDP) for evaluation
 
-2. **Data Behavior Tests** (`data-behavior`)
-   - Validates query patterns
-   - Checks field access, filters, and joins
-   - Detects PII exposure
-
-3. **Contract Tests** (`contract`)
+2. **Contract Tests** (`contract`)
    - Validates data contracts
    - Tests field restrictions and aggregation requirements
 
@@ -53,7 +48,7 @@ Extend the `TestResult` type to include configuration validation:
 ```typescript
 // In core/types.ts
 export interface TestResult {
-  testType: 'access-control' | 'data-behavior' | 'dataset-health' | 'configuration-validation';
+  testType: 'access-control' | 'dataset-health' | 'configuration-validation';
   testName: string;
   passed: boolean;
   details: any;

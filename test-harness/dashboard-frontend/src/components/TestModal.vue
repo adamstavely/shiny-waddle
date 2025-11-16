@@ -31,7 +31,6 @@
                   <select v-model="form.testType" required :disabled="!!testId" class="form-select">
                     <option value="">Select a test type...</option>
                     <option value="access-control">Access Control</option>
-                    <option value="data-behavior">Data Behavior</option>
                     <option value="contract">Contract</option>
                     <option value="dataset-health">Dataset Health</option>
                     <option value="dlp">DLP</option>
@@ -161,24 +160,6 @@
                     <option :value="true">Allow</option>
                     <option :value="false">Deny</option>
                   </select>
-                </div>
-              </div>
-
-              <!-- Data Behavior Configuration -->
-              <div v-if="form.testType === 'data-behavior'" class="form-section">
-                <h3 class="section-title">Data Behavior Configuration</h3>
-                <div class="form-group">
-                  <label>Test Query *</label>
-                  <div class="query-config">
-                    <div class="form-group">
-                      <label>Query Name</label>
-                      <input v-model="form.testQuery.name" type="text" required />
-                    </div>
-                    <div class="form-group">
-                      <label>SQL Query</label>
-                      <textarea v-model="form.testQuery.sql" rows="4" class="code-input"></textarea>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -793,8 +774,6 @@ const loadTest = async () => {
       form.value.resource = test.value.resource;
       form.value.context = test.value.context || {};
       form.value.expectedDecision = test.value.expectedDecision;
-    } else if (test.value.testType === 'data-behavior') {
-      form.value.testQuery = test.value.testQuery;
     } else if (test.value.testType === 'dlp') {
       if (test.value.pattern) {
         dlpTestType.value = 'pattern';
@@ -943,12 +922,6 @@ const validate = (): boolean => {
     }
   }
   
-  if (form.value.testType === 'data-behavior') {
-    if (!form.value.testQuery.name || !form.value.testQuery.sql) {
-      validationErrors.value.push('Query name and SQL are required');
-    }
-  }
-  
   if (form.value.testType === 'api-security') {
     if (apiSecuritySubType.value === 'apiVersion') {
       if (!form.value.apiVersion.version || !form.value.apiVersion.endpoint) {
@@ -998,8 +971,6 @@ const save = async () => {
       payload.resource = form.value.resource;
       payload.context = form.value.context;
       payload.expectedDecision = form.value.expectedDecision;
-    } else if (form.value.testType === 'data-behavior') {
-      payload.testQuery = form.value.testQuery;
     } else if (form.value.testType === 'dlp') {
       if (dlpTestType.value === 'pattern') {
         payload.pattern = form.value.pattern;

@@ -63,7 +63,6 @@
                   <select v-model="form.testType" required class="form-select">
                     <option value="">Select a test type...</option>
                     <option value="access-control">Access Control</option>
-                    <option value="data-behavior">Data Behavior</option>
                     <option value="dataset-health">Dataset Health</option>
                     <option value="rls-cls">RLS/CLS</option>
                     <option value="network-policy">Network Policy</option>
@@ -207,87 +206,6 @@
                 </div>
               </div>
 
-              <!-- Test Queries Tab (only for data-behavior type) -->
-              <div v-if="activeTab === 'queries' && form.testType === 'data-behavior'" class="tab-panel">
-                <div class="section-header">
-                  <h3>Test Queries</h3>
-                  <button type="button" @click="addQuery" class="btn-small">
-                    <Plus class="btn-icon-small" />
-                    Add Query
-                  </button>
-                </div>
-                <div v-for="(query, index) in form.testQueries" :key="index" class="query-item">
-                  <div class="form-group">
-                    <label>Query Name</label>
-                    <input v-model="query.name" type="text" />
-                  </div>
-                  <div class="form-group">
-                    <label>SQL Query</label>
-                    <textarea v-model="query.sql" rows="3" class="code-input"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label>API Endpoint (optional)</label>
-                    <input v-model="query.apiEndpoint" type="text" />
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label>HTTP Method</label>
-                      <select v-model="query.httpMethod">
-                        <option value="">None</option>
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
-                      </select>
-                    </div>
-                    <button type="button" @click="removeQuery(index)" class="btn-icon-only">
-                      <X class="icon" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Data Behavior Config Tab (only for data-behavior type) -->
-              <div v-if="activeTab === 'data-behavior' && form.testType === 'data-behavior'" class="tab-panel">
-                <div class="form-group">
-                  <label>Allowed Fields by Role</label>
-                  <div v-for="role in form.userRoles" :key="role" class="role-fields">
-                    <h4>{{ role }}</h4>
-                    <input
-                      v-model="allowedFieldsInput[role]"
-                      type="text"
-                      :placeholder="'Comma-separated fields (e.g., id, title, status)'"
-                    />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Required Filters by Role</label>
-                  <div v-for="role in form.userRoles" :key="role" class="role-filters">
-                    <h4>{{ role }}</h4>
-                    <div v-for="(filter, idx) in (requiredFiltersInput[role] || [])" :key="idx" class="filter-row">
-                      <input v-model="filter.field" type="text" placeholder="Field" />
-                      <select v-model="filter.operator">
-                        <option value="=">=</option>
-                        <option value="!=">!=</option>
-                        <option value=">">&gt;</option>
-                        <option value="<">&lt;</option>
-                        <option value=">=">&gt;=</option>
-                        <option value="<=">&lt;=</option>
-                      </select>
-                      <input v-model="filter.value" type="text" placeholder="Value" />
-                      <button type="button" @click="removeFilter(role, idx)" class="btn-icon-only">
-                        <X class="icon" />
-                      </button>
-                    </div>
-                    <button type="button" @click="addFilter(role)" class="btn-small">
-                      <Plus class="btn-icon-small" />
-                      Add Filter
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-
               <!-- Datasets Tab (only for dataset-health type) -->
               <div v-if="activeTab === 'datasets' && form.testType === 'dataset-health'" class="tab-panel">
                 <div class="section-header">
@@ -417,8 +335,6 @@ const tabs = [
   { id: 'resources', label: 'Resources', icon: Database },
   { id: 'contexts', label: 'Contexts', icon: Globe },
   { id: 'expected-decisions', label: 'Expected Decisions', icon: Shield },
-  { id: 'queries', label: 'Test Queries', icon: Code },
-  { id: 'data-behavior', label: 'Data Behavior', icon: Shield },
   { id: 'datasets', label: 'Datasets', icon: BarChart3 }
 ];
 
@@ -449,7 +365,6 @@ watch(() => props.editingSuite, (suite) => {
     if (!testType) {
       // Backward compatibility: infer from old boolean flags
       if (suite.includeAccessControlTests) testType = 'access-control';
-      else if (suite.includeDataBehaviorTests) testType = 'data-behavior';
       else if (suite.includeDatasetHealthTests) testType = 'dataset-health';
       else testType = 'access-control'; // default
     }
@@ -627,10 +542,6 @@ function save() {
   // Add type-specific fields
   if (form.value.testType === 'access-control') {
     suiteData.expectedDecisions = form.value.expectedDecisions;
-  } else if (form.value.testType === 'data-behavior') {
-    suiteData.testQueries = form.value.testQueries;
-    suiteData.allowedFields = form.value.allowedFields;
-    suiteData.requiredFilters = form.value.requiredFilters;
   } else if (form.value.testType === 'dataset-health') {
     suiteData.datasets = form.value.datasets;
     suiteData.privacyThresholds = form.value.privacyThresholds;

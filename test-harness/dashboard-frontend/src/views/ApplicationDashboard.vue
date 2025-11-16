@@ -262,7 +262,6 @@ const loadDashboard = async () => {
       openViolations: 2,
       scoresByCategory: {
         'Access Control': 98,
-        'Data Behavior': 95,
         'Contract': 92,
         'Dataset Health': 100
       },
@@ -305,7 +304,7 @@ const loadDashboard = async () => {
         {
           id: '2',
           title: 'Disallowed Join Operation',
-          type: 'data-behavior',
+          type: 'dlp',
           severity: 'medium',
           detectedAt: new Date(Date.now() - 8 * 60 * 60 * 1000)
         }

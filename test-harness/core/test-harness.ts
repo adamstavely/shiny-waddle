@@ -6,7 +6,6 @@
 
 import { UserSimulator } from '../services/user-simulator';
 import { AccessControlTester } from '../services/access-control-tester';
-import { DataBehaviorTester } from '../services/data-behavior-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
 import { 
@@ -15,10 +14,11 @@ import {
   TestConfiguration,
   Test,
   AccessControlTest,
-  DataBehaviorTest,
   DatasetHealthTest,
   ABACPolicy,
 } from './types';
+import { RuntimeTestConfig } from './runtime-config';
+import { mergeRuntimeConfig } from './config-loader';
 
 // Test loader interface - implementations should load tests by IDs
 export interface TestLoader {
@@ -29,7 +29,6 @@ export interface TestLoader {
 export class TestOrchestrator {
   private userSimulator: UserSimulator;
   private accessControlTester: AccessControlTester;
-  private dataBehaviorTester: DataBehaviorTester;
   private datasetHealthTester: DatasetHealthTester;
   private complianceReporter: ComplianceReporter;
   private testLoader?: TestLoader;
@@ -37,7 +36,6 @@ export class TestOrchestrator {
   constructor(config: TestConfiguration, testLoader?: TestLoader) {
     this.userSimulator = new UserSimulator(config.userSimulationConfig);
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
-    this.dataBehaviorTester = new DataBehaviorTester(config.dataBehaviorConfig);
     this.datasetHealthTester = new DatasetHealthTester(config.datasetHealthConfig);
     this.complianceReporter = new ComplianceReporter(config.reportingConfig);
     this.testLoader = testLoader;
@@ -45,23 +43,37 @@ export class TestOrchestrator {
 
   /**
    * Run a complete test suite by loading and executing individual tests
+   * 
+   * @param suite - Test suite to run
+   * @param tests - Optional pre-loaded tests (if not provided, will be loaded via testLoader)
+   * @param runtimeConfig - Optional runtime configuration to merge with suite config
    */
-  async runTestSuite(suite: TestSuite, tests?: Test[]): Promise<TestResult[]> {
+  async runTestSuite(
+    suite: TestSuite,
+    tests?: Test[],
+    runtimeConfig?: RuntimeTestConfig
+  ): Promise<TestResult[]> {
     if (!this.testLoader && !tests) {
       throw new Error('TestLoader must be provided or tests must be passed directly');
+    }
+
+    // Merge runtime config into suite if provided
+    let mergedSuite = suite;
+    if (runtimeConfig) {
+      mergedSuite = mergeRuntimeConfig(suite, runtimeConfig);
     }
 
     // Load tests if not provided
     let testEntities: Test[] = tests || [];
     if (!tests && this.testLoader) {
-      testEntities = await this.testLoader.loadTests(suite.testIds);
+      testEntities = await this.testLoader.loadTests(mergedSuite.testIds);
     }
 
     // Validate all tests match suite type
     for (const test of testEntities) {
-      if (test.testType !== suite.testType) {
+      if (test.testType !== mergedSuite.testType) {
         throw new Error(
-          `Test ${test.id} (${test.testType}) does not match suite type ${suite.testType}`
+          `Test ${test.id} (${test.testType}) does not match suite type ${mergedSuite.testType}`
         );
       }
     }
@@ -70,7 +82,7 @@ export class TestOrchestrator {
     const results: TestResult[] = [];
     for (const test of testEntities) {
       try {
-        const result = await this.runTest(test, suite);
+        const result = await this.runTest(test, mergedSuite);
         results.push(result);
       } catch (error: any) {
         results.push({
@@ -96,8 +108,6 @@ export class TestOrchestrator {
     switch (test.testType) {
       case 'access-control':
         return this.runAccessControlTest(test as AccessControlTest, suite);
-      case 'data-behavior':
-        return this.runDataBehaviorTest(test as DataBehaviorTest, suite);
       case 'dataset-health':
         return this.runDatasetHealthTest(test as DatasetHealthTest, suite);
       default:
@@ -127,11 +137,18 @@ export class TestOrchestrator {
       attributes: {},
     };
 
+    // Use context from runtime config if available, otherwise use test context
+    let context = test.context || {};
+    if (suite.runtimeConfig?.contexts && suite.runtimeConfig.contexts.length > 0) {
+      // Use first context from runtime config, or merge with test context
+      context = { ...context, ...suite.runtimeConfig.contexts[0] };
+    }
+
     // Execute test
     const result = await this.accessControlTester.testPDPDecision({
       user,
       resource: test.resource,
-      context: test.context || {},
+      context,
       expectedDecision: test.expectedDecision,
     });
 
@@ -148,38 +165,6 @@ export class TestOrchestrator {
       testId: test.id,
       testVersion: test.version,
       policyIds: test.policyIds,
-    };
-  }
-
-  /**
-   * Run a single data behavior test
-   */
-  async runDataBehaviorTest(test: DataBehaviorTest, suite: TestSuite): Promise<TestResult> {
-    // Create a test user (role would need to be extracted from test or suite)
-    const testUsers = await this.userSimulator.generateTestUsers(['researcher']);
-    const user = testUsers[0] || {
-      id: 'test-user',
-      email: 'test@example.com',
-      role: 'researcher' as any,
-      attributes: {},
-    };
-
-    const result = await this.dataBehaviorTester.testQuery({
-      user,
-      query: test.testQuery,
-      expectedFields: test.allowedFields,
-      requiredFilters: test.requiredFilters,
-      disallowedJoins: test.disallowedJoins,
-    });
-
-    return {
-      testType: 'data-behavior',
-      testName: test.name,
-      passed: result.compliant,
-      details: result,
-      timestamp: new Date(),
-      testId: test.id,
-      testVersion: test.version,
     };
   }
 

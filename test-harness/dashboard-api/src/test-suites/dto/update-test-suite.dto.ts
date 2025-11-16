@@ -14,7 +14,6 @@ import { TestSuiteStatus } from '../entities/test-suite.entity';
 // Valid test types
 const VALID_TEST_TYPES = [
   'access-control',
-  'data-behavior',
   'dataset-health',
   'rls-cls',
   'network-policy',

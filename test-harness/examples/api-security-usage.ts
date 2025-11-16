@@ -1,20 +1,37 @@
 /**
  * API Security Testing Example
  * 
- * Demonstrates how to use the API Security Tester to test REST and GraphQL APIs
+ * Demonstrates how to use the API Security Tester to test REST and GraphQL APIs.
+ * 
+ * IMPORTANT: All URLs, endpoints, and credentials should be provided via runtime
+ * configuration (environment variables or config files), not hardcoded.
  */
 
 import { APISecurityTester } from '../services/api-security-tester';
 import { User } from '../core/types';
+import { loadRuntimeConfigFromEnv } from '../core/config-loader';
+import { RuntimeTestConfig } from '../core/runtime-config';
 
 async function main() {
-  // Initialize API Security Tester
+  // Load runtime configuration from environment variables
+  // This should include baseUrl, authentication, endpoints, etc.
+  const runtimeConfig = loadRuntimeConfigFromEnv();
+
+  // Validate that required configuration is present
+  if (!runtimeConfig.baseUrl) {
+    throw new Error(
+      'TEST_BASE_URL environment variable is required. ' +
+      'Set it to the base URL of the API being tested (e.g., https://api.example.com)'
+    );
+  }
+
+  // Initialize API Security Tester with runtime configuration
   const tester = new APISecurityTester({
-    baseUrl: 'https://api.example.com',
-    authentication: {
+    baseUrl: runtimeConfig.baseUrl,
+    authentication: runtimeConfig.authentication || {
       type: 'bearer',
       credentials: {
-        token: process.env.API_TOKEN || 'your-token-here',
+        token: process.env.API_TOKEN || process.env.TEST_AUTH_TOKEN || '',
       },
     },
     rateLimitConfig: {
@@ -26,13 +43,17 @@ async function main() {
       'User-Agent': 'Heimdall/1.0',
     },
     timeout: 5000,
+    // Use endpoint patterns from runtime config if provided
+    endpointPatterns: runtimeConfig.endpointPatterns,
   });
 
   // Example 1: Test REST API endpoint
-  console.log('Testing REST API...');
+  // Use endpoint from runtime config if available, otherwise use a default
+  const usersEndpoint = runtimeConfig.endpoints?.users || '/api/v1/users';
+  console.log(`Testing REST API endpoint: ${usersEndpoint}`);
   const restResult = await tester.testRESTAPI({
     name: 'Get Users Endpoint',
-    endpoint: '/api/v1/users',
+    endpoint: usersEndpoint,
     method: 'GET',
     expectedStatus: 200,
     expectedAuthRequired: true,
@@ -65,12 +86,14 @@ async function main() {
     }
   `;
 
+  // Use GraphQL endpoint from runtime config if available
+  const graphqlEndpoint = runtimeConfig.endpoints?.graphql || '/graphql';
   const graphqlResult = await tester.testGraphQLAPI(
     graphqlQuery,
     {},
     {
       name: 'GraphQL Users Query',
-      endpoint: '/graphql',
+      endpoint: graphqlEndpoint,
       expectedAuthRequired: true,
     }
   );
@@ -82,8 +105,10 @@ async function main() {
   });
 
   // Example 3: Test rate limiting
-  console.log('\nTesting Rate Limiting...');
-  const rateLimitResult = await tester.testRateLimiting('/api/v1/data', 'GET');
+  // Use endpoint from runtime config if available
+  const rateLimitEndpoint = runtimeConfig.endpoints?.ratelimit || '/api/v1/data';
+  console.log(`\nTesting Rate Limiting on ${rateLimitEndpoint}...`);
+  const rateLimitResult = await tester.testRateLimiting(rateLimitEndpoint, 'GET');
   console.log('Rate Limit Test Result:', {
     passed: rateLimitResult.passed,
     rateLimitInfo: rateLimitResult.rateLimitInfo,
@@ -91,10 +116,12 @@ async function main() {
   });
 
   // Example 4: Test authentication
-  console.log('\nTesting Authentication...');
+  // Use protected endpoint from runtime config if available
+  const protectedEndpoint = runtimeConfig.endpoints?.protected || '/api/v1/protected';
+  console.log(`\nTesting Authentication on ${protectedEndpoint}...`);
   const authResult = await tester.testAuthentication({
     name: 'Authentication Test',
-    endpoint: '/api/v1/protected',
+    endpoint: protectedEndpoint,
     method: 'GET',
     expectedAuthRequired: true,
   });
@@ -122,9 +149,11 @@ async function main() {
     },
   ];
 
+  // Use admin endpoint from runtime config if available
+  const adminEndpoint = runtimeConfig.endpoints?.admin || '/api/v1/admin/users';
   const authzTests = users.map(user => ({
     name: `Authorization Test for ${user.role}`,
-    endpoint: '/api/v1/admin/users',
+    endpoint: adminEndpoint,
     method: 'GET',
     user,
     expectedAuthRequired: true,
@@ -141,9 +170,11 @@ async function main() {
   });
 
   // Example 6: Test input validation
-  console.log('\nTesting Input Validation...');
+  // Use search endpoint from runtime config if available
+  const searchEndpoint = runtimeConfig.endpoints?.search || '/api/v1/search';
+  console.log(`\nTesting Input Validation on ${searchEndpoint}...`);
   const validationResult = await tester.testInputValidation(
-    '/api/v1/search',
+    searchEndpoint,
     'POST'
   );
   console.log('Input Validation Test Result:', {

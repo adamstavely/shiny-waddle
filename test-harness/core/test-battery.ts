@@ -7,6 +7,7 @@
 import { TestBattery, TestBatteryResult, TestHarness, TestResult, TestSuite } from './types';
 import { TestOrchestrator } from './test-harness';
 import { TestConfiguration } from './types';
+import { RuntimeTestConfig } from './runtime-config';
 
 export class TestBatteryRunner {
   private orchestrator: TestOrchestrator;
@@ -70,11 +71,17 @@ export class TestBatteryRunner {
   /**
    * Run a complete test battery
    * Executes all harnesses in the battery according to execution config
+   * 
+   * @param battery - Test battery to run
+   * @param harnesses - Array of test harnesses
+   * @param testSuites - Map of test suites
+   * @param runtimeConfig - Optional runtime configuration to pass to test execution
    */
   async runBattery(
     battery: TestBattery,
     harnesses: TestHarness[],
-    testSuites: Map<string, TestSuite>
+    testSuites: Map<string, TestSuite>,
+    runtimeConfig?: RuntimeTestConfig
   ): Promise<TestBatteryResult> {
     // Validate battery configuration before running
     const validation = this.validateBattery(battery, harnesses, testSuites);
@@ -94,7 +101,7 @@ export class TestBatteryRunner {
         if (!harness) {
           throw new Error(`Test harness ${harnessId} not found`);
         }
-        const results = await this.runHarness(harness, testSuites);
+        const results = await this.runHarness(harness, testSuites, runtimeConfig);
         return { harnessId, results };
       });
 
@@ -108,7 +115,7 @@ export class TestBatteryRunner {
           throw new Error(`Test harness ${harnessId} not found`);
         }
 
-        const results = await this.runHarness(harness, testSuites);
+        const results = await this.runHarness(harness, testSuites, runtimeConfig);
         harnessResults.push({ harnessId, results });
 
         // Stop on failure if configured
@@ -137,10 +144,15 @@ export class TestBatteryRunner {
   /**
    * Run a single test harness
    * Executes all test suites in the harness
+   * 
+   * @param harness - Test harness to run
+   * @param testSuites - Map of test suites
+   * @param runtimeConfig - Optional runtime configuration to pass to test execution
    */
   async runHarness(
     harness: TestHarness,
-    testSuites: Map<string, TestSuite>
+    testSuites: Map<string, TestSuite>,
+    runtimeConfig?: RuntimeTestConfig
   ): Promise<TestResult[]> {
     const allResults: TestResult[] = [];
 
@@ -151,7 +163,8 @@ export class TestBatteryRunner {
         continue;
       }
 
-      const results = await this.orchestrator.runTestSuite(suite);
+      // Pass runtime config to test execution
+      const results = await this.orchestrator.runTestSuite(suite, undefined, runtimeConfig);
       allResults.push(...results);
     }
 

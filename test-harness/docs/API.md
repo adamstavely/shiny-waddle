@@ -667,7 +667,7 @@ Tests data exfiltration detection.
 **Response:**
 ```json
 {
-  "testType": "data-behavior",
+  "testType": "dlp",
   "testName": "Data Exfiltration Test",
   "passed": true,
   "details": {
@@ -704,7 +704,7 @@ Validates API responses for sensitive data leakage.
 **Response:**
 ```json
 {
-  "testType": "data-behavior",
+  "testType": "dlp",
   "testName": "API Response Validation",
   "passed": true,
   "details": {
@@ -744,7 +744,7 @@ Validates queries for sensitive data access.
 **Response:**
 ```json
 {
-  "testType": "data-behavior",
+  "testType": "dlp",
   "testName": "Query Validation Test",
   "passed": true,
   "details": {
@@ -784,7 +784,7 @@ Tests bulk export controls.
 **Response:**
 ```json
 {
-  "testType": "data-behavior",
+  "testType": "dlp",
   "testName": "Bulk Export Controls Test",
   "passed": true,
   "details": {

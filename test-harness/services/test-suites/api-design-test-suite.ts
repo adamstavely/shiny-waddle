@@ -139,7 +139,8 @@ export class APIDesignTestSuite extends BaseTestSuite {
       const securityIssues: string[] = [];
 
       // Test common endpoint patterns
-      const commonEndpoints = [
+      // Use endpoint patterns from config if provided, otherwise use defaults
+      const commonEndpoints = this.config.endpointPatterns || [
         '/admin',
         '/api/admin',
         '/api/v1/admin',

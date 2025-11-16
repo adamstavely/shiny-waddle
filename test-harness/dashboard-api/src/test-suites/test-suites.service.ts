@@ -87,7 +87,6 @@ export class TestSuitesService {
     // Validate testType
     const validTestTypes = [
       'access-control',
-      'data-behavior',
       'dataset-health',
       'rls-cls',
       'network-policy',

@@ -14,7 +14,7 @@ This guide explains how to create test suites for TestOrchestrator. You'll learn
 ## Test Suite Overview
 
 A test suite defines:
-- **What to test**: Which types of tests to run (access control, data behavior, contracts, dataset health)
+- **What to test**: Which types of tests to run (access control, contracts, dataset health)
 - **Who to test**: User roles and attributes to simulate
 - **What resources**: Resources to test access against
 - **How to test**: Test queries, expected behaviors, and validation rules
@@ -34,21 +34,6 @@ interface AccessControlTestSuite {
   resources: Resource[];
   contexts: Context[];
   expectedDecisions?: Record<string, boolean>;
-}
-
-// Data Behavior Test Suite
-interface DataBehaviorTestSuite {
-  name: string;
-  application: string;
-  team: string;
-  testType: 'data-behavior';       // Required: single test type
-  userRoles: string[];
-  resources: Resource[];
-  contexts: Context[];
-  testQueries: TestQuery[];        // Required for data-behavior
-  allowedFields?: Record<string, string[]>;
-  requiredFilters?: Record<string, Filter[]>;
-  disallowedJoins?: Record<string, string[]>;
 }
 
 // Other test types follow similar pattern with type-specific fields
@@ -98,7 +83,6 @@ Enable the test types you want to run:
 ```typescript
 {
   includeAccessControlTests: true,    // Test PDP decisions
-  includeDataBehaviorTests: true,     // Test query compliance
   includeDatasetHealthTests: false,   // Test privacy/statistics
   // ...
 }
@@ -213,100 +197,7 @@ expectedDecisions?: {
 }
 ```
 
-### 2. Data Behavior Tests
-
-Tests that queries comply with field restrictions, required filters, and join restrictions.
-
-#### Configuration
-
-```typescript
-{
-  includeDataBehaviorTests: true,
-  testQueries: [
-    {
-      name: 'Get all reports',
-      sql: 'SELECT id, title, status FROM reports',
-    },
-    {
-      name: 'Get user emails',
-      sql: 'SELECT id, email FROM users',
-    },
-    {
-      name: 'Get reports with join',
-      sql: 'SELECT r.*, u.email FROM reports r JOIN users u ON r.user_id = u.id',
-    },
-  ],
-  allowedFields: {
-    viewer: ['id', 'title', 'status'],
-    analyst: ['id', 'title', 'status', 'created_at'],
-    researcher: ['id', 'title', 'status', 'created_at', 'content'],
-    admin: ['*'],  // All fields
-  },
-  requiredFilters: {
-    viewer: [
-      { field: 'workspace_id', operator: '=', value: 'user_workspace' },
-    ],
-    analyst: [
-      { field: 'workspace_id', operator: '=', value: 'user_workspace' },
-      { field: 'status', operator: 'IN', value: ['published', 'draft'] },
-    ],
-  },
-  disallowedJoins: {
-    viewer: ['users', 'user_profiles'],
-    analyst: ['user_profiles'],
-  },
-}
-```
-
-#### Test Query Structure
-
-```typescript
-interface TestQuery {
-  name: string;              // Descriptive name
-  sql?: string;              // SQL query to test
-  apiEndpoint?: string;      // API endpoint to test
-  httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  requestBody?: any;         // Request body for API calls
-}
-```
-
-#### Allowed Fields
-
-Map of role to array of allowed field names:
-
-```typescript
-allowedFields?: {
-  [role: string]: string[];   // ['*'] means all fields
-}
-```
-
-#### Required Filters
-
-Map of role to array of required filters:
-
-```typescript
-requiredFilters?: {
-  [role: string]: Filter[];
-}
-
-interface Filter {
-  field: string;
-  operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'IN' | 'NOT IN' | 'LIKE';
-  value: any;
-}
-```
-
-#### Disallowed Joins
-
-Map of role to array of table names that cannot be joined:
-
-```typescript
-disallowedJoins?: {
-  [role: string]: string[];  // Table names
-}
-```
-
-### 3. Dataset Health Tests
+### 2. Dataset Health Tests
 
 Tests that masked/synthetic datasets meet privacy thresholds and statistical fidelity.
 

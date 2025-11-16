@@ -86,7 +86,7 @@ Based on the comprehensive functionality of the TestOrchestrator framework, here
 - **Test Suite Builder/Editor** ✅
   - Modal-based builder in Tests page ✅
   - Standalone wizard page at `/tests/builder` ✅
-  - Configure test types (Access Control, Data Behavior, Contract, Dataset Health) ✅
+  - Configure test types (Access Control, Contract, Dataset Health) ✅
   - Define user roles and attributes ✅
   - Configure resources and contexts ✅
   - Define test queries ✅
@@ -289,7 +289,6 @@ Based on the comprehensive functionality of the TestOrchestrator framework, here
 - Step 4: Contexts (with AddContextModal for IP, location, time, device) ✅
 - Step 5: Test Type Configurations:
   - Access Control: Expected decisions configuration ✅
-  - Data Behavior: Test queries, allowed fields, required filters ✅
   - Contract: Contract definitions ✅
   - Dataset Health: Dataset configurations ✅
 - Step 6: Preview & Validation with comprehensive error checking ✅

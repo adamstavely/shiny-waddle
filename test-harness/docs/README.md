@@ -16,7 +16,6 @@ Welcome to the TestOrchestrator documentation. This directory contains comprehen
 - **[Test Creation Guide](./TEST_CREATION_GUIDE.md)**: Learn how to create test suites
   - Test suite structure
   - Access control tests
-  - Data behavior tests
   - Contract tests
   - Dataset health tests
   - Best practices and examples
@@ -45,7 +44,6 @@ Welcome to the TestOrchestrator documentation. This directory contains comprehen
 
 - [Test Suite Structure](./TEST_CREATION_GUIDE.md#test-suite-overview)
 - [Access Control Tests](./TEST_CREATION_GUIDE.md#1-access-control-tests)
-- [Data Behavior Tests](./TEST_CREATION_GUIDE.md#2-data-behavior-tests)
 - [Contract Tests](./TEST_CREATION_GUIDE.md#3-contract-tests)
 - [Dataset Health Tests](./TEST_CREATION_GUIDE.md#4-dataset-health-tests)
 

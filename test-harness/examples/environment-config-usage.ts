@@ -1,7 +1,10 @@
 /**
  * Environment Configuration Testing Usage Example
  * 
- * Demonstrates how to use the environment configuration testing services
+ * Demonstrates how to use the environment configuration testing services.
+ * 
+ * IMPORTANT: All connection strings, URLs, and credentials should be provided via
+ * runtime configuration (environment variables or config files), not hardcoded.
  */
 
 import { EnvironmentConfigValidator, EnvironmentConfig } from '../services/environment-config-validator';
@@ -9,18 +12,28 @@ import { SecretsManagementValidator, SecretsManagerConfig } from '../services/se
 import { ConfigDriftDetector } from '../services/config-drift-detector';
 import { EnvironmentPolicyValidator, EnvironmentPolicy } from '../services/environment-policy-validator';
 import { EnvironmentConfigTestSuite } from '../services/test-suites/environment-config-test-suite';
+import { loadRuntimeConfigFromEnv } from '../core/config-loader';
 
 async function main() {
+  // Load runtime configuration from environment variables
+  const runtimeConfig = loadRuntimeConfigFromEnv();
+
   // Example 1: Validate environment variables
   console.log('=== Example 1: Environment Variable Validation ===');
   const envValidator = new EnvironmentConfigValidator();
   
+  // Use database config from runtime config if available
+  const databaseUrl = runtimeConfig.database?.connectionString || 
+    (runtimeConfig.database 
+      ? `postgresql://${runtimeConfig.database.username || 'user'}:${runtimeConfig.database.password || 'password'}@${runtimeConfig.database.host || 'localhost'}:${runtimeConfig.database.port || 5432}/${runtimeConfig.database.database || 'db'}`
+      : process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/db');
+
   const envConfig: EnvironmentConfig = {
-    environment: 'prod',
+    environment: runtimeConfig.environment || 'prod',
     variables: {
-      DATABASE_URL: 'postgresql://user:password@localhost:5432/db',
-      API_KEY: 'sk_live_1234567890abcdef',
-      NODE_ENV: 'production',
+      DATABASE_URL: databaseUrl,
+      API_KEY: process.env.API_KEY || 'sk_live_1234567890abcdef',
+      NODE_ENV: process.env.NODE_ENV || 'production',
     },
     configFiles: ['./config/prod.json'],
     secrets: ['DATABASE_URL', 'API_KEY'],
@@ -35,11 +48,13 @@ async function main() {
   console.log('\n=== Example 2: Secrets Management Validation ===');
   const secretsValidator = new SecretsManagementValidator();
   
+  // Use vault endpoint from runtime config if available
+  const vaultAddress = runtimeConfig.endpoints?.vault || process.env.VAULT_ADDR || 'https://vault.example.com';
   const secretsConfig: SecretsManagerConfig = {
     type: 'vault',
     connection: {
-      address: 'https://vault.example.com',
-      token: 'vault-token',
+      address: vaultAddress,
+      token: process.env.VAULT_TOKEN || 'vault-token',
     },
   };
 
@@ -56,12 +71,17 @@ async function main() {
   console.log('Baseline Created:', baseline.timestamp);
 
   // Simulate current config with changes
+  // Use updated database URL from runtime config if available
+  const updatedDatabaseUrl = process.env.UPDATED_DATABASE_URL || 
+    (runtimeConfig.database?.connectionString 
+      ? runtimeConfig.database.connectionString.replace('password', 'newpassword')
+      : 'postgresql://user:newpassword@localhost:5432/db');
   const currentConfig: EnvironmentConfig = {
     ...envConfig,
     variables: {
       ...envConfig.variables,
       NEW_VAR: 'new-value',
-      DATABASE_URL: 'postgresql://user:newpassword@localhost:5432/db', // Changed
+      DATABASE_URL: updatedDatabaseUrl, // Changed
     },
   };
 

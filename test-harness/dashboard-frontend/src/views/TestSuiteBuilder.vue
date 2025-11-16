@@ -90,7 +90,6 @@
               <select v-model="form.testType" required class="form-input form-select">
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
-                <option value="data-behavior">Data Behavior</option>
                 <option value="dataset-health">Dataset Health</option>
                 <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
@@ -279,90 +278,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Data Behavior Configuration -->
-            <div v-if="form.testType === 'data-behavior'" class="config-section">
-              <h3 class="config-title">
-                <Database class="config-icon" />
-                Data Behavior Tests
-              </h3>
-              <div class="form-group">
-                <label>Test Queries</label>
-                <p class="form-help">Define SQL queries to test</p>
-                <div class="queries-list">
-                  <div
-                    v-for="(query, index) in form.testQueries"
-                    :key="index"
-                    class="query-card"
-                  >
-                    <div class="query-header">
-                      <input
-                        v-model="query.name"
-                        type="text"
-                        placeholder="Query name"
-                        class="query-name-input"
-                      />
-                      <button @click="removeQuery(index)" type="button" class="icon-btn">
-                        <Trash2 class="icon" />
-                      </button>
-                    </div>
-                    <textarea
-                      v-model="query.sql"
-                      placeholder="SELECT * FROM ..."
-                      rows="3"
-                      class="query-sql-input"
-                    ></textarea>
-                  </div>
-                  <button @click="addQuery" type="button" class="btn-add-small">
-                    <Plus class="btn-icon" />
-                    Add Query
-                  </button>
-                </div>
-              </div>
-              
-              <div class="form-group">
-                <label>Allowed Fields</label>
-                <p class="form-help">Define which fields each role can access</p>
-                <div class="allowed-fields">
-                  <div
-                    v-for="(fields, role) in form.allowedFields"
-                    :key="role"
-                    class="fields-item"
-                  >
-                    <div class="fields-header">
-                      <span class="fields-role">{{ role }}</span>
-                      <button @click="removeAllowedFields(role)" type="button" class="icon-btn-small">
-                        <X class="icon" />
-                      </button>
-                    </div>
-                    <div class="tags-input">
-                      <span
-                        v-for="(field, idx) in fields"
-                        :key="idx"
-                        class="tag"
-                      >
-                        {{ field }}
-                        <button @click="removeField(role, idx)" type="button" class="tag-remove">
-                          <X class="tag-icon" />
-                        </button>
-                      </span>
-                      <input
-                        v-model="newFields[role]"
-                        type="text"
-                        placeholder="Add field and press Enter"
-                        @keydown.enter.prevent="addField(role)"
-                        class="tag-input"
-                      />
-                    </div>
-                  </div>
-                  <button @click="showAddAllowedFields = true" type="button" class="btn-add-small">
-                    <Plus class="btn-icon" />
-                    Add Role Fields
-                  </button>
-                </div>
-              </div>
-            </div>
-
 
             <!-- Dataset Health Configuration -->
             <div v-if="form.testType === 'dataset-health'" class="config-section">
@@ -758,9 +673,6 @@ const saveDraft = async () => {
     // Add type-specific fields
     if (form.value.testType === 'access-control') {
       suiteData.expectedDecisions = form.value.expectedDecisions;
-    } else if (form.value.testType === 'data-behavior') {
-      suiteData.testQueries = form.value.testQueries;
-      suiteData.allowedFields = form.value.allowedFields;
     } else if (form.value.testType === 'contract') {
       suiteData.contracts = form.value.contracts;
     } else if (form.value.testType === 'dataset-health') {
@@ -801,9 +713,6 @@ const publish = async () => {
     // Add type-specific fields
     if (form.value.testType === 'access-control') {
       suiteData.expectedDecisions = form.value.expectedDecisions;
-    } else if (form.value.testType === 'data-behavior') {
-      suiteData.testQueries = form.value.testQueries;
-      suiteData.allowedFields = form.value.allowedFields;
     } else if (form.value.testType === 'contract') {
       suiteData.contracts = form.value.contracts;
     } else if (form.value.testType === 'dataset-health') {

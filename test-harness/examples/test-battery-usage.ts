@@ -92,9 +92,6 @@ async function runTestBattery() {
       cacheDecisions: true,
       policyMode: 'hybrid',
     },
-    dataBehaviorConfig: {
-      enableQueryLogging: true,
-    },
     datasetHealthConfig: {
       privacyMetrics: [
         { name: 'k-anonymity', type: 'k-anonymity', threshold: 10 },

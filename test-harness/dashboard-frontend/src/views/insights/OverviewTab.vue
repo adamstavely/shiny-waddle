@@ -172,7 +172,6 @@
               <div class="heatmap-row">
                 <div class="heatmap-label">Application</div>
                 <div class="heatmap-label">Access Control</div>
-                <div class="heatmap-label">Data Behavior</div>
                 <div class="heatmap-label">Contracts</div>
                 <div class="heatmap-label">Dataset Health</div>
               </div>
@@ -310,7 +309,6 @@ const heatmapData = computed(() => {
     heatmap[appName] = {
       categories: {
         'Access Control': appData.scoresByCategory?.accessControl || 0,
-        'Data Behavior': appData.scoresByCategory?.dataBehavior || 0,
         'Contracts': appData.scoresByCategory?.contracts || 0,
         'Dataset Health': appData.scoresByCategory?.datasetHealth || 0
       }

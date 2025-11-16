@@ -365,7 +365,6 @@ const loadSuitesUsingTest = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'data-behavior': 'Data Behavior',
     'contract': 'Contract',
     'dataset-health': 'Dataset Health',
     'dlp': 'DLP',

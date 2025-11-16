@@ -7,7 +7,6 @@ export enum ViolationSeverity {
 
 export enum ViolationType {
   ACCESS_CONTROL = 'access-control',
-  DATA_BEHAVIOR = 'data-behavior',
   // CONTRACT = 'contract', // Deprecated - contract rules now in DLP tests
   DATASET_HEALTH = 'dataset-health',
   API_SECURITY = 'api-security',

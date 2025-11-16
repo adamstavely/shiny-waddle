@@ -196,7 +196,6 @@ const editingTestId = ref<string | null>(null);
 const typeOptions = [
   { value: '', label: 'All Types' },
   { value: 'access-control', label: 'Access Control' },
-  { value: 'data-behavior', label: 'Data Behavior' },
   { value: 'contract', label: 'Contract' },
   { value: 'dataset-health', label: 'Dataset Health' },
   { value: 'dlp', label: 'DLP' },
@@ -304,7 +303,6 @@ const loadTestSuites = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'data-behavior': 'Data Behavior',
     'contract': 'Contract',
     'dataset-health': 'Dataset Health',
     'dlp': 'DLP',

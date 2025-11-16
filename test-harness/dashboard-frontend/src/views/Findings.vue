@@ -497,7 +497,6 @@ const resultsStatusOptions = computed(() => [
 const resultsTypeOptions = computed(() => [
   { label: 'All Types', value: '' },
   { label: 'Access Control', value: 'access-control' },
-  { label: 'Data Behavior', value: 'data-behavior' },
   { label: 'Contract', value: 'contract' },
   { label: 'Dataset Health', value: 'dataset-health' }
 ]);

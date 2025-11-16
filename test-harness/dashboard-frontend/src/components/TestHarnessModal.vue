@@ -49,7 +49,6 @@
                 <select v-model="form.testType" required class="form-select">
                   <option value="">Select a test type...</option>
                   <option value="access-control">Access Control</option>
-                  <option value="data-behavior">Data Behavior</option>
                   <option value="contract">Contract</option>
                   <option value="dataset-health">Dataset Health</option>
                   <option value="rls-cls">RLS/CLS</option>

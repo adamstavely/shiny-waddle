@@ -33,6 +33,11 @@ export interface APISecurityTestConfig {
   };
   headers?: Record<string, string>;
   timeout?: number;
+  /**
+   * Endpoint patterns for enumeration tests
+   * If not provided, default patterns will be used
+   */
+  endpointPatterns?: string[];
 }
 
 export interface APISecurityTest {

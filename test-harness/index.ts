@@ -7,7 +7,6 @@ export { TestBatteryRunner } from './core/test-battery';
 export * from './core/types';
 export { UserSimulator } from './services/user-simulator';
 export { AccessControlTester } from './services/access-control-tester';
-export { DataBehaviorTester } from './services/data-behavior-tester';
 export { DatasetHealthTester } from './services/dataset-health-tester';
 export { ComplianceReporter } from './services/compliance-reporter';
 export { ComplianceDashboard } from './dashboard/compliance-dashboard';

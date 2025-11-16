@@ -2,19 +2,36 @@
  * Data Pipeline Testing Example
  * 
  * Demonstrates how to use the Data Pipeline Tester to test ETL pipelines,
- * streaming data, and pipeline security
+ * streaming data, and pipeline security.
+ * 
+ * IMPORTANT: All endpoints and connection strings should be provided via
+ * runtime configuration (environment variables or config files), not hardcoded.
  */
 
 import { DataPipelineTester } from '../services/data-pipeline-tester';
 import { User } from '../core/types';
+import { loadRuntimeConfigFromEnv } from '../core/config-loader';
 
 async function main() {
+  // Load runtime configuration from environment variables
+  const runtimeConfig = loadRuntimeConfigFromEnv();
+
+  // Validate that required configuration is present
+  if (!runtimeConfig.database) {
+    throw new Error(
+      'Database configuration is required. Set TEST_DATABASE_* environment variables ' +
+      'or provide database config in runtime configuration.'
+    );
+  }
+
   // Initialize Data Pipeline Tester for ETL
+  // Use endpoints and connection strings from runtime config
   const etlTester = new DataPipelineTester({
     pipelineType: 'etl',
     connection: {
       type: 'airflow',
-      endpoint: 'http://airflow.example.com:8080',
+      // Use endpoint from runtime config if available
+      endpoint: runtimeConfig.endpoints?.airflow || process.env.AIRFLOW_ENDPOINT || 'http://airflow.example.com:8080',
       credentials: {
         username: process.env.AIRFLOW_USER || 'admin',
         password: process.env.AIRFLOW_PASSWORD || 'admin',
@@ -22,11 +39,14 @@ async function main() {
     },
     dataSource: {
       type: 'database',
-      connectionString: 'postgresql://source-db:5432/mydb',
+      // Use database connection from runtime config
+      connectionString: runtimeConfig.database.connectionString || 
+        `postgresql://${runtimeConfig.database.host || 'source-db'}:${runtimeConfig.database.port || 5432}/${runtimeConfig.database.database || 'mydb'}`,
     },
     dataDestination: {
       type: 'data-warehouse',
-      connectionString: 'snowflake://warehouse.example.com',
+      // Use destination from runtime config if available
+      connectionString: process.env.DATA_WAREHOUSE_CONNECTION || 'snowflake://warehouse.example.com',
     },
   });
 
@@ -70,11 +90,13 @@ async function main() {
 
   // Example 2: Test Streaming Data (Kafka)
   console.log('\nTesting Streaming Data...');
+  // Use Kafka endpoint from runtime config if available
+  const kafkaEndpoint = runtimeConfig.endpoints?.kafka || process.env.KAFKA_ENDPOINT || 'kafka.example.com:9092';
   const streamingTester = new DataPipelineTester({
     pipelineType: 'streaming',
     connection: {
       type: 'kafka',
-      endpoint: 'kafka.example.com:9092',
+      endpoint: kafkaEndpoint,
       credentials: {
         username: process.env.KAFKA_USER || 'kafka-user',
         password: process.env.KAFKA_PASSWORD || 'kafka-pass',

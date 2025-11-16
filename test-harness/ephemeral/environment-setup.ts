@@ -137,7 +137,6 @@ export class EphemeralEnvironment {
     const orchestrator = new TestOrchestrator({
       userSimulationConfig: { roles: ['admin', 'researcher', 'analyst', 'viewer'], attributes: {} },
       accessControlConfig: { policyEngine: 'custom' },
-      dataBehaviorConfig: {},
       datasetHealthConfig: {},
       reportingConfig: { outputFormat: 'json' },
     });

@@ -1,11 +1,15 @@
 /**
  * Basic Usage Example
  * 
- * Demonstrates how to use the TestOrchestrator framework
+ * Demonstrates how to use the TestOrchestrator framework.
+ * 
+ * IMPORTANT: Application names, contexts, and other environment-specific
+ * values should be provided via runtime configuration, not hardcoded.
  */
 
 import { TestOrchestrator } from '../core/test-harness';
 import { TestConfiguration, TestSuite } from '../core/types';
+import { loadRuntimeConfigFromEnv } from '../core/config-loader';
 
 async function main() {
   // 1. Define test configuration
@@ -17,13 +21,6 @@ async function main() {
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,
-    },
-    dataBehaviorConfig: {
-      enableQueryLogging: true,
-      piiDetectionRules: [
-        { fieldPattern: '.*email.*', piiType: 'email' },
-        { fieldPattern: '.*ssn.*', piiType: 'ssn' },
-      ],
     },
     datasetHealthConfig: {
       privacyMetrics: [
@@ -37,47 +34,30 @@ async function main() {
     },
   };
 
+  // Load runtime configuration from environment variables
+  const runtimeConfig = loadRuntimeConfigFromEnv();
+
   // 2. Create test suite
+  // Use runtime config for application name and contexts
   const testSuite: TestSuite = {
     name: 'Basic Compliance Tests',
-    application: 'my-app',
-    team: 'my-team',
-    includeAccessControlTests: true,
-    includeDataBehaviorTests: true,
-    includeDatasetHealthTests: false,
-    userRoles: ['admin', 'viewer'],
-    resources: [
-      {
-        id: 'resource-1',
-        type: 'report',
-        attributes: { sensitivity: 'internal' },
-        sensitivity: 'internal',
-      },
-    ],
-    contexts: [
-      { ipAddress: '192.168.1.1', timeOfDay: '14:00' },
-    ],
-    testQueries: [
-      {
-        name: 'Get reports',
-        sql: 'SELECT id, title FROM reports WHERE workspace_id = 1',
-      },
-    ],
-    allowedFields: {
-      viewer: ['id', 'title'],
-      admin: ['*'],
-    },
-    requiredFilters: {
-      viewer: [{ field: 'workspace_id', operator: '=', value: 1 }],
-    },
+    application: runtimeConfig.applicationName || 'default-app',
+    team: 'default-team',
+    testType: 'access-control',
+    testIds: [],
+    enabled: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    // Use contexts from runtime config if available
+    runtimeConfig,
   };
 
   // 3. Initialize TestOrchestrator
   const orchestrator = new TestOrchestrator(config);
 
-  // 4. Run tests
+  // 4. Run tests with runtime configuration
   console.log('Running compliance tests...');
-  const results = await orchestrator.runTestSuite(testSuite);
+  const results = await orchestrator.runTestSuite(testSuite, undefined, runtimeConfig);
 
   // 5. Check compliance
   const isCompliant = orchestrator.isCompliant(results);

@@ -29,7 +29,7 @@ The plan was to restructure the test hierarchy to enforce type-based organizatio
 #### Implemented:
 - ✅ Created `TestType` union with all 11 supported types
 - ✅ Created `BaseTestSuite` interface with common fields
-- ✅ Created type-specific interfaces (AccessControlTestSuite, DataBehaviorTestSuite, etc.)
+- ✅ Created type-specific interfaces (AccessControlTestSuite, etc.)
 - ✅ Implemented discriminated union pattern for `TestSuite`
 - ✅ Added `testType: TestType` to `TestHarness` interface
 - ✅ Updated `TestResult` to use `TestType` union
@@ -67,12 +67,10 @@ The plan was to restructure the test hierarchy to enforce type-based organizatio
 #### Implemented:
 - ✅ Split `tests/example-test-suite.ts` into:
   - `example-access-control-suite.ts`
-  - `example-data-behavior-suite.ts`
   - `example-contract-suite.ts`
   - `example-dataset-health-suite.ts`
 - ✅ Split `tests/abac-test-suite.ts` into:
   - `abac-access-control-suite.ts`
-  - `abac-data-behavior-suite.ts`
 - ✅ Deleted old multi-type suite files
 - ✅ All new suites have single `testType` and type-specific configurations
 

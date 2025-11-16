@@ -3,14 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sentinel = void 0;
 const user_simulator_1 = require("../services/user-simulator");
 const access_control_tester_1 = require("../services/access-control-tester");
-const data_behavior_tester_1 = require("../services/data-behavior-tester");
 const dataset_health_tester_1 = require("../services/dataset-health-tester");
 const compliance_reporter_1 = require("../services/compliance-reporter");
 class Sentinel {
     constructor(config) {
         this.userSimulator = new user_simulator_1.UserSimulator(config.userSimulationConfig);
         this.accessControlTester = new access_control_tester_1.AccessControlTester(config.accessControlConfig);
-        this.dataBehaviorTester = new data_behavior_tester_1.DataBehaviorTester(config.dataBehaviorConfig);
         this.datasetHealthTester = new dataset_health_tester_1.DatasetHealthTester(config.datasetHealthConfig);
         this.complianceReporter = new compliance_reporter_1.ComplianceReporter(config.reportingConfig);
     }
@@ -19,10 +17,6 @@ class Sentinel {
         if (suite.includeAccessControlTests) {
             const accessControlResults = await this.runAccessControlTests(suite);
             results.push(...accessControlResults);
-        }
-        if (suite.includeDataBehaviorTests) {
-            const dataBehaviorResults = await this.runDataBehaviorTests(suite);
-            results.push(...dataBehaviorResults);
         }
         if (suite.includeDatasetHealthTests) {
             const healthResults = await this.runDatasetHealthTests(suite);
@@ -50,29 +44,6 @@ class Sentinel {
                         timestamp: new Date(),
                     });
                 }
-            }
-        }
-        return results;
-    }
-    async runDataBehaviorTests(suite) {
-        const results = [];
-        const testUsers = await this.userSimulator.generateTestUsers(suite.userRoles);
-        for (const user of testUsers) {
-            for (const query of suite.testQueries) {
-                const result = await this.dataBehaviorTester.testQuery({
-                    user,
-                    query,
-                    expectedFields: suite.allowedFields?.[user.role],
-                    requiredFilters: suite.requiredFilters?.[user.role],
-                    disallowedJoins: suite.disallowedJoins?.[user.role],
-                });
-                results.push({
-                    testType: 'data-behavior',
-                    testName: `Query Validation: ${user.role} executing ${query.name}`,
-                    passed: result.compliant,
-                    details: result,
-                    timestamp: new Date(),
-                });
             }
         }
         return results;

@@ -203,7 +203,6 @@
               <select v-model="form.testType" required class="form-input form-select">
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
-                <option value="data-behavior">Data Behavior</option>
                 <option value="dataset-health">Dataset Health</option>
                 <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
@@ -431,7 +430,6 @@ const visibleTabs = computed(() => {
 const getTestTypeLabel = (testType: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'data-behavior': 'Data Behavior',
     'dataset-health': 'Dataset Health',
     'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
@@ -713,7 +711,6 @@ const getTestTypes = (suiteData: any): string[] => {
   if (suiteData.testType) {
     const typeMap: Record<string, string> = {
       'access-control': 'Access Control',
-      'data-behavior': 'Data Behavior',
       'dataset-health': 'Dataset Health',
       'rls-cls': 'RLS/CLS',
       'network-policy': 'Network Policy',
@@ -728,7 +725,6 @@ const getTestTypes = (suiteData: any): string[] => {
   // Backward compatibility: infer from old boolean flags
   const types: string[] = [];
   if (suiteData.includeAccessControlTests) types.push('Access Control');
-  if (suiteData.includeDataBehaviorTests) types.push('Data Behavior');
   if (suiteData.includeDatasetHealthTests) types.push('Dataset Health');
   return types;
 };
@@ -1808,7 +1804,6 @@ watch([() => route.params.id, () => route.name], () => {
   margin-top: 2px;
 }
 
-.data-behavior-section,
 .filters-section {
   display: flex;
   flex-direction: column;

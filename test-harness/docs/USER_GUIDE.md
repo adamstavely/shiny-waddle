@@ -33,7 +33,6 @@ This guide will help you understand how to use Heimdall, what features are curre
 Heimdall is a comprehensive testing framework designed to:
 
 - **Validate Access Control**: Test Policy Decision Point (PDP) decisions for different user roles, attributes, resources, and contexts
-- **Verify Data Behavior**: Ensure queries only use permitted fields, apply required filters/aggregations, and block disallowed joins
 - **Enforce Data Protection Rules**: Test export restrictions, aggregation requirements, field restrictions, and join restrictions via DLP test configurations
 - **Assess Dataset Health**: Validate masked/synthetic data meets privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy)
 - **Support Zero Trust Architecture**: Comprehensive testing for identity, device, network, application, and data security
@@ -51,14 +50,7 @@ Heimdall is a comprehensive testing framework designed to:
 - **ABAC Support**: Attribute-Based Access Control policy testing
 - **Hybrid Mode**: Support for both RBAC and ABAC simultaneously
 
-#### 2. Data Behavior Testing
-- **Query Validation**: Verify queries only use permitted fields
-- **Filter Enforcement**: Ensure required filters/aggregations are applied
-- **Join Restrictions**: Block disallowed joins
-- **PII Detection**: Automatic detection of PII fields in queries
-- **Field-Level Access Control**: Test column-level security
-
-#### 3. Dataset Health Testing
+#### 2. Dataset Health Testing
 - **Privacy Metrics**: k-anonymity, l-diversity, t-closeness, differential privacy
 - **Statistical Fidelity**: Validate mean, median, stddev, distribution similarity
 - **Masked Data Validation**: Test masked/synthetic data quality
@@ -288,7 +280,7 @@ Test Battery (collection of different types of harnesses with execution config)
 - **Application**: Has Test Harnesses assigned to it
 
 **Type-Based Organization:**
-- Each Test Suite has exactly one `testType` (e.g., 'access-control', 'data-behavior', 'api-security')
+- Each Test Suite has exactly one `testType` (e.g., 'access-control', 'api-security')
 - Each Test Harness has exactly one `testType`, and all suites in it must match that type
 - Each Test Battery must contain harnesses with different types (no duplicate types allowed)
 
@@ -427,7 +419,6 @@ export const myAccessControlSuite: AccessControlTestSuite = {
   "application": "my-app",
   "team": "my-team",
   "includeAccessControlTests": true,
-  "includeDataBehaviorTests": true,
   "includeDatasetHealthTests": false,
   "userRoles": ["admin", "viewer"],
   "resources": [
@@ -497,50 +488,7 @@ Tests Policy Decision Point (PDP) decisions for different user/resource/context 
 }
 ```
 
-#### 2. Data Behavior Tests
-
-Tests that queries comply with field restrictions, required filters, and join restrictions.
-
-```typescript
-{
-  includeDataBehaviorTests: true,
-  testQueries: [
-    {
-      name: 'Get all reports',
-      sql: 'SELECT id, title, status FROM reports',
-    },
-    {
-      name: 'Get user emails',
-      sql: 'SELECT id, email FROM users',
-    },
-    {
-      name: 'Get reports with join',
-      sql: 'SELECT r.*, u.email FROM reports r JOIN users u ON r.user_id = u.id',
-    },
-  ],
-  allowedFields: {
-    viewer: ['id', 'title', 'status'],
-    analyst: ['id', 'title', 'status', 'created_at'],
-    researcher: ['id', 'title', 'status', 'created_at', 'content'],
-    admin: ['*'],  // All fields
-  },
-  requiredFilters: {
-    viewer: [
-      { field: 'workspace_id', operator: '=', value: 'user_workspace' },
-    ],
-    analyst: [
-      { field: 'workspace_id', operator: '=', value: 'user_workspace' },
-      { field: 'status', operator: 'IN', value: ['published', 'draft'] },
-    ],
-  },
-  disallowedJoins: {
-    viewer: ['users', 'user_profiles'],
-    analyst: ['user_profiles'],
-  },
-}
-```
-
-#### 3. Dataset Health Tests
+#### 2. Dataset Health Tests
 
 Tests that masked/synthetic datasets meet privacy thresholds and statistical fidelity.
 
@@ -661,7 +609,6 @@ Validators are extensible components that perform specific validation tasks. Hei
 Heimdall includes validators for:
 
 - **Access Control**: Tests PDP decisions
-- **Data Behavior**: Validates query compliance
 - **Dataset Health**: Validates privacy and statistical metrics
 - **RLS/CLS**: Tests Row-Level and Column-Level Security
 - **Network Policy**: Tests firewall rules and segmentation
@@ -1106,7 +1053,7 @@ The Findings tab supports multiple filters:
 - **Test Battery**: Filter by battery (shows results for all harnesses in the battery)
 - **Application**: Filter by application
 - **Status**: Filter by pass/fail status
-- **Type**: Filter by test type (access-control, data-behavior, etc.)
+- **Type**: Filter by test type (access-control, etc.)
 
 ---
 
@@ -1179,7 +1126,7 @@ Results show remediation status with badges:
 
 ```typescript
 interface TestResult {
-  testType: 'access-control' | 'data-behavior' | 'contract' | 'dataset-health';
+  testType: 'access-control' | 'contract' | 'dataset-health';
   testName: string;
   passed: boolean;
   details: any;
@@ -1350,7 +1297,7 @@ For issues, questions, or contributions:
 
 ## Conclusion
 
-Heimdall provides a comprehensive testing framework for validating access control, data behavior, contracts, and dataset health. With support for RBAC, ABAC, Zero Trust Architecture, and extensive customization through validators, Heimdall can be adapted to test a wide variety of applications and security requirements.
+Heimdall provides a comprehensive testing framework for validating access control, contracts, and dataset health. With support for RBAC, ABAC, Zero Trust Architecture, and extensive customization through validators, Heimdall can be adapted to test a wide variety of applications and security requirements.
 
 This guide covers the basics of using Heimdall. For more detailed information, refer to the specialized guides mentioned in the Additional Resources section.
 

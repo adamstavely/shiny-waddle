@@ -34,8 +34,6 @@ class BaseValidator {
         switch (this.testType) {
             case 'access-control':
                 return suite.includeAccessControlTests === true;
-            case 'data-behavior':
-                return suite.includeDataBehaviorTests === true;
             case 'dataset-health':
                 return suite.includeDatasetHealthTests === true;
             default:

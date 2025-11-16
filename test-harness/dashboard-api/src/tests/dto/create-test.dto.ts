@@ -52,42 +52,6 @@ export class CreateAccessControlTestDto {
   policyRuleId?: string;
 }
 
-export class CreateDataBehaviorTestDto {
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsNotEmpty()
-  @IsEnum(['data-behavior'])
-  testType: 'data-behavior';
-
-  @IsNotEmpty()
-  @IsObject()
-  testQuery: any;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  allowedFields?: string[];
-
-  @IsOptional()
-  @IsArray()
-  requiredFilters?: any[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  disallowedJoins?: string[];
-
-  @IsOptional()
-  @IsObject()
-  expectedResult?: any;
-}
-
 export class CreateDLPTestDto {
   @IsNotEmpty()
   @IsString()
@@ -195,7 +159,6 @@ export class CreateTestDto {
   @IsNotEmpty()
   @IsEnum([
     'access-control',
-    'data-behavior',
     'dataset-health',
     'rls-cls',
     'network-policy',
@@ -236,29 +199,6 @@ export class CreateTestDto {
   @IsOptional()
   @IsString()
   policyRuleId?: string;
-
-  // DataBehaviorTest fields
-  @IsOptional()
-  @IsObject()
-  testQuery?: any;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  allowedFields?: string[];
-
-  @IsOptional()
-  @IsArray()
-  requiredFilters?: any[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  disallowedJoins?: string[];
-
-  @IsOptional()
-  @IsObject()
-  expectedResult?: any;
 
   // DatasetHealthTest fields
   @IsOptional()

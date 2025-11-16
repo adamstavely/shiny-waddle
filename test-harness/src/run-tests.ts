@@ -10,18 +10,46 @@ import { ComplianceReporter } from '../services/compliance-reporter';
 import { ComplianceDashboard } from '../dashboard/compliance-dashboard';
 import { ABACPolicyLoader } from '../services/abac-policy-loader';
 import { TestConfiguration } from '../core/types';
+import { loadRuntimeConfigFromEnv, loadRuntimeConfigFromFile, validateRuntimeConfig } from '../core/config-loader';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
 async function main() {
   const suiteName = process.env.TEST_SUITE || 'default';
   const outputDir = process.env.OUTPUT_DIR || path.join(__dirname, '../reports');
+  const configFile = process.env.TEST_CONFIG_FILE;
 
   // Ensure output directory exists
   await fs.mkdir(outputDir, { recursive: true });
 
+  // Load runtime configuration
+  let runtimeConfig;
+  if (configFile) {
+    console.log(`Loading runtime config from file: ${configFile}`);
+    runtimeConfig = await loadRuntimeConfigFromFile(configFile);
+  } else {
+    console.log('Loading runtime config from environment variables...');
+    runtimeConfig = loadRuntimeConfigFromEnv();
+  }
+
+  // Validate runtime configuration
+  const validation = validateRuntimeConfig(runtimeConfig);
+  if (!validation.valid) {
+    console.error('Runtime configuration validation failed:');
+    validation.errors.forEach(error => console.error(`  - ${error}`));
+    if (validation.warnings) {
+      console.warn('Warnings:');
+      validation.warnings.forEach(warning => console.warn(`  - ${warning}`));
+    }
+    process.exit(1);
+  }
+  if (validation.warnings && validation.warnings.length > 0) {
+    console.warn('Runtime configuration warnings:');
+    validation.warnings.forEach(warning => console.warn(`  - ${warning}`));
+  }
+
   console.log(`Loading test suite: ${suiteName}`);
-  const testSuite = await loadTestSuite(suiteName);
+  const testSuite = await loadTestSuite(suiteName, runtimeConfig);
 
   console.log('Initializing TestOrchestrator...');
   
@@ -51,14 +79,6 @@ async function main() {
       policyMode: policyMode,
       abacPolicies: abacPolicies.length > 0 ? abacPolicies : undefined,
     },
-    dataBehaviorConfig: {
-      enableQueryLogging: true,
-      piiDetectionRules: [
-        { fieldPattern: '.*email.*', piiType: 'email' },
-        { fieldPattern: '.*ssn.*', piiType: 'ssn' },
-        { fieldPattern: '.*phone.*', piiType: 'phone' },
-      ],
-    },
     datasetHealthConfig: {
       privacyMetrics: [
         { name: 'k-anonymity', type: 'k-anonymity', threshold: 10 },
@@ -76,7 +96,8 @@ async function main() {
   const dashboard = new ComplianceDashboard(reporter);
 
   console.log('Running test suite...');
-  const results = await orchestrator.runTestSuite(testSuite);
+  // Pass runtime config to test execution
+  const results = await orchestrator.runTestSuite(testSuite, undefined, runtimeConfig);
 
   console.log(`\nTest Results: ${results.filter(r => r.passed).length}/${results.length} passed`);
 

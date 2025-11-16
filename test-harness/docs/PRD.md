@@ -12,7 +12,7 @@
 
 Heimdall is an automated testing framework designed to validate that applications adhere to access control requirements for data. Named after the Norse god who guards the Bifröst bridge, Heimdall serves as the guardian of data access, ensuring that security policies are correctly implemented and enforced across applications.
 
-The platform provides comprehensive testing capabilities for Zero Trust Architecture (ZTA) compliance, data access control validation, and security policy enforcement. Heimdall enables organizations to automatically test access control policies, validate data behavior, enforce data owner contracts, and assess dataset health for privacy compliance.
+The platform provides comprehensive testing capabilities for Zero Trust Architecture (ZTA) compliance, data access control validation, and security policy enforcement. Heimdall enables organizations to automatically test access control policies, enforce data owner contracts, and assess dataset health for privacy compliance.
 
 ### 1.2 Value Proposition
 
@@ -90,7 +90,7 @@ The platform provides comprehensive testing capabilities for Zero Trust Architec
 **Product Name:** Heimdall
 
 **Product Description:**
-Heimdall is an automated testing framework that validates applications are adhering to access control requirements for data. It provides comprehensive testing capabilities for Zero Trust Architecture (ZTA) compliance, including access control testing, data behavior validation, contract enforcement, and dataset health assessment.
+Heimdall is an automated testing framework that validates applications are adhering to access control requirements for data. It provides comprehensive testing capabilities for Zero Trust Architecture (ZTA) compliance, including access control testing, contract enforcement, and dataset health assessment.
 
 The platform consists of:
 - **Core Testing Framework** - TypeScript-based framework for defining and executing tests
@@ -514,40 +514,7 @@ Heimdall will become the standard platform for automated access control and Zero
 - System MUST support custom PDP implementations
 - System MUST cache policy decisions when configured
 
-#### 4.1.2 Data Behavior Testing
-
-**FR-DB-001: Query Field Validation**
-- System MUST validate that queries only access permitted fields
-- System MUST support role-based field allowlists
-- System MUST detect access to disallowed fields
-- System MUST support wildcard field access (e.g., admin can access all fields)
-
-**FR-DB-002: Required Filter Enforcement**
-- System MUST validate that required filters are applied to queries
-- System MUST support role-based required filters
-- System MUST detect missing required filters
-- System MUST support multiple filter conditions (AND, OR)
-- System MUST support filter operators (=, IN, >, <, LIKE, etc.)
-
-**FR-DB-003: Join Restriction Testing**
-- System MUST validate that disallowed joins are blocked
-- System MUST support role-based join restrictions
-- System MUST detect unauthorized join operations
-- System MUST support table-level join restrictions
-
-**FR-DB-004: PII Detection and Masking**
-- System MUST automatically detect PII fields in queries
-- System MUST validate that PII fields are properly masked
-- System MUST support configurable PII detection rules
-- System MUST validate masking rules are applied correctly
-
-**FR-DB-005: Query Analysis**
-- System MUST parse and analyze SQL queries
-- System MUST extract field names, tables, joins, and filters
-- System MUST validate query structure and compliance
-- System MUST support multiple database dialects (PostgreSQL, MySQL, etc.)
-
-#### 4.1.3 Contract Rules (Now Part of DLP Testing)
+#### 4.1.2 Contract Rules (Now Part of DLP Testing)
 
 **Note**: Contract testing as a separate test type has been deprecated. Contract rules (export restrictions, aggregation requirements, field restrictions, join restrictions) are now configured directly in DLP test configurations.
 
@@ -773,7 +740,6 @@ Heimdall will become the standard platform for automated access control and Zero
 **FR-TM-006: Test Configuration**
 - System MUST support user simulation configuration
 - System MUST support access control configuration
-- System MUST support data behavior configuration
 - System MUST support contract test configuration
 - System MUST support dataset health configuration
 - System MUST support reporting configuration
@@ -1011,7 +977,6 @@ Heimdall will become the standard platform for automated access control and Zero
 
 **FR-VAL-001: Core Validators**
 - System MUST provide access control validator
-- System MUST provide data behavior validator
 - System MUST provide contract test validator
 - System MUST provide dataset health validator
 - System MUST provide RLS/CLS validator
@@ -1268,7 +1233,6 @@ Heimdall follows a microservices architecture with three main components:
 **Services:**
 - **User Simulator** - Simulates users with different roles/attributes
 - **Access Control Tester** - Tests PDP decisions
-- **Data Behavior Tester** - Validates query compliance
 - **Contract Tester** - Tests data owner contracts
 - **Dataset Health Tester** - Validates privacy metrics
 - **Compliance Reporter** - Generates reports
@@ -1434,7 +1398,6 @@ Heimdall follows a microservices architecture with three main components:
 
 **Test Types:**
 - `access-control` - Access control policy testing
-- `data-behavior` - Data behavior validation
 - `contract` - Contract requirement testing
 - `dataset-health` - Dataset health and privacy testing
 - `rls-cls` - Row/Column-level security testing

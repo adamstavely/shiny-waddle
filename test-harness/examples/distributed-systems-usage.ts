@@ -2,58 +2,40 @@
  * Distributed Systems Testing Example
  * 
  * Demonstrates how to test access control and compliance across
- * distributed systems, multi-region deployments, and microservices
+ * distributed systems, multi-region deployments, and microservices.
+ * 
+ * IMPORTANT: All region endpoints and credentials should be provided via
+ * runtime configuration (environment variables or config files), not hardcoded.
  */
 
 import { DistributedSystemsTester } from '../services/distributed-systems-tester';
 import { PolicyDecisionPoint } from '../services/policy-decision-point';
 import { User, Resource } from '../core/types';
+import { loadRuntimeConfigFromEnv } from '../core/config-loader';
 
 async function main() {
+  // Load runtime configuration from environment variables
+  const runtimeConfig = loadRuntimeConfigFromEnv();
+
+  // Validate that region configurations are provided
+  if (!runtimeConfig.regionConfigs || runtimeConfig.regionConfigs.length === 0) {
+    throw new Error(
+      'TEST_REGION_CONFIGS environment variable is required. ' +
+      'Set it to a JSON array of region configurations, e.g.: ' +
+      '[{"id":"us-east-1","name":"US East","endpoint":"https://api-us-east.example.com",...}]'
+    );
+  }
+
   // Initialize Policy Decision Point (optional, can use remote PDPs)
   const pdp = new PolicyDecisionPoint({
     policyEngine: 'custom',
     cacheDecisions: true,
   });
 
-  // Configure distributed system with multiple regions
+  // Configure distributed system with regions from runtime config
   const tester = new DistributedSystemsTester(
     {
-      regions: [
-        {
-          id: 'us-east-1',
-          name: 'US East (Virginia)',
-          endpoint: 'https://api-us-east.example.com',
-          pdpEndpoint: 'https://pdp-us-east.example.com/v1/evaluate',
-          timezone: 'America/New_York',
-          latency: 50, // Simulated latency in ms
-          credentials: {
-            token: process.env.US_EAST_TOKEN || 'token-1',
-          },
-        },
-        {
-          id: 'eu-west-1',
-          name: 'EU West (Ireland)',
-          endpoint: 'https://api-eu-west.example.com',
-          pdpEndpoint: 'https://pdp-eu-west.example.com/v1/evaluate',
-          timezone: 'Europe/Dublin',
-          latency: 100,
-          credentials: {
-            token: process.env.EU_WEST_TOKEN || 'token-2',
-          },
-        },
-        {
-          id: 'ap-southeast-1',
-          name: 'Asia Pacific (Singapore)',
-          endpoint: 'https://api-ap-southeast.example.com',
-          pdpEndpoint: 'https://pdp-ap-southeast.example.com/v1/evaluate',
-          timezone: 'Asia/Singapore',
-          latency: 150,
-          credentials: {
-            token: process.env.AP_SOUTHEAST_TOKEN || 'token-3',
-          },
-        },
-      ],
+      regions: runtimeConfig.regionConfigs,
       policySync: {
         enabled: true,
         syncInterval: 1000, // 1 second
