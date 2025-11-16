@@ -808,7 +808,7 @@
             <p class="field-help">Select the type of distributed systems test to run</p>
           </div>
           
-          <!-- Regions -->
+          <!-- Regions - Required for all test types -->
           <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
             <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Regions</h4>
             <div v-for="(region, index) in form.distributedSystems.regions" :key="index" class="endpoint-item">
@@ -844,8 +844,8 @@
             </button>
           </div>
 
-          <!-- Policy Sync -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+          <!-- Policy Sync - For policy-consistency and eventual-consistency -->
+          <div v-if="form.distributedSystems.testType === 'policy-consistency' || form.distributedSystems.testType === 'eventual-consistency'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
             <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Policy Sync Configuration</h4>
             <div class="form-group">
               <label>
@@ -870,22 +870,84 @@
             </div>
           </div>
 
-          <!-- Coordination -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Coordination (Optional)</h4>
+          <!-- Coordination - For synchronization and transaction -->
+          <div v-if="form.distributedSystems.testType === 'synchronization' || form.distributedSystems.testType === 'transaction'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Coordination</h4>
             <div class="form-grid">
               <div class="form-group">
-                <label>Coordination Type</label>
+                <label>Coordination Type *</label>
                 <Dropdown
                   v-model="form.distributedSystems.coordination.type"
                   :options="coordinationTypeOptions"
                   placeholder="Select coordination type..."
+                  required
                   class="form-input"
                 />
               </div>
               <div v-if="form.distributedSystems.coordination.type" class="form-group">
-                <label>Coordination Endpoint</label>
-                <input v-model="form.distributedSystems.coordination.endpoint" type="text" placeholder="https://consul.example.com:8500" class="form-input" />
+                <label>Coordination Endpoint *</label>
+                <input v-model="form.distributedSystems.coordination.endpoint" type="text" required placeholder="https://consul.example.com:8500" class="form-input" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Synchronization Settings - For synchronization test type -->
+          <div v-if="form.distributedSystems.testType === 'synchronization'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Synchronization Settings</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Sync Interval (seconds)</label>
+                <input v-model.number="form.distributedSystems.policySync.syncInterval" type="number" min="1" class="form-input" />
+                <p class="field-help">How often to check for synchronization</p>
+              </div>
+              <div class="form-group">
+                <label>Timeout (seconds)</label>
+                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
+                <p class="field-help">Maximum time to wait for synchronization</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Settings - For transaction test type -->
+          <div v-if="form.distributedSystems.testType === 'transaction'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Transaction Settings</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Transaction Timeout (seconds)</label>
+                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
+                <p class="field-help">Maximum time for transaction to complete</p>
+              </div>
+              <div class="form-group">
+                <label>Expected Result</label>
+                <Dropdown
+                  v-model="form.distributedSystems.expectedResult"
+                  :options="expectedDecisionOptions"
+                  placeholder="Select expected result..."
+                  class="form-input"
+                />
+                <p class="field-help">Whether the transaction should succeed or fail</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Consistency Level - For eventual-consistency test type -->
+          <div v-if="form.distributedSystems.testType === 'eventual-consistency'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Consistency Settings</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Consistency Level *</label>
+                <Dropdown
+                  v-model="form.distributedSystems.policySync.consistencyLevel"
+                  :options="consistencyLevelOptions"
+                  placeholder="Select consistency level..."
+                  required
+                  class="form-input"
+                />
+              </div>
+              <div class="form-group">
+                <label>Convergence Timeout (seconds)</label>
+                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
+                <p class="field-help">Maximum time to wait for eventual consistency</p>
               </div>
             </div>
           </div>
@@ -893,7 +955,10 @@
 
         <!-- Data Pipeline Configuration -->
         <div v-if="form.testType === 'data-pipeline'" class="form-section form-section-full">
-          <h3 class="section-title">Data Pipeline Configuration</h3>
+          <h3 class="section-title">Data Pipeline Security Testing Configuration</h3>
+          <p class="form-help">Configure security testing for data pipelines. Infrastructure details (sources, destinations, connections) are provided at runtime.</p>
+          
+          <!-- Pipeline Type -->
           <div class="form-grid">
             <div class="form-group">
               <label>Pipeline Type *</label>
@@ -904,65 +969,93 @@
                 required
                 class="form-input"
               />
+              <p class="field-help">Determines which tester method is used</p>
             </div>
           </div>
 
-          <!-- Data Source -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Data Source</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Source Type</label>
-                <Dropdown
-                  v-model="form.dataPipeline.dataSource.type"
-                  :options="dataSourceTypeOptions"
-                  placeholder="Select source type..."
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label>Connection String</label>
-                <input v-model="form.dataPipeline.dataSource.connectionString" type="text" placeholder="jdbc:postgresql://..." class="form-input" />
-              </div>
+          <!-- Pipeline Stage and Action -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Pipeline Stage *</label>
+              <Dropdown
+                v-model="form.dataPipeline.stage"
+                :options="pipelineStageOptions"
+                placeholder="Select stage to test..."
+                required
+                class="form-input"
+              />
+              <p class="field-help">Which pipeline stage(s) to test</p>
+            </div>
+            <div class="form-group">
+              <label>Action *</label>
+              <Dropdown
+                v-model="form.dataPipeline.action"
+                :options="pipelineActionOptions"
+                placeholder="Select action to test..."
+                required
+                class="form-input"
+              />
+              <p class="field-help">What action to test (read, write, execute)</p>
+            </div>
+            <div class="form-group">
+              <label>Expected Access *</label>
+              <Dropdown
+                v-model="form.dataPipeline.expectedAccess"
+                :options="expectedDecisionOptions"
+                placeholder="Select expected result..."
+                required
+                class="form-input"
+              />
+              <p class="field-help">Whether access should be granted or denied</p>
             </div>
           </div>
 
-          <!-- Data Destination -->
+          <!-- Security Controls to Validate -->
           <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Data Destination</h4>
+            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Security Controls to Validate *</h4>
+            <p class="field-help" style="margin-bottom: 1rem;">Select which security controls to validate during testing</p>
             <div class="form-grid">
               <div class="form-group">
-                <label>Destination Type</label>
-                <Dropdown
-                  v-model="form.dataPipeline.dataDestination.type"
-                  :options="dataDestinationTypeOptions"
-                  placeholder="Select destination type..."
-                  class="form-input"
-                />
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.encryptionInTransit" type="checkbox" />
+                  Encryption in Transit
+                </label>
+                <p class="field-help">Validate data is encrypted during transmission</p>
               </div>
               <div class="form-group">
-                <label>Connection String</label>
-                <input v-model="form.dataPipeline.dataDestination.connectionString" type="text" placeholder="jdbc:postgresql://..." class="form-input" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Connection -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Connection (Optional)</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Connection Type</label>
-                <Dropdown
-                  v-model="form.dataPipeline.connection.type"
-                  :options="connectionTypeOptions"
-                  placeholder="Select connection type..."
-                  class="form-input"
-                />
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.encryptionAtRest" type="checkbox" />
+                  Encryption at Rest
+                </label>
+                <p class="field-help">Validate data is encrypted when stored</p>
               </div>
               <div class="form-group">
-                <label>Endpoint</label>
-                <input v-model="form.dataPipeline.connection.endpoint" type="text" placeholder="https://kafka.example.com:9092" class="form-input" />
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.accessLogging" type="checkbox" />
+                  Access Logging
+                </label>
+                <p class="field-help">Validate access attempts are logged</p>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.dataMasking" type="checkbox" />
+                  Data Masking
+                </label>
+                <p class="field-help">Validate PII is masked in pipeline</p>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.networkIsolation" type="checkbox" />
+                  Network Isolation
+                </label>
+                <p class="field-help">Validate pipeline runs in isolated network</p>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input v-model="form.dataPipeline.securityControls.authenticationRequired" type="checkbox" />
+                  Authentication Required
+                </label>
+                <p class="field-help">Validate authentication is required for access</p>
               </div>
             </div>
           </div>
@@ -1159,6 +1252,19 @@ const pipelineTypeOptions = [
   { label: 'Streaming', value: 'streaming' },
   { label: 'Batch', value: 'batch' },
   { label: 'Real-time', value: 'real-time' },
+];
+
+const pipelineStageOptions = [
+  { label: 'Extract', value: 'extract' },
+  { label: 'Transform', value: 'transform' },
+  { label: 'Load', value: 'load' },
+  { label: 'All', value: 'all' },
+];
+
+const pipelineActionOptions = [
+  { label: 'Read', value: 'read' },
+  { label: 'Write', value: 'write' },
+  { label: 'Execute', value: 'execute' },
 ];
 
 const dataSourceTypeOptions = [
@@ -1387,21 +1493,22 @@ const form = ref({
       type: '' as '' | 'consul' | 'etcd' | 'zookeeper' | 'custom',
       endpoint: '',
     },
+    timeout: undefined as number | undefined,
+    expectedResult: undefined as boolean | undefined,
   },
   // Data Pipeline fields
   dataPipeline: {
     pipelineType: '' as '' | 'etl' | 'streaming' | 'batch' | 'real-time',
-    dataSource: {
-      type: '' as '' | 'database' | 'api' | 'file' | 'stream',
-      connectionString: '',
-    },
-    dataDestination: {
-      type: '' as '' | 'database' | 'data-warehouse' | 'data-lake' | 'api',
-      connectionString: '',
-    },
-    connection: {
-      type: '' as '' | 'kafka' | 'spark' | 'airflow' | 'dbt' | 'custom',
-      endpoint: '',
+    stage: 'all' as 'extract' | 'transform' | 'load' | 'all',
+    action: 'read' as 'read' | 'write' | 'execute',
+    expectedAccess: true,
+    securityControls: {
+      encryptionInTransit: false,
+      encryptionAtRest: false,
+      accessLogging: false,
+      dataMasking: false,
+      networkIsolation: false,
+      authenticationRequired: false,
     },
   },
 });
@@ -1607,22 +1714,23 @@ const loadTest = async () => {
           type: '',
           endpoint: '',
         },
+        timeout: (test.value as any).timeout,
+        expectedResult: (test.value as any).expectedResult,
       };
       distributedSystemsSubType.value = subTestType;
     } else if (test.value.testType === 'data-pipeline') {
       form.value.dataPipeline = {
         pipelineType: test.value.pipelineType || '',
-        dataSource: test.value.dataSource || {
-          type: '',
-          connectionString: '',
-        },
-        dataDestination: test.value.dataDestination || {
-          type: '',
-          connectionString: '',
-        },
-        connection: test.value.connection || {
-          type: '',
-          endpoint: '',
+        stage: (test.value as any).stage || 'all',
+        action: (test.value as any).action || 'read',
+        expectedAccess: (test.value as any).expectedAccess !== undefined ? (test.value as any).expectedAccess : true,
+        securityControls: {
+          encryptionInTransit: (test.value as any).securityControls?.encryptionInTransit || false,
+          encryptionAtRest: (test.value as any).securityControls?.encryptionAtRest || false,
+          accessLogging: (test.value as any).securityControls?.accessLogging || false,
+          dataMasking: (test.value as any).securityControls?.dataMasking || false,
+          networkIsolation: (test.value as any).securityControls?.networkIsolation || false,
+          authenticationRequired: (test.value as any).securityControls?.authenticationRequired || false,
         },
       };
     }
@@ -1740,11 +1848,37 @@ const validate = (): boolean => {
         break;
       }
     }
+    if (form.value.distributedSystems.testType === 'synchronization' || form.value.distributedSystems.testType === 'transaction') {
+      if (!form.value.distributedSystems.coordination.type) {
+        validationErrors.value.push('Coordination type is required for ' + form.value.distributedSystems.testType + ' test');
+      }
+      if (form.value.distributedSystems.coordination.type && !form.value.distributedSystems.coordination.endpoint) {
+        validationErrors.value.push('Coordination endpoint is required when coordination type is selected');
+      }
+    }
+    if (form.value.distributedSystems.testType === 'eventual-consistency') {
+      if (!form.value.distributedSystems.policySync.consistencyLevel) {
+        validationErrors.value.push('Consistency level is required for eventual-consistency test');
+      }
+    }
   }
   
   if (form.value.testType === 'data-pipeline') {
     if (!form.value.dataPipeline.pipelineType) {
       validationErrors.value.push('Pipeline type is required for Data Pipeline test');
+    }
+    if (!form.value.dataPipeline.stage) {
+      validationErrors.value.push('Pipeline stage is required for Data Pipeline test');
+    }
+    if (!form.value.dataPipeline.action) {
+      validationErrors.value.push('Action is required for Data Pipeline test');
+    }
+    if (form.value.dataPipeline.expectedAccess === undefined) {
+      validationErrors.value.push('Expected access is required for Data Pipeline test');
+    }
+    const hasSecurityControl = Object.values(form.value.dataPipeline.securityControls).some(enabled => enabled === true);
+    if (!hasSecurityControl) {
+      validationErrors.value.push('At least one security control must be selected for Data Pipeline test');
     }
   }
   
@@ -1904,20 +2038,34 @@ const save = async () => {
         type: form.value.distributedSystems.coordination.type,
         endpoint: form.value.distributedSystems.coordination.endpoint || undefined,
       } : undefined;
+      payload.timeout = form.value.distributedSystems.timeout;
+      payload.expectedResult = form.value.distributedSystems.expectedResult;
     } else if (form.value.testType === 'data-pipeline') {
       payload.pipelineType = form.value.dataPipeline.pipelineType;
-      payload.dataSource = form.value.dataPipeline.dataSource.type ? {
-        type: form.value.dataPipeline.dataSource.type,
-        connectionString: form.value.dataPipeline.dataSource.connectionString || undefined,
-      } : undefined;
-      payload.dataDestination = form.value.dataPipeline.dataDestination.type ? {
-        type: form.value.dataPipeline.dataDestination.type,
-        connectionString: form.value.dataPipeline.dataDestination.connectionString || undefined,
-      } : undefined;
-      payload.connection = form.value.dataPipeline.connection.type ? {
-        type: form.value.dataPipeline.connection.type,
-        endpoint: form.value.dataPipeline.connection.endpoint || undefined,
-      } : undefined;
+      payload.stage = form.value.dataPipeline.stage;
+      payload.action = form.value.dataPipeline.action;
+      payload.expectedAccess = form.value.dataPipeline.expectedAccess;
+      // Only include enabled security controls
+      const enabledControls: Record<string, boolean> = {};
+      if (form.value.dataPipeline.securityControls.encryptionInTransit) {
+        enabledControls.encryptionInTransit = true;
+      }
+      if (form.value.dataPipeline.securityControls.encryptionAtRest) {
+        enabledControls.encryptionAtRest = true;
+      }
+      if (form.value.dataPipeline.securityControls.accessLogging) {
+        enabledControls.accessLogging = true;
+      }
+      if (form.value.dataPipeline.securityControls.dataMasking) {
+        enabledControls.dataMasking = true;
+      }
+      if (form.value.dataPipeline.securityControls.networkIsolation) {
+        enabledControls.networkIsolation = true;
+      }
+      if (form.value.dataPipeline.securityControls.authenticationRequired) {
+        enabledControls.authenticationRequired = true;
+      }
+      payload.securityControls = Object.keys(enabledControls).length > 0 ? enabledControls : undefined;
     }
     
     if (testId.value) {
