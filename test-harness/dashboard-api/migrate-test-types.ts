@@ -42,7 +42,6 @@ interface OldTestBattery {
 const VALID_TEST_TYPES = [
   'access-control',
   'data-behavior',
-  'contract',
   'dataset-health',
   'rls-cls',
   'network-policy',
@@ -85,7 +84,7 @@ async function migrateTestSuites(): Promise<Map<string, string[]>> {
         // Try to infer from suite properties (backward compatibility)
         if ((suite as any).includeAccessControlTests) testTypes.push('access-control');
         if ((suite as any).includeDataBehaviorTests) testTypes.push('data-behavior');
-        if ((suite as any).includeContractTests) testTypes.push('contract');
+        // Contract tests deprecated - functionality moved to DLP tests
         if ((suite as any).includeDatasetHealthTests) testTypes.push('dataset-health');
       }
 

@@ -6,7 +6,6 @@ export interface TestConfiguration {
   userSimulationConfig: UserSimulationConfig;
   accessControlConfig: AccessControlConfig;
   dataBehaviorConfig: DataBehaviorConfig;
-  contractTestConfig: ContractTestConfig;
   datasetHealthConfig: DatasetHealthConfig;
   reportingConfig: ReportingConfig;
 }
@@ -47,10 +46,6 @@ export interface DataBehaviorConfig {
   piiDetectionRules?: PiiDetectionRule[];
 }
 
-export interface ContractTestConfig {
-  contractDefinitionsPath?: string;
-  autoGenerateTests?: boolean;
-}
 
 export interface DatasetHealthConfig {
   privacyMetrics?: PrivacyMetric[];
@@ -67,7 +62,6 @@ export interface ReportingConfig {
 export type TestType = 
   | 'access-control' 
   | 'data-behavior' 
-  | 'contract' 
   | 'dataset-health'
   | 'rls-cls'
   | 'network-policy'
@@ -148,12 +142,6 @@ export interface DataBehaviorTest extends BaseTest {
   expectedResult?: any;
 }
 
-// Contract Test
-export interface ContractTest extends BaseTest {
-  testType: 'contract';
-  contract: Contract;
-  expectedCompliance: boolean;
-}
 
 // Dataset Health Test
 export interface DatasetHealthTest extends BaseTest {
@@ -308,7 +296,6 @@ export interface DataPipelineTest extends BaseTest {
 export type Test =
   | AccessControlTest
   | DataBehaviorTest
-  | ContractTest
   | DatasetHealthTest
   | RLSCLSTest
   | NetworkPolicyTest
@@ -382,6 +369,11 @@ export interface Filter {
   value: any;
 }
 
+/**
+ * @deprecated Contract and ContractRequirement types are deprecated.
+ * Contract rules should now be configured directly in DLP test configuration
+ * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
+ */
 export interface Contract {
   name: string;
   dataOwner: string;
@@ -390,6 +382,11 @@ export interface Contract {
   schema?: any;
 }
 
+/**
+ * @deprecated Contract and ContractRequirement types are deprecated.
+ * Contract rules should now be configured directly in DLP test configuration
+ * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
+ */
 export interface ContractRequirement {
   id: string;
   description: string;

@@ -91,7 +91,6 @@
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
                 <option value="data-behavior">Data Behavior</option>
-                <option value="contract">Contract</option>
                 <option value="dataset-health">Dataset Health</option>
                 <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
@@ -364,38 +363,6 @@
               </div>
             </div>
 
-            <!-- Contract Configuration -->
-            <div v-if="form.testType === 'contract'" class="config-section">
-              <h3 class="config-title">
-                <FileText class="config-icon" />
-                Contract Tests
-              </h3>
-              <div class="form-group">
-                <label>Contracts</label>
-                <p class="form-help">Define data owner contracts</p>
-                <div class="contracts-list">
-                  <div
-                    v-for="(contract, index) in form.contracts"
-                    :key="index"
-                    class="contract-card"
-                  >
-                    <div class="contract-header">
-                      <div>
-                        <h4>{{ contract.name }}</h4>
-                        <span class="contract-owner">{{ contract.dataOwner }}</span>
-                      </div>
-                      <button @click="removeContract(index)" type="button" class="icon-btn">
-                        <Trash2 class="icon" />
-                      </button>
-                    </div>
-                  </div>
-                  <button @click="showAddContract = true" type="button" class="btn-add-small">
-                    <Plus class="btn-icon" />
-                    Add Contract
-                  </button>
-                </div>
-              </div>
-            </div>
 
             <!-- Dataset Health Configuration -->
             <div v-if="form.testType === 'dataset-health'" class="config-section">
@@ -621,7 +588,6 @@ const form = ref({
   expectedDecisions: {} as Record<string, boolean>,
   testQueries: [] as Array<{ name: string; sql?: string }>,
   allowedFields: {} as Record<string, string[]>,
-  contracts: [] as any[],
   datasets: [] as any[]
 });
 
@@ -760,9 +726,6 @@ const removeAllowedFields = (role: string) => {
   delete form.value.allowedFields[role];
 };
 
-const removeContract = (index: number) => {
-  form.value.contracts.splice(index, 1);
-};
 
 const removeDataset = (index: number) => {
   form.value.datasets.splice(index, 1);

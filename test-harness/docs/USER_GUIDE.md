@@ -34,7 +34,7 @@ Heimdall is a comprehensive testing framework designed to:
 
 - **Validate Access Control**: Test Policy Decision Point (PDP) decisions for different user roles, attributes, resources, and contexts
 - **Verify Data Behavior**: Ensure queries only use permitted fields, apply required filters/aggregations, and block disallowed joins
-- **Enforce Contracts**: Test machine-readable requirements from data owners (e.g., "No raw email export," "Min aggregation ≥ k=10")
+- **Enforce Data Protection Rules**: Test export restrictions, aggregation requirements, field restrictions, and join restrictions via DLP test configurations
 - **Assess Dataset Health**: Validate masked/synthetic data meets privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy)
 - **Support Zero Trust Architecture**: Comprehensive testing for identity, device, network, application, and data security
 
@@ -58,14 +58,7 @@ Heimdall is a comprehensive testing framework designed to:
 - **PII Detection**: Automatic detection of PII fields in queries
 - **Field-Level Access Control**: Test column-level security
 
-#### 3. Contract Testing
-- **Machine-Readable Requirements**: Convert data owner requirements into automated tests
-- **Export Restrictions**: Test restrictions on data exports
-- **Aggregation Requirements**: Validate minimum aggregation thresholds
-- **Field Restrictions**: Test field-level access restrictions
-- **Join Restrictions**: Validate join operation restrictions
-
-#### 4. Dataset Health Testing
+#### 3. Dataset Health Testing
 - **Privacy Metrics**: k-anonymity, l-diversity, t-closeness, differential privacy
 - **Statistical Fidelity**: Validate mean, median, stddev, distribution similarity
 - **Masked Data Validation**: Test masked/synthetic data quality
@@ -435,7 +428,6 @@ export const myAccessControlSuite: AccessControlTestSuite = {
   "team": "my-team",
   "includeAccessControlTests": true,
   "includeDataBehaviorTests": true,
-  "includeContractTests": false,
   "includeDatasetHealthTests": false,
   "userRoles": ["admin", "viewer"],
   "resources": [
@@ -548,53 +540,7 @@ Tests that queries comply with field restrictions, required filters, and join re
 }
 ```
 
-#### 3. Contract Tests
-
-Tests based on machine-readable requirements from data owners.
-
-```typescript
-{
-  includeContractTests: true,
-  contracts: [
-    {
-      name: 'No Raw Email Export',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'no-email-export',
-          description: 'No raw email addresses may be exported',
-          type: 'export-restriction',
-          rule: {
-            restrictedFields: ['email'],
-            requireMasking: true,
-          },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
-    },
-    {
-      name: 'Minimum Aggregation k=10',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'min-aggregation',
-          description: 'Queries must aggregate to minimum k=10 records',
-          type: 'aggregation-requirement',
-          rule: {
-            minK: 10,
-            requireAggregation: true,
-          },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
-    },
-  ],
-}
-```
-
-#### 4. Dataset Health Tests
+#### 3. Dataset Health Tests
 
 Tests that masked/synthetic datasets meet privacy thresholds and statistical fidelity.
 
@@ -716,7 +662,6 @@ Heimdall includes validators for:
 
 - **Access Control**: Tests PDP decisions
 - **Data Behavior**: Validates query compliance
-- **Contract Testing**: Tests data owner contracts
 - **Dataset Health**: Validates privacy and statistical metrics
 - **RLS/CLS**: Tests Row-Level and Column-Level Security
 - **Network Policy**: Tests firewall rules and segmentation
@@ -1077,9 +1022,6 @@ const config: TestConfiguration = {
   },
   dataBehaviorConfig: {
     enableQueryLogging: true,
-  },
-  contractTestConfig: {
-    autoGenerateTests: true,
   },
   datasetHealthConfig: {
     privacyMetrics: [

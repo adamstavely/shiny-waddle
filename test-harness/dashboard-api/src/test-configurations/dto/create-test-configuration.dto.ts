@@ -297,6 +297,34 @@ export class CreateDLPConfigurationDto extends BaseConfigurationDto {
   @ValidateNested()
   @Type(() => DLPTestLogicDto)
   testLogic?: DLPTestLogicDto;
+
+  @IsOptional()
+  @IsObject()
+  exportRestrictions?: {
+    restrictedFields?: string[];
+    requireMasking?: boolean;
+    allowedFormats?: string[];
+  };
+
+  @IsOptional()
+  @IsObject()
+  aggregationRequirements?: {
+    minK?: number;
+    requireAggregation?: boolean;
+  };
+
+  @IsOptional()
+  @IsObject()
+  fieldRestrictions?: {
+    disallowedFields?: string[];
+    allowedFields?: string[];
+  };
+
+  @IsOptional()
+  @IsObject()
+  joinRestrictions?: {
+    disallowedJoins?: string[];
+  };
 }
 
 class APIGatewayTestLogicDto {

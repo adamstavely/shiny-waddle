@@ -33,6 +33,38 @@ export interface DLPTesterConfig {
     pattern: RegExp;
     severity: 'critical' | 'high' | 'medium' | 'low';
   }>;
+  
+  /**
+   * Export restrictions (from contract rules)
+   */
+  exportRestrictions?: {
+    restrictedFields?: string[];
+    requireMasking?: boolean;
+    allowedFormats?: string[];
+  };
+  
+  /**
+   * Aggregation requirements (from contract rules)
+   */
+  aggregationRequirements?: {
+    minK?: number;
+    requireAggregation?: boolean;
+  };
+  
+  /**
+   * Field restrictions (from contract rules)
+   */
+  fieldRestrictions?: {
+    disallowedFields?: string[];
+    allowedFields?: string[];
+  };
+  
+  /**
+   * Join restrictions (from contract rules)
+   */
+  joinRestrictions?: {
+    disallowedJoins?: string[];
+  };
 }
 
 export class DLPTester {
@@ -171,6 +203,21 @@ export class DLPTester {
     user: User,
     expectedFields: string[]
   ): Promise<TestResult> {
+    // Validate field restrictions and join restrictions (from contract rules)
+    const fieldViolations = this.validateFieldRestrictions(query, expectedFields);
+    const joinViolations = this.validateJoinRestrictions(query);
+    
+    if (fieldViolations.length > 0 || joinViolations.length > 0) {
+      return {
+        testType: 'data-behavior',
+        testName: 'Query Result Validation',
+        passed: false,
+        details: {
+          violations: [...fieldViolations, ...joinViolations],
+        },
+        timestamp: new Date(),
+      };
+    }
     const result: TestResult = {
       testType: 'data-behavior',
       testName: 'Query Result Validation',
@@ -208,7 +255,7 @@ export class DLPTester {
    */
   async testBulkExportControls(
     user: User,
-    exportRequest: { type: 'csv' | 'json' | 'excel' | 'api'; recordCount: number }
+    exportRequest: { type: 'csv' | 'json' | 'excel' | 'api'; recordCount: number; fields?: string[] }
   ): Promise<TestResult> {
     const result: TestResult = {
       testType: 'data-behavior',
@@ -225,6 +272,23 @@ export class DLPTester {
         recordCount: exportRequest.recordCount,
         allowed: false,
       };
+
+      // Check export restrictions (from contract rules)
+      const exportRestrictionViolations = this.validateExportRestrictions(
+        exportRequest.type,
+        exportRequest.fields || []
+      );
+      
+      if (exportRestrictionViolations.length > 0) {
+        bulkExportTest.allowed = false;
+        bulkExportTest.reason = exportRestrictionViolations.join('; ');
+        result.passed = false;
+        result.details = {
+          bulkExportTest,
+          violations: exportRestrictionViolations,
+        };
+        return result;
+      }
 
       // Check export limits - use configured limits or defaults based on user role
       const defaultLimits: Record<string, number> = {
@@ -328,6 +392,198 @@ export class DLPTester {
     }
 
     return detected;
+  }
+
+  /**
+   * Validate export restrictions (from contract rules)
+   */
+  private validateExportRestrictions(
+    exportType: string,
+    fields: string[]
+  ): string[] {
+    const violations: string[] = [];
+    const restrictions = this.config.exportRestrictions;
+    
+    if (!restrictions) {
+      return violations;
+    }
+    
+    // Check restricted fields
+    if (restrictions.restrictedFields && restrictions.restrictedFields.length > 0) {
+      const restrictedInExport = fields.filter(field => 
+        restrictions.restrictedFields!.includes(field)
+      );
+      if (restrictedInExport.length > 0) {
+        violations.push(
+          `Restricted fields cannot be exported: ${restrictedInExport.join(', ')}`
+        );
+      }
+    }
+    
+    // Check allowed formats
+    if (restrictions.allowedFormats && restrictions.allowedFormats.length > 0) {
+      if (!restrictions.allowedFormats.includes(exportType)) {
+        violations.push(
+          `Export format ${exportType} is not allowed. Allowed formats: ${restrictions.allowedFormats.join(', ')}`
+        );
+      }
+    }
+    
+    // Note: requireMasking is checked separately in the export process
+    
+    return violations;
+  }
+  
+  /**
+   * Validate field restrictions (from contract rules)
+   */
+  private validateFieldRestrictions(
+    query: TestQuery,
+    expectedFields: string[]
+  ): string[] {
+    const violations: string[] = [];
+    const restrictions = this.config.fieldRestrictions;
+    
+    if (!restrictions) {
+      return violations;
+    }
+    
+    // Extract fields from query (simplified - would need proper SQL parsing in production)
+    const queryFields = this.extractFieldsFromQuery(query.sql || '');
+    
+    // Check disallowed fields
+    if (restrictions.disallowedFields && restrictions.disallowedFields.length > 0) {
+      const disallowedInQuery = queryFields.filter(field => 
+        restrictions.disallowedFields!.some(disallowed => 
+          field.toLowerCase().includes(disallowed.toLowerCase())
+        )
+      );
+      if (disallowedInQuery.length > 0) {
+        violations.push(
+          `Disallowed fields accessed: ${disallowedInQuery.join(', ')}`
+        );
+      }
+    }
+    
+    // Check allowed fields (whitelist)
+    if (restrictions.allowedFields && restrictions.allowedFields.length > 0) {
+      const notAllowed = queryFields.filter(field => 
+        !restrictions.allowedFields!.some(allowed => 
+          field.toLowerCase().includes(allowed.toLowerCase())
+        )
+      );
+      if (notAllowed.length > 0) {
+        violations.push(
+          `Fields not in allowed list: ${notAllowed.join(', ')}`
+        );
+      }
+    }
+    
+    return violations;
+  }
+  
+  /**
+   * Validate join restrictions (from contract rules)
+   */
+  private validateJoinRestrictions(query: TestQuery): string[] {
+    const violations: string[] = [];
+    const restrictions = this.config.joinRestrictions;
+    
+    if (!restrictions || !restrictions.disallowedJoins || restrictions.disallowedJoins.length === 0) {
+      return violations;
+    }
+    
+    // Extract joins from query (simplified - would need proper SQL parsing in production)
+    const queryLower = (query.sql || '').toLowerCase();
+    const joins = this.extractJoinsFromQuery(queryLower);
+    
+    for (const disallowedJoin of restrictions.disallowedJoins) {
+      if (joins.some(join => join.toLowerCase().includes(disallowedJoin.toLowerCase()))) {
+        violations.push(`Disallowed join detected: ${disallowedJoin}`);
+      }
+    }
+    
+    return violations;
+  }
+  
+  /**
+   * Validate aggregation requirements (from contract rules)
+   */
+  validateAggregationRequirements(query: TestQuery): { passed: boolean; violations: string[] } {
+    const violations: string[] = [];
+    const requirements = this.config.aggregationRequirements;
+    
+    if (!requirements) {
+      return { passed: true, violations: [] };
+    }
+    
+    const queryLower = (query.sql || '').toLowerCase();
+    
+    // Check if aggregation is required
+    if (requirements.requireAggregation) {
+      const hasAggregation = queryLower.includes('group by') || 
+                            queryLower.includes('count(') ||
+                            queryLower.includes('sum(') ||
+                            queryLower.includes('avg(') ||
+                            queryLower.includes('min(') ||
+                            queryLower.includes('max(');
+      
+      if (!hasAggregation) {
+        violations.push('Aggregation is required but not found in query');
+      }
+    }
+    
+    // Check minimum k (would need to parse GROUP BY and COUNT in production)
+    if (requirements.minK && requirements.minK > 0) {
+      // This is a simplified check - in production, would need to parse the query
+      // and verify that COUNT(*) >= minK or that GROUP BY groups have at least minK records
+      const hasMinK = queryLower.includes(`having count(*) >= ${requirements.minK}`) ||
+                      queryLower.includes(`having count(*) > ${requirements.minK - 1}`);
+      
+      if (requirements.requireAggregation && !hasMinK) {
+        violations.push(`Minimum aggregation k=${requirements.minK} required but not found`);
+      }
+    }
+    
+    return {
+      passed: violations.length === 0,
+      violations,
+    };
+  }
+  
+  /**
+   * Extract fields from SQL query (simplified implementation)
+   */
+  private extractFieldsFromQuery(sql: string): string[] {
+    const fields: string[] = [];
+    // Simple regex to extract field names from SELECT clause
+    const selectMatch = sql.match(/select\s+(.+?)\s+from/i);
+    if (selectMatch) {
+      const selectClause = selectMatch[1];
+      // Split by comma and extract field names
+      const fieldParts = selectClause.split(',').map(f => f.trim());
+      for (const part of fieldParts) {
+        // Remove aliases and extract base field name
+        const fieldMatch = part.match(/(\w+)(?:\s+as\s+\w+)?$/i);
+        if (fieldMatch) {
+          fields.push(fieldMatch[1]);
+        }
+      }
+    }
+    return fields;
+  }
+  
+  /**
+   * Extract joins from SQL query (simplified implementation)
+   */
+  private extractJoinsFromQuery(sql: string): string[] {
+    const joins: string[] = [];
+    // Simple regex to find JOIN clauses
+    const joinMatches = sql.matchAll(/(?:inner|left|right|full)?\s*join\s+(\w+)/gi);
+    for (const match of joinMatches) {
+      joins.push(match[1]);
+    }
+    return joins;
   }
 
   /**

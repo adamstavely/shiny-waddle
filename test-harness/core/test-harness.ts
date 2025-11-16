@@ -7,7 +7,6 @@
 import { UserSimulator } from '../services/user-simulator';
 import { AccessControlTester } from '../services/access-control-tester';
 import { DataBehaviorTester } from '../services/data-behavior-tester';
-import { ContractTester } from '../services/contract-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
 import { 
@@ -17,7 +16,6 @@ import {
   Test,
   AccessControlTest,
   DataBehaviorTest,
-  ContractTest,
   DatasetHealthTest,
   ABACPolicy,
 } from './types';
@@ -32,7 +30,6 @@ export class TestOrchestrator {
   private userSimulator: UserSimulator;
   private accessControlTester: AccessControlTester;
   private dataBehaviorTester: DataBehaviorTester;
-  private contractTester: ContractTester;
   private datasetHealthTester: DatasetHealthTester;
   private complianceReporter: ComplianceReporter;
   private testLoader?: TestLoader;
@@ -41,7 +38,6 @@ export class TestOrchestrator {
     this.userSimulator = new UserSimulator(config.userSimulationConfig);
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
     this.dataBehaviorTester = new DataBehaviorTester(config.dataBehaviorConfig);
-    this.contractTester = new ContractTester(config.contractTestConfig);
     this.datasetHealthTester = new DatasetHealthTester(config.datasetHealthConfig);
     this.complianceReporter = new ComplianceReporter(config.reportingConfig);
     this.testLoader = testLoader;
@@ -102,8 +98,6 @@ export class TestOrchestrator {
         return this.runAccessControlTest(test as AccessControlTest, suite);
       case 'data-behavior':
         return this.runDataBehaviorTest(test as DataBehaviorTest, suite);
-      case 'contract':
-        return this.runContractTest(test as ContractTest, suite);
       case 'dataset-health':
         return this.runDatasetHealthTest(test as DatasetHealthTest, suite);
       default:
@@ -182,23 +176,6 @@ export class TestOrchestrator {
       testType: 'data-behavior',
       testName: test.name,
       passed: result.compliant,
-      details: result,
-      timestamp: new Date(),
-      testId: test.id,
-      testVersion: test.version,
-    };
-  }
-
-  /**
-   * Run a single contract test
-   */
-  async runContractTest(test: ContractTest, suite: TestSuite): Promise<TestResult> {
-    const result = await this.contractTester.testContract(test.contract);
-
-    return {
-      testType: 'contract',
-      testName: test.name,
-      passed: result.compliant === test.expectedCompliance,
       details: result,
       timestamp: new Date(),
       testId: test.id,

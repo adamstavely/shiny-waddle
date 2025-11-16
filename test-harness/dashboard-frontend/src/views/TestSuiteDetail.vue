@@ -204,7 +204,6 @@
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
                 <option value="data-behavior">Data Behavior</option>
-                <option value="contract">Contract</option>
                 <option value="dataset-health">Dataset Health</option>
                 <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
@@ -433,7 +432,6 @@ const getTestTypeLabel = (testType: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
     'data-behavior': 'Data Behavior',
-    'contract': 'Contract',
     'dataset-health': 'Dataset Health',
     'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
@@ -693,7 +691,6 @@ const convertJSONToTypeScript = (json: any, sourcePath: string, originalContent?
   if (json.allowedFields) config.allowedFields = json.allowedFields;
   if (json.requiredFilters) config.requiredFilters = json.requiredFilters;
   if (json.disallowedJoins) config.disallowedJoins = json.disallowedJoins;
-  if (json.contracts) config.contracts = json.contracts;
   if (json.datasets) config.datasets = json.datasets;
   if (json.privacyThresholds) config.privacyThresholds = json.privacyThresholds;
   if (json.statisticalFidelityTargets) config.statisticalFidelityTargets = json.statisticalFidelityTargets;
@@ -717,7 +714,6 @@ const getTestTypes = (suiteData: any): string[] => {
     const typeMap: Record<string, string> = {
       'access-control': 'Access Control',
       'data-behavior': 'Data Behavior',
-      'contract': 'Contract',
       'dataset-health': 'Dataset Health',
       'rls-cls': 'RLS/CLS',
       'network-policy': 'Network Policy',
@@ -733,7 +729,6 @@ const getTestTypes = (suiteData: any): string[] => {
   const types: string[] = [];
   if (suiteData.includeAccessControlTests) types.push('Access Control');
   if (suiteData.includeDataBehaviorTests) types.push('Data Behavior');
-  if (suiteData.includeContractTests) types.push('Contract');
   if (suiteData.includeDatasetHealthTests) types.push('Dataset Health');
   return types;
 };
@@ -821,16 +816,6 @@ const removeFilter = (role: string, index: number) => {
   requiredFiltersInput.value[role].splice(index, 1);
 };
 
-const addContract = () => {
-  form.value.contracts.push({
-    name: '',
-    dataOwner: '',
-  });
-};
-
-const removeContract = (index: number) => {
-  form.value.contracts.splice(index, 1);
-};
 
 const addDataset = () => {
   form.value.datasets.push({

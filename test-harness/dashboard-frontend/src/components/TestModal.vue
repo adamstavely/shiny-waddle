@@ -191,6 +191,10 @@
                     <option value="pattern">Pattern Detection</option>
                     <option value="bulk-export">Bulk Export Limit</option>
                     <option value="pii-detection">PII Detection Rule</option>
+                    <option value="export-restrictions">Export Restrictions</option>
+                    <option value="aggregation-requirements">Aggregation Requirements</option>
+                    <option value="field-restrictions">Field Restrictions</option>
+                    <option value="join-restrictions">Join Restrictions</option>
                     <option value="custom-check">Custom Check</option>
                   </select>
                 </div>
@@ -255,6 +259,98 @@
                       <option :value="true">Should Block</option>
                       <option :value="false">Should Allow</option>
                     </select>
+                  </div>
+                </div>
+
+                <!-- Export Restrictions Test -->
+                <div v-if="dlpTestType === 'export-restrictions'" class="form-group">
+                  <label>Export Restrictions Configuration *</label>
+                  <div class="form-group">
+                    <label>Restricted Fields (comma-separated)</label>
+                    <input 
+                      v-model="exportRestrictionsFieldsInput" 
+                      type="text" 
+                      placeholder="email, ssn, phone"
+                      @blur="updateExportRestrictionsFields"
+                    />
+                    <small>Fields that cannot be exported</small>
+                  </div>
+                  <div class="form-group">
+                    <label>
+                      <input v-model="form.exportRestrictions.requireMasking" type="checkbox" />
+                      Require Masking for Restricted Fields
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label>Allowed Export Formats (comma-separated)</label>
+                    <input 
+                      v-model="allowedFormatsInput" 
+                      type="text" 
+                      placeholder="csv, json"
+                      @blur="updateAllowedFormats"
+                    />
+                    <small>Leave empty to allow all formats</small>
+                  </div>
+                </div>
+
+                <!-- Aggregation Requirements Test -->
+                <div v-if="dlpTestType === 'aggregation-requirements'" class="form-group">
+                  <label>Aggregation Requirements Configuration *</label>
+                  <div class="form-group">
+                    <label>
+                      <input v-model="form.aggregationRequirements.requireAggregation" type="checkbox" />
+                      Require Aggregation
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label>Minimum k (Records per Group)</label>
+                    <input 
+                      v-model.number="form.aggregationRequirements.minK" 
+                      type="number" 
+                      min="1"
+                      placeholder="10"
+                    />
+                    <small>Minimum number of records required per aggregation group</small>
+                  </div>
+                </div>
+
+                <!-- Field Restrictions Test -->
+                <div v-if="dlpTestType === 'field-restrictions'" class="form-group">
+                  <label>Field Restrictions Configuration *</label>
+                  <div class="form-group">
+                    <label>Disallowed Fields (comma-separated)</label>
+                    <input 
+                      v-model="disallowedFieldsInput" 
+                      type="text" 
+                      placeholder="ssn, credit_card"
+                      @blur="updateDisallowedFields"
+                    />
+                    <small>Fields that cannot be accessed in queries</small>
+                  </div>
+                  <div class="form-group">
+                    <label>Allowed Fields (comma-separated)</label>
+                    <input 
+                      v-model="allowedFieldsInput" 
+                      type="text" 
+                      placeholder="id, name, status"
+                      @blur="updateAllowedFields"
+                    />
+                    <small>Whitelist of allowed fields (leave empty to allow all except disallowed)</small>
+                  </div>
+                </div>
+
+                <!-- Join Restrictions Test -->
+                <div v-if="dlpTestType === 'join-restrictions'" class="form-group">
+                  <label>Join Restrictions Configuration *</label>
+                  <div class="form-group">
+                    <label>Disallowed Joins (comma-separated table names)</label>
+                    <input 
+                      v-model="disallowedJoinsInput" 
+                      type="text" 
+                      placeholder="users, user_profiles"
+                      @blur="updateDisallowedJoins"
+                    />
+                    <small>Tables that cannot be joined in queries</small>
                   </div>
                 </div>
               </div>
@@ -529,6 +625,48 @@ const saving = ref(false);
 const validationErrors = ref<string[]>([]);
 const policyFilter = ref('');
 const dlpTestType = ref('pattern');
+
+// Input fields for comma-separated values (contract rules)
+const exportRestrictionsFieldsInput = ref('');
+const allowedFormatsInput = ref('');
+const disallowedFieldsInput = ref('');
+const allowedFieldsInput = ref('');
+const disallowedJoinsInput = ref('');
+
+const updateExportRestrictionsFields = () => {
+  form.value.exportRestrictions.restrictedFields = exportRestrictionsFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateAllowedFormats = () => {
+  form.value.exportRestrictions.allowedFormats = allowedFormatsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateDisallowedFields = () => {
+  form.value.fieldRestrictions.disallowedFields = disallowedFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateAllowedFields = () => {
+  form.value.fieldRestrictions.allowedFields = allowedFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateDisallowedJoins = () => {
+  form.value.joinRestrictions.disallowedJoins = disallowedJoinsInput.value
+    .split(',')
+    .map(j => j.trim())
+    .filter(j => j.length > 0);
+};
 const apiSecuritySubType = ref('apiVersion');
 
 const form = ref({
@@ -562,6 +700,22 @@ const form = ref({
   testRecordCount: 10001,
   expectedBlocked: true,
   expectedDetection: true,
+  exportRestrictions: {
+    restrictedFields: [] as string[],
+    requireMasking: false,
+    allowedFormats: [] as string[],
+  },
+  aggregationRequirements: {
+    minK: undefined as number | undefined,
+    requireAggregation: false,
+  },
+  fieldRestrictions: {
+    disallowedFields: [] as string[],
+    allowedFields: [] as string[],
+  },
+  joinRestrictions: {
+    disallowedJoins: [] as string[],
+  },
   changeReason: '',
   // API Security fields
   apiVersion: {
@@ -652,6 +806,35 @@ const loadTest = async () => {
         form.value.bulkExportLimit = test.value.bulkExportLimit;
         form.value.testRecordCount = test.value.testRecordCount;
         form.value.expectedBlocked = test.value.expectedBlocked;
+      } else if (test.value.exportRestrictions) {
+        dlpTestType.value = 'export-restrictions';
+        form.value.exportRestrictions = {
+          restrictedFields: test.value.exportRestrictions.restrictedFields || [],
+          requireMasking: test.value.exportRestrictions.requireMasking || false,
+          allowedFormats: test.value.exportRestrictions.allowedFormats || [],
+        };
+        exportRestrictionsFieldsInput.value = form.value.exportRestrictions.restrictedFields.join(', ');
+        allowedFormatsInput.value = form.value.exportRestrictions.allowedFormats.join(', ');
+      } else if (test.value.aggregationRequirements) {
+        dlpTestType.value = 'aggregation-requirements';
+        form.value.aggregationRequirements = {
+          minK: test.value.aggregationRequirements.minK,
+          requireAggregation: test.value.aggregationRequirements.requireAggregation || false,
+        };
+      } else if (test.value.fieldRestrictions) {
+        dlpTestType.value = 'field-restrictions';
+        form.value.fieldRestrictions = {
+          disallowedFields: test.value.fieldRestrictions.disallowedFields || [],
+          allowedFields: test.value.fieldRestrictions.allowedFields || [],
+        };
+        disallowedFieldsInput.value = form.value.fieldRestrictions.disallowedFields.join(', ');
+        allowedFieldsInput.value = form.value.fieldRestrictions.allowedFields.join(', ');
+      } else if (test.value.joinRestrictions) {
+        dlpTestType.value = 'join-restrictions';
+        form.value.joinRestrictions = {
+          disallowedJoins: test.value.joinRestrictions.disallowedJoins || [],
+        };
+        disallowedJoinsInput.value = form.value.joinRestrictions.disallowedJoins.join(', ');
       }
     } else if (test.value.testType === 'api-security') {
       if (test.value.apiVersion) {
@@ -826,6 +1009,40 @@ const save = async () => {
         payload.bulkExportLimit = form.value.bulkExportLimit;
         payload.testRecordCount = form.value.testRecordCount;
         payload.expectedBlocked = form.value.expectedBlocked;
+      } else if (dlpTestType.value === 'export-restrictions') {
+        // Update fields from inputs before saving
+        updateExportRestrictionsFields();
+        updateAllowedFormats();
+        payload.exportRestrictions = {
+          restrictedFields: form.value.exportRestrictions.restrictedFields,
+          requireMasking: form.value.exportRestrictions.requireMasking,
+          allowedFormats: form.value.exportRestrictions.allowedFormats.length > 0 
+            ? form.value.exportRestrictions.allowedFormats 
+            : undefined,
+        };
+      } else if (dlpTestType.value === 'aggregation-requirements') {
+        payload.aggregationRequirements = {
+          minK: form.value.aggregationRequirements.minK,
+          requireAggregation: form.value.aggregationRequirements.requireAggregation,
+        };
+      } else if (dlpTestType.value === 'field-restrictions') {
+        // Update fields from inputs before saving
+        updateDisallowedFields();
+        updateAllowedFields();
+        payload.fieldRestrictions = {
+          disallowedFields: form.value.fieldRestrictions.disallowedFields.length > 0
+            ? form.value.fieldRestrictions.disallowedFields
+            : undefined,
+          allowedFields: form.value.fieldRestrictions.allowedFields.length > 0
+            ? form.value.fieldRestrictions.allowedFields
+            : undefined,
+        };
+      } else if (dlpTestType.value === 'join-restrictions') {
+        // Update fields from inputs before saving
+        updateDisallowedJoins();
+        payload.joinRestrictions = {
+          disallowedJoins: form.value.joinRestrictions.disallowedJoins,
+        };
       }
     } else if (form.value.testType === 'api-security') {
       if (apiSecuritySubType.value === 'apiVersion') {
@@ -913,6 +1130,13 @@ const save = async () => {
 
 const close = () => {
   emit('close');
+  // Reset input fields
+  exportRestrictionsFieldsInput.value = '';
+  allowedFormatsInput.value = '';
+  disallowedFieldsInput.value = '';
+  allowedFieldsInput.value = '';
+  disallowedJoinsInput.value = '';
+  dlpTestType.value = 'pattern';
   // Reset form
   form.value = {
     name: '',
@@ -945,6 +1169,22 @@ const close = () => {
     testRecordCount: 10001,
     expectedBlocked: true,
     expectedDetection: true,
+    exportRestrictions: {
+      restrictedFields: [],
+      requireMasking: false,
+      allowedFormats: [],
+    },
+    aggregationRequirements: {
+      minK: undefined,
+      requireAggregation: false,
+    },
+    fieldRestrictions: {
+      disallowedFields: [],
+      allowedFields: [],
+    },
+    joinRestrictions: {
+      disallowedJoins: [],
+    },
     changeReason: '',
     apiVersion: {
       version: '',

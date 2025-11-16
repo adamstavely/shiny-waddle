@@ -95,9 +95,6 @@ async function runTestBattery() {
     dataBehaviorConfig: {
       enableQueryLogging: true,
     },
-    contractTestConfig: {
-      autoGenerateTests: true,
-    },
     datasetHealthConfig: {
       privacyMetrics: [
         { name: 'k-anonymity', type: 'k-anonymity', threshold: 10 },

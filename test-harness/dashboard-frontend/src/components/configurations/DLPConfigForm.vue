@@ -65,6 +65,94 @@
         </label>
       </div>
     </div>
+
+    <div class="form-section">
+      <h3>Export Restrictions</h3>
+      <div class="form-group">
+        <label>Restricted Fields (comma-separated)</label>
+        <input 
+          v-model="restrictedFieldsInput" 
+          type="text" 
+          placeholder="email, ssn, phone"
+          @blur="updateRestrictedFields"
+        />
+        <small class="form-help">Fields that cannot be exported</small>
+      </div>
+      <div class="form-group">
+        <label>
+          <input v-model="localData.exportRestrictions.requireMasking" type="checkbox" />
+          Require Masking for Restricted Fields
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Allowed Export Formats (comma-separated)</label>
+        <input 
+          v-model="allowedFormatsInput" 
+          type="text" 
+          placeholder="csv, json"
+          @blur="updateAllowedFormats"
+        />
+        <small class="form-help">Leave empty to allow all formats</small>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Aggregation Requirements</h3>
+      <div class="form-group">
+        <label>
+          <input v-model="localData.aggregationRequirements.requireAggregation" type="checkbox" />
+          Require Aggregation
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Minimum k (Records per Group)</label>
+        <input 
+          v-model.number="localData.aggregationRequirements.minK" 
+          type="number" 
+          min="1"
+          placeholder="10"
+        />
+        <small class="form-help">Minimum number of records required per aggregation group</small>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Field Restrictions</h3>
+      <div class="form-group">
+        <label>Disallowed Fields (comma-separated)</label>
+        <input 
+          v-model="disallowedFieldsInput" 
+          type="text" 
+          placeholder="ssn, credit_card"
+          @blur="updateDisallowedFields"
+        />
+        <small class="form-help">Fields that cannot be accessed in queries</small>
+      </div>
+      <div class="form-group">
+        <label>Allowed Fields (comma-separated)</label>
+        <input 
+          v-model="allowedFieldsInput" 
+          type="text" 
+          placeholder="id, name, status"
+          @blur="updateAllowedFields"
+        />
+        <small class="form-help">Whitelist of allowed fields (leave empty to allow all except disallowed)</small>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Join Restrictions</h3>
+      <div class="form-group">
+        <label>Disallowed Joins (comma-separated table names)</label>
+        <input 
+          v-model="disallowedJoinsInput" 
+          type="text" 
+          placeholder="users, user_profiles"
+          @blur="updateDisallowedJoins"
+        />
+        <small class="form-help">Tables that cannot be joined in queries</small>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -93,12 +181,86 @@ const localData = ref({
     requireEncryption: true,
     blockExfiltration: true,
   },
+  exportRestrictions: {
+    restrictedFields: [] as string[],
+    requireMasking: false,
+    allowedFormats: [] as string[],
+  },
+  aggregationRequirements: {
+    minK: undefined as number | undefined,
+    requireAggregation: false,
+  },
+  fieldRestrictions: {
+    disallowedFields: [] as string[],
+    allowedFields: [] as string[],
+  },
+  joinRestrictions: {
+    disallowedJoins: [] as string[],
+  },
   ...(props.config || props.modelValue || {}),
 });
+
+// Input fields for comma-separated values
+const restrictedFieldsInput = ref(
+  (localData.value.exportRestrictions?.restrictedFields || []).join(', ')
+);
+const allowedFormatsInput = ref(
+  (localData.value.exportRestrictions?.allowedFormats || []).join(', ')
+);
+const disallowedFieldsInput = ref(
+  (localData.value.fieldRestrictions?.disallowedFields || []).join(', ')
+);
+const allowedFieldsInput = ref(
+  (localData.value.fieldRestrictions?.allowedFields || []).join(', ')
+);
+const disallowedJoinsInput = ref(
+  (localData.value.joinRestrictions?.disallowedJoins || []).join(', ')
+);
+
+const updateRestrictedFields = () => {
+  localData.value.exportRestrictions.restrictedFields = restrictedFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateAllowedFormats = () => {
+  localData.value.exportRestrictions.allowedFormats = allowedFormatsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateDisallowedFields = () => {
+  localData.value.fieldRestrictions.disallowedFields = disallowedFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateAllowedFields = () => {
+  localData.value.fieldRestrictions.allowedFields = allowedFieldsInput.value
+    .split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0);
+};
+
+const updateDisallowedJoins = () => {
+  localData.value.joinRestrictions.disallowedJoins = disallowedJoinsInput.value
+    .split(',')
+    .map(j => j.trim())
+    .filter(j => j.length > 0);
+};
 
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     Object.assign(localData.value, newVal);
+    // Update input fields
+    restrictedFieldsInput.value = (newVal.exportRestrictions?.restrictedFields || []).join(', ');
+    allowedFormatsInput.value = (newVal.exportRestrictions?.allowedFormats || []).join(', ');
+    disallowedFieldsInput.value = (newVal.fieldRestrictions?.disallowedFields || []).join(', ');
+    allowedFieldsInput.value = (newVal.fieldRestrictions?.allowedFields || []).join(', ');
+    disallowedJoinsInput.value = (newVal.joinRestrictions?.disallowedJoins || []).join(', ');
   }
 }, { deep: true });
 
@@ -174,6 +336,14 @@ const removePattern = (index: number) => {
 .form-group select option {
   background: #1a1f2e;
   color: #ffffff;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #718096;
+  font-style: italic;
 }
 
 .pattern-item {

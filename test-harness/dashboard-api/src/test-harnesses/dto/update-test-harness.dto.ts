@@ -9,7 +9,6 @@ import {
 const VALID_TEST_TYPES = [
   'access-control',
   'data-behavior',
-  'contract',
   'dataset-health',
   'rls-cls',
   'network-policy',

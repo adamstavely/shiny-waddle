@@ -36,8 +36,6 @@ class BaseValidator {
                 return suite.includeAccessControlTests === true;
             case 'data-behavior':
                 return suite.includeDataBehaviorTests === true;
-            case 'contract':
-                return suite.includeContractTests === true;
             case 'dataset-health':
                 return suite.includeDatasetHealthTests === true;
             default:

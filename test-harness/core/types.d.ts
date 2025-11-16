@@ -2,7 +2,6 @@ export interface TestConfiguration {
     userSimulationConfig: UserSimulationConfig;
     accessControlConfig: AccessControlConfig;
     dataBehaviorConfig: DataBehaviorConfig;
-    contractTestConfig: ContractTestConfig;
     datasetHealthConfig: DatasetHealthConfig;
     reportingConfig: ReportingConfig;
 }
@@ -37,10 +36,6 @@ export interface DataBehaviorConfig {
     enableQueryLogging?: boolean;
     piiDetectionRules?: PiiDetectionRule[];
 }
-export interface ContractTestConfig {
-    contractDefinitionsPath?: string;
-    autoGenerateTests?: boolean;
-}
 export interface DatasetHealthConfig {
     privacyMetrics?: PrivacyMetric[];
     statisticalTests?: StatisticalTest[];
@@ -56,7 +51,6 @@ export interface TestSuite {
     team: string;
     includeAccessControlTests: boolean;
     includeDataBehaviorTests: boolean;
-    includeContractTests: boolean;
     includeDatasetHealthTests: boolean;
     userRoles: string[];
     resources: Resource[];
@@ -72,7 +66,7 @@ export interface TestSuite {
     statisticalFidelityTargets?: StatisticalFidelityTarget[];
 }
 export interface TestResult {
-    testType: 'access-control' | 'data-behavior' | 'contract' | 'dataset-health';
+    testType: 'access-control' | 'data-behavior' | 'dataset-health';
     testName: string;
     passed: boolean;
     details: any;
@@ -135,6 +129,11 @@ export interface Filter {
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'IN' | 'NOT IN' | 'LIKE';
     value: any;
 }
+/**
+ * @deprecated Contract and ContractRequirement types are deprecated.
+ * Contract rules should now be configured directly in DLP test configuration
+ * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
+ */
 export interface Contract {
     name: string;
     dataOwner: string;
@@ -142,6 +141,11 @@ export interface Contract {
     machineReadable?: boolean;
     schema?: any;
 }
+/**
+ * @deprecated Contract and ContractRequirement types are deprecated.
+ * Contract rules should now be configured directly in DLP test configuration
+ * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
+ */
 export interface ContractRequirement {
     id: string;
     description: string;

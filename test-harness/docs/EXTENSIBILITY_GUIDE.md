@@ -53,7 +53,7 @@ Extend the `TestResult` type to include configuration validation:
 ```typescript
 // In core/types.ts
 export interface TestResult {
-  testType: 'access-control' | 'data-behavior' | 'contract' | 'dataset-health' | 'configuration-validation';
+  testType: 'access-control' | 'data-behavior' | 'dataset-health' | 'configuration-validation';
   testName: string;
   passed: boolean;
   details: any;

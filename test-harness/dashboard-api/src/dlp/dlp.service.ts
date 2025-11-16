@@ -41,9 +41,25 @@ export class DLPService {
         }
         
         // DLP configs don't store user/operation, so we need them from request
-        // But we can use patterns from config
+        // But we can use patterns and contract rules from config
+        const testerConfig: any = {};
         if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          this.tester = new DLPTester({ patterns: dlpConfig.patterns });
+          testerConfig.patterns = dlpConfig.patterns;
+        }
+        if (dlpConfig.exportRestrictions) {
+          testerConfig.exportRestrictions = dlpConfig.exportRestrictions;
+        }
+        if (dlpConfig.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        }
+        if (dlpConfig.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        }
+        if (dlpConfig.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
+        }
+        if (Object.keys(testerConfig).length > 0) {
+          this.tester = new DLPTester(testerConfig);
         }
         user = dto.user || { id: 'test-user', email: 'test@example.com', role: 'viewer', attributes: {} };
         dataOperation = dto.dataOperation || { type: 'export', data: {} };
@@ -181,9 +197,22 @@ export class DLPService {
         }
         dlpConfig = config as DLPConfigurationEntity;
         
-        // Use patterns from config
+        // Use patterns and contract rules from config
+        const testerConfig: any = {};
         if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          this.tester = new DLPTester({ patterns: dlpConfig.patterns });
+          testerConfig.patterns = dlpConfig.patterns;
+        }
+        if (dlpConfig.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        }
+        if (dlpConfig.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
+        }
+        if (dlpConfig.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        }
+        if (Object.keys(testerConfig).length > 0) {
+          this.tester = new DLPTester(testerConfig);
         }
 
         // Extract expected fields from piiDetectionRules if not provided
@@ -247,13 +276,25 @@ export class DLPService {
           throw new ValidationException(`Configuration ${dto.configId} is not a DLP configuration`);
         }
         dlpConfig = config as DLPConfigurationEntity;
-        // Use bulk export limits from config if available
+        // Use bulk export limits and contract rules from config if available
         const testerConfig: any = {};
         if (dlpConfig.bulkExportLimits) {
           testerConfig.bulkExportLimits = dlpConfig.bulkExportLimits;
         }
         if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
           testerConfig.patterns = dlpConfig.patterns;
+        }
+        if (dlpConfig.exportRestrictions) {
+          testerConfig.exportRestrictions = dlpConfig.exportRestrictions;
+        }
+        if (dlpConfig.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        }
+        if (dlpConfig.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        }
+        if (dlpConfig.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new DLPTester(testerConfig);
@@ -287,7 +328,12 @@ export class DLPService {
         return { checked: false, skipped: true, reason: 'Bulk export checking disabled in configuration' };
       }
 
-      const result = await this.tester.testBulkExportControls(user, exportRequest);
+      // Extract fields from export request if available
+      const exportFields = (exportRequest as any).fields || [];
+      const result = await this.tester.testBulkExportControls(user, {
+        ...exportRequest,
+        fields: exportFields,
+      });
 
       // Apply testLogic custom checks if present
       if (dlpConfig?.testLogic?.customChecks && dlpConfig.testLogic.customChecks.length > 0) {

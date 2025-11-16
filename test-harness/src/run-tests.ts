@@ -59,9 +59,6 @@ async function main() {
         { fieldPattern: '.*phone.*', piiType: 'phone' },
       ],
     },
-    contractTestConfig: {
-      autoGenerateTests: true,
-    },
     datasetHealthConfig: {
       privacyMetrics: [
         { name: 'k-anonymity', type: 'k-anonymity', threshold: 10 },

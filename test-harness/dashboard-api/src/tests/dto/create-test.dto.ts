@@ -196,7 +196,6 @@ export class CreateTestDto {
   @IsEnum([
     'access-control',
     'data-behavior',
-    'contract',
     'dataset-health',
     'rls-cls',
     'network-policy',
@@ -260,15 +259,6 @@ export class CreateTestDto {
   @IsOptional()
   @IsObject()
   expectedResult?: any;
-
-  // ContractTest fields
-  @IsOptional()
-  @IsObject()
-  contract?: any;
-
-  @IsOptional()
-  @IsBoolean()
-  expectedCompliance?: boolean;
 
   // DatasetHealthTest fields
   @IsOptional()

@@ -90,7 +90,6 @@ Quick reference for common tasks when creating policies and tests.
   team: 'my-team',
   includeAccessControlTests: true,
   includeDataBehaviorTests: false,
-  includeContractTests: false,
   includeDatasetHealthTests: false,
   userRoles: ['admin', 'viewer'],
   resources: [
@@ -148,25 +147,11 @@ Quick reference for common tasks when creating policies and tests.
 ### Contract Test
 
 ```typescript
-{
-  includeContractTests: true,
-  contracts: [
-    {
-      name: 'No Email Export',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'no-email',
-          description: 'No raw email export',
-          type: 'export-restriction',
-          rule: { restrictedFields: ['email'], requireMasking: true },
-          enforcement: 'hard'
-        }
-      ],
-      machineReadable: true
-    }
-  ]
-}
+// Contract rules are now configured in DLP test configurations:
+// - exportRestrictions: { restrictedFields, requireMasking, allowedFormats }
+// - aggregationRequirements: { minK, requireAggregation }
+// - fieldRestrictions: { disallowedFields, allowedFields }
+// - joinRestrictions: { disallowedJoins }
 ```
 
 ## File Locations

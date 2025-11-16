@@ -85,6 +85,22 @@ export interface DLPConfigurationEntity extends BaseTestConfigurationEntity {
       description?: string;
     }>;
   };
+  exportRestrictions?: {
+    restrictedFields?: string[];
+    requireMasking?: boolean;
+    allowedFormats?: string[];
+  };
+  aggregationRequirements?: {
+    minK?: number;
+    requireAggregation?: boolean;
+  };
+  fieldRestrictions?: {
+    disallowedFields?: string[];
+    allowedFields?: string[];
+  };
+  joinRestrictions?: {
+    disallowedJoins?: string[];
+  };
 }
 
 export interface APIGatewayConfigurationEntity extends BaseTestConfigurationEntity {

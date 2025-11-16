@@ -36,9 +36,6 @@ async function main() {
         { fieldPattern: '.*email.*', piiType: 'email' },
       ],
     },
-    contractTestConfig: {
-      autoGenerateTests: true,
-    },
     datasetHealthConfig: {},
     reportingConfig: {
       outputFormat: 'json',
@@ -54,7 +51,6 @@ async function main() {
     team: 'my-team',
     includeAccessControlTests: true,
     includeDataBehaviorTests: true,
-    includeContractTests: false,
     includeDatasetHealthTests: false,
     userRoles: ['researcher', 'analyst'],
     resources: [

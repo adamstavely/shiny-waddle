@@ -1,5 +1,57 @@
 [
   {
+    "id": "9caba932-27a8-4dcb-b4b5-2a2b2e449e6a",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/applications/test/validators/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-16T04:00:30.416Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1763265630416-ity1t414a"
+  },
+  {
+    "id": "d033687d-639a-4322-adba-6353a64d503f",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/applications/test/test-configurations/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-16T04:00:30.404Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1763265630403-4uy94r1zn"
+  },
+  {
+    "id": "759567db-b1e0-4b21-8555-43313b92d1b5",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/applications/test/validators/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-16T03:47:42.626Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1763264862626-t8gjijurc"
+  },
+  {
+    "id": "4881229a-a605-45f3-b464-ba52022d987a",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/applications/test/test-configurations/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+    "timestamp": "2025-11-16T03:47:42.622Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1763264862622-4oxllb7ar"
+  },
+  {
     "id": "6616077e-0c9f-4bf0-9638-079ccf85c3cf",
     "type": "data-write",
     "severity": "medium",

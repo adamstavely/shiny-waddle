@@ -167,36 +167,6 @@
         </div>
       </div>
 
-      <!-- Data Security Category -->
-      <div v-if="activeCategory === 'data-security'" class="drawer-category" data-category="data-security">
-        <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/data-security"
-            @click.prevent="handleNavClick('/data-security')"
-            :class="['drawer-item', currentPath.value === '/data-security' ? 'drawer-item-active' : '']"
-          >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/datasets"
-            @click.prevent="handleNavClick('/datasets')"
-            :class="['drawer-item', isActive('/datasets') ? 'drawer-item-active' : '']"
-          >
-            <Database class="item-icon" />
-            <span>Datasets</span>
-          </a>
-          <a
-            href="/contracts"
-            @click.prevent="handleNavClick('/contracts')"
-            :class="['drawer-item', isActive('/contracts') ? 'drawer-item-active' : '']"
-          >
-            <FileCheck class="item-icon" />
-            <span>Contracts</span>
-          </a>
-        </div>
-      </div>
-
       <!-- Insights Category -->
       <div v-if="activeCategory === 'insights'" class="drawer-category" data-category="insights">
         <div class="category-items" style="padding: 0 12px 16px;">
@@ -339,11 +309,6 @@ const platformConfigPages = [
   '/environment-config-testing'
 ];
 
-// Data Security pages
-const dataSecurityPages = [
-  '/datasets', '/contracts'
-];
-
 // Insights pages
 const insightsPages = [
   '/insights',
@@ -374,10 +339,6 @@ const getCategoryFromRoute = (path: string): string | null => {
   // Check if it's a platform config page
   if (platformConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'platform-config';
-  }
-  // Check if it's a data security page
-  if (dataSecurityPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'data-security';
   }
   // Check if it's an insights page
   if (path === '/insights' || path.startsWith('/insights') ||

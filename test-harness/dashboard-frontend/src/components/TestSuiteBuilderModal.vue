@@ -64,7 +64,6 @@
                     <option value="">Select a test type...</option>
                     <option value="access-control">Access Control</option>
                     <option value="data-behavior">Data Behavior</option>
-                    <option value="contract">Contract</option>
                     <option value="dataset-health">Dataset Health</option>
                     <option value="rls-cls">RLS/CLS</option>
                     <option value="network-policy">Network Policy</option>
@@ -288,29 +287,6 @@
                 </div>
               </div>
 
-              <!-- Contracts Tab (only for contract type) -->
-              <div v-if="activeTab === 'contracts' && form.testType === 'contract'" class="tab-panel">
-                <div class="section-header">
-                  <h3>Contracts</h3>
-                  <button type="button" @click="addContract" class="btn-small">
-                    <Plus class="btn-icon-small" />
-                    Add Contract
-                  </button>
-                </div>
-                <div v-for="(contract, index) in form.contracts" :key="index" class="contract-item">
-                  <div class="form-group">
-                    <label>Contract Name</label>
-                    <input v-model="contract.name" type="text" />
-                  </div>
-                  <div class="form-group">
-                    <label>Data Owner</label>
-                    <input v-model="contract.dataOwner" type="text" />
-                  </div>
-                  <button type="button" @click="removeContract(index)" class="btn-icon-only">
-                    <X class="icon" />
-                  </button>
-                </div>
-              </div>
 
               <!-- Datasets Tab (only for dataset-health type) -->
               <div v-if="activeTab === 'datasets' && form.testType === 'dataset-health'" class="tab-panel">
@@ -443,7 +419,6 @@ const tabs = [
   { id: 'expected-decisions', label: 'Expected Decisions', icon: Shield },
   { id: 'queries', label: 'Test Queries', icon: Code },
   { id: 'data-behavior', label: 'Data Behavior', icon: Shield },
-  { id: 'contracts', label: 'Contracts', icon: FileText },
   { id: 'datasets', label: 'Datasets', icon: BarChart3 }
 ];
 
@@ -459,7 +434,6 @@ const form = ref({
   testQueries: [] as TestQuery[],
   allowedFields: {} as Record<string, string[]>,
   requiredFilters: {} as Record<string, Filter[]>,
-  contracts: [] as Contract[],
   datasets: [] as Dataset[],
   privacyThresholds: [] as any[],
   statisticalFidelityTargets: [] as any[]
@@ -476,7 +450,6 @@ watch(() => props.editingSuite, (suite) => {
       // Backward compatibility: infer from old boolean flags
       if (suite.includeAccessControlTests) testType = 'access-control';
       else if (suite.includeDataBehaviorTests) testType = 'data-behavior';
-      else if (suite.includeContractTests) testType = 'contract';
       else if (suite.includeDatasetHealthTests) testType = 'dataset-health';
       else testType = 'access-control'; // default
     }
@@ -493,7 +466,6 @@ watch(() => props.editingSuite, (suite) => {
       testQueries: suite.testQueries || [],
       allowedFields: suite.allowedFields || {},
       requiredFilters: suite.requiredFilters || {},
-      contracts: suite.contracts || [],
       datasets: suite.datasets || [],
       privacyThresholds: suite.privacyThresholds || [],
       statisticalFidelityTargets: suite.statisticalFidelityTargets || []
@@ -528,7 +500,6 @@ function resetForm() {
     testQueries: [],
     allowedFields: {},
     requiredFilters: {},
-    contracts: [],
     datasets: [],
     privacyThresholds: [],
     statisticalFidelityTargets: []
@@ -607,16 +578,6 @@ function removeFilter(role: string, index: number) {
   requiredFiltersInput.value[role].splice(index, 1);
 }
 
-function addContract() {
-  form.value.contracts.push({
-    name: '',
-    dataOwner: ''
-  });
-}
-
-function removeContract(index: number) {
-  form.value.contracts.splice(index, 1);
-}
 
 function addDataset() {
   form.value.datasets.push({
@@ -670,8 +631,6 @@ function save() {
     suiteData.testQueries = form.value.testQueries;
     suiteData.allowedFields = form.value.allowedFields;
     suiteData.requiredFilters = form.value.requiredFilters;
-  } else if (form.value.testType === 'contract') {
-    suiteData.contracts = form.value.contracts;
   } else if (form.value.testType === 'dataset-health') {
     suiteData.datasets = form.value.datasets;
     suiteData.privacyThresholds = form.value.privacyThresholds;

@@ -81,7 +81,6 @@ export class TestHarnessesService {
     const validTestTypes = [
       'access-control',
       'data-behavior',
-      'contract',
       'dataset-health',
       'rls-cls',
       'network-policy',
@@ -169,7 +168,6 @@ export class TestHarnessesService {
       const validTestTypes = [
         'access-control',
         'data-behavior',
-        'contract',
         'dataset-health',
         'rls-cls',
         'network-policy',

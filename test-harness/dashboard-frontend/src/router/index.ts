@@ -7,7 +7,6 @@ import TeamDashboard from '../views/TeamDashboard.vue';
 import TestsOverview from '../views/TestsOverview.vue';
 import AccessControlOverview from '../views/AccessControlOverview.vue';
 import PlatformConfigOverview from '../views/PlatformConfigOverview.vue';
-import DataSecurityOverview from '../views/DataSecurityOverview.vue';
 import TestBatteries from '../views/TestBatteries.vue';
 import TestHarnesses from '../views/TestHarnesses.vue';
 import TestSuites from '../views/TestSuites.vue';
@@ -34,8 +33,6 @@ import Integrations from '../views/Integrations.vue';
 import CICDIntegration from '../views/CICDIntegration.vue';
 import UserSimulation from '../views/UserSimulation.vue';
 import Resources from '../views/Resources.vue';
-import Contracts from '../views/Contracts.vue';
-import Datasets from '../views/Datasets.vue';
 import TicketingIntegrations from '../views/TicketingIntegrations.vue';
 import SLAManagement from '../views/SLAManagement.vue';
 import Compliance from '../views/Compliance.vue';
@@ -205,11 +202,6 @@ const router = createRouter({
       component: PlatformConfigOverview,
     },
     {
-      path: '/data-security',
-      name: 'DataSecurityOverview',
-      component: DataSecurityOverview,
-    },
-    {
       path: '/policies',
       name: 'Policies',
       component: Policies,
@@ -288,16 +280,6 @@ const router = createRouter({
       path: '/resources',
       name: 'Resources',
       component: Resources,
-    },
-    {
-      path: '/contracts',
-      name: 'Contracts',
-      component: Contracts,
-    },
-    {
-      path: '/datasets',
-      name: 'Datasets',
-      component: Datasets,
     },
     {
       path: '/compliance',

@@ -88,7 +88,6 @@ export class TestSuitesService {
     const validTestTypes = [
       'access-control',
       'data-behavior',
-      'contract',
       'dataset-health',
       'rls-cls',
       'network-policy',
@@ -349,7 +348,6 @@ export class TestSuitesService {
       const validTestTypes = [
         'access-control',
         'data-behavior',
-        'contract',
         'dataset-health',
         'rls-cls',
         'network-policy',

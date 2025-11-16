@@ -138,7 +138,6 @@ export class EphemeralEnvironment {
       userSimulationConfig: { roles: ['admin', 'researcher', 'analyst', 'viewer'], attributes: {} },
       accessControlConfig: { policyEngine: 'custom' },
       dataBehaviorConfig: {},
-      contractTestConfig: {},
       datasetHealthConfig: {},
       reportingConfig: { outputFormat: 'json' },
     });

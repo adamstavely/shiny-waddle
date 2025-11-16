@@ -99,7 +99,6 @@ Enable the test types you want to run:
 {
   includeAccessControlTests: true,    // Test PDP decisions
   includeDataBehaviorTests: true,     // Test query compliance
-  includeContractTests: false,        // Test data owner contracts
   includeDatasetHealthTests: false,   // Test privacy/statistics
   // ...
 }
@@ -307,122 +306,7 @@ disallowedJoins?: {
 }
 ```
 
-### 3. Contract Tests
-
-Tests based on machine-readable requirements from data owners.
-
-#### Configuration
-
-```typescript
-{
-  includeContractTests: true,
-  contracts: [
-    {
-      name: 'No Raw Email Export',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'no-email-export',
-          description: 'No raw email addresses may be exported',
-          type: 'export-restriction',
-          rule: {
-            restrictedFields: ['email'],
-            requireMasking: true,
-          },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
-    },
-    {
-      name: 'Minimum Aggregation k=10',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'min-aggregation',
-          description: 'Queries must aggregate to minimum k=10 records',
-          type: 'aggregation-requirement',
-          rule: {
-            minK: 10,
-            requireAggregation: true,
-          },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
-    },
-  ],
-}
-```
-
-#### Contract Structure
-
-```typescript
-interface Contract {
-  name: string;
-  dataOwner: string;
-  requirements: ContractRequirement[];
-  machineReadable?: boolean;
-  schema?: any;
-}
-
-interface ContractRequirement {
-  id: string;
-  description: string;
-  type: 'field-restriction' | 'aggregation-requirement' | 
-        'join-restriction' | 'export-restriction';
-  rule: any;
-  enforcement: 'hard' | 'soft';
-}
-```
-
-#### Requirement Types
-
-1. **field-restriction**: Restricts access to specific fields
-   ```typescript
-   {
-     type: 'field-restriction',
-     rule: {
-       fields: ['email', 'ssn'],
-       allowed: false,  // or true for whitelist
-     }
-   }
-   ```
-
-2. **aggregation-requirement**: Requires aggregation with minimum k
-   ```typescript
-   {
-     type: 'aggregation-requirement',
-     rule: {
-       minK: 10,
-       requireAggregation: true,
-     }
-   }
-   ```
-
-3. **join-restriction**: Restricts certain joins
-   ```typescript
-   {
-     type: 'join-restriction',
-     rule: {
-       disallowedJoins: ['users', 'user_profiles'],
-     }
-   }
-   ```
-
-4. **export-restriction**: Restricts data export
-   ```typescript
-   {
-     type: 'export-restriction',
-     rule: {
-       restrictedFields: ['email', 'ssn'],
-       allowedFormats: ['csv', 'json'],
-       requireMasking: true,
-     }
-   }
-   ```
-
-### 4. Dataset Health Tests
+### 3. Dataset Health Tests
 
 Tests that masked/synthetic datasets meet privacy thresholds and statistical fidelity.
 
@@ -527,7 +411,6 @@ export const completeTestSuite: TestSuite = {
   // Test type flags
   includeAccessControlTests: true,
   includeDataBehaviorTests: true,
-  includeContractTests: true,
   includeDatasetHealthTests: true,
 
   // User roles to test
@@ -605,24 +488,6 @@ export const completeTestSuite: TestSuite = {
     viewer: ['users', 'user_profiles'],
   },
 
-  // Contracts
-  contracts: [
-    {
-      name: 'No Raw Email Export',
-      dataOwner: 'data-governance',
-      requirements: [
-        {
-          id: 'no-email-export',
-          description: 'No raw email addresses may be exported',
-          type: 'export-restriction',
-          rule: { restrictedFields: ['email'], requireMasking: true },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
-    },
-  ],
-
   // Datasets
   datasets: [
     {
@@ -695,7 +560,6 @@ export const simpleRBACSuite: TestSuite = {
   team: 'platform',
   includeAccessControlTests: true,
   includeDataBehaviorTests: false,
-  includeContractTests: false,
   includeDatasetHealthTests: false,
   userRoles: ['admin', 'viewer'],
   resources: [
@@ -721,7 +585,6 @@ export const abacTestSuite: TestSuite = {
   team: 'research',
   includeAccessControlTests: true,
   includeDataBehaviorTests: true,
-  includeContractTests: false,
   includeDatasetHealthTests: false,
   userRoles: ['researcher', 'analyst'],
   resources: [
@@ -752,45 +615,37 @@ export const abacTestSuite: TestSuite = {
 };
 ```
 
-### Example 3: Contract Test Suite
+### Example 3: DLP Test Suite with Contract Rules
+
+Contract rules (export restrictions, aggregation requirements, field restrictions, join restrictions) are now configured directly in DLP test configurations. See DLP test configuration documentation for details.
+
+### Example 4: Dataset Health Test Suite
 
 ```typescript
-export const contractTestSuite: TestSuite = {
-  name: 'Contract Compliance Tests',
-  application: 'data-export-service',
+export const datasetHealthTestSuite: TestSuite = {
+  name: 'Dataset Health Tests',
+  application: 'data-platform',
   team: 'data-platform',
   includeAccessControlTests: false,
-  includeDataBehaviorTests: true,
-  includeContractTests: true,
-  includeDatasetHealthTests: false,
+  includeDataBehaviorTests: false,
+  includeDatasetHealthTests: true,
   userRoles: ['analyst'],
   resources: [],
   contexts: [],
-  contracts: [
+  datasets: [
     {
-      name: 'GDPR Compliance',
-      dataOwner: 'legal',
-      requirements: [
-        {
-          id: 'no-pii-export',
-          description: 'No PII fields may be exported',
-          type: 'export-restriction',
-          rule: {
-            restrictedFields: ['email', 'ssn', 'phone'],
-            requireMasking: true,
-          },
-          enforcement: 'hard',
-        },
-        {
-          id: 'min-aggregation',
-          description: 'Minimum aggregation k=10',
-          type: 'aggregation-requirement',
-          rule: { minK: 10, requireAggregation: true },
-          enforcement: 'hard',
-        },
-      ],
-      machineReadable: true,
+      name: 'masked-users',
+      type: 'masked',
+      schema: { id: 'string', email_masked: 'string', name: 'string' },
+      recordCount: 1000,
+      piiFields: ['email_masked'],
     },
+  ],
+  privacyThresholds: [
+    { metric: 'k-anonymity', threshold: 10, operator: '>=' },
+  ],
+  statisticalFidelityTargets: [
+    { field: 'age', metric: 'mean', targetValue: 35.5, tolerance: 2.0 },
   ],
 };
 ```

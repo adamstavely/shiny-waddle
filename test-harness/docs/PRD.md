@@ -547,33 +547,29 @@ Heimdall will become the standard platform for automated access control and Zero
 - System MUST validate query structure and compliance
 - System MUST support multiple database dialects (PostgreSQL, MySQL, etc.)
 
-#### 4.1.3 Contract Testing
+#### 4.1.3 Contract Rules (Now Part of DLP Testing)
 
-**FR-CT-001: Machine-Readable Contracts**
-- System MUST support machine-readable contract definitions
-- System MUST allow data owners to define usage requirements
-- System MUST automatically generate tests from contract definitions
-- System MUST support contract versioning
+**Note**: Contract testing as a separate test type has been deprecated. Contract rules (export restrictions, aggregation requirements, field restrictions, join restrictions) are now configured directly in DLP test configurations.
 
-**FR-CT-002: Export Restrictions**
-- System MUST test restrictions on data exports
+**FR-CT-001: Export Restrictions (via DLP)**
+- System MUST test restrictions on data exports via DLP test configuration
 - System MUST validate export format restrictions (CSV, JSON, Excel)
 - System MUST validate export size limits
 - System MUST detect unauthorized export attempts
 
-**FR-CT-003: Aggregation Requirements**
-- System MUST validate minimum aggregation thresholds (k-anonymity)
+**FR-CT-002: Aggregation Requirements (via DLP)**
+- System MUST validate minimum aggregation thresholds (k-anonymity) via DLP test configuration
 - System MUST require aggregation when specified
 - System MUST detect queries that violate aggregation requirements
 
-**FR-CT-004: Field Restrictions**
-- System MUST test field-level access restrictions
+**FR-CT-003: Field Restrictions (via DLP)**
+- System MUST test field-level access restrictions via DLP test configuration
 - System MUST validate that restricted fields are not accessed
 - System MUST support masking requirements for restricted fields
 
-**FR-CT-005: Join Restrictions**
-- System MUST validate join operation restrictions
-- System MUST detect disallowed joins specified in contracts
+**FR-CT-004: Join Restrictions (via DLP)**
+- System MUST validate join operation restrictions via DLP test configuration
+- System MUST detect disallowed joins
 - System MUST block queries with restricted joins
 
 #### 4.1.4 Dataset Health Testing

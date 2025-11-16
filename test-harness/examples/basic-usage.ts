@@ -25,9 +25,6 @@ async function main() {
         { fieldPattern: '.*ssn.*', piiType: 'ssn' },
       ],
     },
-    contractTestConfig: {
-      autoGenerateTests: true,
-    },
     datasetHealthConfig: {
       privacyMetrics: [
         { name: 'k-anonymity', type: 'k-anonymity', threshold: 10 },
@@ -47,7 +44,6 @@ async function main() {
     team: 'my-team',
     includeAccessControlTests: true,
     includeDataBehaviorTests: true,
-    includeContractTests: false,
     includeDatasetHealthTests: false,
     userRoles: ['admin', 'viewer'],
     resources: [

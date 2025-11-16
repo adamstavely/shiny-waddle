@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/tests', '/access-control', '/platform-config', '/data-security', '/insights', '/admin'].includes(item.path)"
+            v-if="!['/tests', '/access-control', '/platform-config', '/insights', '/admin'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -92,7 +92,6 @@ const menuItems = [
   { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
   { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
   { path: '/platform-config', label: 'Platform Config', icon: Settings, divider: false },
-  { path: '/data-security', label: 'Data Security', icon: Database, divider: true },
 ];
 
 // Test pages
@@ -116,11 +115,6 @@ const platformConfigPages = [
   '/environment-config-testing'
 ];
 
-// Data Security pages
-const dataSecurityPages = [
-  '/datasets', '/contracts'
-];
-
 const isActive = (path: string): boolean => {
   if (path === '/insights') {
     return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
@@ -135,9 +129,6 @@ const isActive = (path: string): boolean => {
   if (path === '/platform-config') {
     return platformConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/data-security') {
-    return dataSecurityPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
-  }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
   }
@@ -146,7 +137,7 @@ const isActive = (path: string): boolean => {
 
 const handleNavClick = (path: string) => {
   // For drawer items, open the drawer with that category's content
-  if (['/tests', '/access-control', '/platform-config', '/data-security', '/insights', '/admin'].includes(path)) {
+  if (['/tests', '/access-control', '/platform-config', '/insights', '/admin'].includes(path)) {
     // Emit event to open drawer with specific category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
     return;
