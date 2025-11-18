@@ -23,6 +23,7 @@ import { BulkToggleDto } from './dto/bulk-toggle.dto';
 import { Application } from './entities/application.entity';
 import { AccessControlGuard, RequirePermission, Permission } from '../security/guards/access-control.guard';
 import { Request as ExpressRequest } from 'express';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/v1/applications')
 @UseGuards(AccessControlGuard)
@@ -43,6 +44,7 @@ export class ApplicationsController {
     return this.applicationsService.create(createApplicationDto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('team') team?: string,
@@ -61,6 +63,7 @@ export class ApplicationsController {
     return this.applicationsService.findAll();
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Application> {
     return this.applicationsService.findOne(id);
@@ -88,6 +91,45 @@ export class ApplicationsController {
   @Get(':id/test-batteries')
   async getTestBatteries(@Param('id') id: string): Promise<any[]> {
     return this.applicationsService.getAssignedTestBatteries(id);
+  }
+
+  @Get(':id/runs')
+  async getRuns(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+  ): Promise<any[]> {
+    return this.applicationsService.getRuns(id, limit ? parseInt(limit) : undefined);
+  }
+
+  @Public()
+  @Get('issues')
+  async getAllIssues(
+    @Query('limit') limit?: string,
+    @Query('priority') priority?: string,
+  ): Promise<any[]> {
+    return this.applicationsService.getAllIssues(
+      limit ? parseInt(limit) : undefined,
+      priority,
+    );
+  }
+
+  @Public()
+  @Get(':id/issues')
+  async getIssues(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @Query('priority') priority?: string,
+  ): Promise<any[]> {
+    return this.applicationsService.getIssues(
+      id,
+      limit ? parseInt(limit) : undefined,
+      priority,
+    );
+  }
+
+  @Get(':id/compliance-score')
+  async getComplianceScore(@Param('id') id: string): Promise<{ score: number }> {
+    return this.applicationsService.getComplianceScore(id);
   }
 
   @Post(':id/test')

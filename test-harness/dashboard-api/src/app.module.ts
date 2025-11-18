@@ -36,6 +36,8 @@ import { TestResultsModule } from './test-results/test-results.module';
 import { TestSuitesModule } from './test-suites/test-suites.module';
 import { TestHarnessesModule } from './test-harnesses/test-harnesses.module';
 import { TestBatteriesModule } from './test-batteries/test-batteries.module';
+import { RunsModule } from './runs/runs.module';
+import { ComplianceSnapshotsModule } from './compliance-snapshots/compliance-snapshots.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FindingApprovalsModule } from './finding-approvals/finding-approvals.module';
 import { UsersModule } from './users/users.module';
@@ -43,6 +45,10 @@ import { EnvironmentConfigModule } from './environment-config/environment-config
 import { TestsModule } from './tests/tests.module';
 import { AuthModule } from './auth/auth.module';
 import { RiskScoringModule } from './risk-scoring/risk-scoring.module';
+import { DataClassificationModule } from './data-classification/data-classification.module';
+import { PlatformConfigModule } from './platform-config/platform-config.module';
+import { ExceptionsModule } from './exceptions/exceptions.module';
+import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -87,12 +93,18 @@ import { AppController } from './app.controller';
     TestSuitesModule,
     TestHarnessesModule,
     TestBatteriesModule,
+    RunsModule,
+    ComplianceSnapshotsModule,
     NotificationsModule,
     FindingApprovalsModule,
     UsersModule,
     EnvironmentConfigModule,
     TestsModule,
     RiskScoringModule,
+    DataClassificationModule,
+    PlatformConfigModule,
+    ExceptionsModule,
+    StandardsMappingModule,
   ],
   controllers: [AppController],
   providers: [

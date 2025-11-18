@@ -11,7 +11,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TestType } from '../../../../core/types';
+import { TestType, TestDomain } from '../../../../core/types';
 
 export class CreateAccessControlTestDto {
   @IsNotEmpty()
@@ -167,8 +167,28 @@ export class CreateTestDto {
     'distributed-systems',
     'api-security',
     'data-pipeline',
+    'data-contract',
+    'salesforce-config',
+    'salesforce-security',
+    'elastic-config',
+    'elastic-security',
+    'k8s-security',
+    'k8s-workload',
+    'idp-compliance',
   ])
   testType: TestType;
+
+  @IsOptional()
+  @IsEnum([
+    'api_security',
+    'platform_config',
+    'identity',
+    'data_contracts',
+    'salesforce',
+    'elastic',
+    'idp_platform',
+  ])
+  domain?: TestDomain; // Optional: will be auto-populated from testType if not provided
 
   @IsOptional()
   @IsString()
@@ -293,6 +313,10 @@ export class CreateTestDto {
   policyType?: string;
 
   // DistributedSystemsTest fields
+  @IsOptional()
+  @IsEnum(['policy-consistency', 'multi-region', 'synchronization', 'transaction', 'eventual-consistency'])
+  distributedTestType?: 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency';
+
   @IsOptional()
   @IsObject()
   region?: any;

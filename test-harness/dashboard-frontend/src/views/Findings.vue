@@ -69,6 +69,12 @@
           placeholder="All Types"
           class="filter-dropdown"
         />
+        <Dropdown
+          v-model="resultsFilterDomain"
+          :options="resultsDomainOptions"
+          placeholder="All Domains"
+          class="filter-dropdown"
+        />
       </div>
 
       <div class="results-list">
@@ -439,6 +445,7 @@ const resultsFilterBattery = ref('');
 const resultsFilterApplication = ref('');
 const resultsFilterStatus = ref('');
 const resultsFilterType = ref('');
+const resultsFilterDomain = ref('');
 
 const showResultDetail = ref(false);
 const selectedResult = ref<any>(null);
@@ -501,6 +508,17 @@ const resultsTypeOptions = computed(() => [
   { label: 'Dataset Health', value: 'dataset-health' }
 ]);
 
+const resultsDomainOptions = computed(() => [
+  { label: 'All Domains', value: '' },
+  { label: 'API Security', value: 'api_security' },
+  { label: 'Platform Configuration', value: 'platform_config' },
+  { label: 'Identity', value: 'identity' },
+  { label: 'Data Contracts', value: 'data_contracts' },
+  { label: 'Salesforce', value: 'salesforce' },
+  { label: 'Elastic', value: 'elastic' },
+  { label: 'IDP / Kubernetes', value: 'idp_platform' },
+]);
+
 const filteredResults = computed(() => {
   if (!testResults.value) return [];
   return testResults.value.filter(result => {
@@ -518,7 +536,8 @@ const filteredResults = computed(() => {
       (resultsFilterStatus.value === 'passed' && result.passed) ||
       (resultsFilterStatus.value === 'failed' && !result.passed);
     const matchesType = !resultsFilterType.value || result.testType === resultsFilterType.value;
-    return matchesSuite && matchesHarness && matchesBattery && matchesApplication && matchesStatus && matchesType;
+    const matchesDomain = !resultsFilterDomain.value || result.domain === resultsFilterDomain.value;
+    return matchesSuite && matchesHarness && matchesBattery && matchesApplication && matchesStatus && matchesType && matchesDomain;
   });
 });
 

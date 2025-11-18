@@ -36,15 +36,24 @@ export class TestHarnessesController {
   async findAll(
     @Query('applicationId') applicationId?: string,
     @Query('suiteId') suiteId?: string,
+    @Query('domain') domain?: string,
   ): Promise<TestHarnessEntity[]> {
-    this.logger.log(`Listing test harnesses${applicationId ? ` for application ${applicationId}` : ''}${suiteId ? ` for suite ${suiteId}` : ''}`);
+    this.logger.log(`Listing test harnesses${applicationId ? ` for application ${applicationId}` : ''}${suiteId ? ` for suite ${suiteId}` : ''}${domain ? ` for domain ${domain}` : ''}`);
+    let harnesses: TestHarnessEntity[];
     if (applicationId) {
-      return this.testHarnessesService.findByApplication(applicationId);
+      harnesses = await this.testHarnessesService.findByApplication(applicationId);
+    } else if (suiteId) {
+      harnesses = await this.testHarnessesService.findByTestSuite(suiteId);
+    } else {
+      harnesses = await this.testHarnessesService.findAll();
     }
-    if (suiteId) {
-      return this.testHarnessesService.findByTestSuite(suiteId);
+    
+    // Filter by domain if provided
+    if (domain) {
+      harnesses = harnesses.filter(h => h.domain === domain);
     }
-    return this.testHarnessesService.findAll();
+    
+    return harnesses;
   }
 
   @Get(':id')
@@ -107,6 +116,20 @@ export class TestHarnessesController {
   ): Promise<TestHarnessEntity> {
     this.logger.log(`Unassigning harness ${id} from application ${appId}`);
     return this.testHarnessesService.unassignFromApplication(id, appId);
+  }
+
+  @Get(':id/used-in-batteries')
+  @HttpCode(HttpStatus.OK)
+  async getUsedInBatteries(@Param('id') id: string): Promise<any[]> {
+    this.logger.log(`Getting batteries using harness: ${id}`);
+    return this.testHarnessesService.getUsedInBatteries(id);
+  }
+
+  @Get(':id/assigned-applications')
+  @HttpCode(HttpStatus.OK)
+  async getAssignedApplications(@Param('id') id: string): Promise<any[]> {
+    this.logger.log(`Getting applications assigned to harness: ${id}`);
+    return this.testHarnessesService.getAssignedApplications(id);
   }
 }
 

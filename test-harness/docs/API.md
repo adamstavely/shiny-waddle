@@ -2559,6 +2559,214 @@ GET /api/test-results?testHarnessId=harness-123&status=failed&limit=10
 ]
 ```
 
+### Risk Acceptance for Test Results
+
+Manage risk acceptance for individual test results. These endpoints allow you to accept or reject risk for failed test results, with optional expiration dates and ticket linking.
+
+#### Accept Risk
+
+Accept risk for a failed test result.
+
+```http
+POST /api/v1/test-results/:id/accept-risk
+```
+
+**Request Body:**
+```json
+{
+  "reason": "False positive - test configuration issue",
+  "approver": "john.doe@example.com",
+  "expirationDate": "2024-12-31T23:59:59Z",
+  "ticketLink": "https://jira.example.com/bug/12345"
+}
+```
+
+**Request Body Fields:**
+- `reason` (string, required): Explanation for accepting this risk
+- `approver` (string, required): Email or identifier of the person approving the risk
+- `expirationDate` (string, optional): ISO 8601 date when the risk acceptance expires. If not provided, the acceptance does not expire
+- `ticketLink` (string, optional): Link to tracking ticket or issue
+
+**Response:**
+```json
+{
+  "id": "result-123",
+  "applicationId": "app-1",
+  "applicationName": "My Application",
+  "testConfigurationId": "config-1",
+  "testConfigurationName": "RLS Coverage Test",
+  "testConfigurationType": "rls-cls",
+  "status": "failed",
+  "passed": false,
+  "riskAcceptance": {
+    "status": "accepted",
+    "reason": "False positive - test configuration issue",
+    "approver": "john.doe@example.com",
+    "acceptedAt": "2024-01-15T10:00:00Z",
+    "expirationDate": "2024-12-31T23:59:59Z",
+    "ticketLink": "https://jira.example.com/bug/12345"
+  },
+  "buildId": "build-456",
+  "branch": "main",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "duration": 1250,
+  "result": {},
+  "error": null,
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Reject Risk
+
+Reject a previously accepted risk or explicitly reject risk acceptance for a test result.
+
+```http
+POST /api/v1/test-results/:id/reject-risk
+```
+
+**Request Body:**
+```json
+{
+  "reason": "Risk is too high, must be remediated",
+  "approver": "jane.smith@example.com"
+}
+```
+
+**Request Body Fields:**
+- `reason` (string, required): Explanation for rejecting the risk
+- `approver` (string, required): Email or identifier of the person rejecting the risk
+
+**Response:**
+```json
+{
+  "id": "result-123",
+  "applicationId": "app-1",
+  "applicationName": "My Application",
+  "testConfigurationId": "config-1",
+  "testConfigurationName": "RLS Coverage Test",
+  "testConfigurationType": "rls-cls",
+  "status": "failed",
+  "passed": false,
+  "riskAcceptance": {
+    "status": "rejected",
+    "reason": "Risk is too high, must be remediated",
+    "approver": "jane.smith@example.com",
+    "rejectedAt": "2024-01-15T11:00:00Z"
+  },
+  "buildId": "build-456",
+  "branch": "main",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "duration": 1250,
+  "result": {},
+  "error": null,
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### Remediation Tracking for Test Results
+
+Track remediation progress for failed test results. This endpoint allows you to update the remediation status, link tickets, assign owners, and track progress.
+
+#### Update Remediation
+
+Update remediation tracking information for a test result.
+
+```http
+PUT /api/v1/test-results/:id/remediation
+```
+
+**Request Body:**
+```json
+{
+  "status": "in-progress",
+  "ticketLink": "https://jira.example.com/bug/12345",
+  "assignedTo": "developer@example.com",
+  "targetDate": "2024-02-15T23:59:59Z",
+  "notes": "Working on fixing RLS policies",
+  "progress": 45,
+  "steps": [
+    {
+      "step": "Identify root cause",
+      "status": "completed",
+      "completedAt": "2024-01-20T10:00:00Z"
+    },
+    {
+      "step": "Update RLS policies",
+      "status": "in-progress",
+      "completedAt": null
+    },
+    {
+      "step": "Verify fix with tests",
+      "status": "pending",
+      "completedAt": null
+    }
+  ]
+}
+```
+
+**Request Body Fields:**
+- `status` (string, optional): Current remediation status. One of: `not-started`, `in-progress`, `completed`
+- `ticketLink` (string, optional): Link to tracking ticket or issue
+- `assignedTo` (string, optional): Email or identifier of person assigned to remediation
+- `targetDate` (string, optional): ISO 8601 date for target completion
+- `notes` (string, optional): Additional notes about remediation progress
+- `progress` (number, optional): Progress percentage (0-100)
+- `steps` (array, optional): Array of remediation steps with status tracking
+
+**Step Object Fields:**
+- `step` (string, required): Description of the step
+- `status` (string, required): Step status. One of: `pending`, `in-progress`, `completed`
+- `completedAt` (string, optional): ISO 8601 date when step was completed
+
+**Response:**
+```json
+{
+  "id": "result-123",
+  "applicationId": "app-1",
+  "applicationName": "My Application",
+  "testConfigurationId": "config-1",
+  "testConfigurationName": "RLS Coverage Test",
+  "testConfigurationType": "rls-cls",
+  "status": "failed",
+  "passed": false,
+  "remediation": {
+    "status": "in-progress",
+    "ticketLink": "https://jira.example.com/bug/12345",
+    "assignedTo": "developer@example.com",
+    "targetDate": "2024-02-15T23:59:59Z",
+    "notes": "Working on fixing RLS policies",
+    "progress": 45,
+    "steps": [
+      {
+        "step": "Identify root cause",
+        "status": "completed",
+        "completedAt": "2024-01-20T10:00:00Z"
+      },
+      {
+        "step": "Update RLS policies",
+        "status": "in-progress",
+        "completedAt": null
+      },
+      {
+        "step": "Verify fix with tests",
+        "status": "pending",
+        "completedAt": null
+      }
+    ],
+    "updatedAt": "2024-01-20T14:30:00Z"
+  },
+  "buildId": "build-456",
+  "branch": "main",
+  "timestamp": "2024-01-15T10:00:00Z",
+  "duration": 1250,
+  "result": {},
+  "error": null,
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+**Note:** These endpoints are specific to test results. For managing risk acceptance requests and remediation tracking at a higher level (across multiple findings), see the Finding Approvals and Remediation Tracking module endpoints documented elsewhere in this API documentation.
+
 ## Environment Configuration Endpoints
 
 ### Validate Environment

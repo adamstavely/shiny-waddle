@@ -20,7 +20,7 @@
             </p>
             <div class="hero-actions">
               <router-link to="/dashboard" class="btn-primary">View Dashboard</router-link>
-              <router-link to="/tests" class="btn-secondary">Run Tests</router-link>
+              <router-link to="/runs" class="btn-secondary">View Runs & Reports</router-link>
             </div>
           </div>
           <div class="hero-visual">

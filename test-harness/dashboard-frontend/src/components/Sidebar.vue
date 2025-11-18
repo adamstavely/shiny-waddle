@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/tests', '/access-control', '/platform-config', '/insights', '/admin'].includes(item.path)"
+            v-if="!['/test-design-library', '/admin'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -80,7 +80,9 @@ import {
   FileCheck,
   CheckCircle2,
   UserCog,
-  KeyRound
+  KeyRound,
+  BookOpen,
+  PlayCircle
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -88,45 +90,51 @@ const router = useRouter();
 const currentPath = ref(route.path);
 
 const menuItems = [
-  { path: '/insights', label: 'Insights', icon: LayoutDashboard, divider: false },
-  { path: '/tests', label: 'Tests', icon: TestTube, divider: false },
-  { path: '/access-control', label: 'Access Control', icon: Shield, divider: false },
-  { path: '/platform-config', label: 'Platform Config', icon: Settings, divider: false },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, divider: false },
+  { path: '/applications', label: 'Applications', icon: Database, divider: false },
+  { path: '/test-design-library', label: 'Test Design Library', icon: BookOpen, divider: false },
+  { path: '/policies', label: 'Policies & Config', icon: Shield, divider: false },
+  { path: '/runs', label: 'Runs & Reports', icon: PlayCircle, divider: false },
 ];
 
-// Test pages
-const testPages = [
-  '/policy-validation',
-  '/api-security', '/users', '/api-gateway', '/dlp',
-  '/distributed-systems', '/network-policies',
-  '/rls-cls'
+// Test Design Library pages
+const testDesignLibraryPages = [
+  '/tests',
+  '/tests/batteries', '/tests/harnesses', '/tests/suites',
+  '/tests/individual', '/tests/library', '/tests/findings',
+  '/tests/history'
 ];
 
-// Access Control pages
-const accessControlPages = [
-  '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation'
-];
-
-// Platform Config pages
-const platformConfigPages = [
+// Policies & Config pages
+const policiesConfigPages = [
+  '/policies',
+  '/resources',
   '/configuration-validation',
   '/environment-config-testing'
 ];
 
+// Runs & Reports pages
+const runsReportsPages = [
+  '/runs',
+  '/reports',
+  '/compliance-trends'
+];
+
 const isActive = (path: string): boolean => {
-  if (path === '/insights') {
-    return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
+  if (path === '/dashboard') {
+    return currentPath.value === '/dashboard' || currentPath.value === '/';
   }
-  if (path === '/tests') {
-    return currentPath.value === '/tests' || currentPath.value.startsWith('/tests/') ||
-           testPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  if (path === '/applications') {
+    return currentPath.value === '/applications' || currentPath.value.startsWith('/applications/');
   }
-  if (path === '/access-control') {
-    return accessControlPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  if (path === '/test-design-library') {
+    return testDesignLibraryPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/platform-config') {
-    return platformConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  if (path === '/policies') {
+    return policiesConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
+  if (path === '/runs') {
+    return runsReportsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
@@ -136,9 +144,14 @@ const isActive = (path: string): boolean => {
 
 const handleNavClick = (path: string) => {
   // For drawer items, open the drawer with that category's content
-  if (['/tests', '/access-control', '/platform-config', '/insights', '/admin'].includes(path)) {
-    // Emit event to open drawer with specific category
-    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: path.replace('/', '') } }));
+  if (path === '/test-design-library') {
+    // Emit event to open drawer with test-design-library category
+    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'test-design-library' } }));
+    return;
+  }
+  if (path === '/admin') {
+    // Emit event to open drawer with admin category
+    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'admin' } }));
     return;
   }
   // Use Vue Router for navigation

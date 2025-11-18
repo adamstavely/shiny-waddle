@@ -6,6 +6,9 @@ export enum ApplicationType {
   MICROSERVICE = 'microservice',
   PIPELINE = 'pipeline',
   DATABASE = 'database',
+  SALESFORCE_ORG = 'salesforce_org',
+  ELASTIC_CLUSTER = 'elastic_cluster',
+  KUBERNETES_CLUSTER = 'kubernetes_cluster',
 }
 
 export enum ApplicationStatus {

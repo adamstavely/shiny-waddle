@@ -52,6 +52,16 @@ export interface ReportingConfig {
   includeDetails?: boolean;
 }
 
+// Test Domain Union - all supported test domains
+export type TestDomain =
+  | 'api_security'
+  | 'platform_config'
+  | 'identity'
+  | 'data_contracts'
+  | 'salesforce'
+  | 'elastic'
+  | 'idp_platform';
+
 // Test Type Union - all supported test types
 export type TestType = 
   | 'access-control' 
@@ -62,7 +72,15 @@ export type TestType =
   | 'api-gateway'
   | 'distributed-systems'
   | 'api-security'
-  | 'data-pipeline';
+  | 'data-pipeline'
+  | 'data-contract'
+  | 'salesforce-config'
+  | 'salesforce-security'
+  | 'elastic-config'
+  | 'elastic-security'
+  | 'k8s-security'
+  | 'k8s-workload'
+  | 'idp-compliance';
 
 // TestSuite - collection of tests (no configuration, tests are pre-made)
 export interface TestSuite {
@@ -71,6 +89,7 @@ export interface TestSuite {
   application: string;
   team: string;
   testType: TestType; // All tests in suite must match this type
+  domain: TestDomain; // Domain for this test suite
   testIds: string[]; // References to Test entities
   description?: string;
   enabled: boolean;
@@ -111,6 +130,7 @@ export interface BaseTest {
   name: string;
   description?: string;
   testType: TestType;
+  domain: TestDomain; // Domain for this test
   version: number;
   versionHistory?: TestVersion[];
   createdAt: Date;
@@ -203,12 +223,19 @@ export interface APIGatewayTest extends BaseTest {
 // Distributed Systems Test
 export interface DistributedSystemsTest extends BaseTest {
   testType: 'distributed-systems';
-  region: {
+  distributedTestType?: 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency';
+  region?: {
     id: string;
     name: string;
     endpoint: string;
     pdpEndpoint?: string;
   };
+  regions?: Array<{
+    id: string;
+    name: string;
+    endpoint: string;
+    pdpEndpoint?: string;
+  }>;
   expectedResult?: any;
 }
 
@@ -226,6 +253,8 @@ export interface APISecurityTest extends BaseTest {
   // OR Gateway Policy test
   gatewayPolicy?: {
     gatewayType: 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy';
+    endpoint: string;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     policyId: string;
     policyType: 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching';
     route?: { path: string; method: string; target: string };
@@ -776,8 +805,12 @@ export interface TestHarness {
   id: string;
   name: string;
   description: string;
-  testType: TestType; // Required: all suites in harness must have this type
-  testSuiteIds: string[]; // Many-to-many: suites can be in multiple harnesses (all must match testType)
+  domain: TestDomain; // Required: all suites in harness must have this domain
+  /**
+   * @deprecated Use domain instead. Kept for backward compatibility during migration.
+   */
+  testType?: TestType; // Deprecated: all suites in harness must have this type
+  testSuiteIds: string[]; // Many-to-many: suites can be in multiple harnesses (all must match domain)
   applicationIds: string[]; // Assigned to applications
   team?: string;
   createdAt: Date;

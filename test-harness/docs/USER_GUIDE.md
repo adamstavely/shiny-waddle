@@ -354,12 +354,27 @@ Test Harnesses are collections of Test Suites that can be assigned to applicatio
 4. Select applications in the **Applications** multi-select
 5. Click **Save**
 
-**Method 2: From Application Page**
+**Method 2: From Application Detail Page**
 1. Navigate to **Applications**
-2. Click on an application
-3. Click **Manage Assignments**
-4. In the **Test Harnesses** section, check/uncheck harnesses
-5. Click **Save**
+2. Click on an application to view its detail page
+3. Click **Manage Assignments** button
+4. In the **Test Harnesses** section, click **Assign Harness** to add a new harness
+5. Select a harness from the list to assign it
+6. To unassign a harness, click **Unassign** next to the harness
+7. Changes are saved automatically
+
+**Method 3: From Applications List Page**
+1. Navigate to **Applications**
+2. In the applications table, find the application you want to manage
+3. Click the **Manage Assignments** button in the Actions column
+4. A modal will open showing the assignment manager
+5. In the **Test Harnesses** section:
+   - Click **Assign Harness** to add a new harness
+   - Select a harness from the available list
+   - Click **Unassign** to remove a harness assignment
+6. Close the modal when done - changes are saved automatically
+
+**Note:** Test Batteries are automatically shown based on the harnesses assigned to the application. You cannot directly assign batteries - they are derived from the harness assignments.
 
 #### Viewing Assignments
 
@@ -1059,66 +1074,150 @@ The Findings tab supports multiple filters:
 
 ## Risk Acceptance Workflow
 
-When a test fails, you may need to accept the risk if it's a false positive or acceptable risk. The dashboard provides a workflow for requesting and approving risk acceptance.
+When a test fails, you may need to accept the risk if it's a false positive or acceptable risk. The dashboard provides a workflow for accepting risk directly on test results.
 
-### Requesting Risk Acceptance
+### Accepting Risk on Test Results
+
+You can accept risk directly on individual test results without going through a request/approval workflow. This is useful for quick risk acceptance when you have the authority to make the decision.
+
+**Step-by-Step Guide:**
 
 1. Navigate to **Tests** → **Findings** tab
-2. Find a failed test result
-3. Click **Accept Risk** button
+2. Find a failed test result that you want to accept risk for
+3. Click **Accept Risk** button (or use the action menu)
+4. Fill in the risk acceptance form:
+   - **Reason** (required): Explain why you're accepting this risk
+     - Example: "False positive - test configuration issue"
+     - Example: "Acceptable risk - documented exception"
+   - **Approver** (required): Your email or identifier
+   - **Expiration Date** (optional): Set when the risk acceptance should expire
+     - Leave blank for permanent acceptance
+     - Useful for temporary exceptions that need review
+   - **Ticket Link** (optional): Link to tracking ticket or issue
+     - Example: "https://jira.example.com/bug/12345"
+5. Click **Accept Risk**
+
+**Example Scenarios:**
+
+- **False Positive**: Test is incorrectly failing due to test configuration issues
+- **Documented Exception**: Risk is acceptable and documented in policy
+- **Temporary Exception**: Risk is acceptable for a limited time period
+
+### Expiration and Renewal
+
+If you set an expiration date on a risk acceptance:
+
+- The risk acceptance will automatically expire on that date
+- You'll need to renew it if the risk is still acceptable
+- Expired risk acceptances will show as expired in the UI
+- You can renew by accepting risk again with a new expiration date
+
+### Rejecting Risk
+
+If you need to reject a previously accepted risk:
+
+1. Navigate to **Tests** → **Findings** tab
+2. Find the test result with accepted risk
+3. Click **Reject Risk** button
 4. Fill in the form:
-   - **Reason**: Explain why you're accepting this risk (required)
-   - **Justification**: Provide additional context (required)
-   - **Ticket Link**: Optional link to tracking ticket
-5. Click **Submit**
+   - **Reason** (required): Explain why you're rejecting the risk
+   - **Approver** (required): Your email or identifier
+5. Click **Reject Risk**
 
-The request will be sent to the appropriate approvers based on the finding severity:
-- **Critical**: Requires both Cyber Risk Manager and Data Steward approval
-- **High**: Requires Cyber Risk Manager approval
-- **Medium/Low**: Requires Cyber Risk Manager approval (Data Steward can also approve)
+**Note:** This workflow is for direct risk acceptance on test results. For formal risk acceptance requests that require approval workflows, see the Finding Approvals module documentation.
 
-### Approving Risk Acceptance
+### Remediation Tracking Workflow
 
-1. Navigate to **Tests** → **Findings** tab
-2. Find results with pending risk acceptance requests
-3. Review the request details
-4. Click **Approve** or **Reject**
-5. Provide comments if rejecting
+For test results that need to be fixed, you can track remediation progress with detailed status, steps, and progress tracking.
 
-### Remediation Tracking
-
-For findings that need to be fixed, you can track remediation progress:
+**Starting Remediation:**
 
 1. Navigate to **Tests** → **Findings** tab
-2. Find a failed test result
-3. Click **Start Remediation** button
-4. Fill in the form:
+2. Find a failed test result that needs remediation
+3. Click **Start Remediation** or **Update Remediation** button
+4. Fill in the remediation form:
    - **Status**: Current remediation status
+     - `not-started`: Remediation hasn't begun
+     - `in-progress`: Actively working on remediation
+     - `completed`: Remediation is finished
+   - **Assigned To**: Email or identifier of person responsible
+   - **Target Date**: When you plan to complete remediation
+   - **Ticket Link**: Link to tracking ticket (e.g., JIRA, GitHub issue)
    - **Progress**: Percentage complete (0-100)
-   - **Current Step**: What step you're working on
-   - **Notes**: Additional notes about progress
+   - **Notes**: Additional notes about progress, blockers, or context
+   - **Steps**: Define remediation steps with status tracking
 5. Click **Save**
 
-You can update remediation progress as you work:
-- Update the progress percentage
-- Mark steps as completed
-- Add notes about progress
-- Link to tracking tickets
+**Defining Remediation Steps:**
+
+You can break down remediation into discrete steps for better tracking:
+
+1. Click **Add Step** in the remediation form
+2. Enter a description of the step (e.g., "Identify root cause", "Update RLS policies")
+3. Set the step status:
+   - `pending`: Step hasn't started
+   - `in-progress`: Currently working on this step
+   - `completed`: Step is finished
+4. Steps are automatically marked as completed when you update their status
+
+**Example Remediation Steps:**
+
+```
+1. Identify root cause (completed)
+2. Update RLS policies (in-progress)
+3. Verify fix with tests (pending)
+4. Deploy to production (pending)
+```
+
+**Updating Remediation Progress:**
+
+As you work on remediation, you can update progress:
+
+1. Navigate to the test result in **Tests** → **Findings** tab
+2. Click **Update Remediation**
+3. Update any of the following:
+   - **Status**: Change from `in-progress` to `completed` when done
+   - **Progress**: Update percentage as you make progress
+   - **Steps**: Mark steps as completed as you finish them
+   - **Notes**: Add updates about progress, blockers, or changes
+   - **Ticket Link**: Update if ticket changes
+4. Click **Save**
+
+**Best Practices:**
+
+- **Set Target Dates**: Always set a target date to track against deadlines
+- **Link Tickets**: Link to your issue tracker for full context
+- **Break into Steps**: Define clear steps for complex remediations
+- **Update Regularly**: Update progress as you work to keep stakeholders informed
+- **Document Blockers**: Use notes to document blockers or dependencies
+- **Mark Complete**: Don't forget to mark status as `completed` when done
 
 ### Risk Status Indicators
 
-Results show risk status with badges:
-- **No Risk**: No risk acceptance requested
-- **Pending**: Risk acceptance request pending approval
-- **Accepted**: Risk has been accepted
+Test results show risk status with badges:
+- **No Risk**: No risk acceptance has been set
+- **Accepted**: Risk has been accepted (may show expiration date if set)
 - **Rejected**: Risk acceptance was rejected
+- **Expired**: Risk acceptance has expired (if expiration date was set)
+
+**Understanding Risk Acceptance:**
+- Risk acceptance is immediate - no approval workflow required
+- You can set expiration dates for temporary exceptions
+- Expired acceptances need to be renewed
+- Rejected risks indicate the risk must be remediated
 
 ### Remediation Status Indicators
 
-Results show remediation status with badges:
-- **Not Started**: No remediation tracking
-- **In Progress**: Remediation is in progress
-- **Completed**: Remediation is complete
+Test results show remediation status with badges:
+- **Not Started**: No remediation tracking has been set up
+- **In Progress**: Remediation is actively being worked on
+- **Completed**: Remediation is finished
+
+**Understanding Remediation Status:**
+- Status transitions: `not-started` → `in-progress` → `completed`
+- Progress percentage shows completion (0-100%)
+- Steps show detailed breakdown of remediation work
+- Target dates help track against deadlines
 
 ---
 

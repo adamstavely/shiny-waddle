@@ -86,7 +86,6 @@ export class ComplianceDashboard {
         overallScore: appScores.overall,
         scoresByCategory: {
           accessControl: appScores.byCategory['access-control'] || 100,
-          dataBehavior: appScores.byCategory['data-behavior'] || 100,
           contracts: appScores.byCategory['contract'] || 100,
           datasetHealth: appScores.byCategory['dataset-health'] || 100,
         },
@@ -122,7 +121,6 @@ export class ComplianceDashboard {
         overallScore: teamScores.overall,
         scoresByCategory: {
           accessControl: teamScores.byCategory['access-control'] || 100,
-          dataBehavior: teamScores.byCategory['data-behavior'] || 100,
           contracts: teamScores.byCategory['contract'] || 100,
           datasetHealth: teamScores.byCategory['dataset-health'] || 100,
         },
@@ -160,7 +158,6 @@ export class ComplianceDashboard {
         overallScore: datasetScores.overall,
         scoresByCategory: {
           accessControl: 100,
-          dataBehavior: 100,
           contracts: 100,
           datasetHealth: datasetScores.overall,
         },

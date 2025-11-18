@@ -136,6 +136,13 @@
             <p>Execution results will appear here after battery runs in CI/CD</p>
           </div>
         </div>
+
+        <!-- Cross Links -->
+        <CrossLinkPanel
+          v-if="battery"
+          entity-type="test-battery"
+          :entity-id="battery.id"
+        />
       </div>
     </div>
 
@@ -210,6 +217,7 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import CrossLinkPanel from '../components/CrossLinkPanel.vue';
 import TestBatteryModal from '../components/TestBatteryModal.vue';
 import type { TestBattery } from '../../core/types';
 

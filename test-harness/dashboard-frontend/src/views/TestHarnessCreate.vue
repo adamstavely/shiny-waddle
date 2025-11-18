@@ -39,17 +39,13 @@
 
             <div class="form-group">
               <label>Test Type *</label>
-              <select v-model="form.testType" required class="form-input form-select">
-                <option value="">Select a test type...</option>
-                <option value="access-control">Access Control</option>
-                <option value="rls-cls">RLS/CLS</option>
-                <option value="network-policy">Network Policy</option>
-                <option value="dlp">DLP</option>
-                <option value="api-gateway">API Gateway</option>
-                <option value="distributed-systems">Distributed Systems</option>
-                <option value="api-security">API Security</option>
-                <option value="data-pipeline">Data Pipeline</option>
-              </select>
+              <Dropdown
+                v-model="form.testType"
+                :options="testTypeOptions"
+                placeholder="Select a test type..."
+                required
+                class="form-input"
+              />
               <p class="field-help">All test suites in this harness must have the same test type.</p>
             </div>
 
@@ -145,8 +141,18 @@ import { useRouter } from 'vue-router';
 import { Layers, Save, ArrowLeft } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import Dropdown from '../components/Dropdown.vue';
 
 const router = useRouter();
+
+const testTypeOptions = [
+  { label: 'Access Control', value: 'access-control' },
+  { label: 'Network Policy', value: 'network-policy' },
+  { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
+  { label: 'Distributed Systems', value: 'distributed-systems' },
+  { label: 'API Security', value: 'api-security' },
+  { label: 'Data Pipeline', value: 'data-pipeline' },
+];
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },

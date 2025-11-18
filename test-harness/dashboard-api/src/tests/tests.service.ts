@@ -13,8 +13,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { TestEntity } from './entities/test.entity';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
-import { Test, TestVersion, AccessControlTest } from '../../../../core/types';
+import { Test, TestVersion, AccessControlTest, TestType } from '../../../../core/types';
 import { PoliciesService } from '../policies/policies.service';
+import { getDomainFromTestType } from '../../../../core/domain-mapping';
 
 @Injectable()
 export class TestsService {
@@ -122,9 +123,23 @@ export class TestsService {
       await this.validatePolicies(dto.policyIds);
     }
 
+    // Auto-populate domain from testType if not provided
+    const domain = dto.domain || getDomainFromTestType(dto.testType as TestType);
+    
+    // Validate that provided domain matches testType mapping
+    if (dto.domain) {
+      const expectedDomain = getDomainFromTestType(dto.testType as TestType);
+      if (dto.domain !== expectedDomain) {
+        throw new BadRequestException(
+          `Domain "${dto.domain}" does not match testType "${dto.testType}" (expected: "${expectedDomain}")`
+        );
+      }
+    }
+
     const test: TestEntity = {
       id: uuidv4(),
       ...dto,
+      domain,
       version: 1,
       versionHistory: [],
       createdAt: new Date(),
@@ -140,13 +155,17 @@ export class TestsService {
     return test;
   }
 
-  async findAll(filters?: { testType?: string; policyId?: string }): Promise<TestEntity[]> {
+  async findAll(filters?: { testType?: string; policyId?: string; domain?: string }): Promise<TestEntity[]> {
     await this.loadTests();
     
     let filtered = [...this.tests];
     
     if (filters?.testType) {
       filtered = filtered.filter(t => t.testType === filters.testType);
+    }
+    
+    if (filters?.domain) {
+      filtered = filtered.filter(t => t.domain === filters.domain);
     }
     
     if (filters?.policyId) {
@@ -254,6 +273,21 @@ export class TestsService {
       changes,
     });
     
+    // Auto-update domain if testType changes
+    let domain = oldTest.domain;
+    if (dto.testType && dto.testType !== oldTest.testType) {
+      domain = getDomainFromTestType(dto.testType as TestType);
+    } else if (dto.domain) {
+      // Validate provided domain matches testType
+      const expectedDomain = getDomainFromTestType((dto.testType || oldTest.testType) as TestType);
+      if (dto.domain !== expectedDomain) {
+        throw new BadRequestException(
+          `Domain "${dto.domain}" does not match testType "${dto.testType || oldTest.testType}" (expected: "${expectedDomain}")`
+        );
+      }
+      domain = dto.domain;
+    }
+    
     // Keep only last 10 versions
     if (versionHistory.length > 10) {
       versionHistory.shift();
@@ -263,6 +297,7 @@ export class TestsService {
     const updatedTest: TestEntity = {
       ...oldTest,
       ...dto,
+      domain,
       version: newVersion,
       versionHistory,
       updatedAt: new Date(),
@@ -288,6 +323,33 @@ export class TestsService {
     await this.saveTests();
     
     this.logger.log(`Deleted test ${id}`);
+  }
+
+  async getUsedInSuites(testId: string): Promise<any[]> {
+    await this.loadTests();
+    const test = await this.findOne(testId);
+    if (!test) {
+      return [];
+    }
+
+    // Read test suites file to find which suites use this test
+    const suitesFile = path.join(process.cwd(), 'data', 'test-suites.json');
+    try {
+      const data = await fs.readFile(suitesFile, 'utf-8');
+      if (!data || data.trim() === '') {
+        return [];
+      }
+      const suites = JSON.parse(data);
+      return suites
+        .filter((s: any) => s.testIds && s.testIds.includes(testId))
+        .map((s: any) => ({
+          id: s.id,
+          name: s.name,
+        }));
+    } catch (err) {
+      this.logger.error('Error getting suites for test:', err);
+      return [];
+    }
   }
 }
 

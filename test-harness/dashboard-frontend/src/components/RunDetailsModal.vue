@@ -1,104 +1,124 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="isOpen && run" class="modal-overlay" @click="close">
-        <div class="modal-content run-details" @click.stop>
+      <div v-if="isOpen" class="modal-overlay" @click="close">
+        <div class="modal-content" @click.stop>
           <div class="modal-header">
-            <div class="modal-title-group">
-              <GitBranch v-if="platform === 'github'" class="modal-title-icon" />
-              <Settings v-else class="modal-title-icon" />
-              <h2>{{ run.name }}</h2>
-            </div>
+            <h2>Run Details</h2>
             <button @click="close" class="modal-close">
               <X class="close-icon" />
             </button>
           </div>
-
           <div class="modal-body">
-            <!-- Run Summary -->
-            <div class="summary-section">
-              <div class="summary-cards">
-                <div class="summary-card">
-                  <div class="summary-card-label">Status</div>
-                  <div class="summary-card-value" :class="`status-${run.status}`">
+            <div v-if="loading" class="loading-state">
+              <p>Loading run details...</p>
+            </div>
+            <div v-else-if="error" class="error-state">
+              <p>{{ error }}</p>
+            </div>
+            <div v-else-if="run" class="run-details">
+              <!-- Run Summary -->
+              <div class="run-summary">
+                <div class="summary-item">
+                  <span class="summary-label">Battery:</span>
+                  <span class="summary-value">{{ run.batteryName }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Status:</span>
+                  <span class="summary-value" :class="`status-${run.status}`">
                     {{ run.status }}
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Score:</span>
+                  <span class="summary-value" :class="getScoreClass(run.score)">
+                    {{ run.score }}%
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Tests:</span>
+                  <span class="summary-value">
+                    {{ run.passedTests }}/{{ run.totalTests }} passed
+                  </span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Timestamp:</span>
+                  <span class="summary-value">{{ formatTime(run.timestamp) }}</span>
+                </div>
+              </div>
+
+              <!-- Hierarchy Tree -->
+              <div class="hierarchy-tree">
+                <h3 class="tree-title">Test Hierarchy</h3>
+                <div class="tree-container">
+                  <!-- Battery Level -->
+                  <div class="tree-node battery-node">
+                    <div class="node-header" @click="toggleNode('battery')">
+                      <ChevronRight v-if="!expandedNodes.battery" class="chevron" />
+                      <ChevronDown v-else class="chevron" />
+                      <Battery class="node-icon" />
+                      <span class="node-name">{{ run.batteryName }}</span>
+                      <span class="node-badge">{{ run.harnesses.length }} harness{{ run.harnesses.length !== 1 ? 'es' : '' }}</span>
+                    </div>
+                    <div v-if="expandedNodes.battery" class="node-children">
+                      <!-- Harness Level -->
+                      <div
+                        v-for="harness in run.harnesses"
+                        :key="harness.id"
+                        class="tree-node harness-node"
+                      >
+                        <div class="node-header" @click="toggleNode(`harness-${harness.id}`)">
+                          <ChevronRight v-if="!expandedNodes[`harness-${harness.id}`]" class="chevron" />
+                          <ChevronDown v-else class="chevron" />
+                          <Layers class="node-icon" />
+                          <span class="node-name">{{ harness.name }}</span>
+                          <span class="node-badge">{{ harness.suites.length }} suite{{ harness.suites.length !== 1 ? 's' : '' }}</span>
+                        </div>
+                        <div v-if="expandedNodes[`harness-${harness.id}`]" class="node-children">
+                          <!-- Suite Level -->
+                          <div
+                            v-for="suite in harness.suites"
+                            :key="suite.id"
+                            class="tree-node suite-node"
+                          >
+                            <div class="node-header" @click="toggleNode(`suite-${suite.id}`)">
+                              <ChevronRight v-if="!expandedNodes[`suite-${suite.id}`]" class="chevron" />
+                              <ChevronDown v-else class="chevron" />
+                              <List class="node-icon" />
+                              <span class="node-name">{{ suite.name }}</span>
+                              <span class="node-badge">{{ suite.tests.length }} test{{ suite.tests.length !== 1 ? 's' : '' }}</span>
+                            </div>
+                            <div v-if="expandedNodes[`suite-${suite.id}`]" class="node-children">
+                              <!-- Test Level -->
+                              <div
+                                v-for="test in suite.tests"
+                                :key="test.id"
+                                class="tree-node test-node"
+                              >
+                                <div class="node-header">
+                                  <TestTube class="node-icon" />
+                                  <span class="node-name">{{ test.testConfigurationName }}</span>
+                                  <span class="node-status" :class="`status-${test.status}`">
+                                    {{ test.status }}
+                                  </span>
+                                </div>
+                                <div v-if="test.error" class="test-error">
+                                  <AlertCircle class="error-icon" />
+                                  <span>{{ test.error }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="summary-card">
-                  <div class="summary-card-label">Compliance Score</div>
-                  <div class="summary-card-value" :class="run.compliancePassed ? 'passed' : 'failed'">
-                    {{ run.complianceScore }}%
-                  </div>
-                </div>
-                <div class="summary-card">
-                  <div class="summary-card-label">Duration</div>
-                  <div class="summary-card-value">{{ run.duration }}s</div>
-                </div>
-                <div class="summary-card" v-if="run.blocked">
-                  <div class="summary-card-label">Blocked</div>
-                  <div class="summary-card-value blocked">Yes</div>
-                </div>
               </div>
             </div>
-
-            <!-- Test Results -->
-            <div v-if="run.testResults" class="section">
-              <h3>Test Results</h3>
-              <div class="test-results-list">
-                <div
-                  v-for="(test, index) in run.testResults"
-                  :key="index"
-                  class="test-result-item"
-                  :class="{ passed: test.passed, failed: !test.passed }"
-                >
-                  <CheckCircle2 v-if="test.passed" class="test-icon passed" />
-                  <X v-else class="test-icon failed" />
-                  <div class="test-details">
-                    <div class="test-name">{{ test.name }}</div>
-                    <div v-if="test.error" class="test-error">{{ test.error }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Logs -->
-            <div v-if="run.logs" class="section">
-              <h3>Logs</h3>
-              <div class="logs-container">
-                <pre class="logs-content">{{ run.logs }}</pre>
-              </div>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="section">
-              <h3>Details</h3>
-              <div class="details-grid">
-                <div class="detail-item">
-                  <span class="detail-label">Started At:</span>
-                  <span class="detail-value">{{ formatDate(run.startedAt) }}</span>
-                </div>
-                <div class="detail-item" v-if="run.completedAt">
-                  <span class="detail-label">Completed At:</span>
-                  <span class="detail-value">{{ formatDate(run.completedAt) }}</span>
-                </div>
-                <div class="detail-item" v-if="run.prNumber">
-                  <span class="detail-label">PR Number:</span>
-                  <span class="detail-value">#{{ run.prNumber }}</span>
-                </div>
-                <div class="detail-item" v-if="run.buildNumber">
-                  <span class="detail-label">Build Number:</span>
-                  <span class="detail-value">#{{ run.buildNumber }}</span>
-                </div>
-                <div class="detail-item" v-if="run.branch">
-                  <span class="detail-label">Branch:</span>
-                  <span class="detail-value">{{ run.branch }}</span>
-                </div>
-                <div class="detail-item" v-if="run.commit">
-                  <span class="detail-label">Commit:</span>
-                  <span class="detail-value commit-hash">{{ run.commit.substring(0, 7) }}</span>
-                </div>
-              </div>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="close" class="btn-secondary">Close</button>
           </div>
         </div>
       </div>
@@ -107,27 +127,78 @@
 </template>
 
 <script setup lang="ts">
-import { Teleport } from 'vue';
-import { GitBranch, Settings, X, CheckCircle2 } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import { Teleport, Transition } from 'vue';
+import { X, Battery, Layers, List, TestTube, ChevronRight, ChevronDown, AlertCircle } from 'lucide-vue-next';
+import axios from 'axios';
 
-const props = defineProps<{
+interface Props {
   isOpen: boolean;
-  run: any;
-  platform: string;
-}>();
+  runId: string | null;
+}
 
+const props = defineProps<Props>();
 const emit = defineEmits<{
-  'update:isOpen': [value: boolean];
+  close: [];
 }>();
 
-const close = () => {
-  emit('update:isOpen', false);
+const loading = ref(false);
+const error = ref<string | null>(null);
+const run = ref<any>(null);
+const expandedNodes = ref<Record<string, boolean>>({
+  battery: true,
+});
+
+const loadRunDetails = async () => {
+  if (!props.runId) return;
+  
+  try {
+    loading.value = true;
+    error.value = null;
+    const response = await axios.get(`/api/v1/runs/${props.runId}`);
+    run.value = response.data;
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Failed to load run details';
+    console.error('Error loading run details:', err);
+  } finally {
+    loading.value = false;
+  }
 };
 
-const formatDate = (date: Date | string): string => {
+const toggleNode = (nodeId: string) => {
+  expandedNodes.value[nodeId] = !expandedNodes.value[nodeId];
+};
+
+const getScoreClass = (score: number) => {
+  if (score >= 90) return 'score-high';
+  if (score >= 70) return 'score-medium';
+  return 'score-low';
+};
+
+const formatTime = (date: Date | string): string => {
+  if (!date) return 'Unknown';
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleString();
 };
+
+const close = () => {
+  emit('close');
+  run.value = null;
+  expandedNodes.value = { battery: true };
+  error.value = null;
+};
+
+watch(() => props.isOpen, (newValue) => {
+  if (newValue && props.runId) {
+    loadRunDetails();
+  }
+});
+
+watch(() => props.runId, (newValue) => {
+  if (props.isOpen && newValue) {
+    loadRunDetails();
+  }
+});
 </script>
 
 <style scoped>
@@ -137,18 +208,24 @@ const formatDate = (date: Date | string): string => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
   padding: 20px;
 }
 
-.run-details {
+.modal-content {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 16px;
+  width: 100%;
   max-width: 900px;
   max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .modal-header {
@@ -159,18 +236,6 @@ const formatDate = (date: Date | string): string => {
   border-bottom: 1px solid rgba(79, 172, 254, 0.2);
 }
 
-.modal-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.modal-title-icon {
-  width: 24px;
-  height: 24px;
-  color: #4facfe;
-}
-
 .modal-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
@@ -179,16 +244,13 @@ const formatDate = (date: Date | string): string => {
 }
 
 .modal-close {
-  padding: 8px;
   background: transparent;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
   color: #a0aec0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .modal-close:hover {
@@ -202,178 +264,203 @@ const formatDate = (date: Date | string): string => {
 }
 
 .modal-body {
+  flex: 1;
   padding: 24px;
-  max-height: calc(90vh - 100px);
   overflow-y: auto;
 }
 
-.summary-section {
-  margin-bottom: 24px;
-}
-
-.summary-cards {
+.run-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-}
-
-.summary-card {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-}
-
-.summary-card-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  margin-bottom: 8px;
-}
-
-.summary-card-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.summary-card-value.status-success,
-.summary-card-value.passed {
-  color: #22c55e;
-}
-
-.summary-card-value.status-failure,
-.summary-card-value.failed {
-  color: #fc8181;
-}
-
-.summary-card-value.status-pending {
-  color: #4facfe;
-}
-
-.summary-card-value.blocked {
-  color: #fbbf24;
-}
-
-.section {
   margin-bottom: 24px;
-  padding: 20px;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-}
-
-.section h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 16px 0;
-}
-
-.test-results-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.test-result-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(15, 20, 25, 0.8);
-  border-radius: 8px;
-  border: 1px solid rgba(79, 172, 254, 0.2);
-}
-
-.test-result-item.passed {
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.test-result-item.failed {
-  border-color: rgba(252, 129, 129, 0.3);
-}
-
-.test-icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.test-icon.passed {
-  color: #22c55e;
-}
-
-.test-icon.failed {
-  color: #fc8181;
-}
-
-.test-details {
-  flex: 1;
-}
-
-.test-name {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ffffff;
-  margin-bottom: 4px;
-}
-
-.test-error {
-  font-size: 0.875rem;
-  color: #fc8181;
-  margin-top: 4px;
-}
-
-.logs-container {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
   padding: 16px;
-  overflow-x: auto;
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 8px;
 }
 
-.logs-content {
-  margin: 0;
-  color: #a0aec0;
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-}
-
-.detail-item {
+.summary-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.detail-label {
-  font-size: 0.875rem;
-  color: #718096;
-  font-weight: 500;
+.summary-label {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.detail-value {
-  font-size: 0.9rem;
+.summary-value {
+  font-size: 1rem;
+  font-weight: 600;
   color: #ffffff;
 }
 
-.commit-hash {
-  font-family: 'Courier New', monospace;
+.status-completed,
+.status-passed {
+  color: #48bb78;
+}
+
+.status-failed {
+  color: #f56565;
+}
+
+.status-running {
+  color: #ed8936;
+}
+
+.score-high {
+  color: #48bb78;
+}
+
+.score-medium {
+  color: #ed8936;
+}
+
+.score-low {
+  color: #f56565;
+}
+
+.hierarchy-tree {
+  margin-top: 24px;
+}
+
+.tree-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.tree-container {
+  background: rgba(15, 20, 25, 0.6);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.tree-node {
+  margin-bottom: 8px;
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(79, 172, 254, 0.05);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.node-header:hover {
+  background: rgba(79, 172, 254, 0.1);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  color: #a0aec0;
+  flex-shrink: 0;
+}
+
+.node-icon {
+  width: 18px;
+  height: 18px;
   color: #4facfe;
+  flex-shrink: 0;
+}
+
+.node-name {
+  flex: 1;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.node-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  color: #4facfe;
+}
+
+.node-status {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.node-children {
+  margin-left: 32px;
+  margin-top: 4px;
+  border-left: 2px solid rgba(79, 172, 254, 0.2);
+  padding-left: 16px;
+}
+
+.test-node .node-header {
+  cursor: default;
+}
+
+.test-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: rgba(245, 101, 101, 0.1);
+  border-left: 3px solid #f56565;
+  border-radius: 4px;
+  color: #f56565;
+  font-size: 0.875rem;
+}
+
+.error-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+}
+
+.error-state {
+  color: #fc8181;
+}
+
+.modal-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  border-radius: 8px;
+  color: #4facfe;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 172, 254, 0.1);
+  border-color: rgba(79, 172, 254, 0.5);
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s;
 }
 
 .fade-enter-from,
@@ -381,4 +468,3 @@ const formatDate = (date: Date | string): string => {
   opacity: 0;
 }
 </style>
-

@@ -172,6 +172,13 @@
               </div>
             </div>
           </div>
+          
+          <!-- Cross Links -->
+          <CrossLinkPanel
+            v-if="suite"
+            entity-type="test-suite"
+            :entity-id="suite.id"
+          />
         </div>
 
         <!-- Configuration Tab (show always when creating, or when tab is active when editing) -->
@@ -203,10 +210,8 @@
               <select v-model="form.testType" required class="form-input form-select">
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
-                <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
-                <option value="dlp">DLP</option>
-                <option value="api-gateway">API Gateway</option>
+                <option value="dlp">Data Loss Prevention (DLP)</option>
                 <option value="distributed-systems">Distributed Systems</option>
                 <option value="api-security">API Security</option>
                 <option value="data-pipeline">Data Pipeline</option>
@@ -376,6 +381,7 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import CrossLinkPanel from '../components/CrossLinkPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -429,11 +435,8 @@ const visibleTabs = computed(() => {
 const getTestTypeLabel = (testType: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'dataset-health': 'Dataset Health',
-    'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
-    'dlp': 'DLP',
-    'api-gateway': 'API Gateway',
+    'dlp': 'Data Loss Prevention (DLP)',
     'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
     'data-pipeline': 'Data Pipeline',
@@ -710,11 +713,8 @@ const getTestTypes = (suiteData: any): string[] => {
   if (suiteData.testType) {
     const typeMap: Record<string, string> = {
       'access-control': 'Access Control',
-      'dataset-health': 'Dataset Health',
-      'rls-cls': 'RLS/CLS',
       'network-policy': 'Network Policy',
-      'dlp': 'DLP',
-      'api-gateway': 'API Gateway',
+      'dlp': 'Data Loss Prevention (DLP)',
       'distributed-systems': 'Distributed Systems',
       'api-security': 'API Security',
       'data-pipeline': 'Data Pipeline',

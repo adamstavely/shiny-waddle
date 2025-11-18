@@ -1163,6 +1163,14 @@ const distributedSystemsSubType = ref('policy-consistency');
 
 // Options for dropdowns
 const testTypeOptions = [
+  { label: 'Data Contract', value: 'data-contract' },
+  { label: 'Salesforce Config', value: 'salesforce-config' },
+  { label: 'Salesforce Security', value: 'salesforce-security' },
+  { label: 'Elastic Config', value: 'elastic-config' },
+  { label: 'Elastic Security', value: 'elastic-security' },
+  { label: 'K8s Security', value: 'k8s-security' },
+  { label: 'K8s Workload', value: 'k8s-workload' },
+  { label: 'IDP Compliance', value: 'idp-compliance' },
   { label: 'Access Control', value: 'access-control' },
   { label: 'Network Policy', value: 'network-policy' },
   { label: 'Data Loss Prevention (DLP)', value: 'dlp' },

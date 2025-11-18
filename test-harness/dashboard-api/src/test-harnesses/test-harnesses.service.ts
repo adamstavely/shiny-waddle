@@ -77,25 +77,7 @@ export class TestHarnessesService {
   async create(dto: CreateTestHarnessDto): Promise<TestHarnessEntity> {
     await this.loadHarnesses();
 
-    // Validate testType
-    const validTestTypes = [
-      'access-control',
-      'dataset-health',
-      'rls-cls',
-      'network-policy',
-      'dlp',
-      'api-gateway',
-      'distributed-systems',
-      'api-security',
-      'data-pipeline',
-    ];
-    if (!validTestTypes.includes(dto.testType)) {
-      throw new BadRequestException(
-        `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
-      );
-    }
-
-    // Validate that all suites match the harness type
+    // Validate that all suites match the harness domain
     if (dto.testSuiteIds && dto.testSuiteIds.length > 0) {
       const suites = await this.testSuitesService.findAll();
       for (const suiteId of dto.testSuiteIds) {
@@ -103,10 +85,10 @@ export class TestHarnessesService {
         if (!suite) {
           throw new BadRequestException(`Test suite with ID "${suiteId}" not found`);
         }
-        if (suite.testType !== dto.testType) {
+        if (suite.domain !== dto.domain) {
           throw new BadRequestException(
-            `Test suite "${suite.name}" (${suite.testType}) does not match harness type "${dto.testType}". ` +
-            `All suites in a harness must have the same type.`
+            `Test suite "${suite.name}" (domain: ${suite.domain}) does not match harness domain "${dto.domain}". ` +
+            `All suites in a harness must have the same domain.`
           );
         }
       }
@@ -123,7 +105,8 @@ export class TestHarnessesService {
       id: uuidv4(),
       name: dto.name,
       description: dto.description,
-      testType: dto.testType,
+      domain: dto.domain,
+      testType: dto.testType, // Keep for backward compatibility
       testSuiteIds: dto.testSuiteIds || [],
       applicationIds: dto.applicationIds || [],
       team: dto.team,
@@ -302,6 +285,60 @@ export class TestHarnessesService {
   async findByTestSuite(suiteId: string): Promise<TestHarnessEntity[]> {
     await this.loadHarnesses();
     return this.harnesses.filter(h => h.testSuiteIds.includes(suiteId));
+  }
+
+  async getUsedInBatteries(harnessId: string): Promise<any[]> {
+    await this.loadHarnesses();
+    const harness = await this.findOne(harnessId);
+    if (!harness) {
+      return [];
+    }
+
+    // Read batteries file to find which batteries use this harness
+    const batteriesFile = path.join(process.cwd(), 'data', 'test-batteries.json');
+    try {
+      const data = await fs.readFile(batteriesFile, 'utf-8');
+      if (!data || data.trim() === '') {
+        return [];
+      }
+      const batteries = JSON.parse(data);
+      return batteries
+        .filter((b: any) => b.harnessIds && b.harnessIds.includes(harnessId))
+        .map((b: any) => ({
+          id: b.id,
+          name: b.name,
+        }));
+    } catch (err) {
+      this.logger.error('Error getting batteries for harness:', err);
+      return [];
+    }
+  }
+
+  async getAssignedApplications(harnessId: string): Promise<any[]> {
+    await this.loadHarnesses();
+    const harness = await this.findOne(harnessId);
+    if (!harness) {
+      return [];
+    }
+
+    // Read applications file to get application details
+    const applicationsFile = path.join(process.cwd(), 'data', 'applications.json');
+    try {
+      const data = await fs.readFile(applicationsFile, 'utf-8');
+      if (!data || data.trim() === '') {
+        return [];
+      }
+      const applications = JSON.parse(data);
+      return applications
+        .filter((app: any) => harness.applicationIds && harness.applicationIds.includes(app.id))
+        .map((app: any) => ({
+          id: app.id,
+          name: app.name,
+        }));
+    } catch (err) {
+      this.logger.error('Error getting applications for harness:', err);
+      return [];
+    }
   }
 }
 

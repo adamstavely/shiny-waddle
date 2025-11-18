@@ -54,6 +54,12 @@
         class="filter-dropdown"
       />
       <Dropdown
+        v-model="filterDomain"
+        :options="domainOptions"
+        placeholder="All Domains"
+        class="filter-dropdown"
+      />
+      <Dropdown
         v-model="filterPolicy"
         :options="policyOptions"
         placeholder="All Policies"
@@ -149,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import {
   Plus,
@@ -179,18 +185,36 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const searchQuery = ref('');
 const filterType = ref('');
+const filterDomain = ref('');
 const filterPolicy = ref('');
 
 const typeOptions = [
   { value: '', label: 'All Types' },
   { value: 'access-control', label: 'Access Control' },
-  { value: 'rls-cls', label: 'RLS/CLS' },
   { value: 'network-policy', label: 'Network Policy' },
-  { value: 'dlp', label: 'DLP' },
-  { value: 'api-gateway', label: 'API Gateway' },
+  { value: 'dlp', label: 'Data Loss Prevention (DLP)' },
   { value: 'distributed-systems', label: 'Distributed Systems' },
   { value: 'api-security', label: 'API Security' },
   { value: 'data-pipeline', label: 'Data Pipeline' },
+  { value: 'data-contract', label: 'Data Contract' },
+  { value: 'salesforce-config', label: 'Salesforce Config' },
+  { value: 'salesforce-security', label: 'Salesforce Security' },
+  { value: 'elastic-config', label: 'Elastic Config' },
+  { value: 'elastic-security', label: 'Elastic Security' },
+  { value: 'k8s-security', label: 'K8s Security' },
+  { value: 'k8s-workload', label: 'K8s Workload' },
+  { value: 'idp-compliance', label: 'IDP Compliance' },
+];
+
+const domainOptions = [
+  { value: '', label: 'All Domains' },
+  { value: 'api_security', label: 'API Security' },
+  { value: 'platform_config', label: 'Platform Configuration' },
+  { value: 'identity', label: 'Identity' },
+  { value: 'data_contracts', label: 'Data Contracts' },
+  { value: 'salesforce', label: 'Salesforce' },
+  { value: 'elastic', label: 'Elastic' },
+  { value: 'idp_platform', label: 'IDP / Kubernetes' },
 ];
 
 const policyOptions = computed(() => {
@@ -228,6 +252,10 @@ const filteredTests = computed(() => {
     filtered = filtered.filter(t => t.testType === filterType.value);
   }
   
+  if (filterDomain.value) {
+    filtered = filtered.filter(t => t.domain === filterDomain.value);
+  }
+  
   if (filterPolicy.value) {
     filtered = filtered.filter(t => {
       if (t.testType === 'access-control' && t.policyIds) {
@@ -246,6 +274,7 @@ const loadTests = async () => {
   try {
     const params: any = {};
     if (filterType.value) params.testType = filterType.value;
+    if (filterDomain.value) params.domain = filterDomain.value;
     if (filterPolicy.value) params.policyId = filterPolicy.value;
     
     const response = await axios.get('/api/tests', { params });
@@ -294,13 +323,19 @@ const loadTestSuites = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
-    'dlp': 'DLP',
-    'api-gateway': 'API Gateway',
+    'dlp': 'Data Loss Prevention (DLP)',
     'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
     'data-pipeline': 'Data Pipeline',
+    'data-contract': 'Data Contract',
+    'salesforce-config': 'Salesforce Config',
+    'salesforce-security': 'Salesforce Security',
+    'elastic-config': 'Elastic Config',
+    'elastic-security': 'Elastic Security',
+    'k8s-security': 'K8s Security',
+    'k8s-workload': 'K8s Workload',
+    'idp-compliance': 'IDP Compliance',
   };
   return labels[type] || type;
 };
@@ -373,6 +408,11 @@ const formatDate = (date: Date | string): string => {
   const d = new Date(date);
   return d.toLocaleDateString();
 };
+
+// Watch for filter changes and reload
+watch([filterType, filterDomain, filterPolicy], () => {
+  loadTests();
+});
 
 onMounted(async () => {
   await Promise.all([loadTests(), loadPolicies(), loadTestResults(), loadTestSuites()]);

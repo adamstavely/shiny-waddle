@@ -17,33 +17,16 @@
       />
     </button>
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
-      <!-- Tests Category -->
-      <div v-if="activeCategory === 'tests'" class="drawer-category" data-category="tests">
-        <!-- Main Tests Pages -->
+      <!-- Test Design Library Category -->
+      <div v-if="activeCategory === 'test-design-library'" class="drawer-category" data-category="test-design-library">
         <div class="category-items" style="padding: 0 12px 16px;">
           <a
-            href="/tests"
-            @click.prevent="handleNavClick('/tests')"
-            :class="['drawer-item', isActive('/tests') && !currentPath.value?.includes('/tests/') ? 'drawer-item-active' : '']"
+            href="/tests/individual"
+            @click.prevent="handleNavClick('/tests/individual')"
+            :class="['drawer-item', isActive('/tests/individual') ? 'drawer-item-active' : '']"
           >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/tests/batteries"
-            @click.prevent="handleNavClick('/tests/batteries')"
-            :class="['drawer-item', isActive('/tests/batteries') ? 'drawer-item-active' : '']"
-          >
-            <Battery class="item-icon" />
-            <span>Test Batteries</span>
-          </a>
-          <a
-            href="/tests/harnesses"
-            @click.prevent="handleNavClick('/tests/harnesses')"
-            :class="['drawer-item', isActive('/tests/harnesses') ? 'drawer-item-active' : '']"
-          >
-            <Layers class="item-icon" />
-            <span>Test Harnesses</span>
+            <TestTube class="item-icon" />
+            <span>Tests</span>
           </a>
           <a
             href="/tests/suites"
@@ -54,137 +37,20 @@
             <span>Test Suites</span>
           </a>
           <a
-            href="/tests/individual"
-            @click.prevent="handleNavClick('/tests/individual')"
-            :class="['drawer-item', isActive('/tests/individual') ? 'drawer-item-active' : '']"
+            href="/tests/harnesses"
+            @click.prevent="handleNavClick('/tests/harnesses')"
+            :class="['drawer-item', isActive('/tests/harnesses') ? 'drawer-item-active' : '']"
           >
-            <TestTube class="item-icon" />
-            <span>Tests</span>
+            <Layers class="item-icon" />
+            <span>Test Harnesses</span>
           </a>
           <a
-            href="/tests/library"
-            @click.prevent="handleNavClick('/tests/library')"
-            :class="['drawer-item', isActive('/tests/library') ? 'drawer-item-active' : '']"
+            href="/tests/batteries"
+            @click.prevent="handleNavClick('/tests/batteries')"
+            :class="['drawer-item', isActive('/tests/batteries') ? 'drawer-item-active' : '']"
           >
-            <BookOpen class="item-icon" />
-            <span>Test Library</span>
-          </a>
-          <a
-            href="/tests/findings"
-            @click.prevent="handleNavClick('/tests/findings')"
-            :class="['drawer-item', isActive('/tests/findings') ? 'drawer-item-active' : '']"
-          >
-            <AlertCircle class="item-icon" />
-            <span>Findings</span>
-          </a>
-        </div>
-
-        <!-- Separator -->
-        <div style="height: 1px; background: rgba(79, 172, 254, 0.2); margin: 16px 20px;"></div>
-      </div>
-
-      <!-- Access Control Category -->
-      <div v-if="activeCategory === 'access-control'" class="drawer-category" data-category="access-control">
-        <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/access-control"
-            @click.prevent="handleNavClick('/access-control')"
-            :class="['drawer-item', currentPath.value === '/access-control' ? 'drawer-item-active' : '']"
-          >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/policies"
-            @click.prevent="handleNavClick('/policies')"
-            :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
-          >
-            <Shield class="item-icon" />
-            <span>Policies</span>
-          </a>
-          <a
-            href="/resources"
-            @click.prevent="handleNavClick('/resources')"
-            :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-          >
-            <Folder class="item-icon" />
-            <span>Resources</span>
-          </a>
-          <a
-            href="/tests/user-simulation"
-            @click.prevent="handleNavClick('/tests/user-simulation')"
-            :class="['drawer-item', isActive('/tests/user-simulation') || isActive('/users') ? 'drawer-item-active' : '']"
-          >
-            <Users class="item-icon" />
-            <span>User Simulation</span>
-          </a>
-          <a
-            href="/tests/policy-validation"
-            @click.prevent="handleNavClick('/tests/policy-validation')"
-            :class="['drawer-item', isActive('/tests/policy-validation') || isActive('/policy-validation') ? 'drawer-item-active' : '']"
-          >
-            <FileSearch class="item-icon" />
-            <span>Policy Validation</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Platform Config Category -->
-      <div v-if="activeCategory === 'platform-config'" class="drawer-category" data-category="platform-config">
-        <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/platform-config"
-            @click.prevent="handleNavClick('/platform-config')"
-            :class="['drawer-item', currentPath.value === '/platform-config' ? 'drawer-item-active' : '']"
-          >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/configuration-validation"
-            @click.prevent="handleNavClick('/configuration-validation')"
-            :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
-          >
-            <Shield class="item-icon" />
-            <span>Config Validator</span>
-          </a>
-          <a
-            href="/environment-config-testing"
-            @click.prevent="handleNavClick('/environment-config-testing')"
-            :class="['drawer-item', isActive('/environment-config-testing') ? 'drawer-item-active' : '']"
-          >
-            <KeyRound class="item-icon" />
-            <span>Environment Config Testing</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Insights Category -->
-      <div v-if="activeCategory === 'insights'" class="drawer-category" data-category="insights">
-        <div class="category-items" style="padding: 0 12px 16px;">
-          <a
-            href="/insights"
-            @click.prevent="handleNavClick('/insights')"
-            :class="['drawer-item', (currentPath.value === '/insights' || (currentPath.value && currentPath.value.startsWith('/insights'))) && (!route.query.tab || route.query.tab === 'overview') ? 'drawer-item-active' : '']"
-          >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/insights?tab=reports"
-            @click.prevent="handleNavClick('/insights?tab=reports')"
-            :class="['drawer-item', (currentPath.value === '/insights' || (currentPath.value && currentPath.value.startsWith('/insights'))) && route.query.tab === 'reports' ? 'drawer-item-active' : '']"
-          >
-            <FileText class="item-icon" />
-            <span>Reports</span>
-          </a>
-          <a
-            href="/compliance-trends"
-            @click.prevent="handleNavClick('/compliance-trends')"
-            :class="['drawer-item', isActive('/compliance-trends') ? 'drawer-item-active' : '']"
-          >
-            <TrendingUp class="item-icon" />
-            <span>Compliance Trends</span>
+            <Battery class="item-icon" />
+            <span>Test Batteries</span>
           </a>
         </div>
       </div>
@@ -280,31 +146,12 @@ const currentPath = ref(route.path);
 const isCollapsed = ref(true);
 const activeCategory = ref<string | null>(null);
 
-// Test pages
-const testPages = [
+// Test Design Library pages
+const testDesignLibraryPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/individual', '/tests/library', '/tests/findings',
   '/tests/history'
-];
-
-// Access Control pages
-const accessControlPages = [
-  '/policies', '/resources', '/tests/user-simulation',
-  '/tests/policy-validation', '/policy-validation', '/users'
-];
-
-// Platform Config pages
-const platformConfigPages = [
-  '/configuration-validation',
-  '/environment-config-testing'
-];
-
-// Insights pages
-const insightsPages = [
-  '/insights',
-  '/compliance-trends',
-  '/reports'
 ];
 
 // Admin pages
@@ -318,23 +165,10 @@ const adminPages = [
 
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
-  // Check if it's a test page
+  // Check if it's a test design library page
   if (path === '/tests' || path.startsWith('/tests/') ||
-      testPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'tests';
-  }
-  // Check if it's an access control page
-  if (accessControlPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'access-control';
-  }
-  // Check if it's a platform config page
-  if (platformConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'platform-config';
-  }
-  // Check if it's an insights page
-  if (path === '/insights' || path.startsWith('/insights') ||
-      insightsPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'insights';
+      testDesignLibraryPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'test-design-library';
   }
   // Check if it's an admin page
   if (path === '/admin' || path.startsWith('/admin/') ||

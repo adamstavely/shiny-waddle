@@ -1,1 +1,148 @@
-[]
+[
+  {
+    "id": "b_data_contracts_only",
+    "name": "Data Contracts Only",
+    "description": "Battery containing all data contract tests",
+    "harnessIds": [
+      "h_data_contracts_preprod_validation",
+      "h_data_contracts_prod_drift"
+    ],
+    "executionConfig": {
+      "executionMode": "parallel",
+      "stopOnFailure": false
+    },
+    "team": "Data Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_data_governance_full",
+    "name": "Data Governance Full",
+    "description": "Full data governance battery including contracts and related tests",
+    "harnessIds": [
+      "h_data_contracts_preprod_validation",
+      "h_data_contracts_prod_drift"
+    ],
+    "executionConfig": {
+      "executionMode": "sequential",
+      "stopOnFailure": true
+    },
+    "team": "Data Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_salesforce_full_compliance",
+    "name": "Salesforce Full Compliance",
+    "description": "Complete Salesforce compliance battery",
+    "harnessIds": [
+      "h_salesforce_metadata_scan",
+      "h_salesforce_security_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "parallel",
+      "stopOnFailure": false
+    },
+    "team": "Salesforce Team",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_salesforce_monthly_security",
+    "name": "Salesforce Monthly Security",
+    "description": "Monthly Salesforce security scanning battery",
+    "harnessIds": [
+      "h_salesforce_security_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "sequential",
+      "timeout": 3600000,
+      "stopOnFailure": false
+    },
+    "team": "Salesforce Team",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_elastic_full_compliance",
+    "name": "Elastic Full Compliance",
+    "description": "Complete Elastic compliance battery",
+    "harnessIds": [
+      "h_elastic_config_scan",
+      "h_elastic_security_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "parallel",
+      "stopOnFailure": false
+    },
+    "team": "Infrastructure",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_elastic_security_daily",
+    "name": "Elastic Security Daily",
+    "description": "Daily Elastic security scanning battery",
+    "harnessIds": [
+      "h_elastic_security_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "sequential",
+      "timeout": 1800000,
+      "stopOnFailure": false
+    },
+    "team": "Infrastructure",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_idp_full_compliance",
+    "name": "IDP Full Compliance",
+    "description": "Complete IDP/K8s compliance battery",
+    "harnessIds": [
+      "h_idp_cluster_scan",
+      "h_idp_workload_hardening_scan",
+      "h_idp_golden_path_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "parallel",
+      "stopOnFailure": false
+    },
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_idp_security_daily",
+    "name": "IDP Security Daily",
+    "description": "Daily IDP/K8s security scanning battery",
+    "harnessIds": [
+      "h_idp_cluster_scan",
+      "h_idp_workload_hardening_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "sequential",
+      "timeout": 3600000,
+      "stopOnFailure": false
+    },
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "b_idp_golden_path_weekly",
+    "name": "IDP Golden Path Weekly",
+    "description": "Weekly IDP golden path compliance battery",
+    "harnessIds": [
+      "h_idp_golden_path_scan"
+    ],
+    "executionConfig": {
+      "executionMode": "sequential",
+      "timeout": 1800000,
+      "stopOnFailure": true
+    },
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  }
+]

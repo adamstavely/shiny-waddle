@@ -6,6 +6,8 @@ import { TestSuiteEntity, TestSuiteStatus } from './entities/test-suite.entity';
 import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { parseTypeScriptTestSuite, convertJSONToTypeScript } from './test-suite-converter';
+import { getDomainFromTestType } from '../../../../core/domain-mapping';
+import { TestType } from '../../../../core/types';
 
 @Injectable()
 export class TestSuitesService {
@@ -95,11 +97,32 @@ export class TestSuitesService {
       'distributed-systems',
       'api-security',
       'data-pipeline',
+      'data-contract',
+      'salesforce-config',
+      'salesforce-security',
+      'elastic-config',
+      'elastic-security',
+      'k8s-security',
+      'k8s-workload',
+      'idp-compliance',
     ];
     if (!validTestTypes.includes(dto.testType)) {
       throw new BadRequestException(
         `Invalid testType "${dto.testType}". Valid types are: ${validTestTypes.join(', ')}`
       );
+    }
+
+    // Auto-populate domain from testType if not provided
+    const domain = dto.domain || getDomainFromTestType(dto.testType as TestType);
+    
+    // Validate that provided domain matches testType mapping
+    if (dto.domain) {
+      const expectedDomain = getDomainFromTestType(dto.testType as TestType);
+      if (dto.domain !== expectedDomain) {
+        throw new BadRequestException(
+          `Domain "${dto.domain}" does not match testType "${dto.testType}" (expected: "${expectedDomain}")`
+        );
+      }
     }
 
     // Check for duplicate name
@@ -119,6 +142,7 @@ export class TestSuitesService {
       testCount: dto.testCount || 0,
       score: dto.score || 0,
       testType: dto.testType,
+      domain,
       testTypes: dto.testTypes || [dto.testType], // Set testTypes to match testType for backward compatibility
       enabled: dto.enabled !== undefined ? dto.enabled : true,
       testConfigurationIds: dto.testConfigurationIds || [],
@@ -373,11 +397,27 @@ export class TestSuitesService {
       }
     }
 
+    // Auto-update domain if testType changes
+    let domain = existing.domain;
+    if (dto.testType && dto.testType !== existing.testType) {
+      domain = getDomainFromTestType(dto.testType as TestType);
+    } else if (dto.domain) {
+      // Validate provided domain matches testType
+      const expectedDomain = getDomainFromTestType((dto.testType || existing.testType) as TestType);
+      if (dto.domain !== expectedDomain) {
+        throw new BadRequestException(
+          `Domain "${dto.domain}" does not match testType "${dto.testType || existing.testType}" (expected: "${expectedDomain}")`
+        );
+      }
+      domain = dto.domain;
+    }
+
     const updated: TestSuiteEntity = {
       ...existing,
       ...dto,
       id: existing.id, // Don't allow ID changes
       testType: dto.testType || existing.testType, // Keep existing if not provided
+      domain,
       testTypes: dto.testTypes || (dto.testType ? [dto.testType] : existing.testTypes), // Update testTypes if testType changed
       updatedAt: new Date(),
     };
@@ -438,6 +478,45 @@ export class TestSuitesService {
     const fsSuites = Array.from(this.filesystemSuites.values()).filter(s => s.team === team);
     
     return [...jsonSuites, ...fsSuites];
+  }
+
+  async getUsedInHarnesses(suiteId: string): Promise<any[]> {
+    await this.loadSuites();
+    const suite = await this.findOne(suiteId);
+    if (!suite) {
+      return [];
+    }
+
+    // Import TestHarnessesService dynamically to avoid circular dependency
+    const { TestHarnessesService } = await import('../test-harnesses/test-harnesses.service');
+    const { TestHarnessesModule } = await import('../test-harnesses/test-harnesses.module');
+    // For now, we'll need to inject this properly, but for the reverse lookup we can query directly
+    // This is a simplified version - in production you'd inject the service properly
+    try {
+      const harnessesModule = await import('../test-harnesses/test-harnesses.module');
+      // We'll need to get the service instance, but for now let's use a simpler approach
+      // Read the harnesses file directly or use a shared service
+      const harnessesFile = path.join(process.cwd(), 'data', 'test-harnesses.json');
+      let harnesses: any[] = [];
+      try {
+        const data = await fs.readFile(harnessesFile, 'utf-8');
+        if (data && data.trim()) {
+          harnesses = JSON.parse(data);
+        }
+      } catch (err) {
+        // File doesn't exist or is invalid
+      }
+      
+      return harnesses.filter((h: any) => 
+        h.testSuiteIds && h.testSuiteIds.includes(suiteId)
+      ).map((h: any) => ({
+        id: h.id,
+        name: h.name,
+      }));
+    } catch (err) {
+      this.logger.error('Error getting harnesses for suite:', err);
+      return [];
+    }
   }
 }
 

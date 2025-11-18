@@ -12,8 +12,10 @@ import { v4 as uuidv4 } from 'uuid';
 export class PoliciesService {
   private readonly policiesFile = path.join(process.cwd(), '..', '..', 'data', 'policies.json');
   private readonly auditLogFile = path.join(process.cwd(), '..', '..', 'data', 'policy-audit.json');
+  private readonly domainConfigsFile = path.join(process.cwd(), '..', '..', 'data', 'domain-configs.json');
   private policies: Policy[] = [];
   private auditLogs: PolicyAuditLog[] = [];
+  private domainConfigs: Record<string, any> = {};
 
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -24,6 +26,9 @@ export class PoliciesService {
     });
     this.loadAuditLogs().catch(err => {
       console.error('Error loading audit logs on startup:', err);
+    });
+    this.loadDomainConfigs().catch(err => {
+      console.error('Error loading domain configs on startup:', err);
     });
   }
 
@@ -366,6 +371,56 @@ export class PoliciesService {
       // TestsService may not be available, return empty array
       return [];
     }
+  }
+
+  // Domain-specific configuration methods
+  private async loadDomainConfigs(): Promise<void> {
+    try {
+      await fs.mkdir(path.dirname(this.domainConfigsFile), { recursive: true });
+      try {
+        const data = await fs.readFile(this.domainConfigsFile, 'utf-8');
+        this.domainConfigs = JSON.parse(data);
+      } catch (readError: any) {
+        if (readError.code === 'ENOENT') {
+          this.domainConfigs = {};
+          await this.saveDomainConfigs();
+        } else {
+          throw readError;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading domain configs:', error);
+      this.domainConfigs = {};
+    }
+  }
+
+  private async saveDomainConfigs(): Promise<void> {
+    try {
+      await fs.mkdir(path.dirname(this.domainConfigsFile), { recursive: true });
+      await fs.writeFile(this.domainConfigsFile, JSON.stringify(this.domainConfigs, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Error saving domain configs:', error);
+      throw error;
+    }
+  }
+
+  async getDomainConfig(domain: string): Promise<any> {
+    await this.loadDomainConfigs();
+    return this.domainConfigs[domain] || null;
+  }
+
+  async saveDomainConfig(domain: string, config: any): Promise<void> {
+    await this.loadDomainConfigs();
+    this.domainConfigs[domain] = {
+      ...config,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.saveDomainConfigs();
+  }
+
+  async getAllDomainConfigs(): Promise<Record<string, any>> {
+    await this.loadDomainConfigs();
+    return { ...this.domainConfigs };
   }
 }
 

@@ -76,10 +76,10 @@ export class TestBatteriesService {
   async create(dto: CreateTestBatteryDto): Promise<TestBatteryEntity> {
     await this.loadBatteries();
 
-    // Validate that all harnesses have different types
+    // Validate that all harnesses have different domains
     if (dto.harnessIds && dto.harnessIds.length > 0) {
       const harnesses = await this.testHarnessesService.findAll();
-      const harnessTypes = new Set<string>();
+      const harnessDomains = new Set<string>();
       
       for (const harnessId of dto.harnessIds) {
         const harness = harnesses.find(h => h.id === harnessId);
@@ -87,13 +87,21 @@ export class TestBatteriesService {
           throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
         }
         
-        if (harnessTypes.has(harness.testType)) {
+        // Use domain if available, fallback to testType for backward compatibility
+        const domain = harness.domain || harness.testType;
+        if (!domain) {
           throw new BadRequestException(
-            `Battery contains multiple harnesses with the same type "${harness.testType}". ` +
-            `All harnesses in a battery must have different types.`
+            `Test harness "${harness.name}" does not have a domain or testType.`
           );
         }
-        harnessTypes.add(harness.testType);
+        
+        if (harnessDomains.has(domain)) {
+          throw new BadRequestException(
+            `Battery contains multiple harnesses with the same domain "${domain}". ` +
+            `All harnesses in a battery must have different domains.`
+          );
+        }
+        harnessDomains.add(domain);
       }
     }
 
@@ -247,6 +255,58 @@ export class TestBatteriesService {
     }
 
     return battery;
+  }
+
+  async getAssignedApplications(batteryId: string): Promise<any[]> {
+    await this.loadBatteries();
+    const battery = await this.findOne(batteryId);
+    if (!battery) {
+      return [];
+    }
+
+    // Get all applications that have harnesses assigned that are in this battery
+    const applicationsFile = path.join(process.cwd(), 'data', 'applications.json');
+    try {
+      const data = await fs.readFile(applicationsFile, 'utf-8');
+      if (!data || data.trim() === '') {
+        return [];
+      }
+      const applications = JSON.parse(data);
+      
+      // Get all harnesses in this battery
+      const harnessesInBattery = battery.harnessIds || [];
+      
+      // Get all harnesses to find which apps they're assigned to
+      const harnessesFile = path.join(process.cwd(), 'data', 'test-harnesses.json');
+      let harnesses: any[] = [];
+      try {
+        const harnessData = await fs.readFile(harnessesFile, 'utf-8');
+        if (harnessData && harnessData.trim()) {
+          harnesses = JSON.parse(harnessData);
+        }
+      } catch (err) {
+        // File doesn't exist
+      }
+      
+      // Find applications that have any of the harnesses in this battery assigned
+      const appIds = new Set<string>();
+      for (const harnessId of harnessesInBattery) {
+        const harness = harnesses.find(h => h.id === harnessId);
+        if (harness && harness.applicationIds) {
+          harness.applicationIds.forEach((appId: string) => appIds.add(appId));
+        }
+      }
+      
+      return applications
+        .filter((app: any) => appIds.has(app.id))
+        .map((app: any) => ({
+          id: app.id,
+          name: app.name,
+        }));
+    } catch (err) {
+      this.logger.error('Error getting applications for battery:', err);
+      return [];
+    }
   }
 }
 

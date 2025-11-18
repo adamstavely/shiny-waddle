@@ -51,6 +51,11 @@
       <!-- Overview Tab -->
       <div v-if="activeTab === 'overview'" class="tab-content">
         <div class="overview-grid">
+          <CrossLinkPanel
+            v-if="test"
+            entity-type="test"
+            :entity-id="test.id"
+          />
           <div class="info-card">
             <h3 class="card-title">
               <Info class="title-icon" />
@@ -208,30 +213,12 @@
           </div>
         </div>
 
-        <!-- Test Suites Using This Test -->
-        <div v-if="suitesUsingTest.length > 0" class="content-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <List class="title-icon" />
-              Test Suites Using This Test
-            </h2>
-            <span class="suite-count">{{ suitesUsingTest.length }} suite{{ suitesUsingTest.length !== 1 ? 's' : '' }}</span>
-          </div>
-          <div class="suites-list">
-            <div
-              v-for="suite in suitesUsingTest"
-              :key="suite.id"
-              class="suite-item"
-              @click="viewSuite(suite.id)"
-            >
-              <div class="suite-info">
-                <h4 class="suite-name">{{ suite.name }}</h4>
-                <p class="suite-meta">{{ suite.application }} • {{ suite.team }}</p>
-              </div>
-              <Eye class="view-icon" />
-            </div>
-          </div>
-        </div>
+        <!-- Cross Links -->
+        <CrossLinkPanel
+          v-if="test"
+          entity-type="test"
+          :entity-id="test.id"
+        />
       </div>
 
       <!-- Configuration Tab -->
@@ -292,6 +279,7 @@ import {
   List,
   Eye,
 } from 'lucide-vue-next';
+import CrossLinkPanel from '../components/CrossLinkPanel.vue';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
 
@@ -355,10 +343,8 @@ const loadSuitesUsingTest = async () => {
 const getTestTypeLabel = (type: string): string => {
   const labels: Record<string, string> = {
     'access-control': 'Access Control',
-    'rls-cls': 'RLS/CLS',
     'network-policy': 'Network Policy',
-    'dlp': 'DLP',
-    'api-gateway': 'API Gateway',
+    'dlp': 'Data Loss Prevention (DLP)',
     'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
     'data-pipeline': 'Data Pipeline',

@@ -120,5 +120,26 @@ export class PoliciesController {
   async getTestsUsingPolicy(@Param('id') id: string): Promise<any[]> {
     return this.policiesService.findTestsUsingPolicy(id);
   }
+
+  // Domain-specific configuration endpoints
+  @Get('domain-configs/:domain')
+  async getDomainConfig(@Param('domain') domain: string): Promise<any> {
+    return this.policiesService.getDomainConfig(domain);
+  }
+
+  @Post('domain-configs/:domain')
+  @HttpCode(HttpStatus.OK)
+  async saveDomainConfig(
+    @Param('domain') domain: string,
+    @Body() config: any,
+  ): Promise<any> {
+    await this.policiesService.saveDomainConfig(domain, config);
+    return { message: 'Domain configuration saved successfully' };
+  }
+
+  @Get('domain-configs')
+  async getAllDomainConfigs(): Promise<Record<string, any>> {
+    return this.policiesService.getAllDomainConfigs();
+  }
 }
 

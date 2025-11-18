@@ -24,8 +24,9 @@ export class TestsController {
   async findAll(
     @Query('testType') testType?: string,
     @Query('policyId') policyId?: string,
+    @Query('domain') domain?: string,
   ): Promise<TestEntity[]> {
-    return this.testsService.findAll({ testType, policyId });
+    return this.testsService.findAll({ testType, policyId, domain });
   }
 
   @Get('by-policy/:policyId')
@@ -77,6 +78,12 @@ export class TestsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     return this.testsService.remove(id);
+  }
+
+  @Get(':id/used-in-suites')
+  @HttpCode(HttpStatus.OK)
+  async getUsedInSuites(@Param('id') id: string): Promise<any[]> {
+    return this.testsService.getUsedInSuites(id);
   }
 }
 

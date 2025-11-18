@@ -86,6 +86,12 @@
           placeholder="All Harnesses"
           class="filter-dropdown"
         />
+        <Dropdown
+          v-model="filterDomain"
+          :options="domainOptions"
+          placeholder="All Domains"
+          class="filter-dropdown"
+        />
       </div>
 
       <div class="test-suites-grid">
@@ -271,6 +277,7 @@ const filterTeam = ref('');
 const filterStatus = ref('');
 const filterValidator = ref('');
 const filterHarness = ref('');
+const filterDomain = ref('');
 
 const showSourceEditor = ref(false);
 const editingSourceSuiteId = ref<string | null>(null);
@@ -318,6 +325,33 @@ const harnessOptions = computed(() => {
   ];
 });
 
+const domainOptions = computed(() => {
+  const domains = new Set<string>();
+  testSuites.value.forEach(suite => {
+    if (suite.domain) {
+      domains.add(suite.domain);
+    }
+  });
+  
+  const domainLabels: Record<string, string> = {
+    'api_security': 'API Security',
+    'platform_config': 'Platform Configuration',
+    'identity': 'Identity',
+    'data_contracts': 'Data Contracts',
+    'salesforce': 'Salesforce',
+    'elastic': 'Elastic',
+    'idp_platform': 'IDP / Kubernetes',
+  };
+  
+  return [
+    { label: 'All Domains', value: '' },
+    ...Array.from(domains).map(d => ({ 
+      label: domainLabels[d] || d, 
+      value: d 
+    }))
+  ];
+});
+
 const filteredTestSuites = computed(() => {
   return testSuites.value.filter(suite => {
     const matchesSearch = !searchQuery.value || suite.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -327,7 +361,8 @@ const filteredTestSuites = computed(() => {
     const matchesStatus = !filterStatus.value || suite.status === filterStatus.value;
     const matchesValidator = !filterValidator.value || (suite.validatorId === filterValidator.value);
     const matchesHarness = !filterHarness.value || (suite.harnessIds && suite.harnessIds.includes(filterHarness.value));
-    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesValidator && matchesHarness;
+    const matchesDomain = !filterDomain.value || suite.domain === filterDomain.value;
+    return matchesSearch && matchesApp && matchesTeam && matchesStatus && matchesValidator && matchesHarness && matchesDomain;
   });
 });
 

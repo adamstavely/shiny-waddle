@@ -1,1 +1,337 @@
-[]
+[
+  {
+    "id": "suite.data_contracts.1",
+    "name": "Data Contract – Schema Conformance",
+    "applicationId": "default",
+    "team": "Data Platform",
+    "testType": "data-contract",
+    "domain": "data_contracts",
+    "testIds": [
+      "test.data_contracts.schema_matches_registered_data_contract",
+      "test.data_contracts.required_fields_present",
+      "test.data_contracts.enum_values_within_contract",
+      "test.data_contracts.contract_version_in_sync_with_runtime_schema"
+    ],
+    "description": "Data Contract – Schema Conformance",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 4,
+    "score": 0
+  },
+  {
+    "id": "suite.data_contracts.2",
+    "name": "Data Contract – Security & Classification Alignment",
+    "applicationId": "default",
+    "team": "Data Platform",
+    "testType": "data-contract",
+    "domain": "data_contracts",
+    "testIds": [
+      "test.data_contracts.pii_fields_match_contract_classification"
+    ],
+    "description": "Data Contract – Security & Classification Alignment",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 1,
+    "score": 0
+  },
+  {
+    "id": "suite.data_contracts.3",
+    "name": "Data Contract – Quality & SLAs",
+    "applicationId": "default",
+    "team": "Data Platform",
+    "testType": "data-contract",
+    "domain": "data_contracts",
+    "testIds": [
+      "test.data_contracts.contract_quality_sla_respected"
+    ],
+    "description": "Data Contract – Quality & SLAs",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 1,
+    "score": 0
+  },
+  {
+    "id": "suite.salesforce.config_baseline",
+    "name": "Salesforce – Configuration Baseline",
+    "applicationId": "default",
+    "team": "Salesforce Team",
+    "testType": "salesforce-config",
+    "domain": "salesforce",
+    "testIds": [
+      "test.salesforce.metadata_matches_baseline",
+      "test.salesforce.profiles_match_expected_permissions",
+      "test.salesforce.validation_rules_match_baseline",
+      "test.salesforce.flows_match_baseline",
+      "test.salesforce.connected_apps_match_baseline"
+    ],
+    "description": "Salesforce configuration baseline tests",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 5,
+    "score": 0
+  },
+  {
+    "id": "suite.salesforce.security",
+    "name": "Salesforce – Security Posture",
+    "applicationId": "default",
+    "team": "Salesforce Team",
+    "testType": "salesforce-security",
+    "domain": "salesforce",
+    "testIds": [
+      "test.salesforce.mfa_enforced_for_all_users",
+      "test.salesforce.guest_user_access_restricted",
+      "test.salesforce.org_wide_defaults_secure",
+      "test.salesforce.excessive_permissions_detected",
+      "test.salesforce.inactive_users_deactivated",
+      "test.salesforce.critical_perms_limited_to_admins"
+    ],
+    "description": "Salesforce security posture tests",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 6,
+    "score": 0
+  },
+  {
+    "id": "suite.elastic.config",
+    "name": "Elastic – Cluster Baseline Config",
+    "applicationId": "default",
+    "team": "Infrastructure",
+    "testType": "elastic-config",
+    "domain": "elastic",
+    "testIds": [
+      "test.elastic.cluster_settings_match_baseline",
+      "test.elastic.index_templates_match_baseline",
+      "test.elastic.ilm_policies_match_baseline",
+      "test.elastic.ingest_pipelines_match_baseline",
+      "test.elastic.snapshots_configured_for_critical_indices"
+    ],
+    "description": "Elastic cluster baseline configuration tests",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 5,
+    "score": 0
+  },
+  {
+    "id": "suite.elastic.security",
+    "name": "Elastic – Security Posture",
+    "applicationId": "default",
+    "team": "Infrastructure",
+    "testType": "elastic-security",
+    "domain": "elastic",
+    "testIds": [
+      "test.elastic.security_features_enabled",
+      "test.elastic.tls_enabled_internode",
+      "test.elastic.tls_enabled_http",
+      "test.elastic.anonymous_access_disabled",
+      "test.elastic.roles_match_baseline",
+      "test.elastic.excessive_privileges_detected",
+      "test.elastic.api_keys_scoped_and_valid"
+    ],
+    "description": "Elastic security posture tests",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 7,
+    "score": 0
+  },
+  {
+    "id": "suite.elastic.data_protection",
+    "name": "Elastic – Data Protection & Tenancy",
+    "applicationId": "default",
+    "team": "Infrastructure",
+    "testType": "elastic-security",
+    "domain": "elastic",
+    "testIds": [
+      "test.elastic.sensitive_indices_protected",
+      "test.elastic.snapshots_encrypted_and_in_compliant_region",
+      "test.elastic.multi-tenant_index_patterns_isolated"
+    ],
+    "description": "Elastic data protection and tenancy tests",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 3,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.1",
+    "name": "IDP – Cluster & Control Plane Hardening",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "k8s-security",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.api_server_authn_enabled",
+      "test.idp.api_server_audit_logging_enabled",
+      "test.idp.etcd_encrypted_at_rest",
+      "test.idp.control_plane_tls_enforced",
+      "test.idp.cis_controls_pass"
+    ],
+    "description": "IDP – Cluster & Control Plane Hardening",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 5,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.2",
+    "name": "IDP – Tenant Isolation & Resource Governance",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "k8s-workload",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.namespace_has_resource_quotas",
+      "test.idp.namespace_has_limit_ranges",
+      "test.idp.tenant_namespaces_isolated",
+      "test.idp.pod_security_standards_enforced"
+    ],
+    "description": "IDP – Tenant Isolation & Resource Governance",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 4,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.3",
+    "name": "IDP – Network & Service Mesh Security",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "k8s-security",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.mesh_mtls_enabled",
+      "test.idp.ingress_restricts_external_exposure",
+      "test.idp.egress_policies_enforced"
+    ],
+    "description": "IDP – Network & Service Mesh Security",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 3,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.4",
+    "name": "IDP – Workload Hardening & Health",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "k8s-workload",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.no_privileged_containers",
+      "test.idp.no_hostpath_mounts_without_approval",
+      "test.idp.run_as_non-root_enforced",
+      "test.idp.capabilities_dropped",
+      "test.idp.liveness_readiness_probes_configured"
+    ],
+    "description": "IDP – Workload Hardening & Health",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 5,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.5",
+    "name": "IDP – Supply Chain & Image Hygiene",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "idp-compliance",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.images_from_trusted_registry_only",
+      "test.idp.images_signed_and_verified",
+      "test.idp.no_latest_tag_in_prod",
+      "test.idp.vulnerability_policy_respected"
+    ],
+    "description": "IDP – Supply Chain & Image Hygiene",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 4,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.6",
+    "name": "IDP – Secrets & Config Hygiene",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "k8s-security",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.secrets_stored_in_approved_backend",
+      "test.idp.secrets_mounted_least_privilege"
+    ],
+    "description": "IDP – Secrets & Config Hygiene",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 2,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.7",
+    "name": "IDP – Platform Services & Observability",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "idp-compliance",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.cert_manager_issuers_configured",
+      "test.idp.ingress_tls_required",
+      "test.idp.workloads_emit_structured_logs",
+      "test.idp.workloads_have_standard_labels",
+      "test.idp.metrics_and_traces_exported"
+    ],
+    "description": "IDP – Platform Services & Observability",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 5,
+    "score": 0
+  },
+  {
+    "id": "suite.idp.8",
+    "name": "IDP – Golden Path Compliance",
+    "applicationId": "default",
+    "team": "Platform",
+    "testType": "idp-compliance",
+    "domain": "idp_platform",
+    "testIds": [
+      "test.idp.service_conforms_to_golden_template",
+      "test.idp.required_sidecars_present",
+      "test.idp.backstage_catalog_entry_in_sync"
+    ],
+    "description": "IDP – Golden Path Compliance",
+    "enabled": true,
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z",
+    "status": "pending",
+    "testCount": 3,
+    "score": 0
+  }
+]

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
+import Dashboard from '../views/Dashboard.vue';
 import ApplicationDashboard from '../views/ApplicationDashboard.vue';
 import ApplicationDetail from '../views/ApplicationDetail.vue';
 import Applications from '../views/Applications.vue';
@@ -19,6 +20,7 @@ import TestBatteryCreate from '../views/TestBatteryCreate.vue';
 import TestHarnessDetail from '../views/TestHarnessDetail.vue';
 import TestHarnessCreate from '../views/TestHarnessCreate.vue';
 import Reports from '../views/Reports.vue';
+import RunsAndReports from '../views/RunsAndReports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
 import Insights from '../views/insights/Insights.vue';
@@ -63,6 +65,26 @@ const router = createRouter({
       component: Home,
     },
     {
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: Dashboard,
+    },
+    {
+      path: '/applications',
+      name: 'Applications',
+      component: Applications,
+    },
+    {
+      path: '/applications/:id',
+      name: 'ApplicationDetail',
+      component: ApplicationDetail,
+    },
+    {
+      path: '/admin/applications/:id',
+      name: 'AdminApplicationDetail',
+      component: ApplicationDetail,
+    },
+    {
       path: '/insights',
       name: 'Insights',
       component: Insights,
@@ -74,16 +96,6 @@ const router = createRouter({
       path: '/dashboard/app/:id',
       name: 'ApplicationDashboard',
       component: ApplicationDashboard,
-    },
-    {
-      path: '/applications',
-      name: 'Applications',
-      component: Applications,
-    },
-    {
-      path: '/admin/applications/:id',
-      name: 'ApplicationDetail',
-      component: ApplicationDetail,
     },
     {
       path: '/dashboard/team/:id',
@@ -209,6 +221,11 @@ const router = createRouter({
       path: '/platform-config',
       name: 'PlatformConfigOverview',
       component: PlatformConfigOverview,
+    },
+    {
+      path: '/runs',
+      name: 'RunsAndReports',
+      component: RunsAndReports,
     },
     {
       path: '/policies',

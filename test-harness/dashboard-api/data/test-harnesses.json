@@ -1,1 +1,134 @@
-[]
+[
+  {
+    "id": "h_data_contracts_preprod_validation",
+    "name": "Data Contracts Preprod Validation",
+    "description": "Data contract validation harness for pre-production environments",
+    "domain": "data_contracts",
+    "testType": "data-contract",
+    "testSuiteIds": [
+      "suite.data_contracts.1"
+    ],
+    "applicationIds": [],
+    "team": "Data Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_data_contracts_prod_drift",
+    "name": "Data Contracts Prod Drift",
+    "description": "Data contract drift detection harness for production",
+    "domain": "data_contracts",
+    "testType": "data-contract",
+    "testSuiteIds": [
+      "suite.data_contracts.2",
+      "suite.data_contracts.3"
+    ],
+    "applicationIds": [],
+    "team": "Data Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_salesforce_metadata_scan",
+    "name": "Salesforce Metadata Scan",
+    "description": "Salesforce metadata baseline scanning harness",
+    "domain": "salesforce",
+    "testType": "salesforce-config",
+    "testSuiteIds": [
+      "suite.salesforce.config_baseline"
+    ],
+    "applicationIds": [],
+    "team": "Salesforce Team",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_salesforce_security_scan",
+    "name": "Salesforce Security Scan",
+    "description": "Salesforce security posture scanning harness",
+    "domain": "salesforce",
+    "testType": "salesforce-security",
+    "testSuiteIds": [
+      "suite.salesforce.security"
+    ],
+    "applicationIds": [],
+    "team": "Salesforce Team",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_elastic_config_scan",
+    "name": "Elastic Config Scan",
+    "description": "Elastic cluster configuration baseline scanning harness",
+    "domain": "elastic",
+    "testType": "elastic-config",
+    "testSuiteIds": [
+      "suite.elastic.config"
+    ],
+    "applicationIds": [],
+    "team": "Infrastructure",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_elastic_security_scan",
+    "name": "Elastic Security Scan",
+    "description": "Elastic security posture scanning harness",
+    "domain": "elastic",
+    "testType": "elastic-security",
+    "testSuiteIds": [
+      "suite.elastic.security",
+      "suite.elastic.data_protection"
+    ],
+    "applicationIds": [],
+    "team": "Infrastructure",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_idp_cluster_scan",
+    "name": "IDP Cluster Scan",
+    "description": "IDP/K8s cluster and control plane scanning harness",
+    "domain": "idp_platform",
+    "testType": "k8s-security",
+    "testSuiteIds": [
+      "suite.idp.1"
+    ],
+    "applicationIds": [],
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_idp_workload_hardening_scan",
+    "name": "IDP Workload Hardening Scan",
+    "description": "IDP/K8s workload hardening and security scanning harness",
+    "domain": "idp_platform",
+    "testType": "k8s-workload",
+    "testSuiteIds": [
+      "suite.idp.2",
+      "suite.idp.4",
+      "suite.idp.6"
+    ],
+    "applicationIds": [],
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  },
+  {
+    "id": "h_idp_golden_path_scan",
+    "name": "IDP Golden Path Scan",
+    "description": "IDP golden path compliance scanning harness",
+    "domain": "idp_platform",
+    "testType": "idp-compliance",
+    "testSuiteIds": [
+      "suite.idp.5",
+      "suite.idp.7",
+      "suite.idp.8"
+    ],
+    "applicationIds": [],
+    "team": "Platform",
+    "createdAt": "2025-11-18T04:32:19.093Z",
+    "updatedAt": "2025-11-18T04:32:19.093Z"
+  }
+]

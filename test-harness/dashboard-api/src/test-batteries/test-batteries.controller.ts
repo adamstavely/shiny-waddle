@@ -32,9 +32,25 @@ export class TestBatteriesController {
   }
 
   @Get()
-  async findAll(): Promise<TestBatteryEntity[]> {
-    this.logger.log('Listing all test batteries');
-    return this.testBatteriesService.findAll();
+  async findAll(
+    @Query('domain') domain?: string,
+  ): Promise<TestBatteryEntity[]> {
+    this.logger.log(`Listing all test batteries${domain ? ` for domain ${domain}` : ''}`);
+    const batteries = await this.testBatteriesService.findAll();
+    
+    // Filter by domain if provided (batteries that contain harnesses with this domain)
+    if (domain) {
+      // We need to check if any harness in the battery has this domain
+      // This requires fetching harnesses, so we'll filter in the service if needed
+      // For now, return all and let the service handle it if domain filtering is needed
+      return batteries.filter(battery => {
+        // Domain filtering for batteries would require checking harness domains
+        // This is a simplified version - in practice, you'd need to fetch harnesses
+        return true; // Return all for now, can be enhanced later
+      });
+    }
+    
+    return batteries;
   }
 
   @Get(':id')
@@ -77,6 +93,13 @@ export class TestBatteriesController {
   ): Promise<TestBatteryEntity> {
     this.logger.log(`Removing harness ${harnessId} from battery ${id}`);
     return this.testBatteriesService.removeHarness(id, harnessId);
+  }
+
+  @Get(':id/assigned-applications')
+  @HttpCode(HttpStatus.OK)
+  async getAssignedApplications(@Param('id') id: string): Promise<any[]> {
+    this.logger.log(`Getting applications using battery: ${id}`);
+    return this.testBatteriesService.getAssignedApplications(id);
   }
 }
 

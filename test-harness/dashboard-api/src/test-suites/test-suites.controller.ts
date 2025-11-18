@@ -37,15 +37,24 @@ export class TestSuitesController {
   async findAll(
     @Query('applicationId') applicationId?: string,
     @Query('team') team?: string,
+    @Query('domain') domain?: string,
   ): Promise<TestSuiteEntity[]> {
-    this.logger.log(`Listing test suites${applicationId ? ` for application ${applicationId}` : ''}${team ? ` for team ${team}` : ''}`);
+    this.logger.log(`Listing test suites${applicationId ? ` for application ${applicationId}` : ''}${team ? ` for team ${team}` : ''}${domain ? ` for domain ${domain}` : ''}`);
+    let suites: TestSuiteEntity[];
     if (applicationId) {
-      return this.testSuitesService.findByApplication(applicationId);
+      suites = await this.testSuitesService.findByApplication(applicationId);
+    } else if (team) {
+      suites = await this.testSuitesService.findByTeam(team);
+    } else {
+      suites = await this.testSuitesService.findAll();
     }
-    if (team) {
-      return this.testSuitesService.findByTeam(team);
+    
+    // Filter by domain if provided
+    if (domain) {
+      suites = suites.filter(s => s.domain === domain);
     }
-    return this.testSuitesService.findAll();
+    
+    return suites;
   }
 
   @Get(':id')
@@ -124,6 +133,13 @@ export class TestSuitesController {
       throw new NotFoundException('Could not extract configuration from source file');
     }
     return { config };
+  }
+
+  @Get(':id/used-in-harnesses')
+  @HttpCode(HttpStatus.OK)
+  async getUsedInHarnesses(@Param('id') id: string): Promise<any[]> {
+    this.logger.log(`Getting harnesses using test suite: ${id}`);
+    return this.testSuitesService.getUsedInHarnesses(id);
   }
 }
 

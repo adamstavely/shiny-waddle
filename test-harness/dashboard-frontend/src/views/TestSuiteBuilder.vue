@@ -90,10 +90,8 @@
               <select v-model="form.testType" required class="form-input form-select">
                 <option value="">Select a test type...</option>
                 <option value="access-control">Access Control</option>
-                <option value="rls-cls">RLS/CLS</option>
                 <option value="network-policy">Network Policy</option>
-                <option value="dlp">DLP</option>
-                <option value="api-gateway">API Gateway</option>
+                <option value="dlp">Data Loss Prevention (DLP)</option>
                 <option value="distributed-systems">Distributed Systems</option>
                 <option value="api-security">API Security</option>
                 <option value="data-pipeline">Data Pipeline</option>

@@ -164,6 +164,13 @@
             <p>Execution results will appear here after harness runs in CI/CD</p>
           </div>
         </div>
+
+        <!-- Cross Links -->
+        <CrossLinkPanel
+          v-if="harness"
+          entity-type="test-harness"
+          :entity-id="harness.id"
+        />
       </div>
     </div>
 
@@ -275,6 +282,7 @@ import {
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import CrossLinkPanel from '../components/CrossLinkPanel.vue';
 import TestHarnessModal from '../components/TestHarnessModal.vue';
 import type { TestHarness } from '../../core/types';
 

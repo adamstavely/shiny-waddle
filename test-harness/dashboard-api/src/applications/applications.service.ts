@@ -10,6 +10,8 @@ import { ValidatorsService } from '../validators/validators.service';
 import { TestHarnessesService } from '../test-harnesses/test-harnesses.service';
 import { TestBatteriesService } from '../test-batteries/test-batteries.service';
 import { ContextDetectorService } from '../cicd/context-detector.service';
+import { getDomainFromTestType, getDomainDisplayName } from '../../../core/domain-mapping';
+import { TestType } from '../../../core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -954,6 +956,183 @@ export class ApplicationsService {
     return allBatteries.filter(battery => 
       battery.harnessIds && battery.harnessIds.some(harnessId => assignedHarnessIds.includes(harnessId))
     );
+  }
+
+  /**
+   * Get runs for an application
+   */
+  async getRuns(applicationId: string, limit?: number): Promise<any[]> {
+    await this.loadApplications();
+    await this.findOne(applicationId);
+    
+    const results = await this.testResultsService.query({
+      applicationId,
+      limit,
+    });
+    
+    // Group results by runId to create battery runs
+    const runsByRunId = new Map<string, any>();
+    
+    for (const result of results) {
+      const runId = result.runId || result.id;
+      if (!runsByRunId.has(runId)) {
+        // Try to find battery name from harness/battery
+        const batteryName = result.metadata?.batteryName || 'Unknown Battery';
+        runsByRunId.set(runId, {
+          id: runId,
+          batteryName,
+          status: result.status === 'passed' ? 'completed' : result.status === 'failed' ? 'failed' : 'running',
+          score: this.calculateScoreFromResults([result]),
+          timestamp: result.timestamp,
+          environment: result.metadata?.environment || 'N/A',
+          harnesses: [],
+        });
+      }
+      
+      const run = runsByRunId.get(runId);
+      if (result.metadata?.harnessName && !run.harnesses.find((h: any) => h.id === result.metadata.harnessId)) {
+        run.harnesses.push({
+          id: result.metadata.harnessId,
+          name: result.metadata.harnessName,
+        });
+      }
+    }
+    
+    return Array.from(runsByRunId.values()).sort((a, b) => 
+      b.timestamp.getTime() - a.timestamp.getTime()
+    );
+  }
+
+  /**
+   * Get issues across all applications
+   */
+  async getAllIssues(limit?: number, priority?: string): Promise<any[]> {
+    await this.loadApplications();
+    
+    // Get failed test results as issues from all applications
+    const results = await this.testResultsService.query({
+      status: 'failed',
+      limit: limit ? limit * 2 : undefined, // Get more to account for filtering
+    });
+    
+    const issues = results.map(result => ({
+      id: result.id,
+      title: `Test failed: ${result.testConfigurationName || 'Unknown Test'}`,
+      description: result.error || 'Test execution failed',
+      domain: this.getDomainFromTestType(result.testConfigurationType || ''),
+      priority: this.getPriorityFromResult(result),
+      applicationId: result.applicationId,
+      applicationName: result.applicationName,
+      timestamp: result.timestamp,
+    }));
+    
+    // Filter by priority if specified
+    let filteredIssues = issues;
+    if (priority) {
+      const priorities = priority.split(',');
+      filteredIssues = issues.filter(issue => priorities.includes(issue.priority));
+    }
+    
+    // Sort by priority (critical, high, medium, low) and timestamp
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    filteredIssues.sort((a, b) => {
+      const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 99) - 
+                           (priorityOrder[b.priority as keyof typeof priorityOrder] || 99);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
+    
+    // Apply limit after filtering and sorting
+    if (limit) {
+      return filteredIssues.slice(0, limit);
+    }
+    
+    return filteredIssues;
+  }
+
+  /**
+   * Get issues for an application
+   */
+  async getIssues(applicationId: string, limit?: number, priority?: string): Promise<any[]> {
+    await this.loadApplications();
+    await this.findOne(applicationId);
+    
+    // Get failed test results as issues
+    const results = await this.testResultsService.query({
+      applicationId,
+      status: 'failed',
+      limit,
+    });
+    
+    const issues = results.map(result => ({
+      id: result.id,
+      title: `Test failed: ${result.testConfigurationName || 'Unknown Test'}`,
+      description: result.error || 'Test execution failed',
+      domain: this.getDomainFromTestType(result.testConfigurationType || ''),
+      priority: this.getPriorityFromResult(result),
+      applicationId,
+      applicationName: result.applicationName,
+      timestamp: result.timestamp,
+    }));
+    
+    // Filter by priority if specified
+    if (priority) {
+      const priorities = priority.split(',');
+      return issues.filter(issue => priorities.includes(issue.priority));
+    }
+    
+    return issues;
+  }
+
+  /**
+   * Get compliance score for an application
+   */
+  async getComplianceScore(applicationId: string): Promise<{ score: number }> {
+    await this.loadApplications();
+    await this.findOne(applicationId);
+    
+    const results = await this.testResultsService.query({
+      applicationId,
+      limit: 100, // Get recent results
+    });
+    
+    if (results.length === 0) {
+      return { score: 0 };
+    }
+    
+    const score = this.calculateScoreFromResults(results);
+    return { score };
+  }
+
+  private calculateScoreFromResults(results: any[]): number {
+    if (results.length === 0) return 0;
+    const passed = results.filter(r => r.status === 'passed').length;
+    return Math.round((passed / results.length) * 100);
+  }
+
+  private getDomainFromTestType(testType: string): string {
+    // Use centralized domain mapping utility
+    try {
+      const domain = getDomainFromTestType(testType as TestType);
+      return getDomainDisplayName(domain);
+    } catch (error) {
+      // Fallback for unknown test types
+      return 'Other';
+    }
+  }
+
+  private getPriorityFromResult(result: any): string {
+    // Determine priority based on test type and error
+    if (result.testConfigurationType === 'api-security' || result.testConfigurationType === 'access-control') {
+      return 'critical';
+    }
+    if (result.error && result.error.includes('critical')) {
+      return 'critical';
+    }
+    if (result.error && result.error.includes('high')) {
+      return 'high';
+    }
+    return 'medium';
   }
 }
 
