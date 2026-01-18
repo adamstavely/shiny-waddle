@@ -49,6 +49,7 @@ import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
 import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
+import { AlertingModule } from './alerting/alerting.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -104,6 +105,7 @@ import { AppController } from './app.controller';
     ExceptionsModule,
     StandardsMappingModule,
     SalesforceExperienceCloudModule,
+    AlertingModule,
   ],
   controllers: [AppController],
   providers: [

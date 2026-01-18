@@ -32,6 +32,7 @@ import {
 } from '../../../services/attack-path-analyzer';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
+import { AlertingService } from '../alerting/alerting.service';
 
 @Injectable()
 export class UnifiedFindingsService {
@@ -48,6 +49,8 @@ export class UnifiedFindingsService {
   constructor(
     @Inject(forwardRef(() => ApplicationsService))
     private readonly applicationsService: ApplicationsService,
+    @Inject(forwardRef(() => AlertingService))
+    private readonly alertingService?: AlertingService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
     @Inject(forwardRef(() => UsersService))
@@ -176,6 +179,16 @@ export class UnifiedFindingsService {
           // Don't throw - notification failures shouldn't break ingestion
         }
       }
+
+      // Evaluate alert rules for new findings
+      if (isNew && this.alertingService) {
+        try {
+          await this.alertingService.evaluateFinding(finding);
+        } catch (err) {
+          this.logger.error('Failed to evaluate alert rules for finding:', err);
+          // Don't throw - alert evaluation failures shouldn't break ingestion
+        }
+      }
     }
 
     await this.saveFindings();
@@ -206,13 +219,24 @@ export class UnifiedFindingsService {
       }
     }
 
-    this.findings[index] = {
+    const updatedFinding = {
       ...currentFinding,
       ...updates,
       updatedAt: new Date(),
     };
+    this.findings[index] = updatedFinding;
 
     await this.saveFindings();
+
+    // Evaluate alert rules if severity or status changed
+    if (this.alertingService && (updates.severity || updates.status)) {
+      try {
+        await this.alertingService.evaluateFinding(updatedFinding);
+      } catch (err) {
+        this.logger.error('Failed to evaluate alert rules for updated finding:', err);
+        // Don't throw - alert evaluation failures shouldn't break updates
+      }
+    }
 
     // Store compliance score after update (async, don't wait)
     this.storeComplianceScoreAfterUpdate().catch(err => {
