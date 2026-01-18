@@ -1,0 +1,695 @@
+<template>
+  <div class="individual-tests-page">
+    <Breadcrumb :items="breadcrumbItems" />
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <h1 class="page-title">Individual Tests</h1>
+          <p class="page-description">Manage and organize individual test configurations. Each test validates specific security requirements using policies and infrastructure.</p>
+        </div>
+        <button @click="router.push({ name: 'TestCreate' })" class="btn-primary">
+          <Plus class="btn-icon" />
+          Create Test
+        </button>
+      </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <TestTube class="stat-icon" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ tests.length || 0 }}</div>
+          <div class="stat-label">Total Tests</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <Shield class="stat-icon" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ accessControlTestsCount }}</div>
+          <div class="stat-label">Access Control</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <Database class="stat-icon" />
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ otherTestsCount }}</div>
+          <div class="stat-label">Other Types</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tests List -->
+    <div v-if="loading" class="loading">Loading tests...</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else>
+      <div class="filters">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search tests..."
+          class="search-input"
+        />
+        <Dropdown
+          v-model="filterTestType"
+          :options="testTypeOptions"
+          placeholder="All Test Types"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterDomain"
+          :options="domainOptions"
+          placeholder="All Domains"
+          class="filter-dropdown"
+        />
+      </div>
+
+      <div class="tests-grid">
+        <div
+          v-for="test in filteredTests"
+          :key="test.id"
+          class="test-card"
+          @click="viewTest(test.id)"
+        >
+          <div class="test-header">
+            <div class="test-title-row">
+              <h3 class="test-name">{{ test.name }}</h3>
+              <span class="version-badge">v{{ test.version }}</span>
+            </div>
+            <p v-if="test.description" class="test-description">{{ test.description }}</p>
+            <div class="test-meta">
+              <span class="test-type-badge" :class="`type-${test.testType}`">
+                {{ getTestTypeLabel(test.testType) }}
+              </span>
+              <span v-if="test.domain" class="domain-badge">
+                {{ getDomainLabel(test.domain) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="test-info">
+            <div v-if="test.testType === 'access-control' && test.policyId" class="info-row">
+              <span class="info-label">Policy:</span>
+              <span class="info-value">{{ getPolicyName(test.policyId) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Created:</span>
+              <span class="info-value">{{ formatDate(test.createdAt) }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Last Updated:</span>
+              <span class="info-value">{{ formatDate(test.updatedAt) }}</span>
+            </div>
+          </div>
+
+          <div class="test-actions">
+            <button @click.stop="viewTest(test.id)" class="action-btn view-btn">
+              <Eye class="action-icon" />
+              View
+            </button>
+            <button @click.stop="editTest(test.id)" class="action-btn edit-btn">
+              <Edit class="action-icon" />
+              Edit
+            </button>
+            <button @click.stop="deleteTest(test.id)" class="action-btn delete-btn">
+              <Trash2 class="action-icon" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="filteredTests.length === 0" class="empty-state">
+        <TestTube class="empty-icon" />
+        <h3>No tests found</h3>
+        <p>Create your first test to get started</p>
+        <button @click="router.push({ name: 'TestCreate' })" class="btn-primary">
+          Create Test
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import {
+  TestTube,
+  Shield,
+  Database,
+  Plus,
+  Eye,
+  Edit,
+  Trash2
+} from 'lucide-vue-next';
+import axios from 'axios';
+import Dropdown from '../components/Dropdown.vue';
+import Breadcrumb from '../components/Breadcrumb.vue';
+
+const router = useRouter();
+const route = useRoute();
+
+const breadcrumbItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Tests', to: '/tests' },
+  { label: 'Individual Tests' }
+];
+
+const tests = ref<any[]>([]);
+const policies = ref<any[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+const searchQuery = ref('');
+const filterTestType = ref('');
+const filterDomain = ref('');
+
+const testTypeOptions = computed(() => {
+  const types = new Set(tests.value.map(t => t.testType));
+  const typeLabels: Record<string, string> = {
+    'access-control': 'Access Control',
+    'dataset-health': 'Dataset Health',
+    'rls-cls': 'RLS/CLS',
+    'network-policy': 'Network Policy',
+    'dlp': 'DLP',
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems',
+    'api-security': 'API Security',
+    'data-pipeline': 'Data Pipeline',
+    'data-contract': 'Data Contract',
+    'salesforce-config': 'Salesforce Config',
+    'salesforce-security': 'Salesforce Security',
+    'salesforce-experience-cloud': 'Salesforce Experience Cloud',
+    'elastic-config': 'Elastic Config',
+    'elastic-security': 'Elastic Security',
+    'k8s-security': 'K8s Security',
+    'k8s-workload': 'K8s Workload',
+    'idp-compliance': 'IDP Compliance'
+  };
+  
+  return [
+    { label: 'All Test Types', value: '' },
+    ...Array.from(types).map(t => ({
+      label: typeLabels[t] || t,
+      value: t
+    }))
+  ];
+});
+
+const domainOptions = computed(() => {
+  const domains = new Set(tests.value.map(t => t.domain).filter(Boolean));
+  const domainLabels: Record<string, string> = {
+    'api_security': 'API Security',
+    'platform_config': 'Platform Configuration',
+    'identity': 'Identity',
+    'data_contracts': 'Data Contracts',
+    'salesforce': 'Salesforce',
+    'elastic': 'Elastic',
+    'idp_platform': 'IDP / Kubernetes',
+  };
+  
+  return [
+    { label: 'All Domains', value: '' },
+    ...Array.from(domains).map(d => ({
+      label: domainLabels[d] || d,
+      value: d
+    }))
+  ];
+});
+
+const filteredTests = computed(() => {
+  return tests.value.filter(test => {
+    const matchesSearch = !searchQuery.value || 
+      test.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      (test.description && test.description.toLowerCase().includes(searchQuery.value.toLowerCase()));
+    const matchesType = !filterTestType.value || test.testType === filterTestType.value;
+    const matchesDomain = !filterDomain.value || test.domain === filterDomain.value;
+    return matchesSearch && matchesType && matchesDomain;
+  });
+});
+
+const accessControlTestsCount = computed(() => {
+  return tests.value.filter(t => t.testType === 'access-control').length;
+});
+
+const otherTestsCount = computed(() => {
+  return tests.value.filter(t => t.testType !== 'access-control').length;
+});
+
+const getTestTypeLabel = (testType: string): string => {
+  const labels: Record<string, string> = {
+    'access-control': 'Access Control',
+    'dataset-health': 'Dataset Health',
+    'rls-cls': 'RLS/CLS',
+    'network-policy': 'Network Policy',
+    'dlp': 'DLP',
+    'api-gateway': 'API Gateway',
+    'distributed-systems': 'Distributed Systems',
+    'api-security': 'API Security',
+    'data-pipeline': 'Data Pipeline',
+    'data-contract': 'Data Contract',
+    'salesforce-config': 'Salesforce Config',
+    'salesforce-security': 'Salesforce Security',
+    'salesforce-experience-cloud': 'Salesforce Experience Cloud',
+    'elastic-config': 'Elastic Config',
+    'elastic-security': 'Elastic Security',
+    'k8s-security': 'K8s Security',
+    'k8s-workload': 'K8s Workload',
+    'idp-compliance': 'IDP Compliance'
+  };
+  return labels[testType] || testType;
+};
+
+const getDomainLabel = (domain: string): string => {
+  const labels: Record<string, string> = {
+    'api_security': 'API Security',
+    'platform_config': 'Platform Configuration',
+    'identity': 'Identity',
+    'data_contracts': 'Data Contracts',
+    'salesforce': 'Salesforce',
+    'elastic': 'Elastic',
+    'idp_platform': 'IDP / Kubernetes',
+  };
+  return labels[domain] || domain;
+};
+
+const getPolicyName = (policyId: string): string => {
+  const policy = policies.value.find(p => p.id === policyId);
+  return policy?.name || policyId;
+};
+
+const formatDate = (date: Date | string | undefined): string => {
+  if (!date) return 'Never';
+  const d = new Date(date);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+};
+
+const loadTests = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const policyId = route.query.policyId as string;
+    const params: any = {};
+    if (policyId) {
+      params.policyId = policyId;
+    }
+    
+    const response = await axios.get('/api/v1/tests', { params });
+    tests.value = (response.data || []).map((t: any) => ({
+      ...t,
+      createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
+      updatedAt: t.updatedAt ? new Date(t.updatedAt) : new Date(),
+    }));
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Failed to load tests';
+    console.error('Error loading tests:', err);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadPolicies = async () => {
+  try {
+    const response = await axios.get('/api/v1/policies');
+    policies.value = response.data || [];
+  } catch (err) {
+    console.error('Error loading policies:', err);
+  }
+};
+
+const viewTest = (id: string) => {
+  router.push({ path: `/tests/test/${id}` });
+};
+
+const editTest = (id: string) => {
+  router.push({ name: 'TestEdit', params: { id } });
+};
+
+const deleteTest = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+    return;
+  }
+  try {
+    await axios.delete(`/api/v1/tests/${id}`);
+    await loadTests();
+  } catch (err: any) {
+    error.value = err.response?.data?.message || 'Failed to delete test';
+    console.error('Error deleting test:', err);
+    alert(err.response?.data?.message || 'Failed to delete test');
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([
+    loadTests(),
+    loadPolicies()
+  ]);
+});
+</script>
+
+<style scoped>
+.individual-tests-page {
+  padding: 2rem;
+  max-width: 1800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-description {
+  color: #a0aec0;
+  margin: 0;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.1);
+}
+
+.stat-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(79, 172, 254, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon {
+  width: 24px;
+  height: 24px;
+  color: #4facfe;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem;
+  background: rgba(26, 31, 46, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 0.875rem;
+}
+
+.search-input::placeholder {
+  color: #6b7280;
+}
+
+.filter-dropdown {
+  min-width: 150px;
+}
+
+.tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.test-card {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.test-card:hover {
+  border-color: rgba(79, 172, 254, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
+}
+
+.test-header {
+  margin-bottom: 1rem;
+}
+
+.test-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.test-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  flex: 1;
+}
+
+.version-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #4facfe;
+}
+
+.test-description {
+  color: #a0aec0;
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.5;
+}
+
+.test-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.test-type-badge,
+.domain-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.test-type-badge.type-access-control {
+  background: rgba(79, 172, 254, 0.2);
+  color: #4facfe;
+}
+
+.test-type-badge.type-dataset-health {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.test-type-badge.type-rls-cls {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.test-type-badge {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.domain-badge {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+}
+
+.test-info {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.info-label {
+  color: #a0aec0;
+}
+
+.info-value {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.test-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(79, 172, 254, 0.1);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 6px;
+  color: #4facfe;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: rgba(79, 172, 254, 0.2);
+  border-color: rgba(79, 172, 254, 0.4);
+}
+
+.action-btn.edit-btn {
+  color: #4facfe;
+}
+
+.action-btn.delete-btn {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  color: #4facfe;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #a0aec0;
+  margin-bottom: 1.5rem;
+}
+
+.loading, .error {
+  padding: 2rem;
+  text-align: center;
+}
+
+.error {
+  color: #fc8181;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary .btn-icon {
+  width: 16px;
+  height: 16px;
+}
+</style>

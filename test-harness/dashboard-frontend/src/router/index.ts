@@ -19,6 +19,7 @@ import TestBatteryDetail from '../views/TestBatteryDetail.vue';
 import TestBatteryCreate from '../views/TestBatteryCreate.vue';
 import TestHarnessDetail from '../views/TestHarnessDetail.vue';
 import TestHarnessCreate from '../views/TestHarnessCreate.vue';
+import IndividualTests from '../views/IndividualTests.vue';
 import Reports from '../views/Reports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
@@ -134,7 +135,8 @@ const router = createRouter({
     },
     {
       path: '/tests/individual',
-      redirect: '/tests',
+      name: 'IndividualTests',
+      component: IndividualTests,
     },
     {
       path: '/tests/individual/new',
