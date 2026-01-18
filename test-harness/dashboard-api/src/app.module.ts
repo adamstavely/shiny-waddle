@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { VersionMiddleware } from './common/middleware/version.middleware';
 import { HttpsRedirectMiddleware } from './common/middleware/https-redirect.middleware';
 import { SanitizeMiddleware } from './common/middleware/sanitize.middleware';
+import { DotRouteMiddleware } from './common/middleware/dot-route.middleware';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ValidatorsModule } from './validators/validators.module';
@@ -13,7 +14,6 @@ import { ViolationsModule } from './violations/violations.module';
 import { HistoryModule } from './history/history.module';
 import { ApiSecurityModule } from './api-security/api-security.module';
 import { DataPipelineModule } from './data-pipeline/data-pipeline.module';
-import { ReportsModule } from './reports/reports.module';
 import { DistributedSystemsModule } from './distributed-systems/distributed-systems.module';
 import { CICDModule } from './cicd/cicd.module';
 import { TicketingModule } from './ticketing/ticketing.module';
@@ -31,7 +31,6 @@ import { IdentityProviderModule } from './identity-providers/identity-provider.m
 import { NetworkPolicyModule } from './network-policy/network-policy.module';
 import { APIGatewayModule } from './api-gateway/api-gateway.module';
 import { DLPModule } from './dlp/dlp.module';
-import { TestConfigurationsModule } from './test-configurations/test-configurations.module';
 import { TestResultsModule } from './test-results/test-results.module';
 import { TestSuitesModule } from './test-suites/test-suites.module';
 import { TestHarnessesModule } from './test-harnesses/test-harnesses.module';
@@ -49,6 +48,7 @@ import { DataClassificationModule } from './data-classification/data-classificat
 import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
+import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -70,7 +70,6 @@ import { AppController } from './app.controller';
     HistoryModule,
     ApiSecurityModule,
     DataPipelineModule,
-    ReportsModule,
     DistributedSystemsModule,
     CICDModule,
     TicketingModule,
@@ -88,7 +87,6 @@ import { AppController } from './app.controller';
     NetworkPolicyModule,
     APIGatewayModule,
     DLPModule,
-    TestConfigurationsModule,
     TestResultsModule,
     TestSuitesModule,
     TestHarnessesModule,
@@ -105,6 +103,7 @@ import { AppController } from './app.controller';
     PlatformConfigModule,
     ExceptionsModule,
     StandardsMappingModule,
+    SalesforceExperienceCloudModule,
   ],
   controllers: [AppController],
   providers: [
@@ -117,7 +116,7 @@ import { AppController } from './app.controller';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(HttpsRedirectMiddleware, SanitizeMiddleware, VersionMiddleware)
+      .apply(HttpsRedirectMiddleware, SanitizeMiddleware, VersionMiddleware, DotRouteMiddleware)
       .forRoutes('*'); // Apply to all routes
   }
 }

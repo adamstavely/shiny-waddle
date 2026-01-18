@@ -120,7 +120,7 @@ const loadPreferences = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await axios.get('/api/notifications/preferences');
+    const response = await axios.get('/api/v1/notifications/preferences');
     preferences.value = response.data;
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to load preferences';
@@ -134,7 +134,7 @@ const savePreferences = async () => {
   if (!preferences.value) return;
 
   try {
-    await axios.patch('/api/notifications/preferences', preferences.value);
+    await axios.patch('/api/v1/notifications/preferences', preferences.value);
     saveStatus.value = { type: 'success', message: 'Preferences saved successfully' };
     setTimeout(() => {
       saveStatus.value = null;

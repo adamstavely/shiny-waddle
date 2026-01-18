@@ -473,7 +473,7 @@ const loadSuite = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await axios.get(`/api/test-suites/${suiteId.value}`);
+    const response = await axios.get(`/api/v1/test-suites/${suiteId.value}`);
     const suiteData = response.data;
 
     suite.value = suiteData;
@@ -530,7 +530,7 @@ const loadAvailableTests = async () => {
   }
 
   try {
-    const response = await axios.get(`/api/tests?testType=${form.value.testType}`);
+    const response = await axios.get(`/api/v1/tests?testType=${form.value.testType}`);
     availableTests.value = response.data.filter((test: any) => 
       !form.value.testIds.includes(test.id)
     );
@@ -555,7 +555,7 @@ const loadSourceContent = async () => {
   sourceLoading.value = true;
   sourceError.value = null;
   try {
-    const response = await axios.get(`/api/test-suites/${suiteId.value}/source`);
+    const response = await axios.get(`/api/v1/test-suites/${suiteId.value}/source`);
     sourceContent.value = response.data.content;
     originalSourceContent.value = response.data.content;
   } catch (err: any) {
@@ -609,7 +609,7 @@ const saveSource = async () => {
   sourceLoading.value = true;
   sourceError.value = null;
   try {
-    await axios.put(`/api/test-suites/${suiteId.value}/source`, {
+    await axios.put(`/api/v1/test-suites/${suiteId.value}/source`, {
       content: sourceContent.value,
     });
     originalSourceContent.value = sourceContent.value;
@@ -644,14 +644,14 @@ const saveSuite = async () => {
 
     // If creating new suite
     if (isCreating.value) {
-      const response = await axios.post('/api/test-suites', payload);
+      const response = await axios.post('/api/v1/test-suites', payload);
       const newSuiteId = response.data.id || response.data._id;
       await router.push({ name: 'TestSuiteDetail', params: { id: newSuiteId } });
       return;
     }
 
     // Update existing suite
-    await axios.put(`/api/test-suites/${suiteId.value}`, payload);
+    await axios.put(`/api/v1/test-suites/${suiteId.value}`, payload);
     await loadSuite();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to save test suite';

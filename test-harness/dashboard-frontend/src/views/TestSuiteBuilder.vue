@@ -676,7 +676,7 @@ const saveDraft = async () => {
       suiteData.datasets = form.value.datasets;
     }
 
-    await axios.post('/api/test-suites', suiteData);
+    await axios.post('/api/v1/test-suites', suiteData);
     // In a real app, show success message
   } catch (error) {
     console.error('Error saving draft:', error);
@@ -716,7 +716,7 @@ const publish = async () => {
       suiteData.datasets = form.value.datasets;
     }
 
-    await axios.post('/api/test-suites', suiteData);
+    await axios.post('/api/v1/test-suites', suiteData);
     router.push('/tests');
   } catch (error) {
     console.error('Error publishing test suite:', error);

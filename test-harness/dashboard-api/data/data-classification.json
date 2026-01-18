@@ -1,0 +1,41 @@
+{
+  "levels": [
+    {
+      "id": "19209ef4-418e-4f3a-92da-61b3437944bc",
+      "name": "Public",
+      "description": "Publicly accessible data",
+      "sensitivity": "public",
+      "color": "#48bb78",
+      "createdAt": "2026-01-18T00:18:43.766Z",
+      "updatedAt": "2026-01-18T00:18:43.766Z"
+    },
+    {
+      "id": "e1997238-2769-44b1-997a-5ee73f9b115b",
+      "name": "Internal",
+      "description": "Internal use only",
+      "sensitivity": "internal",
+      "color": "#4299e1",
+      "createdAt": "2026-01-18T00:18:43.766Z",
+      "updatedAt": "2026-01-18T00:18:43.766Z"
+    },
+    {
+      "id": "1dc2f886-9b12-43e7-87d5-10d5e055c4b2",
+      "name": "Confidential",
+      "description": "Confidential data requiring protection",
+      "sensitivity": "confidential",
+      "color": "#ed8936",
+      "createdAt": "2026-01-18T00:18:43.766Z",
+      "updatedAt": "2026-01-18T00:18:43.766Z"
+    },
+    {
+      "id": "f9924893-c577-4b0e-b1d7-56a95e49bd3a",
+      "name": "Restricted",
+      "description": "Highly restricted data",
+      "sensitivity": "restricted",
+      "color": "#f56565",
+      "createdAt": "2026-01-18T00:18:43.766Z",
+      "updatedAt": "2026-01-18T00:18:43.766Z"
+    }
+  ],
+  "rules": []
+}

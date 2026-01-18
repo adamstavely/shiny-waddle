@@ -16,6 +16,7 @@ import { TestHarnessesService } from './test-harnesses.service';
 import { CreateTestHarnessDto } from './dto/create-test-harness.dto';
 import { UpdateTestHarnessDto } from './dto/update-test-harness.dto';
 import { TestHarnessEntity } from './entities/test-harness.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/v1/test-harnesses')
 export class TestHarnessesController {
@@ -23,6 +24,7 @@ export class TestHarnessesController {
 
   constructor(private readonly testHarnessesService: TestHarnessesService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -32,6 +34,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.create(dto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('applicationId') applicationId?: string,
@@ -56,12 +59,14 @@ export class TestHarnessesController {
     return harnesses;
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<TestHarnessEntity> {
     this.logger.log(`Getting test harness: ${id}`);
     return this.testHarnessesService.findOne(id);
   }
 
+  @Public()
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -71,6 +76,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.update(id, dto);
   }
 
+  @Public()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
@@ -78,6 +84,7 @@ export class TestHarnessesController {
     await this.testHarnessesService.delete(id);
   }
 
+  @Public()
   @Post(':id/test-suites')
   @HttpCode(HttpStatus.OK)
   async addTestSuite(
@@ -88,6 +95,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.addTestSuite(id, suiteId);
   }
 
+  @Public()
   @Delete(':id/test-suites/:suiteId')
   @HttpCode(HttpStatus.OK)
   async removeTestSuite(
@@ -98,6 +106,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.removeTestSuite(id, suiteId);
   }
 
+  @Public()
   @Post(':id/applications')
   @HttpCode(HttpStatus.OK)
   async assignToApplication(
@@ -108,6 +117,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.assignToApplication(id, applicationId);
   }
 
+  @Public()
   @Delete(':id/applications/:appId')
   @HttpCode(HttpStatus.OK)
   async unassignFromApplication(
@@ -118,6 +128,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.unassignFromApplication(id, appId);
   }
 
+  @Public()
   @Get(':id/used-in-batteries')
   @HttpCode(HttpStatus.OK)
   async getUsedInBatteries(@Param('id') id: string): Promise<any[]> {
@@ -125,6 +136,7 @@ export class TestHarnessesController {
     return this.testHarnessesService.getUsedInBatteries(id);
   }
 
+  @Public()
   @Get(':id/assigned-applications')
   @HttpCode(HttpStatus.OK)
   async getAssignedApplications(@Param('id') id: string): Promise<any[]> {

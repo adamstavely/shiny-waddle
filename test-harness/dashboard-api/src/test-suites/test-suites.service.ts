@@ -6,8 +6,8 @@ import { TestSuiteEntity, TestSuiteStatus } from './entities/test-suite.entity';
 import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { parseTypeScriptTestSuite, convertJSONToTypeScript } from './test-suite-converter';
-import { getDomainFromTestType } from '../../../../core/domain-mapping';
-import { TestType } from '../../../../core/types';
+import { getDomainFromTestType } from '../../../core/domain-mapping';
+import { TestType } from '../../../core/types';
 
 @Injectable()
 export class TestSuitesService {
@@ -145,7 +145,6 @@ export class TestSuitesService {
       domain,
       testTypes: dto.testTypes || [dto.testType], // Set testTypes to match testType for backward compatibility
       enabled: dto.enabled !== undefined ? dto.enabled : true,
-      testConfigurationIds: dto.testConfigurationIds || [],
       createdAt: now,
       updatedAt: now,
     };

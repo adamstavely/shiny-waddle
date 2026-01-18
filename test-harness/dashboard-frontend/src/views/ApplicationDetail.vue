@@ -371,29 +371,86 @@
               <div v-else class="empty-state">No app-specific rules</div>
             </div>
 
-            <!-- Test Configuration Management -->
+            <!-- Infrastructure Management -->
             <div class="config-section">
               <div class="config-section-header">
-                <h3 class="config-section-title">Test Configuration Management</h3>
-                <BulkTogglePanel
-                  v-if="testConfigurations.length > 0"
-                  :items="testConfigurations.map(c => ({ id: c.configId, name: c.name, enabled: c.enabled }))"
-                  @bulk-toggle="handleBulkToggleTestConfigs"
-                />
+                <h3 class="config-section-title">Infrastructure</h3>
+                <button @click="editInfrastructure" class="btn-secondary">
+                  <Edit class="btn-icon" />
+                  Edit Infrastructure
+                </button>
               </div>
-              <div v-if="loadingTestConfigs" class="loading-state">Loading test configurations...</div>
-              <div v-else-if="testConfigurations.length === 0" class="empty-state">
-                No test configurations available
+              <div v-if="application.infrastructure" class="infrastructure-content">
+                <!-- Databases -->
+                <div v-if="application.infrastructure.databases && application.infrastructure.databases.length > 0" class="infrastructure-subsection">
+                  <h4 class="subsection-title">Databases</h4>
+                  <div class="infrastructure-list">
+                    <div
+                      v-for="db in application.infrastructure.databases"
+                      :key="db.id"
+                      class="infrastructure-item"
+                    >
+                      <div class="item-header">
+                        <span class="item-name">{{ db.name }}</span>
+                        <span class="item-type">{{ db.type }}</span>
+                      </div>
+                      <div class="item-details">
+                        <span>{{ db.host }}:{{ db.port }}/{{ db.database }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Network Segments -->
+                <div v-if="application.infrastructure.networkSegments && application.infrastructure.networkSegments.length > 0" class="infrastructure-subsection">
+                  <h4 class="subsection-title">Network Segments</h4>
+                  <div class="infrastructure-list">
+                    <div
+                      v-for="segment in application.infrastructure.networkSegments"
+                      :key="segment.id"
+                      class="infrastructure-item"
+                    >
+                      <div class="item-header">
+                        <span class="item-name">{{ segment.name }}</span>
+                        <span v-if="segment.cidr" class="item-type">{{ segment.cidr }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DLP -->
+                <div v-if="application.infrastructure.dlp" class="infrastructure-subsection">
+                  <h4 class="subsection-title">Data Loss Prevention (DLP)</h4>
+                  <div class="infrastructure-item">
+                    <div class="item-details">
+                      <span v-if="application.infrastructure.dlp.patterns">
+                        {{ application.infrastructure.dlp.patterns.length }} pattern(s) configured
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- API Gateway -->
+                <div v-if="application.infrastructure.apiGateway" class="infrastructure-subsection">
+                  <h4 class="subsection-title">API Gateway</h4>
+                  <div class="infrastructure-item">
+                    <div class="item-details">
+                      <span v-if="application.infrastructure.apiGateway.rateLimitConfig">
+                        Rate limiting configured
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Other infrastructure types can be added here -->
               </div>
-              <div v-else class="test-configs-list">
-                <TestConfigToggle
-                  v-for="config in testConfigurations"
-                  :key="config.configId"
-                  :application-id="applicationId"
-                  :config="config"
-                  @updated="loadTestConfigurations"
-                />
+              <div v-else class="empty-state">
+                <p>No infrastructure configured</p>
+                <button @click="editInfrastructure" class="btn-primary">
+                  Add Infrastructure
+                </button>
               </div>
+
             </div>
 
             <!-- Validator Management -->
@@ -461,7 +518,6 @@ import {
 import Breadcrumb from '../components/Breadcrumb.vue';
 import AttachBatteryModal from '../components/AttachBatteryModal.vue';
 import RunDetailsModal from '../components/RunDetailsModal.vue';
-import TestConfigToggle from '../components/TestConfigToggle.vue';
 import ValidatorToggle from '../components/ValidatorToggle.vue';
 import BulkTogglePanel from '../components/BulkTogglePanel.vue';
 
@@ -487,9 +543,7 @@ const lastRun = ref<Date | null>(null);
 const showAttachBattery = ref(false);
 const showRunDetails = ref(false);
 const selectedRunId = ref<string | null>(null);
-const testConfigurations = ref<any[]>([]);
 const validators = ref<any[]>([]);
-const loadingTestConfigs = ref(false);
 const loadingValidators = ref(false);
 
 const tabs = [
@@ -518,7 +572,7 @@ watch(activeTab, (newTab) => {
   router.replace({ query: { ...route.query, tab: newTab } });
   // Load config data when switching to config tab
   if (newTab === 'config') {
-    loadTestConfigurations();
+    loadInfrastructure();
     loadValidators();
   }
 });
@@ -710,18 +764,26 @@ const loadTopFailingDomains = async () => {
   }
 };
 
-const loadTestConfigurations = async () => {
+const loadInfrastructure = async () => {
   try {
-    loadingTestConfigs.value = true;
-    const response = await axios.get(`/api/v1/applications/${applicationId.value}/test-configurations/status`);
-    testConfigurations.value = response.data || [];
+    // Infrastructure is part of application, already loaded
+    // But we can refresh it if needed
+    if (application.value) {
+      const response = await axios.get(`/api/v1/applications/${applicationId.value}/infrastructure`);
+      if (application.value) {
+        application.value.infrastructure = response.data;
+      }
+    }
   } catch (err: any) {
-    console.error('Error loading test configurations:', err);
-    testConfigurations.value = [];
-  } finally {
-    loadingTestConfigs.value = false;
+    console.error('Error loading infrastructure:', err);
   }
 };
+
+const editInfrastructure = () => {
+  // TODO: Open infrastructure edit modal
+  alert('Infrastructure editing will be available soon. For now, use PATCH /api/v1/applications/:id with infrastructure field.');
+};
+
 
 const loadValidators = async () => {
   try {
@@ -736,17 +798,6 @@ const loadValidators = async () => {
   }
 };
 
-const handleBulkToggleTestConfigs = async (items: Array<{ id: string; enabled: boolean; reason?: string }>) => {
-  try {
-    await axios.patch(`/api/v1/applications/${applicationId.value}/test-configurations/bulk-toggle`, {
-      items
-    });
-    await loadTestConfigurations();
-  } catch (err: any) {
-    console.error('Error bulk toggling test configurations:', err);
-    alert(err.response?.data?.message || 'Failed to update test configurations');
-  }
-};
 
 const handleBulkToggleValidators = async (items: Array<{ id: string; enabled: boolean; reason?: string }>) => {
   try {
@@ -1481,6 +1532,92 @@ onMounted(async () => {
 .environments-list {
   flex-direction: row;
   flex-wrap: wrap;
+}
+
+.infrastructure-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.infrastructure-subsection {
+  margin-bottom: 16px;
+}
+
+.subsection-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.infrastructure-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infrastructure-item {
+  padding: 12px;
+  background: rgba(15, 20, 25, 0.6);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 8px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.item-type {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+.item-details {
+  font-size: 0.875rem;
+  color: #a0aec0;
+}
+
+.deprecated-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(79, 172, 254, 0.2);
+}
+
+.deprecation-notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.deprecation-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.deprecation-notice div {
+  flex: 1;
+  color: #fbbf24;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.deprecation-notice strong {
+  color: #ffffff;
 }
 
 .env-tag {

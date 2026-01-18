@@ -13,7 +13,7 @@ export function useNotifications() {
     loading.value = true;
     error.value = null;
     try {
-      const response = await axios.get('/api/notifications', {
+      const response = await axios.get('/api/v1/notifications', {
         params: { unreadOnly: unreadOnly ? 'true' : undefined },
       });
       notifications.value = response.data.map((n: any) => ({
@@ -36,7 +36,7 @@ export function useNotifications() {
 
   const getUnreadCount = async () => {
     try {
-      const response = await axios.get('/api/notifications/unread-count');
+      const response = await axios.get('/api/v1/notifications/unread-count');
       unreadCount.value = response.data.count || 0;
     } catch (err: any) {
       // Silently fail - don't break UI if notification count fails
@@ -49,7 +49,7 @@ export function useNotifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await axios.patch(`/api/notifications/${notificationId}/read`);
+      await axios.patch(`/api/v1/notifications/${notificationId}/read`);
       // Update local state
       const notification = notifications.value.find(n => n.id === notificationId);
       if (notification) {
@@ -63,7 +63,7 @@ export function useNotifications() {
 
   const markAllAsRead = async () => {
     try {
-      await axios.patch('/api/notifications/read-all');
+      await axios.patch('/api/v1/notifications/read-all');
       // Update local state
       notifications.value.forEach(n => {
         n.read = true;
@@ -76,7 +76,7 @@ export function useNotifications() {
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      await axios.delete(`/api/notifications/${notificationId}`);
+      await axios.delete(`/api/v1/notifications/${notificationId}`);
       notifications.value = notifications.value.filter(n => n.id !== notificationId);
       await getUnreadCount();
     } catch (err) {

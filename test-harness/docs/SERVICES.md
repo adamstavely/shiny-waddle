@@ -890,4 +890,74 @@ const config: PropagationTestConfig = {
 const result = await tester.testAttributePropagation(config);
 ```
 
+## Salesforce Experience Cloud Testing Services
+
+### SalesforceExperienceCloudTester
+
+Tests Salesforce Experience Cloud applications for security misconfigurations using Google's [aura-inspector](https://github.com/google/aura-inspector) tool.
+
+**Location**: `services/salesforce-experience-cloud-tester.ts`
+
+**Prerequisites**:
+- Python 3.x installed
+- aura-inspector installed: `pipx install git+https://github.com/google/aura-inspector`
+- `aura_cli.py` accessible in PATH or specify `auraInspectorPath` in configuration
+
+**Key Methods**:
+- `testGuestAccess()` - Tests accessible records from Guest context
+- `testAuthenticatedAccess()` - Tests accessible records from authenticated context
+- `testGraphQLCapability()` - Tests GraphQL Aura method availability
+- `testSelfRegistration()` - Checks for self-registration capabilities
+- `testRecordListComponents()` - Discovers Record List components
+- `testHomeURLs()` - Discovers Home URLs with admin access
+- `testObjectAccess(objects)` - Tests access to specific objects
+- `runFullAudit()` - Runs complete audit of all test types
+
+**Configuration Interface**:
+```typescript
+interface SalesforceExperienceCloudConfig {
+  url: string;                    // Required: Root URL of Salesforce application
+  cookies?: string;               // Optional: Cookies for authenticated context
+  outputDir?: string;             // Optional: Output directory
+  objectList?: string[];           // Optional: Specific objects to test
+  app?: string;                    // Optional: Custom app path
+  aura?: string;                   // Optional: Custom aura path
+  context?: string;                // Optional: Aura context
+  token?: string;                  // Optional: Aura token
+  noGraphQL?: boolean;             // Optional: Disable GraphQL checks
+  proxy?: string;                  // Optional: Proxy configuration
+  insecure?: boolean;              // Optional: Ignore TLS validation
+  auraRequestFile?: string;        // Optional: Aura request file
+  auraInspectorPath?: string;      // Optional: Path to aura-inspector
+  timeout?: number;                // Optional: Execution timeout (ms)
+  pythonPath?: string;             // Optional: Python path (default: "python3")
+}
+```
+
+**Usage Example**:
+```typescript
+import { SalesforceExperienceCloudTester } from './services/salesforce-experience-cloud-tester';
+
+const config = {
+  url: 'https://example.force.com',
+  cookies: 'sid=...;',
+  objectList: ['Account', 'Contact'],
+  timeout: 300000,
+};
+
+const tester = new SalesforceExperienceCloudTester(config);
+
+// Test guest access
+const guestResult = await tester.testGuestAccess();
+console.log(`Guest Access: ${guestResult.passed ? 'PASSED' : 'FAILED'}`);
+console.log(`Findings: ${guestResult.details?.summary?.totalFindings || 0}`);
+
+// Run full audit
+const auditResults = await tester.runFullAudit();
+console.log(`Full Audit Results: ${auditResults.length} tests`);
+```
+
+**Integration with Heimdall**:
+The tester is integrated as a validator (`SalesforceExperienceCloudValidator`) that can be used in test suites with test type `'salesforce-experience-cloud'`.
+
 

@@ -179,6 +179,93 @@ Heimdall is a comprehensive testing framework designed to:
 - **Transformation Testing**: Tests attribute transformation and mapping
 - **Consistency Validation**: Verifies attribute consistency across services
 
+### ✅ Salesforce Experience Cloud Testing
+
+Heimdall integrates with Google's [aura-inspector](https://github.com/google/aura-inspector) to test Salesforce Experience Cloud applications for security misconfigurations and vulnerabilities.
+
+#### Prerequisites
+
+Before using Salesforce Experience Cloud testing, ensure:
+1. Python 3.x is installed
+2. aura-inspector is installed: `pipx install git+https://github.com/google/aura-inspector`
+3. The `aura_cli.py` script is accessible in PATH
+
+#### Test Types
+
+**Guest Access Testing**
+- Tests accessible records from unauthenticated (Guest) context
+- Identifies records that should not be publicly accessible
+- Reports severity levels (critical, high, medium, low)
+
+**Authenticated Access Testing**
+- Tests accessible records from authenticated context
+- Requires cookies or aura request file for authentication
+- Validates proper access control enforcement
+
+**GraphQL Capability Testing**
+- Tests GraphQL Aura method availability
+- Identifies security vulnerabilities in GraphQL endpoints
+- Validates GraphQL query security
+
+**Self-Registration Testing**
+- Checks for self-registration capabilities
+- Identifies potential security concerns with registration flows
+- Validates registration security controls
+
+**Record List Components Testing**
+- Discovers Record List components
+- Identifies misconfigured objects exposed via Record Lists
+- Tests UI component security
+
+**Home URLs Testing**
+- Discovers Home URLs that could allow unauthorized admin access
+- Identifies critical security vulnerabilities
+- Tests administrative access controls
+
+**Object Access Testing**
+- Tests access to specific Salesforce objects
+- Validates object-level security
+- Supports testing multiple objects simultaneously
+
+**Full Audit**
+- Runs all test types in a single execution
+- Provides comprehensive security assessment
+- Returns results grouped by test type
+
+#### Usage Example
+
+```typescript
+import { SalesforceExperienceCloudTester } from './services/salesforce-experience-cloud-tester';
+
+const config = {
+  url: 'https://example.force.com',
+  cookies: 'sid=...;', // Optional: for authenticated tests
+  objectList: ['Account', 'Contact'], // Optional: specific objects
+  timeout: 300000, // 5 minutes
+};
+
+const tester = new SalesforceExperienceCloudTester(config);
+
+// Run individual tests
+const guestResult = await tester.testGuestAccess();
+const authResult = await tester.testAuthenticatedAccess();
+const graphqlResult = await tester.testGraphQLCapability();
+
+// Or run full audit
+const auditResults = await tester.runFullAudit();
+```
+
+#### Configuration Options
+
+- `url` (required): Root URL of Salesforce application
+- `cookies` (optional): Cookies for authenticated context
+- `objectList` (optional): Specific objects to test
+- `app` (optional): Custom app path (e.g., "/myApp")
+- `aura` (optional): Custom aura path (e.g., "/aura")
+- `timeout` (optional): Execution timeout in milliseconds
+- `pythonPath` (optional): Python executable path (default: "python3")
+- `auraInspectorPath` (optional): Path to aura-inspector installation
+
 ### 📊 Dashboard API Support
 
 The Dashboard API provides REST endpoints for:
@@ -922,6 +1009,20 @@ POST /api/test-configurations/:id/test
 - **POST `/api/abac-correctness/test-performance`** - Test ABAC performance
 - **POST `/api/abac-correctness/detect-conflicts`** - Detect policy conflicts
 - **POST `/api/abac-correctness/test-propagation`** - Test attribute propagation
+
+#### Salesforce Experience Cloud API
+
+- **POST `/api/salesforce-experience-cloud/configs`** - Create test configuration
+- **GET `/api/salesforce-experience-cloud/configs`** - List configurations
+- **POST `/api/salesforce-experience-cloud/tests/guest-access`** - Test guest access
+- **POST `/api/salesforce-experience-cloud/tests/authenticated-access`** - Test authenticated access
+- **POST `/api/salesforce-experience-cloud/tests/graphql`** - Test GraphQL capability
+- **POST `/api/salesforce-experience-cloud/tests/self-registration`** - Test self-registration
+- **POST `/api/salesforce-experience-cloud/tests/record-lists`** - Test record list components
+- **POST `/api/salesforce-experience-cloud/tests/home-urls`** - Test home URLs
+- **POST `/api/salesforce-experience-cloud/tests/object-access`** - Test object access
+- **POST `/api/salesforce-experience-cloud/tests/full-audit`** - Run full audit
+- **GET `/api/salesforce-experience-cloud/results`** - List test results
 
 See `docs/API.md` for complete API documentation with all endpoints, request/response formats, and examples.
 

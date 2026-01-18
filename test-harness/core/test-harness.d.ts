@@ -1,6 +1,5 @@
 import { TestResult, TestSuite, TestConfiguration } from './types';
 export declare class TestOrchestrator {
-    private userSimulator;
     private accessControlTester;
     private dataBehaviorTester;
     private contractTester;

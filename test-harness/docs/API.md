@@ -3198,9 +3198,459 @@ POST /api/abac-correctness/test-propagation
       "latency": 50
     }
   ],
-  "consistencyIssues": []
+  "consistencyIssues": [  ]
 }
 ```
+
+## Salesforce Experience Cloud Endpoints
+
+The Salesforce Experience Cloud endpoints use Google's [aura-inspector](https://github.com/google/aura-inspector) tool to test Salesforce Experience Cloud applications for security misconfigurations and vulnerabilities.
+
+### Configuration Management
+
+#### Create Configuration
+
+```http
+POST /api/salesforce-experience-cloud/configs
+```
+
+Creates a new Salesforce Experience Cloud test configuration.
+
+**Request Body:**
+```json
+{
+  "name": "Production Site Audit",
+  "url": "https://example.force.com",
+  "cookies": "sid=...;",
+  "app": "/myApp",
+  "aura": "/aura",
+  "objectList": ["Account", "Contact"],
+  "timeout": 300000
+}
+```
+
+**Response:**
+```json
+{
+  "id": "config-123",
+  "name": "Production Site Audit",
+  "url": "https://example.force.com",
+  "cookies": "sid=...;",
+  "app": "/myApp",
+  "aura": "/aura",
+  "objectList": ["Account", "Contact"],
+  "timeout": 300000,
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### List Configurations
+
+```http
+GET /api/salesforce-experience-cloud/configs
+```
+
+Returns all Salesforce Experience Cloud configurations.
+
+**Response:**
+```json
+[
+  {
+    "id": "config-123",
+    "name": "Production Site Audit",
+    "url": "https://example.force.com",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+#### Get Configuration
+
+```http
+GET /api/salesforce-experience-cloud/configs/:id
+```
+
+Returns a specific configuration by ID.
+
+#### Update Configuration
+
+```http
+PATCH /api/salesforce-experience-cloud/configs/:id
+```
+
+Updates an existing configuration.
+
+**Request Body:**
+```json
+{
+  "name": "Updated Production Site Audit",
+  "objectList": ["Account", "Contact", "Opportunity"]
+}
+```
+
+#### Delete Configuration
+
+```http
+DELETE /api/salesforce-experience-cloud/configs/:id
+```
+
+Deletes a configuration and all associated test results.
+
+### Test Execution
+
+#### Test Guest Access
+
+Tests accessible records from Guest (unauthenticated) context.
+
+```http
+POST /api/salesforce-experience-cloud/tests/guest-access
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "result-456",
+  "configId": "config-123",
+  "testName": "Guest Access Test",
+  "testType": "guest-access",
+  "status": "failed",
+  "findings": [
+    {
+      "type": "guest_access",
+      "severity": "high",
+      "description": "Account records accessible from guest context",
+      "details": {},
+      "objects": ["Account"],
+      "recordCount": 150,
+      "accessibleRecords": []
+    }
+  ],
+  "summary": {
+    "totalFindings": 1,
+    "criticalCount": 0,
+    "highCount": 1,
+    "mediumCount": 0
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Test Authenticated Access
+
+Tests accessible records from authenticated context.
+
+```http
+POST /api/salesforce-experience-cloud/tests/authenticated-access
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123",
+  "cookies": "sid=...;" // Optional: override config cookies
+}
+```
+
+**Response:** Similar to guest access test response, with `testType: "authenticated-access"`.
+
+#### Test GraphQL Capability
+
+Tests GraphQL Aura method availability and security.
+
+```http
+POST /api/salesforce-experience-cloud/tests/graphql
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "result-789",
+  "configId": "config-123",
+  "testName": "GraphQL Capability Test",
+  "testType": "graphql",
+  "status": "passed",
+  "details": {
+    "findings": [],
+    "graphqlAvailable": true
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Test Self-Registration
+
+Checks for self-registration capabilities.
+
+```http
+POST /api/salesforce-experience-cloud/tests/self-registration
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "result-101",
+  "configId": "config-123",
+  "testName": "Self-Registration Test",
+  "testType": "self-registration",
+  "status": "warning",
+  "details": {
+    "findings": [
+      {
+        "type": "self_registration",
+        "severity": "medium",
+        "description": "Self-registration capability detected",
+        "details": {}
+      }
+    ],
+    "selfRegistrationAvailable": true
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Test Record List Components
+
+Discovers Record List components and checks for misconfigurations.
+
+```http
+POST /api/salesforce-experience-cloud/tests/record-lists
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "result-102",
+  "configId": "config-123",
+  "testName": "Record List Components Test",
+  "testType": "record-lists",
+  "status": "failed",
+  "findings": [
+    {
+      "type": "record_list",
+      "severity": "high",
+      "description": "Record List component exposes sensitive objects",
+      "details": {},
+      "objects": ["Account", "Contact"]
+    }
+  ],
+  "details": {
+    "findings": [...],
+    "objects": ["Account", "Contact"],
+    "summary": {
+      "totalFindings": 1,
+      "misconfiguredObjects": 1
+    }
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Test Home URLs
+
+Discovers Home URLs that could allow unauthorized admin access.
+
+```http
+POST /api/salesforce-experience-cloud/tests/home-urls
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "result-103",
+  "configId": "config-123",
+  "testName": "Home URLs Test",
+  "testType": "home-urls",
+  "status": "failed",
+  "findings": [
+    {
+      "type": "home_url",
+      "severity": "critical",
+      "description": "Unauthorized admin access via home URL",
+      "details": {},
+      "urls": ["https://example.force.com/admin/home"]
+    }
+  ],
+  "details": {
+    "findings": [...],
+    "urls": ["https://example.force.com/admin/home"],
+    "summary": {
+      "totalFindings": 1,
+      "unauthorizedURLs": 1
+    }
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
+```
+
+#### Test Object Access
+
+Tests access to specific Salesforce objects.
+
+```http
+POST /api/salesforce-experience-cloud/tests/object-access
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123",
+  "objects": ["Account", "Contact", "Opportunity"]
+}
+```
+
+**Response:** Similar to other test responses, with `testType: "object-access"` and `objects` array in details.
+
+#### Run Full Audit
+
+Runs a complete audit of all test types.
+
+```http
+POST /api/salesforce-experience-cloud/tests/full-audit
+```
+
+**Request Body:**
+```json
+{
+  "configId": "config-123"
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "result-104",
+    "configId": "config-123",
+    "testName": "Guest Access - Full Audit",
+    "testType": "full-audit",
+    "status": "failed",
+    ...
+  },
+  {
+    "id": "result-105",
+    "configId": "config-123",
+    "testName": "GraphQL - Full Audit",
+    "testType": "full-audit",
+    "status": "passed",
+    ...
+  }
+]
+```
+
+### Test Results
+
+#### List Results
+
+```http
+GET /api/salesforce-experience-cloud/results
+```
+
+Returns all test results, optionally filtered by `configId` query parameter.
+
+**Query Parameters:**
+- `configId` (optional): Filter results by configuration ID
+
+**Response:**
+```json
+[
+  {
+    "id": "result-456",
+    "configId": "config-123",
+    "testName": "Guest Access Test",
+    "testType": "guest-access",
+    "status": "failed",
+    "timestamp": "2024-01-15T10:00:00Z",
+    "createdAt": "2024-01-15T10:00:00Z"
+  }
+]
+```
+
+#### Get Result
+
+```http
+GET /api/salesforce-experience-cloud/results/:id
+```
+
+Returns a specific test result by ID.
+
+#### Delete Result
+
+```http
+DELETE /api/salesforce-experience-cloud/results/:id
+```
+
+Deletes a test result.
+
+### Configuration Options
+
+**Required Fields:**
+- `name` (string): Configuration name
+- `url` (string): Root URL of Salesforce application (must be valid URL)
+
+**Optional Fields:**
+- `cookies` (string): Cookies for authenticated context
+- `outputDir` (string): Output directory for aura-inspector results
+- `objectList` (string[]): Specific objects to test (e.g., ["Account", "Contact"])
+- `app` (string): Custom app path (e.g., "/myApp")
+- `aura` (string): Custom aura path (e.g., "/aura")
+- `context` (string): Aura context for POST requests
+- `token` (string): Aura token for POST requests
+- `noGraphQL` (boolean): Disable GraphQL checks
+- `proxy` (string): Proxy configuration
+- `insecure` (boolean): Ignore TLS certificate validation
+- `auraRequestFile` (string): Path to file with aura request
+- `auraInspectorPath` (string): Path to aura-inspector installation
+- `timeout` (number): Execution timeout in milliseconds (default: 300000)
+- `pythonPath` (string): Python executable path (default: "python3")
+
+### Prerequisites
+
+Before using these endpoints, ensure:
+1. Python 3.x is installed
+2. aura-inspector is installed: `pipx install git+https://github.com/google/aura-inspector`
+3. The `aura_cli.py` script is accessible in PATH or specify `auraInspectorPath` in configuration
 
 ## Rate Limits
 

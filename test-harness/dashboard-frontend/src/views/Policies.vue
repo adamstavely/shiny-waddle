@@ -1083,7 +1083,7 @@ const loadPolicies = async () => {
 
 const loadTests = async () => {
   try {
-    const response = await axios.get('/api/tests?testType=access-control');
+    const response = await axios.get('/api/v1/tests?testType=access-control');
     tests.value = response.data;
     
     // Count tests per policy

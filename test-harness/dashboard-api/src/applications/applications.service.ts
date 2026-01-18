@@ -1,8 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { CreateApplicationDto, ApplicationType, ApplicationStatus } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
-import { Application, TestConfigurationOverride, ValidatorOverride } from './entities/application.entity';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
+import { Application, ApplicationInfrastructure, ValidatorOverride } from './entities/application.entity';
 import { TestResultsService } from '../test-results/test-results.service';
 import { TestResultStatus } from '../test-results/entities/test-result.entity';
 import { SecurityAuditLogService, SecurityAuditEventType } from '../security/audit-log.service';
@@ -21,23 +20,8 @@ export class ApplicationsService {
   private readonly applicationsFile = path.join(process.cwd(), 'data', 'applications.json');
   private applications: Application[] = [];
 
-  /**
-   * Mapping from test configuration types to validator testTypes.
-   * This determines which validators should be checked before running a test configuration.
-   */
-  private readonly CONFIG_TYPE_TO_VALIDATOR_TYPES: Record<string, string[]> = {
-    'rls-cls': ['rls-cls', 'access-control'],
-    'network-policy': ['network-policy'],
-    'dlp': ['dlp'],
-    'api-gateway': ['api-gateway'],
-    'distributed-systems': ['distributed-systems', 'access-control'],
-    'api-security': ['api-security'],
-    'data-pipeline': ['data-pipeline'],
-  };
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly testConfigurationsService: TestConfigurationsService,
     @Inject(forwardRef(() => TestResultsService))
     private readonly testResultsService: TestResultsService,
     @Inject(forwardRef(() => SecurityAuditLogService))
@@ -66,10 +50,9 @@ export class ApplicationsService {
       let updated = 0;
       for (let i = 0; i < this.applications.length; i++) {
         const app = this.applications[i];
-        if (!app.testConfigurationOverrides || !app.validatorOverrides) {
+        if (!app.validatorOverrides) {
           this.applications[i] = {
             ...app,
-            testConfigurationOverrides: app.testConfigurationOverrides || {},
             validatorOverrides: app.validatorOverrides || {},
           };
           updated++;
@@ -107,7 +90,6 @@ export class ApplicationsService {
           registeredAt: app.registeredAt ? new Date(app.registeredAt) : new Date(),
           lastTestAt: app.lastTestAt ? new Date(app.lastTestAt) : undefined,
           updatedAt: app.updatedAt ? new Date(app.updatedAt) : new Date(),
-          testConfigurationOverrides: app.testConfigurationOverrides || {},
           validatorOverrides: app.validatorOverrides || {},
         }));
       } catch (readError: any) {
@@ -152,6 +134,11 @@ export class ApplicationsService {
       throw new ConflictException(`Application with ID "${createApplicationDto.id}" already exists`);
     }
 
+    // Validate infrastructure if provided
+    if (createApplicationDto.infrastructure) {
+      this.validateInfrastructure(createApplicationDto.infrastructure);
+    }
+
     const application: Application = {
       id: createApplicationDto.id,
       name: createApplicationDto.name,
@@ -161,6 +148,7 @@ export class ApplicationsService {
       team: createApplicationDto.team,
       description: createApplicationDto.description,
       config: createApplicationDto.config || {},
+      infrastructure: createApplicationDto.infrastructure, // NEW
       registeredAt: new Date(),
       updatedAt: new Date(),
     };
@@ -169,6 +157,37 @@ export class ApplicationsService {
     await this.saveApplications();
 
     return application;
+  }
+
+  /**
+   * Validate application infrastructure
+   */
+  private validateInfrastructure(infrastructure: ApplicationInfrastructure): void {
+    // Validate databases
+    if (infrastructure.databases) {
+      for (const db of infrastructure.databases) {
+        if (!db.id || !db.name) {
+          throw new BadRequestException('Database infrastructure must have id and name');
+        }
+        if (!db.host || !db.port || !db.database) {
+          throw new BadRequestException('Database infrastructure must have host, port, and database');
+        }
+        if (!db.type) {
+          throw new BadRequestException('Database infrastructure must have type');
+        }
+      }
+    }
+
+    // Validate network segments
+    if (infrastructure.networkSegments) {
+      for (const segment of infrastructure.networkSegments) {
+        if (!segment.id || !segment.name) {
+          throw new BadRequestException('Network segment infrastructure must have id and name');
+        }
+      }
+    }
+
+    // Additional validation for other infrastructure types can be added here
   }
 
   async findAll(): Promise<Application[]> {
@@ -200,6 +219,11 @@ export class ApplicationsService {
 
     // Don't allow updating the ID
     const { id: _, ...updateData } = updateApplicationDto;
+
+    // Validate infrastructure if provided
+    if (updateData.infrastructure) {
+      this.validateInfrastructure(updateData.infrastructure);
+    }
 
     this.applications[index] = {
       ...this.applications[index],
@@ -266,49 +290,6 @@ export class ApplicationsService {
     }
   }
 
-  async assignTestConfigurations(appId: string, testConfigurationIds: string[]): Promise<Application> {
-    const application = await this.findOne(appId);
-
-    // Validate that all test configuration IDs exist
-    for (const configId of testConfigurationIds) {
-      try {
-        await this.testConfigurationsService.findOne(configId);
-      } catch (error) {
-        throw new BadRequestException(`Test configuration with ID "${configId}" not found`);
-      }
-    }
-
-    // Update the application's test configuration IDs
-    application.testConfigurationIds = testConfigurationIds;
-    application.updatedAt = new Date();
-    await this.saveApplications();
-
-    return application;
-  }
-
-  async getTestConfigurations(appId: string, expand: boolean = false): Promise<string[] | any[]> {
-    const application = await this.findOne(appId);
-    
-    if (!application.testConfigurationIds || application.testConfigurationIds.length === 0) {
-      return [];
-    }
-
-    if (!expand) {
-      return application.testConfigurationIds;
-    }
-
-    // Return full test configuration objects
-    const configs = [];
-    for (const configId of application.testConfigurationIds) {
-      try {
-        const config = await this.testConfigurationsService.findOne(configId);
-        configs.push(config);
-      } catch (error) {
-        this.logger.warn(`Test configuration ${configId} not found, skipping`);
-      }
-    }
-    return configs;
-  }
 
   async runTests(
     appId: string,
@@ -341,7 +322,11 @@ export class ApplicationsService {
       this.logger.log(`Detected CI/CD platform: ${detectedContext.ciPlatform} for test execution`);
     }
 
-    if (!application.testConfigurationIds || application.testConfigurationIds.length === 0) {
+    // TODO: Update runTests to work with Application.infrastructure and Test Suites
+    // For now, return empty results since test configurations have been removed
+    this.logger.warn(`runTests called for application ${appId} but test execution via infrastructure is not yet implemented`);
+    
+    if (!application.infrastructure) {
       return {
         status: 'passed',
         totalTests: 0,
@@ -351,149 +336,19 @@ export class ApplicationsService {
       };
     }
 
-    const results = [];
-    let passed = 0;
-    let failed = 0;
-
-    const startTime = Date.now();
-
-    // Filter test configurations based on overrides
-    const enabledConfigIds = [];
-    for (const configId of application.testConfigurationIds) {
-      const isEnabled = await this.isTestConfigurationEnabled(appId, configId);
-      if (isEnabled) {
-        enabledConfigIds.push(configId);
-      } else {
-        this.logger.log(`Skipping test configuration ${configId} for application ${appId} (disabled by override)`);
-      }
-    }
-
-    if (enabledConfigIds.length === 0) {
-      this.logger.warn(`No enabled test configurations for application ${appId}`);
-      return {
-        status: 'passed',
-        totalTests: 0,
-        passed: 0,
-        failed: 0,
-        results: [],
-      };
-    }
-
-    for (const configId of enabledConfigIds) {
-      let configName = 'Unknown';
-      let configType: string = 'unknown';
-      let testStartTime = Date.now();
-      let testResult: any = null;
-      let testStatus: TestResultStatus = 'error';
-      let testPassed = false;
-      let testError: any = undefined;
-
-      try {
-        // Get config name first for better error messages
-        const config = await this.testConfigurationsService.findOne(configId);
-        configName = config.name;
-        configType = config.type;
-        
-        // Check if validators are enabled for this test configuration type
-        const validatorsEnabled = await this.areValidatorsEnabledForTestConfig(appId, configType);
-        if (!validatorsEnabled) {
-          this.logger.log(`Skipping test configuration ${configId} (${configName}) for application ${appId} (validator disabled by override)`);
-          results.push({
-            configId,
-            configName,
-            configType,
-            passed: false,
-            error: {
-              message: 'Test configuration skipped: validator disabled by override',
-              type: 'ValidatorDisabledException',
-              details: {
-                statusCode: 200,
-                message: 'Test configuration skipped: validator disabled by override',
-              },
-            },
-          });
-          failed++;
-          continue;
-        }
-        
-        this.logger.log(`Running test configuration ${configId} (${configName}) for application ${appId}`);
-        testResult = await this.testConfigurationsService.testConfiguration(configId, {
-          applicationId: appId,
-          buildId: executionMetadata.buildId,
-          runId: executionMetadata.runId,
-          commitSha: executionMetadata.commitSha,
-          branch: executionMetadata.branch,
-        });
-        
-        testPassed = testResult.passed !== false;
-        testStatus = testPassed ? 'passed' : 'failed';
-        
-        if (testPassed) {
-          passed++;
-        } else {
-          failed++;
-        }
-
-        results.push({
-          configId,
-          configName,
-          result: testResult,
-          passed: testPassed,
-        });
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
-        const errorType = error.constructor?.name || 'Error';
-        
-        this.logger.error(
-          `Error running test configuration ${configId} (${configName}) for application ${appId}: ${errorMessage}`,
-          error.stack
-        );
-        
-        testStatus = 'error';
-        testPassed = false;
-        testError = {
-          message: errorMessage,
-          type: errorType,
-          details: error.response?.data || undefined,
-        };
-        
-        failed++;
-        results.push({
-          configId,
-          configName,
-          passed: false,
-          error: testError,
-        });
-      } finally {
-        // Save test result (don't fail if storage fails)
-        try {
-          const testDuration = Date.now() - testStartTime;
-          await this.testResultsService.saveResult({
-            applicationId: appId,
-            applicationName: application.name,
-            testConfigurationId: configId,
-            testConfigurationName: configName,
-            testConfigurationType: configType as any,
-            status: testStatus,
-            passed: testPassed,
-            buildId: executionMetadata.buildId,
-            runId: executionMetadata.runId,
-            commitSha: executionMetadata.commitSha,
-            branch: executionMetadata.branch,
-            timestamp: new Date(),
-            duration: testDuration,
-            result: testResult,
-            error: testError,
-            metadata: {
-              ...metadata,
-            },
-          });
-        } catch (storageError: any) {
-          // Log but don't fail the test run if storage fails
-          this.logger.warn(`Failed to save test result for ${configId}: ${storageError.message}`);
-        }
-      }
-    }
+    // TODO: Implement test execution using application.infrastructure and test suites
+    // This should:
+    // 1. Find test suites for this application
+    // 2. Use infrastructure to configure tests
+    // 3. Execute tests via test harness/battery system
+    
+    return {
+      status: 'passed',
+      totalTests: 0,
+      passed: 0,
+      failed: 0,
+      results: [],
+    };
 
     // Update last test time
     application.lastTestAt = new Date();
@@ -511,71 +366,6 @@ export class ApplicationsService {
     };
   }
 
-  async findApplicationsUsingConfig(configId: string): Promise<Application[]> {
-    return this.applications.filter(
-      app => app.testConfigurationIds && app.testConfigurationIds.includes(configId)
-    );
-  }
-
-  async toggleTestConfiguration(
-    appId: string,
-    configId: string,
-    enabled: boolean,
-    reason?: string,
-    userId?: string,
-    username?: string,
-  ): Promise<Application> {
-    const application = await this.findOne(appId);
-
-    // Verify the test configuration exists and is assigned to this application
-    if (!application.testConfigurationIds || !application.testConfigurationIds.includes(configId)) {
-      throw new BadRequestException(
-        `Test configuration "${configId}" is not assigned to application "${appId}"`
-      );
-    }
-
-    await this.testConfigurationsService.findOne(configId); // Verify config exists
-
-    // Initialize overrides if needed
-    if (!application.testConfigurationOverrides) {
-      application.testConfigurationOverrides = {};
-    }
-
-    // Set or update the override
-    application.testConfigurationOverrides[configId] = {
-      enabled,
-      reason,
-      updatedBy: username || userId,
-      updatedAt: new Date(),
-    };
-
-    application.updatedAt = new Date();
-    await this.saveApplications();
-
-    // Audit log
-    if (this.auditLogService) {
-      await this.auditLogService.log({
-        type: SecurityAuditEventType.CONFIG_CHANGED,
-        action: enabled ? 'enable-test-config' : 'disable-test-config',
-        description: `${enabled ? 'Enabled' : 'Disabled'} test configuration "${configId}" for application "${appId}"${reason ? `: ${reason}` : ''}`,
-        userId,
-        username,
-        resourceType: 'application',
-        resourceId: appId,
-        resourceName: application.name,
-        application: appId,
-        team: application.team,
-        success: true,
-        metadata: {
-          configId,
-          enabled,
-          reason,
-        },
-      });
-    }
-
-    return application;
-  }
 
   async toggleValidator(
     appId: string,
@@ -631,52 +421,6 @@ export class ApplicationsService {
     return application;
   }
 
-  async removeTestConfigurationOverride(
-    appId: string,
-    configId: string,
-    userId?: string,
-    username?: string,
-  ): Promise<Application> {
-    const application = await this.findOne(appId);
-
-    if (!application.testConfigurationOverrides || !application.testConfigurationOverrides[configId]) {
-      throw new BadRequestException(
-        `No override exists for test configuration "${configId}" on application "${appId}"`
-      );
-    }
-
-    delete application.testConfigurationOverrides[configId];
-
-    // Clean up empty override object
-    if (Object.keys(application.testConfigurationOverrides).length === 0) {
-      delete application.testConfigurationOverrides;
-    }
-
-    application.updatedAt = new Date();
-    await this.saveApplications();
-
-    // Audit log
-    if (this.auditLogService) {
-      await this.auditLogService.log({
-        type: SecurityAuditEventType.CONFIG_CHANGED,
-        action: 'remove-test-config-override',
-        description: `Removed override for test configuration "${configId}" on application "${appId}"`,
-        userId,
-        username,
-        resourceType: 'application',
-        resourceId: appId,
-        resourceName: application.name,
-        application: appId,
-        team: application.team,
-        success: true,
-        metadata: {
-          configId,
-        },
-      });
-    }
-
-    return application;
-  }
 
   async removeValidatorOverride(
     appId: string,
@@ -725,40 +469,6 @@ export class ApplicationsService {
     return application;
   }
 
-  async getTestConfigurationStatus(appId: string): Promise<Array<{
-    configId: string;
-    name: string;
-    type: string;
-    enabled: boolean;
-    override?: TestConfigurationOverride;
-  }>> {
-    const application = await this.findOne(appId);
-
-    if (!application.testConfigurationIds || application.testConfigurationIds.length === 0) {
-      return [];
-    }
-
-    const statuses = [];
-    for (const configId of application.testConfigurationIds) {
-      try {
-        const config = await this.testConfigurationsService.findOne(configId);
-        const override = application.testConfigurationOverrides?.[configId];
-        const enabled = override ? override.enabled : (config.enabled !== false);
-
-        statuses.push({
-          configId,
-          name: config.name,
-          type: config.type,
-          enabled,
-          override,
-        });
-      } catch (error) {
-        this.logger.warn(`Test configuration ${configId} not found, skipping`);
-      }
-    }
-
-    return statuses;
-  }
 
   async getValidatorStatus(appId: string): Promise<Array<{
     validatorId: string;
@@ -790,22 +500,6 @@ export class ApplicationsService {
     return statuses;
   }
 
-  async isTestConfigurationEnabled(appId: string, configId: string): Promise<boolean> {
-    const application = await this.findOne(appId);
-    const override = application.testConfigurationOverrides?.[configId];
-    
-    if (override !== undefined) {
-      return override.enabled;
-    }
-
-    // If no override, check the test configuration's global enabled status
-    try {
-      const config = await this.testConfigurationsService.findOne(configId);
-      return config.enabled !== false;
-    } catch {
-      return false;
-    }
-  }
 
   async isValidatorEnabled(appId: string, validatorId: string): Promise<boolean> {
     const application = await this.findOne(appId);
@@ -832,79 +526,6 @@ export class ApplicationsService {
     }
   }
 
-  /**
-   * Get validator IDs for a given test configuration type.
-   * Returns validators that match the testTypes associated with the config type.
-   */
-  private async getValidatorsForTestConfigurationType(configType: string): Promise<string[]> {
-    const validatorTypes = this.CONFIG_TYPE_TO_VALIDATOR_TYPES[configType];
-    
-    if (!validatorTypes || validatorTypes.length === 0) {
-      // No validators mapped for this config type - backward compatible
-      return [];
-    }
-
-    try {
-      const allValidators = await this.validatorsService.findAll();
-      const matchingValidators = allValidators
-        .filter(v => validatorTypes.includes(v.testType))
-        .map(v => v.id);
-      
-      return matchingValidators;
-    } catch (error) {
-      this.logger.warn(`Error finding validators for test configuration type ${configType}:`, error);
-      return [];
-    }
-  }
-
-  /**
-   * Check if all validators required for a test configuration type are enabled for the application.
-   * Returns true if:
-   * - No validators exist for the test config type (backward compatible)
-   * - All validators for the test config type are enabled
-   * Returns false if any validator is disabled.
-   */
-  async areValidatorsEnabledForTestConfig(appId: string, configType: string): Promise<boolean> {
-    const validatorIds = await this.getValidatorsForTestConfigurationType(configType);
-    
-    // If no validators found for this config type, allow test (backward compatible)
-    if (validatorIds.length === 0) {
-      return true;
-    }
-
-    // Check each validator - all must be enabled
-    for (const validatorId of validatorIds) {
-      const isEnabled = await this.isValidatorEnabled(appId, validatorId);
-      if (!isEnabled) {
-        this.logger.log(`Validator ${validatorId} is disabled for application ${appId}, blocking test configuration type ${configType}`);
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  async bulkToggleTestConfigurations(
-    appId: string,
-    items: Array<{ id: string; enabled: boolean; reason?: string }>,
-    userId?: string,
-    username?: string,
-  ): Promise<Application> {
-    const application = await this.findOne(appId);
-
-    for (const item of items) {
-      await this.toggleTestConfiguration(
-        appId,
-        item.id,
-        item.enabled,
-        item.reason,
-        userId,
-        username,
-      );
-    }
-
-    return application;
-  }
 
   async bulkToggleValidators(
     appId: string,

@@ -194,7 +194,7 @@ const loadSuites = async () => {
   loadingSuites.value = true;
   suitesError.value = null;
   try {
-    const response = await axios.get('/api/test-suites');
+    const response = await axios.get('/api/v1/test-suites');
     availableSuites.value = response.data || [];
   } catch (err: any) {
     suitesError.value = err.response?.data?.message || 'Failed to load test suites';
@@ -260,9 +260,9 @@ const save = async () => {
 
     let response;
     if (props.editingHarness) {
-      response = await axios.put(`/api/test-harnesses/${props.editingHarness.id}`, payload);
+      response = await axios.put(`/api/v1/test-harnesses/${props.editingHarness.id}`, payload);
     } else {
-      response = await axios.post('/api/test-harnesses', payload);
+      response = await axios.post('/api/v1/test-harnesses', payload);
     }
 
     emit('saved', response.data);

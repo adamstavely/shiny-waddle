@@ -426,7 +426,7 @@ const loadFrameworks = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await fetch('/api/compliance/frameworks');
+    const response = await fetch('/api/v1/compliance/frameworks');
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API Error:', response.status, errorText);
@@ -453,7 +453,7 @@ const selectFramework = async (framework: ComplianceFramework) => {
   
   // Load framework metadata
   try {
-    const response = await fetch(`/api/compliance/frameworks/${framework}`);
+    const response = await fetch(`/api/v1/compliance/frameworks/${framework}`);
     if (response.ok) {
       const data = await response.json();
       frameworkMetadata.value = data;
@@ -495,7 +495,7 @@ const loadControls = async () => {
   if (!selectedFramework.value) return;
   
   try {
-    const response = await fetch(`/api/compliance/frameworks/${selectedFramework.value}/controls`);
+    const response = await fetch(`/api/v1/compliance/frameworks/${selectedFramework.value}/controls`);
     if (response.ok) {
       const text = await response.text();
       if (text && text.trim()) {
@@ -521,7 +521,7 @@ const loadMappings = async () => {
   if (!selectedFramework.value) return;
   
   try {
-    const response = await fetch(`/api/compliance/mappings?framework=${selectedFramework.value}`);
+    const response = await fetch(`/api/v1/compliance/mappings?framework=${selectedFramework.value}`);
     if (response.ok) {
       const text = await response.text();
       if (text && text.trim()) {
@@ -547,7 +547,7 @@ const loadCurrentAssessment = async () => {
   if (!selectedFramework.value) return;
   
   try {
-    const response = await fetch(`/api/compliance/assessments?framework=${selectedFramework.value}&latest=true`);
+    const response = await fetch(`/api/v1/compliance/assessments?framework=${selectedFramework.value}&latest=true`);
     if (response.ok) {
       const text = await response.text();
       if (text && text.trim()) {
@@ -575,7 +575,7 @@ const loadGapAnalysis = async () => {
   
   loadingGaps.value = true;
   try {
-    const response = await fetch(`/api/compliance/frameworks/${selectedFramework.value}/gaps`);
+    const response = await fetch(`/api/v1/compliance/frameworks/${selectedFramework.value}/gaps`);
     if (response.ok) {
       gaps.value = await response.json();
       activeTab.value = 'gaps';
@@ -591,7 +591,7 @@ const loadRoadmaps = async () => {
   if (!selectedFramework.value) return;
   
   try {
-    const response = await fetch(`/api/compliance/roadmaps?framework=${selectedFramework.value}`);
+    const response = await fetch(`/api/v1/compliance/roadmaps?framework=${selectedFramework.value}`);
     if (response.ok) {
       const text = await response.text();
       if (text && text.trim()) {
@@ -619,7 +619,7 @@ const createAssessment = async () => {
   creatingAssessment.value = true;
   try {
     // Create a new assessment from current mappings
-    const response = await fetch('/api/compliance/assessments', {
+    const response = await fetch('/api/v1/compliance/assessments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -656,7 +656,7 @@ const createRoadmap = async () => {
   
   creatingRoadmap.value = true;
   try {
-    const response = await fetch(`/api/compliance/frameworks/${selectedFramework.value}/roadmaps`, {
+    const response = await fetch(`/api/v1/compliance/frameworks/${selectedFramework.value}/roadmaps`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

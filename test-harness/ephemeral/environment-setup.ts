@@ -135,7 +135,6 @@ export class EphemeralEnvironment {
 
     const testSuite = await loadTestSuite('default');
     const orchestrator = new TestOrchestrator({
-      userSimulationConfig: { roles: ['admin', 'researcher', 'analyst', 'viewer'], attributes: {} },
       accessControlConfig: { policyEngine: 'custom' },
       datasetHealthConfig: {},
       reportingConfig: { outputFormat: 'json' },

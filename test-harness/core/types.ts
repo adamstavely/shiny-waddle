@@ -5,16 +5,9 @@
 import { RuntimeTestConfig } from './runtime-config';
 
 export interface TestConfiguration {
-  userSimulationConfig: UserSimulationConfig;
   accessControlConfig: AccessControlConfig;
   datasetHealthConfig: DatasetHealthConfig;
   reportingConfig: ReportingConfig;
-}
-
-export interface UserSimulationConfig {
-  roles: string[];
-  attributes: Record<string, any>;
-  workspaceMemberships?: WorkspaceMembership[];
 }
 
 export interface AccessControlConfig {
@@ -76,6 +69,7 @@ export type TestType =
   | 'data-contract'
   | 'salesforce-config'
   | 'salesforce-security'
+  | 'salesforce-experience-cloud'
   | 'elastic-config'
   | 'elastic-security'
   | 'k8s-security'
@@ -86,7 +80,7 @@ export type TestType =
 export interface TestSuite {
   id: string;
   name: string;
-  application: string;
+  application: string; // Application ID - infrastructure comes from application.infrastructure
   team: string;
   testType: TestType; // All tests in suite must match this type
   domain: TestDomain; // Domain for this test suite
@@ -100,6 +94,7 @@ export interface TestSuite {
    * This allows tests to be environment-agnostic
    */
   runtimeConfig?: RuntimeTestConfig;
+  // REMOVED: testConfigurationIds - infrastructure comes from application.infrastructure
 }
 
 export interface TestResult {
@@ -111,6 +106,8 @@ export interface TestResult {
   error?: string;
   testId?: string;
   testVersion?: number;
+  policyId?: string; // Changed from policyIds - 1:1 relationship
+  // DEPRECATED: Keep for backward compatibility
   policyIds?: string[];
 }
 
@@ -139,31 +136,63 @@ export interface BaseTest {
   lastModifiedBy?: string;
 }
 
-// Access Control Test - references policies
+// Access Control Test - 1:1 with Policy
 export interface AccessControlTest extends BaseTest {
   testType: 'access-control';
-  policyIds: string[]; // References to Policy entities (RBAC/ABAC)
-  role: string; // Role to test
-  resource: Resource; // Resource to test access to
-  context?: Context; // Context for testing
-  expectedDecision: boolean; // What the policy should decide
-  policyRuleId?: string; // Optional: test specific policy rule
+  
+  // 1:1 relationship with Policy (required for policy-based tests)
+  policyId: string; // Changed from policyIds: string[] - exactly one policy
+  
+  // Test inputs and expectations
+  inputs: {
+    subject?: {
+      role?: string;
+      attributes?: Record<string, any>;
+    };
+    resource: Resource;
+    context?: Context;
+    action?: string;
+  };
+  expected: {
+    allowed: boolean; // Changed from expectedDecision
+    reason?: string;
+  };
+  
+  // DEPRECATED: Keep for backward compatibility during migration
+  role?: string;
+  expectedDecision?: boolean;
+  policyRuleId?: string;
 }
 
-// Dataset Health Test
+// Dataset Health Test - optional policy relationship
 export interface DatasetHealthTest extends BaseTest {
   testType: 'dataset-health';
+  policyId?: string; // Optional - not all tests validate policies
   dataset: Dataset;
   privacyThresholds?: PrivacyThreshold[];
   statisticalFidelityTargets?: StatisticalFidelityTarget[];
+  expected: {
+    compliant: boolean;
+    metrics?: Record<string, number>;
+  };
+  // DEPRECATED: Keep for backward compatibility
   expectedResult?: any;
 }
 
-// RLS/CLS Test
+// RLS/CLS Test - references application infrastructure
 export interface RLSCLSTest extends BaseTest {
   testType: 'rls-cls';
-  database: DatabaseConfig;
+  policyId?: string; // Optional
+  applicationId: string; // References application with database infrastructure
+  databaseId?: string; // Which database in application.infrastructure.databases
   testQuery: TestQuery;
+  expected: {
+    rlsEnabled: boolean;
+    clsEnabled?: boolean;
+    coverage?: number;
+  };
+  // DEPRECATED: Keep for backward compatibility
+  database?: DatabaseConfig;
   maskingRules?: Array<{
     table: string;
     column: string;
@@ -176,11 +205,17 @@ export interface RLSCLSTest extends BaseTest {
 // Network Policy Test
 export interface NetworkPolicyTest extends BaseTest {
   testType: 'network-policy';
+  policyId?: string; // Optional
+  applicationId?: string; // References application with network infrastructure
   source: string;
   target: string;
   protocol: 'tcp' | 'udp' | 'icmp' | 'all';
   port?: number;
-  expectedAllowed: boolean;
+  expected: {
+    allowed: boolean;
+  };
+  // DEPRECATED: Keep for backward compatibility
+  expectedAllowed?: boolean;
 }
 
 // DLP Test - one per pattern/rule
@@ -209,14 +244,22 @@ export interface DLPTest extends BaseTest {
   };
 }
 
-// API Gateway Test
+// API Gateway Test - 1:1 with Policy
 export interface APIGatewayTest extends BaseTest {
   testType: 'api-gateway';
+  policyId: string; // Required - 1:1 with gateway policy
+  applicationId?: string; // References application with API gateway infrastructure
   gatewayType: 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy';
   endpoint: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  policyId?: string; // Reference to gateway policy
   policyType?: 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching';
+  expected: {
+    allowed?: boolean;
+    rateLimited?: boolean;
+    authenticated?: boolean;
+    [key: string]: any;
+  };
+  // DEPRECATED: Keep for backward compatibility
   expectedResult?: any;
 }
 

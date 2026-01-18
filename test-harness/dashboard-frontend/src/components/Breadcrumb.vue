@@ -17,18 +17,12 @@
         <span v-else class="breadcrumb-current">
           <span>{{ item.label }}</span>
         </span>
-        <ChevronRight
-          v-if="index < items.length - 1"
-          class="breadcrumb-separator"
-        />
       </li>
     </ol>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { ChevronRight } from 'lucide-vue-next';
-
 export interface BreadcrumbItem {
   label: string;
   to?: string;
@@ -77,14 +71,6 @@ defineProps<{
 .breadcrumb-current {
   color: #a0aec0;
   font-weight: 500;
-}
-
-.breadcrumb-separator {
-  width: 14px;
-  height: 14px;
-  color: #718096;
-  flex-shrink: 0;
-  margin-left: 4px;
 }
 </style>
 

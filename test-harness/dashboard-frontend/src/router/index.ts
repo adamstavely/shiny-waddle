@@ -33,7 +33,6 @@ import EphemeralEnvironments from '../views/EphemeralEnvironments.vue';
 import Settings from '../views/Settings.vue';
 import Integrations from '../views/Integrations.vue';
 import CICDIntegration from '../views/CICDIntegration.vue';
-import UserSimulation from '../views/UserSimulation.vue';
 import Resources from '../views/Resources.vue';
 import TicketingIntegrations from '../views/TicketingIntegrations.vue';
 import SLAManagement from '../views/SLAManagement.vue';
@@ -55,6 +54,7 @@ import PendingApprovals from '../views/PendingApprovals.vue';
 import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
 import EnvironmentConfigTesting from '../views/EnvironmentConfigTesting.vue';
+import SalesforceExperienceCloud from '../views/SalesforceExperienceCloud.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -87,10 +87,37 @@ const router = createRouter({
     {
       path: '/insights',
       name: 'Insights',
-      component: Insights,
-      props: (route) => ({ 
-        defaultTab: route.query.tab || 'overview' 
-      })
+      component: () => import('../views/insights/InsightsOverview.vue'),
+    },
+    {
+      path: '/insights/overview',
+      name: 'InsightsOverviewContent',
+      component: () => import('../views/insights/InsightsOverviewContent.vue'),
+    },
+    {
+      path: '/insights/analytics',
+      name: 'InsightsAnalytics',
+      component: () => import('../views/insights/InsightsAnalytics.vue'),
+    },
+    {
+      path: '/insights/predictions',
+      name: 'InsightsPredictions',
+      component: () => import('../views/insights/InsightsPredictions.vue'),
+    },
+    {
+      path: '/insights/runs',
+      name: 'InsightsRuns',
+      component: () => import('../views/insights/InsightsRuns.vue'),
+    },
+    {
+      path: '/insights/reports',
+      name: 'InsightsReports',
+      component: () => import('../views/insights/InsightsReports.vue'),
+    },
+    {
+      path: '/insights/trends',
+      name: 'InsightsTrends',
+      component: () => import('../views/insights/InsightsTrends.vue'),
     },
     {
       path: '/dashboard/app/:id',
@@ -208,11 +235,6 @@ const router = createRouter({
       component: PolicyValidation,
     },
     {
-      path: '/tests/user-simulation',
-      name: 'UserSimulation',
-      component: UserSimulation,
-    },
-    {
       path: '/access-control',
       name: 'AccessControlOverview',
       component: AccessControlOverview,
@@ -225,12 +247,57 @@ const router = createRouter({
     {
       path: '/runs',
       name: 'RunsAndReports',
-      component: RunsAndReports,
+      redirect: '/insights/runs',
     },
     {
       path: '/policies',
       name: 'Policies',
-      component: Policies,
+      component: () => import('../views/policies/PoliciesOverview.vue'),
+    },
+    {
+      path: '/policies/access-control',
+      name: 'AccessControlPolicies',
+      component: () => import('../views/policies/AccessControlPolicies.vue'),
+    },
+    {
+      path: '/policies/data-classification',
+      name: 'DataClassificationPolicies',
+      component: () => import('../views/policies/DataClassificationPolicies.vue'),
+    },
+    {
+      path: '/policies/platform-config',
+      name: 'PlatformConfigPolicies',
+      component: () => import('../views/policies/PlatformConfigPolicies.vue'),
+    },
+    {
+      path: '/policies/exceptions',
+      name: 'ExceptionsPolicies',
+      component: () => import('../views/policies/ExceptionsPolicies.vue'),
+    },
+    {
+      path: '/policies/standards-mapping',
+      name: 'StandardsMappingPolicies',
+      component: () => import('../views/policies/StandardsMappingPolicies.vue'),
+    },
+    {
+      path: '/policies/data-contracts',
+      name: 'DataContractsPolicies',
+      component: () => import('../views/policies/DataContractsPolicies.vue'),
+    },
+    {
+      path: '/policies/salesforce',
+      name: 'SalesforceBaselinesPolicies',
+      component: () => import('../views/policies/SalesforceBaselinesPolicies.vue'),
+    },
+    {
+      path: '/policies/elastic',
+      name: 'ElasticBaselinesPolicies',
+      component: () => import('../views/policies/ElasticBaselinesPolicies.vue'),
+    },
+    {
+      path: '/policies/idp-platform',
+      name: 'IDPPlatformPolicies',
+      component: () => import('../views/policies/IDPPlatformPolicies.vue'),
     },
     {
       path: '/policies/:id',
@@ -366,6 +433,11 @@ const router = createRouter({
       path: '/environment-config-testing',
       name: 'EnvironmentConfigTesting',
       component: EnvironmentConfigTesting,
+    },
+    {
+      path: '/salesforce-experience-cloud',
+      name: 'SalesforceExperienceCloud',
+      component: SalesforceExperienceCloud,
     },
     {
       path: '/:pathMatch(.*)*',

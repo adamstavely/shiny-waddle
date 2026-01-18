@@ -207,7 +207,7 @@ const loadHarnesses = async () => {
   loadingHarnesses.value = true;
   harnessesError.value = null;
   try {
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     availableHarnesses.value = response.data || [];
   } catch (err: any) {
     harnessesError.value = err.response?.data?.message || 'Failed to load test harnesses';
@@ -242,7 +242,7 @@ const save = async () => {
       },
     };
 
-    const response = await axios.post('/api/test-batteries', payload);
+    const response = await axios.post('/api/v1/test-batteries', payload);
     await router.push({ path: `/tests/batteries/${response.data.id || response.data._id}` });
   } catch (err: any) {
     console.error('Error saving battery:', err);

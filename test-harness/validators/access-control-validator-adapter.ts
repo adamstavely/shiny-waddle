@@ -8,8 +8,7 @@
 import { BaseValidator } from '../core/base-validator';
 import { ValidatorMetadata } from '../core/validator-registry';
 import { AccessControlTester } from '../services/access-control-tester';
-import { UserSimulator } from '../services/user-simulator';
-import { TestResult, TestSuite, AccessControlConfig, UserSimulationConfig } from '../core/types';
+import { TestResult, TestSuite, AccessControlConfig } from '../core/types';
 
 export class AccessControlValidatorAdapter extends BaseValidator {
   readonly id = 'access-control';
@@ -21,25 +20,28 @@ export class AccessControlValidatorAdapter extends BaseValidator {
   readonly metadata: ValidatorMetadata = {
     supportedTestTypes: ['access-control'],
     requiredConfig: ['accessControlConfig'],
-    optionalConfig: ['userSimulationConfig'],
+    optionalConfig: [],
     tags: ['rbac', 'abac', 'policies', 'access-control'],
   };
 
   private accessControlTester: AccessControlTester;
-  private userSimulator: UserSimulator;
 
-  constructor(config: { accessControlConfig: AccessControlConfig; userSimulationConfig?: UserSimulationConfig }) {
+  constructor(config: { accessControlConfig: AccessControlConfig }) {
     super(config);
     
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
-    this.userSimulator = new UserSimulator(
-      config.userSimulationConfig || { roles: [], attributes: {} }
-    );
   }
 
   protected async runTestsInternal(suite: TestSuite): Promise<TestResult[]> {
     const results: TestResult[] = [];
-    const testUsers = await this.userSimulator.generateTestUsers(suite.userRoles);
+    
+    // Generate test users from roles
+    const testUsers = suite.userRoles.map(role => ({
+      id: `test-user-${role}`,
+      email: `${role}@test.example.com`,
+      role: role as any,
+      attributes: {},
+    }));
 
     for (const user of testUsers) {
       for (const resource of suite.resources) {

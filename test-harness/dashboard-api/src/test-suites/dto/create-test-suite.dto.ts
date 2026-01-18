@@ -91,10 +91,5 @@ export class CreateTestSuiteDto {
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  testConfigurationIds?: string[];
 }
 

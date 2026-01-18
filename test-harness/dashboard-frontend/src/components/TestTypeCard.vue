@@ -320,8 +320,8 @@ const loadUsageData = async () => {
   try {
     // Load all test suites and harnesses
     const [suitesResponse, harnessesResponse] = await Promise.all([
-      axios.get('/api/test-suites'),
-      axios.get('/api/test-harnesses'),
+      axios.get('/api/v1/test-suites'),
+      axios.get('/api/v1/test-harnesses'),
     ]);
     
     testSuites.value = suitesResponse.data || [];

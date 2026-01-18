@@ -248,7 +248,7 @@ const loadBattery = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await axios.get(`/api/test-batteries/${route.params.id}`);
+    const response = await axios.get(`/api/v1/test-batteries/${route.params.id}`);
     battery.value = response.data;
     await loadHarnesses();
   } catch (err: any) {
@@ -270,7 +270,7 @@ const loadHarnesses = async () => {
   try {
     const promises = battery.value.harnessIds.map(async (harnessId) => {
       try {
-        const response = await axios.get(`/api/test-harnesses/${harnessId}`);
+        const response = await axios.get(`/api/v1/test-harnesses/${harnessId}`);
         return response.data;
       } catch (err) {
         console.error(`Error loading harness ${harnessId}:`, err);
@@ -291,7 +291,7 @@ const loadHarnesses = async () => {
 const loadAvailableHarnesses = async () => {
   loadingAvailableHarnesses.value = true;
   try {
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     const allHarnesses = response.data || [];
     // Filter out harnesses already in the battery
     const currentHarnessIds = battery.value?.harnessIds || [];
@@ -308,7 +308,7 @@ const loadAvailableHarnesses = async () => {
 
 const addHarness = async (harnessId: string) => {
   try {
-    await axios.post(`/api/test-batteries/${route.params.id}/harnesses`, {
+    await axios.post(`/api/v1/test-batteries/${route.params.id}/harnesses`, {
       harnessId,
     });
     showAddHarnessModal.value = false;
@@ -324,7 +324,7 @@ const removeHarness = async (harnessId: string) => {
   }
 
   try {
-    await axios.delete(`/api/test-batteries/${route.params.id}/harnesses/${harnessId}`);
+    await axios.delete(`/api/v1/test-batteries/${route.params.id}/harnesses/${harnessId}`);
     await loadBattery();
   } catch (err: any) {
     alert(err.response?.data?.message || 'Failed to remove harness');
@@ -346,7 +346,7 @@ const deleteBattery = async () => {
   }
 
   try {
-    await axios.delete(`/api/test-batteries/${route.params.id}`);
+    await axios.delete(`/api/v1/test-batteries/${route.params.id}`);
     router.push({ path: '/tests', query: { tab: 'batteries' } });
   } catch (err: any) {
     alert(err.response?.data?.message || 'Failed to delete battery');

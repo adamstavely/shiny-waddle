@@ -14,10 +14,6 @@ import { loadRuntimeConfigFromEnv } from '../core/config-loader';
 async function main() {
   // 1. Define test configuration
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: ['admin', 'researcher', 'analyst', 'viewer'],
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,

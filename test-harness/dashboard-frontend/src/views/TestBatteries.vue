@@ -94,7 +94,7 @@ const loadTestBatteries = async () => {
   try {
     loadingBatteries.value = true;
     batteriesError.value = null;
-    const response = await axios.get('/api/test-batteries');
+    const response = await axios.get('/api/v1/test-batteries');
     testBatteries.value = response.data;
   } catch (err: any) {
     batteriesError.value = err.response?.data?.message || 'Failed to load test batteries';

@@ -20,10 +20,6 @@ async function main() {
 
   // 2. Define test configuration with ABAC support
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: ['admin', 'researcher', 'analyst', 'viewer'],
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,

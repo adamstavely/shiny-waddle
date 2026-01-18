@@ -218,7 +218,7 @@ const loadBatteries = async () => {
 const loadAvailableHarnesses = async () => {
   loadingAvailableHarnesses.value = true;
   try {
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     const allHarnesses = response.data || [];
     const assignedHarnessIds = assignedHarnesses.value.map(h => h.id);
     availableHarnesses.value = allHarnesses.filter(
@@ -234,7 +234,7 @@ const loadAvailableHarnesses = async () => {
 
 const assignHarness = async (harnessId: string) => {
   try {
-    await axios.post(`/api/test-harnesses/${harnessId}/applications`, {
+    await axios.post(`/api/v1/test-harnesses/${harnessId}/applications`, {
       applicationId: props.applicationId,
     });
     showAddHarnessModal.value = false;
@@ -251,7 +251,7 @@ const unassignHarness = async (harnessId: string) => {
   }
 
   try {
-    await axios.delete(`/api/test-harnesses/${harnessId}/applications/${props.applicationId}`);
+    await axios.delete(`/api/v1/test-harnesses/${harnessId}/applications/${props.applicationId}`);
     await loadAssignments();
     emit('updated');
   } catch (err: any) {

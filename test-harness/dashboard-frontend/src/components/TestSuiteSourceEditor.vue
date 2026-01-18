@@ -123,7 +123,7 @@ const loadSource = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await axios.get(`/api/test-suites/${props.suiteId}/source`);
+    const response = await axios.get(`/api/v1/test-suites/${props.suiteId}/source`);
     content.value = response.data.content;
     originalContent.value = response.data.content;
     sourceType.value = response.data.sourceType || 'typescript';
@@ -189,7 +189,7 @@ const save = async () => {
   loading.value = true;
   error.value = null;
   try {
-    await axios.put(`/api/test-suites/${props.suiteId}/source`, {
+    await axios.put(`/api/v1/test-suites/${props.suiteId}/source`, {
       content: content.value,
     });
     originalContent.value = content.value;

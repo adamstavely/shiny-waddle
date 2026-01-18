@@ -1,4 +1,6 @@
-import { IsString, IsOptional, IsEnum, IsObject, IsUrl, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsObject, IsUrl, IsBoolean, ValidateNested, IsArray } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApplicationInfrastructure } from '../entities/application.entity';
 
 export enum ApplicationType {
   API = 'api',
@@ -46,5 +48,11 @@ export class CreateApplicationDto {
   @IsObject()
   @IsOptional()
   config?: Record<string, any>;
+
+  // NEW: Infrastructure configuration
+  @ValidateNested()
+  @Type(() => Object)
+  @IsOptional()
+  infrastructure?: ApplicationInfrastructure;
 }
 

@@ -69,10 +69,6 @@ async function main() {
   const policyMode = (process.env.POLICY_MODE as 'rbac' | 'abac' | 'hybrid') || 'hybrid';
   
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: testSuite.userRoles,
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,

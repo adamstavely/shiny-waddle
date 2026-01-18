@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   ValidationPipe,
@@ -15,6 +16,7 @@ import { TestBatteriesService } from './test-batteries.service';
 import { CreateTestBatteryDto } from './dto/create-test-battery.dto';
 import { UpdateTestBatteryDto } from './dto/update-test-battery.dto';
 import { TestBatteryEntity } from './entities/test-battery.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/v1/test-batteries')
 export class TestBatteriesController {
@@ -22,6 +24,7 @@ export class TestBatteriesController {
 
   constructor(private readonly testBatteriesService: TestBatteriesService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -31,6 +34,7 @@ export class TestBatteriesController {
     return this.testBatteriesService.create(dto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('domain') domain?: string,
@@ -53,12 +57,14 @@ export class TestBatteriesController {
     return batteries;
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<TestBatteryEntity> {
     this.logger.log(`Getting test battery: ${id}`);
     return this.testBatteriesService.findOne(id);
   }
 
+  @Public()
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -68,6 +74,7 @@ export class TestBatteriesController {
     return this.testBatteriesService.update(id, dto);
   }
 
+  @Public()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
@@ -75,6 +82,7 @@ export class TestBatteriesController {
     await this.testBatteriesService.delete(id);
   }
 
+  @Public()
   @Post(':id/harnesses')
   @HttpCode(HttpStatus.OK)
   async addHarness(
@@ -85,6 +93,7 @@ export class TestBatteriesController {
     return this.testBatteriesService.addHarness(id, harnessId);
   }
 
+  @Public()
   @Delete(':id/harnesses/:harnessId')
   @HttpCode(HttpStatus.OK)
   async removeHarness(
@@ -95,6 +104,7 @@ export class TestBatteriesController {
     return this.testBatteriesService.removeHarness(id, harnessId);
   }
 
+  @Public()
   @Get(':id/assigned-applications')
   @HttpCode(HttpStatus.OK)
   async getAssignedApplications(@Param('id') id: string): Promise<any[]> {

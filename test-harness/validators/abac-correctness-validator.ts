@@ -24,7 +24,7 @@ export class ABACCorrectnessValidator extends BaseValidator {
   readonly metadata: ValidatorMetadata = {
     supportedTestTypes: ['access-control'],
     requiredConfig: ['accessControlConfig'],
-    optionalConfig: ['userSimulationConfig'],
+    optionalConfig: [],
     tags: ['abac', 'correctness', 'validation', 'policies', 'access-control'],
   };
 

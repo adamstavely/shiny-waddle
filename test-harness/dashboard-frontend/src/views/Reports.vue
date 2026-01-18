@@ -454,8 +454,8 @@ const loadValidators = async () => {
 const loadBatteriesAndHarnesses = async () => {
   try {
     const [batteriesResponse, harnessesResponse] = await Promise.all([
-      axios.get('/api/test-batteries'),
-      axios.get('/api/test-harnesses'),
+      axios.get('/api/v1/test-batteries'),
+      axios.get('/api/v1/test-harnesses'),
     ]);
     testBatteries.value = batteriesResponse.data || [];
     testHarnesses.value = harnessesResponse.data || [];

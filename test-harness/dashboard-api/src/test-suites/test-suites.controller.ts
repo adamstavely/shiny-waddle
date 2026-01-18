@@ -12,11 +12,13 @@ import {
   HttpStatus,
   ValidationPipe,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { TestSuitesService } from './test-suites.service';
 import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { TestSuiteEntity } from './entities/test-suite.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/v1/test-suites')
 export class TestSuitesController {
@@ -24,6 +26,7 @@ export class TestSuitesController {
 
   constructor(private readonly testSuitesService: TestSuitesService) {}
 
+  @Public()
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -33,6 +36,7 @@ export class TestSuitesController {
     return this.testSuitesService.create(dto);
   }
 
+  @Public()
   @Get()
   async findAll(
     @Query('applicationId') applicationId?: string,
@@ -57,12 +61,14 @@ export class TestSuitesController {
     return suites;
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<TestSuiteEntity> {
     this.logger.log(`Getting test suite: ${id}`);
     return this.testSuitesService.findOne(id);
   }
 
+  @Public()
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -72,6 +78,7 @@ export class TestSuitesController {
     return this.testSuitesService.update(id, dto);
   }
 
+  @Public()
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(@Param('id') id: string): Promise<void> {
@@ -79,6 +86,7 @@ export class TestSuitesController {
     await this.testSuitesService.delete(id);
   }
 
+  @Public()
   @Patch(':id/enable')
   @HttpCode(HttpStatus.OK)
   async enable(@Param('id') id: string): Promise<TestSuiteEntity> {
@@ -86,6 +94,7 @@ export class TestSuitesController {
     return this.testSuitesService.enable(id);
   }
 
+  @Public()
   @Patch(':id/disable')
   @HttpCode(HttpStatus.OK)
   async disable(@Param('id') id: string): Promise<TestSuiteEntity> {
@@ -93,6 +102,7 @@ export class TestSuitesController {
     return this.testSuitesService.disable(id);
   }
 
+  @Public()
   @Get('discover')
   @HttpCode(HttpStatus.OK)
   async discover(): Promise<{ message: string; count: number }> {
@@ -106,6 +116,7 @@ export class TestSuitesController {
     };
   }
 
+  @Public()
   @Get(':id/source')
   @HttpCode(HttpStatus.OK)
   async getSource(@Param('id') id: string): Promise<{ content: string; sourceType: string; sourcePath?: string }> {
@@ -113,6 +124,7 @@ export class TestSuitesController {
     return this.testSuitesService.getTestSuiteSource(id);
   }
 
+  @Public()
   @Put(':id/source')
   @HttpCode(HttpStatus.OK)
   async updateSource(
@@ -124,6 +136,7 @@ export class TestSuitesController {
     return { message: 'Source file updated successfully' };
   }
 
+  @Public()
   @Get(':id/extract-config')
   @HttpCode(HttpStatus.OK)
   async extractConfig(@Param('id') id: string): Promise<{ config: any }> {
@@ -135,6 +148,7 @@ export class TestSuitesController {
     return { config };
   }
 
+  @Public()
   @Get(':id/used-in-harnesses')
   @HttpCode(HttpStatus.OK)
   async getUsedInHarnesses(@Param('id') id: string): Promise<any[]> {

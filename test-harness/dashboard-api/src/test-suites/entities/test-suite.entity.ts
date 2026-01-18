@@ -19,7 +19,6 @@ export interface TestSuiteEntity {
   updatedAt: Date;
   createdBy?: string;
   description?: string;
-  testConfigurationIds?: string[]; // IDs of test configurations to run
   sourceType?: TestSuiteSourceType; // 'json' for data/test-suites.json, 'typescript' for filesystem files
   sourcePath?: string; // Path to source file relative to project root
 }

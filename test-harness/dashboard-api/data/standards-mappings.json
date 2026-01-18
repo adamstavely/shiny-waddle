@@ -1,0 +1,47 @@
+{
+  "standards": [
+    {
+      "id": "nist-800-53",
+      "name": "NIST 800-53",
+      "version": "Rev 5",
+      "description": "NIST Security and Privacy Controls",
+      "framework": "nist"
+    },
+    {
+      "id": "soc2",
+      "name": "SOC 2",
+      "version": "Type II",
+      "description": "Service Organization Control 2",
+      "framework": "soc2"
+    },
+    {
+      "id": "iso-27001",
+      "name": "ISO 27001",
+      "version": "2022",
+      "description": "Information Security Management",
+      "framework": "iso27001"
+    },
+    {
+      "id": "pci-dss",
+      "name": "PCI DSS",
+      "version": "4.0",
+      "description": "Payment Card Industry Data Security Standard",
+      "framework": "pci-dss"
+    },
+    {
+      "id": "hipaa",
+      "name": "HIPAA",
+      "version": "2023",
+      "description": "Health Insurance Portability and Accountability Act",
+      "framework": "hipaa"
+    },
+    {
+      "id": "gdpr",
+      "name": "GDPR",
+      "version": "2018",
+      "description": "General Data Protection Regulation",
+      "framework": "gdpr"
+    }
+  ],
+  "mappings": []
+}

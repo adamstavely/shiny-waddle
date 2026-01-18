@@ -391,8 +391,8 @@ const loadTestSuites = async () => {
   suitesError.value = null;
   try {
     const [suitesResponse, harnessesResponse] = await Promise.all([
-      axios.get('/api/test-suites'),
-      axios.get('/api/test-harnesses'),
+      axios.get('/api/v1/test-suites'),
+      axios.get('/api/v1/test-harnesses'),
     ]);
     
     const allHarnesses = harnessesResponse.data || [];
@@ -434,7 +434,7 @@ const loadConfigurations = async () => {
 
 const loadTestHarnesses = async () => {
   try {
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     testHarnesses.value = response.data || [];
   } catch (err) {
     console.error('Error loading test harnesses:', err);
@@ -455,7 +455,7 @@ const deleteTestSuite = async (id: string) => {
     return;
   }
   try {
-    await axios.delete(`/api/test-suites/${id}`);
+    await axios.delete(`/api/v1/test-suites/${id}`);
     await loadTestSuites();
   } catch (err: any) {
     suitesError.value = err.response?.data?.message || 'Failed to delete test suite';
@@ -467,9 +467,9 @@ const deleteTestSuite = async (id: string) => {
 const toggleTestSuite = async (suite: any) => {
   try {
     if (suite.enabled) {
-      await axios.patch(`/api/test-suites/${suite.id}/disable`);
+      await axios.patch(`/api/v1/test-suites/${suite.id}/disable`);
     } else {
-      await axios.patch(`/api/test-suites/${suite.id}/enable`);
+      await axios.patch(`/api/v1/test-suites/${suite.id}/enable`);
     }
     await loadTestSuites();
   } catch (err: any) {

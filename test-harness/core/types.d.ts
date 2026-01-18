@@ -1,14 +1,8 @@
 export interface TestConfiguration {
-    userSimulationConfig: UserSimulationConfig;
     accessControlConfig: AccessControlConfig;
     dataBehaviorConfig: DataBehaviorConfig;
     datasetHealthConfig: DatasetHealthConfig;
     reportingConfig: ReportingConfig;
-}
-export interface UserSimulationConfig {
-    roles: string[];
-    attributes: Record<string, any>;
-    workspaceMemberships?: WorkspaceMembership[];
 }
 export interface AccessControlConfig {
     pdpEndpoint?: string;

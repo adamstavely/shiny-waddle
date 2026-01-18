@@ -294,9 +294,9 @@ const loadStats = async () => {
   try {
     const [configsRes, suitesRes, harnessesRes, batteriesRes, resultsRes] = await Promise.all([
       axios.get('/api/test-configurations').catch(() => ({ data: [] })),
-      axios.get('/api/test-suites').catch(() => ({ data: [] })),
-      axios.get('/api/test-harnesses').catch(() => ({ data: [] })),
-      axios.get('/api/test-batteries').catch(() => ({ data: [] })),
+      axios.get('/api/v1/test-suites').catch(() => ({ data: [] })),
+      axios.get('/api/v1/test-harnesses').catch(() => ({ data: [] })),
+      axios.get('/api/v1/test-batteries').catch(() => ({ data: [] })),
       axios.get('/api/test-results?limit=1000').catch(() => ({ data: [] }))
     ]);
     

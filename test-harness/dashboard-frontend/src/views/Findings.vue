@@ -629,7 +629,7 @@ const loadTestResults = async () => {
 
 const loadTestSuites = async () => {
   try {
-    const response = await axios.get('/api/test-suites');
+    const response = await axios.get('/api/v1/test-suites');
     testSuites.value = response.data || [];
   } catch (err) {
     console.error('Error loading test suites:', err);
@@ -638,7 +638,7 @@ const loadTestSuites = async () => {
 
 const loadTestHarnesses = async () => {
   try {
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     testHarnesses.value = response.data || [];
   } catch (err) {
     console.error('Error loading test harnesses:', err);
@@ -647,7 +647,7 @@ const loadTestHarnesses = async () => {
 
 const loadTestBatteries = async () => {
   try {
-    const response = await axios.get('/api/test-batteries');
+    const response = await axios.get('/api/v1/test-batteries');
     testBatteries.value = response.data || [];
   } catch (err) {
     console.error('Error loading test batteries:', err);

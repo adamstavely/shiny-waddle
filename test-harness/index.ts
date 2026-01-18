@@ -5,7 +5,6 @@
 export { TestOrchestrator } from './core/test-harness';
 export { TestBatteryRunner } from './core/test-battery';
 export * from './core/types';
-export { UserSimulator } from './services/user-simulator';
 export { AccessControlTester } from './services/access-control-tester';
 export { DatasetHealthTester } from './services/dataset-health-tester';
 export { ComplianceReporter } from './services/compliance-reporter';

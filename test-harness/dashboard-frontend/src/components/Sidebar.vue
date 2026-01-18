@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/test-design-library', '/admin'].includes(item.path)"
+            v-if="!['/test-design-library', '/admin', '/policies'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -94,7 +94,7 @@ const menuItems = [
   { path: '/applications', label: 'Applications', icon: Database, divider: false },
   { path: '/test-design-library', label: 'Test Design Library', icon: BookOpen, divider: false },
   { path: '/policies', label: 'Policies & Config', icon: Shield, divider: false },
-  { path: '/runs', label: 'Runs & Reports', icon: PlayCircle, divider: false },
+  { path: '/insights', label: 'Insights & Reports', icon: BarChart3, divider: false },
 ];
 
 // Test Design Library pages
@@ -110,14 +110,20 @@ const policiesConfigPages = [
   '/policies',
   '/resources',
   '/configuration-validation',
-  '/environment-config-testing'
+  '/environment-config-testing',
+  '/salesforce-experience-cloud'
 ];
 
-// Runs & Reports pages
-const runsReportsPages = [
-  '/runs',
-  '/reports',
-  '/compliance-trends'
+// Insights & Reports pages
+const insightsReportsPages = [
+  '/insights',
+  '/insights/overview',
+  '/insights/analytics',
+  '/insights/predictions',
+  '/insights/runs',
+  '/insights/reports',
+  '/insights/trends',
+  '/runs' // Legacy redirect
 ];
 
 const isActive = (path: string): boolean => {
@@ -133,8 +139,8 @@ const isActive = (path: string): boolean => {
   if (path === '/policies') {
     return policiesConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/runs') {
-    return runsReportsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  if (path === '/insights') {
+    return insightsReportsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
@@ -149,12 +155,17 @@ const handleNavClick = (path: string) => {
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'test-design-library' } }));
     return;
   }
+  if (path === '/policies') {
+    // Emit event to open drawer with policies-config category
+    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'policies-config' } }));
+    return;
+  }
   if (path === '/admin') {
     // Emit event to open drawer with admin category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'admin' } }));
     return;
   }
-  // Use Vue Router for navigation
+  // Use Vue Router for navigation (including /insights - it navigates directly)
   router.push(path);
 };
 

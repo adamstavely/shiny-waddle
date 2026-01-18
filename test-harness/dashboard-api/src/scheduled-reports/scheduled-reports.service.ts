@@ -4,7 +4,7 @@ import * as path from 'path';
 import { ScheduledReport } from './entities/scheduled-report.entity';
 import { CreateScheduledReportDto } from './dto/create-scheduled-report.dto';
 import { UpdateScheduledReportDto } from './dto/update-scheduled-report.dto';
-import { ReportsService } from '../reports/reports.service';
+// import { ReportsService } from '../reports/reports.service'; // TODO: Implement ReportsService
 import { SchedulerService } from './scheduler.service';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
   private scheduler: NodeJS.Timeout | null = null;
 
   constructor(
-    private readonly reportsService: ReportsService,
+    // private readonly reportsService: ReportsService, // TODO: Implement ReportsService
     private readonly schedulerService: SchedulerService,
   ) {}
 
@@ -114,7 +114,9 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
         includeDetails: report.includeDetails ?? true,
       };
 
-      const generatedReport = await this.reportsService.generateReport(generateRequest);
+      // TODO: Implement ReportsService
+      // const generatedReport = await this.reportsService.generateReport(generateRequest);
+      const generatedReport = { id: 'stub', content: 'Report generation not yet implemented' };
 
       // Update schedule with last run and calculate next run
       report.lastRun = new Date();

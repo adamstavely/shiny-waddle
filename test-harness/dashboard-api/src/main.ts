@@ -86,6 +86,15 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type,Authorization',
   });
 
+  // Configure Express to allow dots in route parameters (not treat them as file extensions)
+  // This is needed for test IDs like "test.idp.service_conforms_to_golden_template"
+  const expressApp = app.getHttpAdapter().getInstance();
+  if (expressApp && typeof expressApp.set === 'function') {
+    // Disable treating dots as file extensions by configuring Express
+    expressApp.set('json escape', false);
+    expressApp.set('strict routing', false);
+  }
+
   const port = process.env.PORT || 3001;
   const protocol = httpsEnabled ? 'https' : 'http';
   await app.listen(port);

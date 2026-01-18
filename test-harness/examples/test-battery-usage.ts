@@ -83,10 +83,6 @@ async function runTestBattery() {
 
   // Create test configuration
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: ['admin', 'viewer', 'editor'],
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,
@@ -190,10 +186,6 @@ async function runSequentialBattery() {
   };
 
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: ['admin'],
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,
@@ -244,10 +236,6 @@ async function runParallelBattery() {
   };
 
   const config: TestConfiguration = {
-    userSimulationConfig: {
-      roles: ['admin', 'viewer'],
-      attributes: {},
-    },
     accessControlConfig: {
       policyEngine: 'custom',
       cacheDecisions: true,

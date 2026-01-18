@@ -16,8 +16,6 @@ import {
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto, ApplicationStatus, ApplicationType } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
-import { AssignTestConfigurationsDto } from './dto/assign-test-configurations.dto';
-import { ToggleTestConfigDto } from './dto/toggle-test-config.dto';
 import { ToggleValidatorDto } from './dto/toggle-validator.dto';
 import { BulkToggleDto } from './dto/bulk-toggle.dto';
 import { Application } from './entities/application.entity';
@@ -64,6 +62,18 @@ export class ApplicationsController {
   }
 
   @Public()
+  @Get('issues')
+  async getAllIssues(
+    @Query('limit') limit?: string,
+    @Query('priority') priority?: string,
+  ): Promise<any[]> {
+    return this.applicationsService.getAllIssues(
+      limit ? parseInt(limit) : undefined,
+      priority,
+    );
+  }
+
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Application> {
     return this.applicationsService.findOne(id);
@@ -102,18 +112,6 @@ export class ApplicationsController {
   }
 
   @Public()
-  @Get('issues')
-  async getAllIssues(
-    @Query('limit') limit?: string,
-    @Query('priority') priority?: string,
-  ): Promise<any[]> {
-    return this.applicationsService.getAllIssues(
-      limit ? parseInt(limit) : undefined,
-      priority,
-    );
-  }
-
-  @Public()
   @Get(':id/issues')
   async getIssues(
     @Param('id') id: string,
@@ -138,22 +136,17 @@ export class ApplicationsController {
     return this.applicationsService.updateLastTestAt(id, new Date());
   }
 
-  @Post(':id/test-configurations')
-  @HttpCode(HttpStatus.OK)
-  async assignTestConfigurations(
-    @Param('id') id: string,
-    @Body(ValidationPipe) body: AssignTestConfigurationsDto,
-  ): Promise<Application> {
-    return this.applicationsService.assignTestConfigurations(id, body.testConfigurationIds);
+
+  /**
+   * Get application infrastructure
+   * NEW: Infrastructure is now part of Application entity
+   */
+  @Get(':id/infrastructure')
+  async getInfrastructure(@Param('id') id: string): Promise<any> {
+    const app = await this.applicationsService.findOne(id);
+    return app.infrastructure || {};
   }
 
-  @Get(':id/test-configurations')
-  async getTestConfigurations(
-    @Param('id') id: string,
-    @Query('expand') expand?: string,
-  ): Promise<string[] | any[]> {
-    return this.applicationsService.getTestConfigurations(id, expand === 'true');
-  }
 
   @Post(':id/run-tests')
   @HttpCode(HttpStatus.OK)
@@ -173,24 +166,6 @@ export class ApplicationsController {
     return this.applicationsService.runTests(id, { buildId, runId, commitSha, branch });
   }
 
-  @Patch(':id/test-configurations/:configId/toggle')
-  @RequirePermission(Permission.MANAGE_APPLICATION_TESTS)
-  async toggleTestConfiguration(
-    @Param('id') id: string,
-    @Param('configId') configId: string,
-    @Body(ValidationPipe) dto: ToggleTestConfigDto,
-    @Request() req: ExpressRequest,
-  ): Promise<Application> {
-    const user = this.getUserFromRequest(req);
-    return this.applicationsService.toggleTestConfiguration(
-      id,
-      configId,
-      dto.enabled,
-      dto.reason,
-      user.userId,
-      user.username,
-    );
-  }
 
   @Patch(':id/validators/:validatorId/toggle')
   @RequirePermission(Permission.MANAGE_APPLICATION_VALIDATORS)
@@ -211,11 +186,6 @@ export class ApplicationsController {
     );
   }
 
-  @Get(':id/test-configurations/status')
-  @RequirePermission(Permission.READ_APPLICATIONS)
-  async getTestConfigurationStatus(@Param('id') id: string) {
-    return this.applicationsService.getTestConfigurationStatus(id);
-  }
 
   @Get(':id/validators/status')
   @RequirePermission(Permission.READ_APPLICATIONS)
@@ -223,21 +193,6 @@ export class ApplicationsController {
     return this.applicationsService.getValidatorStatus(id);
   }
 
-  @Patch(':id/test-configurations/bulk-toggle')
-  @RequirePermission(Permission.MANAGE_APPLICATION_TESTS)
-  async bulkToggleTestConfigurations(
-    @Param('id') id: string,
-    @Body(ValidationPipe) dto: BulkToggleDto,
-    @Request() req: ExpressRequest,
-  ): Promise<Application> {
-    const user = this.getUserFromRequest(req);
-    return this.applicationsService.bulkToggleTestConfigurations(
-      id,
-      dto.items,
-      user.userId,
-      user.username,
-    );
-  }
 
   @Patch(':id/validators/bulk-toggle')
   @RequirePermission(Permission.MANAGE_APPLICATION_VALIDATORS)
@@ -255,21 +210,6 @@ export class ApplicationsController {
     );
   }
 
-  @Delete(':id/test-configurations/:configId/override')
-  @RequirePermission(Permission.MANAGE_APPLICATION_TESTS)
-  async removeTestConfigurationOverride(
-    @Param('id') id: string,
-    @Param('configId') configId: string,
-    @Request() req: ExpressRequest,
-  ): Promise<Application> {
-    const user = this.getUserFromRequest(req);
-    return this.applicationsService.removeTestConfigurationOverride(
-      id,
-      configId,
-      user.userId,
-      user.username,
-    );
-  }
 
   @Delete(':id/validators/:validatorId/override')
   @RequirePermission(Permission.MANAGE_APPLICATION_VALIDATORS)

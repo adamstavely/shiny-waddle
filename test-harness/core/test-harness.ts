@@ -4,7 +4,6 @@
  * Main orchestrator for running compliance tests against applications
  */
 
-import { UserSimulator } from '../services/user-simulator';
 import { AccessControlTester } from '../services/access-control-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
@@ -23,18 +22,17 @@ import { mergeRuntimeConfig } from './config-loader';
 // Test loader interface - implementations should load tests by IDs
 export interface TestLoader {
   loadTests(testIds: string[]): Promise<Test[]>;
-  loadPolicies(policyIds: string[]): Promise<ABACPolicy[]>;
+  loadPolicy(policyId: string): Promise<ABACPolicy>; // Changed to 1:1 - load single policy
+  loadApplication(applicationId: string): Promise<any>; // Load application with infrastructure
 }
 
 export class TestOrchestrator {
-  private userSimulator: UserSimulator;
   private accessControlTester: AccessControlTester;
   private datasetHealthTester: DatasetHealthTester;
   private complianceReporter: ComplianceReporter;
   private testLoader?: TestLoader;
 
   constructor(config: TestConfiguration, testLoader?: TestLoader) {
-    this.userSimulator = new UserSimulator(config.userSimulationConfig);
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
     this.datasetHealthTester = new DatasetHealthTester(config.datasetHealthConfig);
     this.complianceReporter = new ComplianceReporter(config.reportingConfig);
@@ -116,55 +114,68 @@ export class TestOrchestrator {
   }
 
   /**
-   * Run a single access control test
+   * Run a single access control test (1:1 with Policy)
    */
   async runAccessControlTest(test: AccessControlTest, suite: TestSuite): Promise<TestResult> {
-    // Load policies referenced by test
-    let policies: ABACPolicy[] = [];
-    if (this.testLoader && test.policyIds && test.policyIds.length > 0) {
-      policies = await this.testLoader.loadPolicies(test.policyIds);
-      // Configure access control tester with these policies
-      // Note: This assumes AccessControlTester can be reconfigured
-      // In a real implementation, you'd update the config or create a new tester
+    // Load policy (1:1 relationship)
+    if (!test.policyId) {
+      throw new Error('AccessControlTest must have policyId (1:1 relationship with Policy)');
     }
 
-    // Create user from test role
-    const testUsers = await this.userSimulator.generateTestUsers([test.role]);
-    const user = testUsers[0] || {
-      id: 'test-user',
-      email: 'test@example.com',
-      role: test.role as any,
+    let policy: ABACPolicy;
+    if (this.testLoader) {
+      policy = await this.testLoader.loadPolicy(test.policyId);
+    } else {
+      throw new Error('TestLoader must be provided to load policies');
+    }
+
+    // Use test inputs (new structure) or fall back to deprecated fields
+    const subject = test.inputs?.subject || {
+      role: test.role, // DEPRECATED: fallback
       attributes: {},
     };
 
-    // Use context from runtime config if available, otherwise use test context
-    let context = test.context || {};
+    const resource = test.inputs?.resource || test.resource; // DEPRECATED: fallback
+    const context = test.inputs?.context || test.context || {}; // DEPRECATED: fallback
+
+    // Merge with runtime config context if available
     if (suite.runtimeConfig?.contexts && suite.runtimeConfig.contexts.length > 0) {
-      // Use first context from runtime config, or merge with test context
-      context = { ...context, ...suite.runtimeConfig.contexts[0] };
+      Object.assign(context, suite.runtimeConfig.contexts[0]);
     }
+
+    // Create user from subject
+    const user = {
+      id: 'test-user',
+      email: 'test@example.com',
+      role: subject.role as any,
+      attributes: subject.attributes || {},
+    };
 
     // Execute test
     const result = await this.accessControlTester.testPDPDecision({
       user,
-      resource: test.resource,
+      resource,
       context,
-      expectedDecision: test.expectedDecision,
+      expectedDecision: test.expected?.allowed ?? test.expectedDecision ?? true, // Support both new and old structure
     });
+
+    const expectedAllowed = test.expected?.allowed ?? test.expectedDecision ?? true;
 
     return {
       testType: 'access-control',
       testName: test.name,
-      passed: result.allowed === result.expectedAllowed,
+      passed: result.allowed === expectedAllowed,
       details: {
         ...result,
-        policiesTested: test.policyIds,
+        policyTested: test.policyId,
         appliedPolicies: result.policyRules,
       },
       timestamp: new Date(),
       testId: test.id,
       testVersion: test.version,
-      policyIds: test.policyIds,
+      policyId: test.policyId, // 1:1 relationship
+      // DEPRECATED: Keep for backward compatibility
+      policyIds: [test.policyId],
     };
   }
 
@@ -178,14 +189,20 @@ export class TestOrchestrator {
       statisticalFidelityTargets: test.statisticalFidelityTargets,
     });
 
+    const expectedCompliant = test.expected?.compliant ?? result.compliant;
+
     return {
       testType: 'dataset-health',
       testName: test.name,
-      passed: result.compliant,
-      details: result,
+      passed: result.compliant === expectedCompliant,
+      details: {
+        ...result,
+        expected: test.expected,
+      },
       timestamp: new Date(),
       testId: test.id,
       testVersion: test.version,
+      policyId: test.policyId, // Optional - may be undefined
     };
   }
 

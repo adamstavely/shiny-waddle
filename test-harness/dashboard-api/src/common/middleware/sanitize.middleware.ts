@@ -57,9 +57,13 @@ export class SanitizeMiddleware implements NestMiddleware {
       return str;
     }
 
-    // Remove SQL injection patterns
+    // Remove dangerous SQL injection patterns (but allow normal characters)
+    // Remove common SQL injection patterns: -- (comments), /* */ (block comments), ; (statement terminators)
     let sanitized = str
-      .replace(/('|(\\')|(;)|(\\)|(\/\*)|(\*\/)|(\-\-)|(\+)|(\%)|(\=)|(\>)|(\<)|(\!)|(\@)|(\#)|(\$)|(\^)|(\&)|(\*)|(\()|(\))|(\[)|(\])|(\{)|(\})|(\|)|(\\)|(\~)|(\`)|(\?)|(\:)|(\;)|(\")|(\')/gi, '');
+      .replace(/--/g, '') // SQL comments
+      .replace(/\/\*/g, '') // Block comment start
+      .replace(/\*\//g, '') // Block comment end
+      .replace(/;/g, ''); // Statement terminator
 
     // Remove XSS patterns
     sanitized = sanitizeHtml(sanitized, {

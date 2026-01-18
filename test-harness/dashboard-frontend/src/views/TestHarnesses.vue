@@ -95,7 +95,7 @@ const loadTestHarnesses = async () => {
   try {
     loadingHarnesses.value = true;
     harnessesError.value = null;
-    const response = await axios.get('/api/test-harnesses');
+    const response = await axios.get('/api/v1/test-harnesses');
     testHarnesses.value = response.data;
   } catch (err: any) {
     harnessesError.value = err.response?.data?.message || 'Failed to load test harnesses';

@@ -17,6 +17,7 @@ Heimdall is an automated testing framework that validates applications are adher
 - **API Security Testing**: Comprehensive REST/GraphQL API security testing including authentication, authorization, rate limiting, and vulnerability detection
 - **Data Pipeline Testing**: Test ETL pipelines, streaming data, data transformations, and pipeline security controls
 - **Distributed Systems Testing**: Test access control across multiple regions, verify policy consistency, test synchronization, and distributed transactions
+- **Salesforce Experience Cloud Testing**: Test Salesforce Experience Cloud applications for security misconfigurations using Google's aura-inspector tool
 
 ### Zero Trust Architecture (ZTA) Features
 

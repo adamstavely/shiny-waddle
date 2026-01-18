@@ -130,19 +130,6 @@
         
         <div class="explanation-card">
           <div class="explanation-icon">
-            <Users />
-          </div>
-          <h3 class="explanation-title">User Simulation</h3>
-          <p class="explanation-text">
-            Simulate users with different roles, attributes, and contexts to test how your 
-            policies behave. Generate test users and validate that access control works as 
-            expected across various scenarios.
-          </p>
-          <button @click="navigateTo('/tests/user-simulation')" class="explanation-link">Simulate Users →</button>
-        </div>
-        
-        <div class="explanation-card">
-          <div class="explanation-icon">
             <FileSearch />
           </div>
           <h3 class="explanation-title">Policy Validation</h3>

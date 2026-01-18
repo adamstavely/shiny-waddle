@@ -277,7 +277,7 @@ const loadTests = async () => {
     if (filterDomain.value) params.domain = filterDomain.value;
     if (filterPolicy.value) params.policyId = filterPolicy.value;
     
-    const response = await axios.get('/api/tests', { params });
+    const response = await axios.get('/api/v1/tests', { params });
     tests.value = response.data;
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to load tests';
@@ -313,7 +313,7 @@ const loadTestResults = async () => {
 
 const loadTestSuites = async () => {
   try {
-    const response = await axios.get('/api/test-suites');
+    const response = await axios.get('/api/v1/test-suites');
     testSuites.value = response.data || [];
   } catch (err) {
     console.error('Error loading test suites:', err);

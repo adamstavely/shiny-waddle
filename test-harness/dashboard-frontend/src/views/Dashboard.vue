@@ -393,7 +393,7 @@ const loadBatteriesData = async () => {
     batteriesError.value = null;
     
     const [batteriesResponse, runsResponse] = await Promise.all([
-      axios.get('/api/test-batteries'),
+      axios.get('/api/v1/test-batteries'),
       axios.get('/api/v1/runs?limit=20')
     ]);
     
@@ -450,9 +450,9 @@ const loadHarnessesData = async () => {
     harnessesError.value = null;
     
     const [harnessesResponse, appsResponse, suitesResponse] = await Promise.all([
-      axios.get('/api/test-harnesses'),
+      axios.get('/api/v1/test-harnesses'),
       axios.get('/api/v1/applications'),
-      axios.get('/api/test-suites')
+      axios.get('/api/v1/test-suites')
     ]);
     
     const harnesses = harnessesResponse.data || [];

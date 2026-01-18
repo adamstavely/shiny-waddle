@@ -2082,7 +2082,7 @@ const save = async () => {
       }
       await axios.put(`/api/tests/${testId.value}`, payload);
     } else {
-      await axios.post('/api/tests', payload);
+      await axios.post('/api/v1/tests', payload);
     }
     
     router.push('/tests/individual');

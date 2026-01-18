@@ -331,7 +331,7 @@ const loadSuitesUsingTest = async () => {
   if (!test.value?.id) return;
   
   try {
-    const response = await axios.get('/api/test-suites');
+    const response = await axios.get('/api/v1/test-suites');
     suitesUsingTest.value = response.data.filter((suite: any) =>
       suite.testIds && suite.testIds.includes(test.value.id)
     );

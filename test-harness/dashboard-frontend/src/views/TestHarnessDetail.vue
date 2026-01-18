@@ -321,7 +321,7 @@ const loadHarness = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await axios.get(`/api/test-harnesses/${route.params.id}`);
+    const response = await axios.get(`/api/v1/test-harnesses/${route.params.id}`);
     harness.value = response.data;
     await Promise.all([loadSuites(), loadApplications()]);
   } catch (err: any) {
@@ -343,7 +343,7 @@ const loadSuites = async () => {
   try {
     const promises = harness.value.testSuiteIds.map(async (suiteId) => {
       try {
-        const response = await axios.get(`/api/test-suites/${suiteId}`);
+        const response = await axios.get(`/api/v1/test-suites/${suiteId}`);
         return response.data;
       } catch (err) {
         console.error(`Error loading suite ${suiteId}:`, err);
@@ -393,7 +393,7 @@ const loadApplications = async () => {
 const loadAvailableSuites = async () => {
   loadingAvailableSuites.value = true;
   try {
-    const response = await axios.get('/api/test-suites');
+    const response = await axios.get('/api/v1/test-suites');
     const allSuites = response.data || [];
     // Filter out suites already in the harness
     const currentSuiteIds = harness.value?.testSuiteIds || [];
@@ -428,7 +428,7 @@ const loadAvailableApplications = async () => {
 
 const addSuite = async (suiteId: string) => {
   try {
-    await axios.post(`/api/test-harnesses/${route.params.id}/test-suites`, {
+    await axios.post(`/api/v1/test-harnesses/${route.params.id}/test-suites`, {
       suiteId,
     });
     showAddSuiteModal.value = false;
@@ -444,7 +444,7 @@ const removeSuite = async (suiteId: string) => {
   }
 
   try {
-    await axios.delete(`/api/test-harnesses/${route.params.id}/test-suites/${suiteId}`);
+    await axios.delete(`/api/v1/test-harnesses/${route.params.id}/test-suites/${suiteId}`);
     await loadHarness();
   } catch (err: any) {
     alert(err.response?.data?.message || 'Failed to remove test suite');
@@ -453,7 +453,7 @@ const removeSuite = async (suiteId: string) => {
 
 const assignApplication = async (applicationId: string) => {
   try {
-    await axios.post(`/api/test-harnesses/${route.params.id}/applications`, {
+    await axios.post(`/api/v1/test-harnesses/${route.params.id}/applications`, {
       applicationId,
     });
     showAddApplicationModal.value = false;
@@ -469,7 +469,7 @@ const unassignApplication = async (applicationId: string) => {
   }
 
   try {
-    await axios.delete(`/api/test-harnesses/${route.params.id}/applications/${applicationId}`);
+    await axios.delete(`/api/v1/test-harnesses/${route.params.id}/applications/${applicationId}`);
     await loadHarness();
   } catch (err: any) {
     alert(err.response?.data?.message || 'Failed to unassign application');
@@ -491,7 +491,7 @@ const deleteHarness = async () => {
   }
 
   try {
-    await axios.delete(`/api/test-harnesses/${route.params.id}`);
+    await axios.delete(`/api/v1/test-harnesses/${route.params.id}`);
     router.push({ path: '/tests', query: { tab: 'harnesses' } });
   } catch (err: any) {
     alert(err.response?.data?.message || 'Failed to delete harness');
