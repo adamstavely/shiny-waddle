@@ -19,19 +19,27 @@ import { IsString, IsNotEmpty, IsOptional, ValidateIf } from 'class-validator';
 class TestPolicyBypassDto {
   @IsOptional()
   @IsString()
-  @ValidateIf((o) => !o.configId)
+  applicationId?: string;
+
+  @IsOptional()
+  @IsString()
+  databaseId?: string;
+
+  @IsOptional()
+  @IsString()
+  @ValidateIf((o) => !o.applicationId)
   @IsNotEmpty()
   userId?: string;
 
   @IsOptional()
   @IsString()
-  @ValidateIf((o) => !o.configId)
+  @ValidateIf((o) => !o.applicationId)
   @IsNotEmpty()
   resourceId?: string;
 
   @IsOptional()
   @IsString()
-  @ValidateIf((o) => !o.configId)
+  @ValidateIf((o) => !o.applicationId)
   @IsNotEmpty()
   resourceType?: string;
 }
@@ -58,9 +66,9 @@ export class RLSCLSController {
 
   @Post('test-dynamic-masking')
   @HttpCode(HttpStatus.OK)
-  async testDynamicMasking(@Body(ValidationPipe) dto: TestDynamicMaskingDto & { configId?: string }) {
-    this.logger.log(dto.configId
-      ? `Testing dynamic masking with config: ${dto.configId}`
+  async testDynamicMasking(@Body(ValidationPipe) dto: TestDynamicMaskingDto & { applicationId?: string; databaseId?: string }) {
+    this.logger.log(dto.applicationId
+      ? `Testing dynamic masking for application: ${dto.applicationId}${dto.databaseId ? `, database: ${dto.databaseId}` : ''}`
       : `Testing dynamic masking for query: ${dto.query?.name || 'unknown'}`);
     return this.rlsClsService.testDynamicMasking(dto);
   }
@@ -78,9 +86,9 @@ export class RLSCLSController {
 
   @Post('test-policy-bypass')
   @HttpCode(HttpStatus.OK)
-  async testPolicyBypass(@Body(ValidationPipe) dto: TestPolicyBypassDto & { configId?: string }) {
-    this.logger.log(dto.configId
-      ? `Testing policy bypass with config: ${dto.configId}`
+  async testPolicyBypass(@Body(ValidationPipe) dto: TestPolicyBypassDto) {
+    this.logger.log(dto.applicationId
+      ? `Testing policy bypass for application: ${dto.applicationId}${dto.databaseId ? `, database: ${dto.databaseId}` : ''}`
       : `Testing policy bypass for user: ${dto.userId}, resource: ${dto.resourceId}`);
     return this.rlsClsService.testPolicyBypass(dto);
   }

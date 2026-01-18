@@ -5,24 +5,18 @@ import { DataPipelineService } from './data-pipeline.service';
 export class DataPipelineController {
   constructor(private readonly dataPipelineService: DataPipelineService) {}
 
-  @Get('configs/:id')
-  async findOneConfig(@Param('id') id: string) {
-    return this.dataPipelineService.findOneConfig(id);
-  }
-
-  @Post('configs/:id/test')
+  @Post('applications/:applicationId/test')
   @HttpCode(HttpStatus.OK)
   async runTest(
-    @Param('id') id: string,
+    @Param('applicationId') applicationId: string,
     @Body(ValidationPipe) context?: {
-      applicationId?: string;
       buildId?: string;
       runId?: string;
       commitSha?: string;
       branch?: string;
     }
   ) {
-    return this.dataPipelineService.runTest(id, context);
+    return this.dataPipelineService.runTest(applicationId, context);
   }
 }
 

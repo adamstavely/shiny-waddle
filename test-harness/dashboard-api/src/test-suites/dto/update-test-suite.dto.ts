@@ -61,18 +61,10 @@ export class UpdateTestSuiteDto {
   @Max(100)
   score?: number;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  testTypes?: string[]; // Deprecated: kept for backward compatibility
 
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  testConfigurationIds?: string[];
 }
 

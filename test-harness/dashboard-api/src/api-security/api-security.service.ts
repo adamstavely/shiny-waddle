@@ -12,8 +12,8 @@ import {
   APITestType,
 } from './entities/api-security.entity';
 import { APISecurityTester, APISecurityTestConfig } from '../../../services/api-security-tester';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { APISecurityConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { APISecurityInfrastructure } from '../applications/entities/application.entity';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -30,8 +30,8 @@ export class ApiSecurityService {
   private results: APISecurityTestResultEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly testConfigurationsService?: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService?: ApplicationsService,
   ) {
     this.loadData().catch(err => {
       console.error('Error loading API security data on startup:', err);
@@ -288,10 +288,10 @@ export class ApiSecurityService {
   }
 
   /**
-   * Run API Security test for test configuration system
+   * Run API Security test - supports both application infrastructure and standalone configs
    */
   async runTest(
-    configId: string,
+    configIdOrApplicationId: string,
     context?: {
       applicationId?: string;
       buildId?: string;
@@ -300,35 +300,43 @@ export class ApiSecurityService {
       branch?: string;
     }
   ): Promise<any> {
-    // First try to get config from test-configurations system
+    // Try to get config from application infrastructure first
     let config: APISecurityTestConfigEntity | null = null;
     let endpoints: APIEndpointEntity[] = [];
     let selectedTestSuites: string[] | undefined = undefined;
     
-    if (this.testConfigurationsService) {
+    // Use applicationId from context if provided, otherwise try configId as applicationId
+    const applicationId = context?.applicationId || configIdOrApplicationId;
+    let actualConfigId: string | undefined = context?.applicationId ? configIdOrApplicationId : undefined;
+    
+    // Try to get from application infrastructure
+    if (this.applicationsService && applicationId) {
       try {
-        const testConfig = await this.testConfigurationsService.findOne(configId);
-        if (testConfig.type === 'api-security') {
-          const apiConfig = testConfig as APISecurityConfigurationEntity;
-          // Convert test-configuration entity to API security config entity
+        const application = await this.applicationsService.findOne(applicationId);
+        if (application.infrastructure?.apiSecurity) {
+          const apiSecurityInfra = application.infrastructure.apiSecurity;
+          
+          // Convert infrastructure to API security config entity
           config = {
-            id: apiConfig.id,
-            name: apiConfig.name,
-            baseUrl: apiConfig.baseUrl,
-            authentication: apiConfig.authentication,
-            rateLimitConfig: apiConfig.rateLimitConfig,
-            headers: apiConfig.headers,
-            timeout: apiConfig.timeout,
-            createdAt: apiConfig.createdAt,
-            updatedAt: apiConfig.updatedAt,
+            id: application.id,
+            name: `${application.name} - API Security`,
+            baseUrl: apiSecurityInfra.baseUrl,
+            authentication: apiSecurityInfra.authentication,
+            rateLimitConfig: apiSecurityInfra.rateLimitConfig,
+            headers: apiSecurityInfra.headers,
+            timeout: apiSecurityInfra.timeout,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           };
+          
           // Get selected test suites from testLogic
-          selectedTestSuites = apiConfig.testLogic?.selectedTestSuites;
+          selectedTestSuites = apiSecurityInfra.testLogic?.selectedTestSuites;
+          
           // Convert endpoints if they exist
-          if (apiConfig.endpoints) {
-            endpoints = apiConfig.endpoints.map(ep => ({
+          if (apiSecurityInfra.endpoints) {
+            endpoints = apiSecurityInfra.endpoints.map(ep => ({
               id: ep.id || uuidv4(),
-              configId: apiConfig.id,
+              configId: application.id,
               name: ep.name,
               endpoint: ep.endpoint,
               method: ep.method as any,
@@ -344,15 +352,16 @@ export class ApiSecurityService {
           }
         }
       } catch (error) {
-        // Config not found in test-configurations, try standalone storage
-        this.logger.debug(`Config ${configId} not found in test-configurations, trying standalone storage`);
+        // Not an application ID, fall through to standalone storage
+        this.logger.debug(`Config ${applicationId} not found as application, trying standalone storage`);
       }
     }
     
-    // Fallback to standalone storage if not found in test-configurations
+    // Fallback to standalone storage if not found in infrastructure
     if (!config) {
-      config = await this.findOneConfig(configId);
-      endpoints = await this.findAllEndpoints(configId);
+      const configIdToUse = actualConfigId || configIdOrApplicationId;
+      config = await this.findOneConfig(configIdToUse);
+      endpoints = await this.findAllEndpoints(configIdToUse);
     }
 
     if (endpoints.length === 0) {

@@ -1,45 +1,42 @@
 import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { DataPipelineTester, PipelineTestConfig, PipelineTest } from '../../../services/data-pipeline-tester';
-import { DataPipelineConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
+import { ApplicationsService } from '../applications/applications.service';
+import { DataPipelineInfrastructure } from '../applications/entities/application.entity';
 
 @Injectable()
 export class DataPipelineService {
   private readonly logger = new Logger(DataPipelineService.name);
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly testConfigurationsService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {}
 
-  async findOneConfig(id: string): Promise<DataPipelineConfigurationEntity> {
-    const config = await this.testConfigurationsService.findOne(id);
-    if (config.type !== 'data-pipeline') {
-      throw new NotFoundException(`Configuration with ID "${id}" is not a data pipeline configuration`);
-    }
-    return config as DataPipelineConfigurationEntity;
-  }
-
   /**
-   * Run Data Pipeline test for test configuration system
+   * Run Data Pipeline test - supports application infrastructure
    */
   async runTest(
-    configId: string,
+    applicationId: string,
     context?: {
-      applicationId?: string;
       buildId?: string;
       runId?: string;
       commitSha?: string;
       branch?: string;
     }
   ): Promise<any> {
-    const config = await this.findOneConfig(configId);
+    const application = await this.applicationsService.findOne(applicationId);
+    
+    if (!application.infrastructure?.dataPipeline) {
+      throw new NotFoundException(`Application "${applicationId}" has no data pipeline infrastructure configured`);
+    }
+    
+    const pipelineInfra = application.infrastructure.dataPipeline;
 
     const testerConfig: PipelineTestConfig = {
-      pipelineType: config.pipelineType,
-      connection: config.connection,
-      dataSource: config.dataSource,
-      dataDestination: config.dataDestination,
+      pipelineType: pipelineInfra.pipelineType,
+      connection: pipelineInfra.connection,
+      dataSource: pipelineInfra.dataSource,
+      dataDestination: pipelineInfra.dataDestination,
     };
 
     const tester = new DataPipelineTester(testerConfig);
@@ -48,13 +45,13 @@ export class DataPipelineService {
 
     try {
       const test: PipelineTest = {
-        name: `Test: ${config.name}`,
-        pipelineId: config.id,
+        name: `Test: ${application.name} - Data Pipeline`,
+        pipelineId: application.id,
         stage: 'all',
         expectedAccess: true,
       };
 
-      switch (config.pipelineType) {
+      switch (pipelineInfra.pipelineType) {
         case 'etl':
           result = await tester.testETLPipeline(test);
           break;
@@ -82,12 +79,12 @@ export class DataPipelineService {
       const overallResult = {
         passed: result.passed !== false,
         testType: 'data-pipeline',
-        testName: `Data Pipeline Test: ${config.name}`,
+        testName: `Data Pipeline Test: ${application.name}`,
         timestamp: new Date(),
         details: {
-          configId: config.id,
-          configName: config.name,
-          pipelineType: config.pipelineType,
+          applicationId: application.id,
+          applicationName: application.name,
+          pipelineType: pipelineInfra.pipelineType,
           accessGranted: result.accessGranted,
           dataValidation: result.dataValidation,
           transformationResult: result.transformationResult,
@@ -104,12 +101,12 @@ export class DataPipelineService {
       return {
         passed: false,
         testType: 'data-pipeline',
-        testName: `Data Pipeline Test: ${config.name}`,
+        testName: `Data Pipeline Test: ${application.name}`,
         timestamp: new Date(),
         error: error.message,
         details: {
-          configId: config.id,
-          configName: config.name,
+          applicationId: application.id,
+          applicationName: application.name,
         },
         ...context,
       };

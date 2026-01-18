@@ -83,10 +83,6 @@ export class CreateTestSuiteDto {
   @Max(100)
   score?: number;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  testTypes?: string[]; // Deprecated: kept for backward compatibility
 
   @IsOptional()
   @IsBoolean()

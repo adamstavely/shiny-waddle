@@ -25,7 +25,6 @@ export { APISecurityTester } from './services/api-security-tester';
 export { DataPipelineTester } from './services/data-pipeline-tester';
 export { DistributedSystemsTester } from './services/distributed-systems-tester';
 export { EphemeralEnvironment, setupPREnvironment } from './ephemeral/environment-setup';
-export { IntegrationHooks } from './integrations/sast-dast-hooks';
 export { ABACCorrectnessValidator } from './validators/abac-correctness-validator';
 export { validatorRegistry } from './core/validator-registry';
 

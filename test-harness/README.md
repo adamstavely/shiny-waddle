@@ -72,8 +72,6 @@ heimdall/
 │   └── check-compliance.js       # Compliance check script
 ├── ephemeral/               # Ephemeral environment setup
 │   └── environment-setup.ts      # Per-PR environment creation
-├── integrations/            # External tool integrations
-│   └── sast-dast-hooks.ts        # SAST/DAST/DBT/GE hooks
 └── src/                     # Entry point
     └── run-tests.ts              # Main test runner
 ```
@@ -250,22 +248,6 @@ Dashboard shows:
 - Scores by dataset
 - Recent test results
 - Trends over time
-
-## Integration Hooks
-
-Integrate with external tools:
-
-```typescript
-import { IntegrationHooks } from './integrations/sast-dast-hooks';
-
-const hooks = new IntegrationHooks();
-const results = await hooks.runAllIntegrations({
-  sourcePath: './src',
-  apiUrl: 'http://localhost:3000',
-  dbtProjectPath: './dbt',
-  geSuiteName: 'data_quality',
-});
-```
 
 ## Policy Configuration
 

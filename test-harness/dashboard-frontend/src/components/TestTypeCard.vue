@@ -235,10 +235,9 @@ const loadUsageData = async () => {
     const usage: Record<string, { suites: Array<{ id: string; name: string }>; harnesses: Array<{ id: string; name: string }> }> = {};
     
     configurations.value.forEach((config) => {
-      // Find suites that use this configuration
-      const suitesUsingConfig = testSuites.value.filter((suite: any) => 
-        suite.testConfigurationIds && suite.testConfigurationIds.includes(config.id)
-      );
+      // Note: testConfigurationIds is deprecated - configurations are now managed via application infrastructure
+      // Find suites that might reference this configuration (legacy support)
+      const suitesUsingConfig: any[] = [];
       
       // Find harnesses that contain these suites
       const harnessIds = new Set<string>();

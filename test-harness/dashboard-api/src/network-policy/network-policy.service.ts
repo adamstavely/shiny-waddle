@@ -3,8 +3,8 @@ import { NetworkMicrosegmentationTester } from '../../../services/network-micros
 import { ServiceMeshConfig } from '../../../services/service-mesh-integration';
 import { FirewallRule, NetworkSegment } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { NetworkPolicyConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { NetworkSegmentInfrastructure } from '../applications/entities/application.entity';
 import { validateNetworkPolicyConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
@@ -13,43 +13,73 @@ export class NetworkPolicyService {
   private tester: NetworkMicrosegmentationTester;
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly configService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {
     this.tester = new NetworkMicrosegmentationTester();
   }
 
-  async testFirewallRules(dto: { configId?: string; rules?: FirewallRule[] }) {
+  async testFirewallRules(dto: { applicationId?: string; networkSegmentId?: string; rules?: FirewallRule[] }) {
     try {
       let rules: FirewallRule[];
-      let npConfig: NetworkPolicyConfigurationEntity | null = null;
+      let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'network-policy') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a network policy configuration`);
-        }
-        npConfig = config as NetworkPolicyConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Validate configuration completeness
-        const validationErrors = validateNetworkPolicyConfig(npConfig);
-        if (validationErrors.length > 0) {
-          const errorMessage = formatValidationErrors(validationErrors, npConfig.name);
-          throw new ValidationException(
-            `Configuration '${npConfig.name}' is missing required fields for firewall rules test:\n${errorMessage}`
-          );
+        if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
+          throw new ValidationException('Application has no network segment infrastructure configured');
         }
         
-        rules = npConfig.firewallRules;
+        // Find specific segment or use first one
+        if (dto.networkSegmentId) {
+          segmentInfra = application.infrastructure.networkSegments.find(seg => seg.id === dto.networkSegmentId);
+          if (!segmentInfra) {
+            throw new NotFoundException(`Network segment ${dto.networkSegmentId} not found in application infrastructure`);
+          }
+        } else {
+          segmentInfra = application.infrastructure.networkSegments[0];
+        }
+        
+        // Extract firewall rules from segment
+        rules = segmentInfra.firewallRules || [];
+        
         // Merge with inline rules if provided (inline takes precedence)
         if (dto.rules && dto.rules.length > 0) {
           rules = dto.rules;
+        }
+        
+        // Validate configuration completeness
+        const validationErrors = validateNetworkPolicyConfig({
+          id: segmentInfra.id,
+          name: segmentInfra.name,
+          type: 'network-policy' as const,
+          firewallRules: rules,
+          networkSegments: application.infrastructure.networkSegments.map(seg => ({
+            id: seg.id,
+            name: seg.name,
+            cidr: seg.cidr,
+            services: [],
+            allowedConnections: [],
+            deniedConnections: [],
+          })),
+          serviceMeshConfig: segmentInfra.serviceMeshConfig,
+          testLogic: segmentInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, segmentInfra.name);
+          throw new ValidationException(
+            `Network segment '${segmentInfra.name}' is missing required fields for firewall rules test:\n${errorMessage}`
+          );
         }
       } else if (dto.rules) {
         rules = dto.rules;
       } else {
         throw new ValidationException(
-          'Either configId or rules must be provided. If using configId, ensure the configuration includes firewallRules.'
+          'Either applicationId or rules must be provided. If using applicationId, ensure the application has network segment infrastructure with firewall rules.'
         );
       }
 
@@ -63,15 +93,15 @@ export class NetworkPolicyService {
       const result = await this.tester.testFirewallRules(rules);
 
       // Apply testLogic if config provided
-      if (npConfig?.testLogic) {
+      if (segmentInfra?.testLogic) {
         // Apply validateConnectivity flag
-        if (npConfig.testLogic.validateConnectivity !== false) {
+        if (segmentInfra.testLogic.validateConnectivity !== false) {
           result.connectivityValidated = result.passed || false;
         }
 
         // Run custom rules if present
-        if (npConfig.testLogic.customRules && npConfig.testLogic.customRules.length > 0) {
-          result.customRuleResults = npConfig.testLogic.customRules.map(rule => ({
+        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
             source: rule.source,
             target: rule.target,
             expected: rule.expected,
@@ -95,22 +125,33 @@ export class NetworkPolicyService {
     }
   }
 
-  async testServiceToService(dto: { configId?: string; source?: string; target?: string }) {
+  async testServiceToService(dto: { applicationId?: string; networkSegmentId?: string; source?: string; target?: string }) {
     try {
       let source: string;
       let target: string;
-      let npConfig: NetworkPolicyConfigurationEntity | null = null;
+      let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'network-policy') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a network policy configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
+          throw new ValidationException('Application has no network segment infrastructure configured');
         }
-        npConfig = config as NetworkPolicyConfigurationEntity;
+        
+        // Find specific segment or use first one
+        if (dto.networkSegmentId) {
+          segmentInfra = application.infrastructure.networkSegments.find(seg => seg.id === dto.networkSegmentId);
+          if (!segmentInfra) {
+            throw new NotFoundException(`Network segment ${dto.networkSegmentId} not found in application infrastructure`);
+          }
+        } else {
+          segmentInfra = application.infrastructure.networkSegments[0];
+        }
+        
         // Use network segments to determine source/target if not provided
-        if (npConfig.networkSegments && npConfig.networkSegments.length >= 2) {
-          source = dto.source || npConfig.networkSegments[0].services[0] || 'frontend';
-          target = dto.target || npConfig.networkSegments[1].services[0] || 'backend';
+        if (application.infrastructure.networkSegments.length >= 2) {
+          source = dto.source || 'frontend';
+          target = dto.target || 'backend';
         } else {
           source = dto.source || 'frontend';
           target = dto.target || 'backend';
@@ -133,15 +174,15 @@ export class NetworkPolicyService {
       const result = await this.tester.testServiceToServiceTraffic(source, target);
 
       // Apply testLogic if config provided
-      if (npConfig?.testLogic) {
+      if (segmentInfra?.testLogic) {
         // Apply validateConnectivity flag
-        if (npConfig.testLogic.validateConnectivity !== false) {
+        if (segmentInfra.testLogic.validateConnectivity !== false) {
           result.connectivityValidated = result.passed || false;
         }
 
         // Run custom rules if present
-        if (npConfig.testLogic.customRules && npConfig.testLogic.customRules.length > 0) {
-          result.customRuleResults = npConfig.testLogic.customRules.map(rule => ({
+        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
             source: rule.source,
             target: rule.target,
             expected: rule.expected,
@@ -165,36 +206,59 @@ export class NetworkPolicyService {
     }
   }
 
-  async validateSegmentation(dto: { configId?: string; segments?: NetworkSegment[] }) {
+  async validateSegmentation(dto: { applicationId?: string; segments?: NetworkSegment[] }) {
     try {
       let segments: NetworkSegment[];
-      let npConfig: NetworkPolicyConfigurationEntity | null = null;
+      let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'network-policy') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a network policy configuration`);
-        }
-        npConfig = config as NetworkPolicyConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Validate configuration completeness
-        const validationErrors = validateNetworkPolicyConfig(npConfig);
-        if (validationErrors.length > 0) {
-          const errorMessage = formatValidationErrors(validationErrors, npConfig.name);
-          throw new ValidationException(
-            `Configuration '${npConfig.name}' is missing required fields for network segmentation test:\n${errorMessage}`
-          );
+        if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
+          throw new ValidationException('Application has no network segment infrastructure configured');
         }
         
-        segments = npConfig.networkSegments;
+        // Convert infrastructure segments to NetworkSegment format
+        segments = application.infrastructure.networkSegments.map(seg => ({
+          id: seg.id,
+          name: seg.name,
+          cidr: seg.cidr,
+          services: [],
+          allowedConnections: [],
+          deniedConnections: [],
+        }));
+        
         // Merge with inline segments if provided (inline takes precedence)
         if (dto.segments && dto.segments.length > 0) {
           segments = dto.segments;
         }
+        
+        // Use first segment for testLogic reference
+        segmentInfra = application.infrastructure.networkSegments[0];
+        
+        // Validate configuration completeness
+        const validationErrors = validateNetworkPolicyConfig({
+          id: application.id,
+          name: application.name,
+          type: 'network-policy' as const,
+          firewallRules: segmentInfra.firewallRules || [],
+          networkSegments: segments,
+          serviceMeshConfig: segmentInfra.serviceMeshConfig,
+          testLogic: segmentInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, application.name);
+          throw new ValidationException(
+            `Network infrastructure for application '${application.name}' is missing required fields for segmentation test:\n${errorMessage}`
+          );
+        }
       } else if (dto.segments) {
         segments = dto.segments;
       } else {
-        throw new ValidationException('Either configId or segments must be provided');
+        throw new ValidationException('Either applicationId or segments must be provided');
       }
 
       if (!segments || !Array.isArray(segments)) {
@@ -207,15 +271,15 @@ export class NetworkPolicyService {
       const result = await this.tester.validateNetworkSegmentation(segments);
 
       // Apply testLogic if config provided
-      if (npConfig?.testLogic) {
+      if (segmentInfra?.testLogic) {
         // Apply checkSegmentation flag
-        if (npConfig.testLogic.checkSegmentation !== false) {
+        if (segmentInfra.testLogic.checkSegmentation !== false) {
           result.segmentationChecked = result.passed || false;
         }
 
         // Run custom rules if present
-        if (npConfig.testLogic.customRules && npConfig.testLogic.customRules.length > 0) {
-          result.customRuleResults = npConfig.testLogic.customRules.map(rule => ({
+        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
             source: rule.source,
             target: rule.target,
             expected: rule.expected,
@@ -239,20 +303,31 @@ export class NetworkPolicyService {
     }
   }
 
-  async testServiceMeshPolicies(dto: { configId?: string; config?: ServiceMeshConfig }) {
+  async testServiceMeshPolicies(dto: { applicationId?: string; networkSegmentId?: string; config?: ServiceMeshConfig }) {
     try {
       let meshConfig: ServiceMeshConfig;
-      let npConfig: NetworkPolicyConfigurationEntity | null = null;
+      let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'network-policy') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a network policy configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
+          throw new ValidationException('Application has no network segment infrastructure configured');
         }
-        npConfig = config as NetworkPolicyConfigurationEntity;
-        // Use serviceMeshConfig from config if available
-        if (npConfig.serviceMeshConfig) {
-          meshConfig = npConfig.serviceMeshConfig;
+        
+        // Find specific segment or use first one
+        if (dto.networkSegmentId) {
+          segmentInfra = application.infrastructure.networkSegments.find(seg => seg.id === dto.networkSegmentId);
+          if (!segmentInfra) {
+            throw new NotFoundException(`Network segment ${dto.networkSegmentId} not found in application infrastructure`);
+          }
+        } else {
+          segmentInfra = application.infrastructure.networkSegments[0];
+        }
+        
+        // Use serviceMeshConfig from infrastructure if available
+        if (segmentInfra.serviceMeshConfig) {
+          meshConfig = segmentInfra.serviceMeshConfig;
           // Merge with inline config if provided (inline takes precedence)
           if (dto.config) {
             meshConfig = { ...meshConfig, ...dto.config };
@@ -260,7 +335,7 @@ export class NetworkPolicyService {
         } else if (dto.config) {
           meshConfig = dto.config;
         } else {
-          throw new ValidationException('Service mesh configuration is required (either in config or request)');
+          throw new ValidationException('Service mesh configuration is required (either in infrastructure or request)');
         }
       } else {
         meshConfig = dto.config!;
@@ -279,10 +354,10 @@ export class NetworkPolicyService {
       const result = await this.tester.testServiceMeshPolicies(meshConfig);
 
       // Apply testLogic if config provided
-      if (npConfig?.testLogic) {
+      if (segmentInfra?.testLogic) {
         // Run custom rules if present
-        if (npConfig.testLogic.customRules && npConfig.testLogic.customRules.length > 0) {
-          result.customRuleResults = npConfig.testLogic.customRules.map(rule => ({
+        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
             source: rule.source,
             target: rule.target,
             expected: rule.expected,

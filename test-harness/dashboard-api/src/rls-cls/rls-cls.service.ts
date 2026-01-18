@@ -2,8 +2,8 @@ import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nest
 import { RLSCLSTester } from '../../../services/rls-cls-tester';
 import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { RLSCLSConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { DatabaseInfrastructure } from '../applications/entities/application.entity';
 import { validateRLSCLSConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
@@ -12,43 +12,73 @@ export class RLSCLSService {
   private tester: RLSCLSTester;
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly configService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {
     this.tester = new RLSCLSTester();
   }
 
-  async testRLSCoverage(dto: { configId?: string; database?: DatabaseConfig }) {
+  async testRLSCoverage(dto: { applicationId?: string; databaseId?: string; database?: DatabaseConfig }) {
     try {
       let database: DatabaseConfig;
-      let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let dbInfra: DatabaseInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'rls-cls') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
-        }
-        rlsConfig = config as RLSCLSConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Validate configuration completeness
-        const validationErrors = validateRLSCLSConfig(rlsConfig);
-        if (validationErrors.length > 0) {
-          const errorMessage = formatValidationErrors(validationErrors, rlsConfig.name);
-          throw new ValidationException(
-            `Configuration '${rlsConfig.name}' is missing required fields for RLS coverage test:\n${errorMessage}`
-          );
+        if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
+          throw new ValidationException('Application has no database infrastructure configured');
         }
         
-        database = rlsConfig.database;
+        // Find specific database or use first one
+        if (dto.databaseId) {
+          dbInfra = application.infrastructure.databases.find(db => db.id === dto.databaseId);
+          if (!dbInfra) {
+            throw new NotFoundException(`Database ${dto.databaseId} not found in application infrastructure`);
+          }
+        } else {
+          dbInfra = application.infrastructure.databases[0];
+        }
+        
+        // Convert DatabaseInfrastructure to DatabaseConfig
+        database = {
+          type: dbInfra.type,
+          host: dbInfra.host,
+          port: dbInfra.port,
+          database: dbInfra.database,
+          // Note: username/password come from runtime config, not infrastructure
+        };
+        
         // Merge with inline database if provided (inline takes precedence)
         if (dto.database) {
           database = { ...database, ...dto.database };
+        }
+        
+        // Validate configuration completeness (convert to config entity format for validation)
+        const validationErrors = validateRLSCLSConfig({
+          id: dbInfra.id,
+          name: dbInfra.name,
+          type: 'rls-cls' as const,
+          database,
+          testQueries: dbInfra.testQueries || [],
+          maskingRules: dbInfra.maskingRules,
+          validationRules: dbInfra.validationRules,
+          testLogic: dbInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, dbInfra.name);
+          throw new ValidationException(
+            `Database infrastructure '${dbInfra.name}' is missing required fields for RLS coverage test:\n${errorMessage}`
+          );
         }
       } else if (dto.database) {
         database = dto.database;
       } else {
         throw new ValidationException(
-          'Either configId or database must be provided. If using configId, ensure the configuration includes a database field.'
+          'Either applicationId or database must be provided. If using applicationId, ensure the application has database infrastructure configured.'
         );
       }
 
@@ -56,9 +86,9 @@ export class RLSCLSService {
       
       // Create tester with config if provided
       let tester = this.tester;
-      if (rlsConfig) {
+      if (dbInfra?.testLogic) {
         const testerConfig: any = {
-          testLogic: rlsConfig.testLogic,
+          testLogic: dbInfra.testLogic,
         };
         tester = new RLSCLSTester(testerConfig);
       }
@@ -66,8 +96,8 @@ export class RLSCLSService {
       const result = await tester.testRLSCoverage(database);
 
       // Run custom validations if present (tester handles skipDisabledPolicies)
-      if (rlsConfig?.testLogic?.customValidations && rlsConfig.testLogic.customValidations.length > 0) {
-        result.customValidationResults = rlsConfig.testLogic.customValidations.map(validation => ({
+      if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
+        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
@@ -75,20 +105,20 @@ export class RLSCLSService {
       }
 
       // Apply validationRules if config provided
-      if (rlsConfig?.validationRules) {
+      if (dbInfra?.validationRules) {
         result.validationResults = {
-          minRLSCoverageMet: result.coveragePercentage >= (rlsConfig.validationRules.minRLSCoverage || 0),
-          minRLSCoverage: rlsConfig.validationRules.minRLSCoverage,
+          minRLSCoverageMet: result.coveragePercentage >= (dbInfra.validationRules.minRLSCoverage || 0),
+          minRLSCoverage: dbInfra.validationRules.minRLSCoverage,
           actualCoverage: result.coveragePercentage,
         };
 
         // Check required policies
-        if (rlsConfig.validationRules.requiredPolicies && rlsConfig.validationRules.requiredPolicies.length > 0) {
+        if (dbInfra.validationRules.requiredPolicies && dbInfra.validationRules.requiredPolicies.length > 0) {
           const policyNames = result.policies.map(p => p.policyName);
-          result.validationResults.requiredPoliciesMet = rlsConfig.validationRules.requiredPolicies.every(
+          result.validationResults.requiredPoliciesMet = dbInfra.validationRules.requiredPolicies.every(
             required => policyNames.includes(required)
           );
-          result.validationResults.missingPolicies = rlsConfig.validationRules.requiredPolicies.filter(
+          result.validationResults.missingPolicies = dbInfra.validationRules.requiredPolicies.filter(
             required => !policyNames.includes(required)
           );
         }
@@ -107,37 +137,66 @@ export class RLSCLSService {
     }
   }
 
-  async testCLSCoverage(dto: { configId?: string; database?: DatabaseConfig }) {
+  async testCLSCoverage(dto: { applicationId?: string; databaseId?: string; database?: DatabaseConfig }) {
     try {
       let database: DatabaseConfig;
-      let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let dbInfra: DatabaseInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'rls-cls') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
-        }
-        rlsConfig = config as RLSCLSConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Validate configuration completeness
-        const validationErrors = validateRLSCLSConfig(rlsConfig);
-        if (validationErrors.length > 0) {
-          const errorMessage = formatValidationErrors(validationErrors, rlsConfig.name);
-          throw new ValidationException(
-            `Configuration '${rlsConfig.name}' is missing required fields for CLS coverage test:\n${errorMessage}`
-          );
+        if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
+          throw new ValidationException('Application has no database infrastructure configured');
         }
         
-        database = rlsConfig.database;
+        // Find specific database or use first one
+        if (dto.databaseId) {
+          dbInfra = application.infrastructure.databases.find(db => db.id === dto.databaseId);
+          if (!dbInfra) {
+            throw new NotFoundException(`Database ${dto.databaseId} not found in application infrastructure`);
+          }
+        } else {
+          dbInfra = application.infrastructure.databases[0];
+        }
+        
+        // Convert DatabaseInfrastructure to DatabaseConfig
+        database = {
+          type: dbInfra.type,
+          host: dbInfra.host,
+          port: dbInfra.port,
+          database: dbInfra.database,
+        };
+        
         // Merge with inline database if provided (inline takes precedence)
         if (dto.database) {
           database = { ...database, ...dto.database };
+        }
+        
+        // Validate configuration completeness
+        const validationErrors = validateRLSCLSConfig({
+          id: dbInfra.id,
+          name: dbInfra.name,
+          type: 'rls-cls' as const,
+          database,
+          testQueries: dbInfra.testQueries || [],
+          maskingRules: dbInfra.maskingRules,
+          validationRules: dbInfra.validationRules,
+          testLogic: dbInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        if (validationErrors.length > 0) {
+          const errorMessage = formatValidationErrors(validationErrors, dbInfra.name);
+          throw new ValidationException(
+            `Database infrastructure '${dbInfra.name}' is missing required fields for CLS coverage test:\n${errorMessage}`
+          );
         }
       } else if (dto.database) {
         database = dto.database;
       } else {
         throw new ValidationException(
-          'Either configId or database must be provided. If using configId, ensure the configuration includes a database field.'
+          'Either applicationId or database must be provided. If using applicationId, ensure the application has database infrastructure configured.'
         );
       }
 
@@ -145,9 +204,9 @@ export class RLSCLSService {
       
       // Create tester with config if provided
       let tester = this.tester;
-      if (rlsConfig) {
+      if (dbInfra?.testLogic) {
         const testerConfig: any = {
-          testLogic: rlsConfig.testLogic,
+          testLogic: dbInfra.testLogic,
         };
         tester = new RLSCLSTester(testerConfig);
       }
@@ -155,8 +214,8 @@ export class RLSCLSService {
       const result = await tester.testCLSCoverage(database);
 
       // Run custom validations if present (tester handles skipDisabledPolicies)
-      if (rlsConfig?.testLogic?.customValidations && rlsConfig.testLogic.customValidations.length > 0) {
-        result.customValidationResults = rlsConfig.testLogic.customValidations.map(validation => ({
+      if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
+        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
@@ -164,10 +223,10 @@ export class RLSCLSService {
       }
 
       // Apply validationRules if config provided
-      if (rlsConfig?.validationRules) {
+      if (dbInfra?.validationRules) {
         result.validationResults = {
-          minCLSCoverageMet: result.coveragePercentage >= (rlsConfig.validationRules.minCLSCoverage || 0),
-          minCLSCoverage: rlsConfig.validationRules.minCLSCoverage,
+          minCLSCoverageMet: result.coveragePercentage >= (dbInfra.validationRules.minCLSCoverage || 0),
+          minCLSCoverage: dbInfra.validationRules.minCLSCoverage,
           actualCoverage: result.coveragePercentage,
         };
       }
@@ -186,7 +245,8 @@ export class RLSCLSService {
   }
 
   async testDynamicMasking(dto: {
-    configId?: string;
+    applicationId?: string;
+    databaseId?: string;
     query?: TestQuery;
     user?: User;
     maskingRules?: DynamicMaskingRule[];
@@ -195,23 +255,34 @@ export class RLSCLSService {
       let query: TestQuery;
       let user: User;
       let maskingRules: DynamicMaskingRule[];
-      let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let dbInfra: DatabaseInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'rls-cls') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
+          throw new ValidationException('Application has no database infrastructure configured');
         }
-        rlsConfig = config as RLSCLSConfigurationEntity;
-        // Use testQueries from config if query not provided
-        query = dto.query || (rlsConfig.testQueries && rlsConfig.testQueries.length > 0 ? rlsConfig.testQueries[0] : { name: 'default-query', sql: 'SELECT * FROM users' });
+        
+        // Find specific database or use first one
+        if (dto.databaseId) {
+          dbInfra = application.infrastructure.databases.find(db => db.id === dto.databaseId);
+          if (!dbInfra) {
+            throw new NotFoundException(`Database ${dto.databaseId} not found in application infrastructure`);
+          }
+        } else {
+          dbInfra = application.infrastructure.databases[0];
+        }
+        
+        // Use testQueries from infrastructure if query not provided
+        query = dto.query || (dbInfra.testQueries && dbInfra.testQueries.length > 0 ? dbInfra.testQueries[0] : { name: 'default-query', sql: 'SELECT * FROM users' });
         user = dto.user || { id: 'test-user', email: 'test@example.com', role: 'viewer', attributes: {} };
-        // Use masking rules from config if not provided inline
+        // Use masking rules from infrastructure if not provided inline
         if (dto.maskingRules && dto.maskingRules.length > 0) {
           maskingRules = dto.maskingRules;
-        } else if (rlsConfig.maskingRules && rlsConfig.maskingRules.length > 0) {
-          // Convert config masking rules to DynamicMaskingRule format
-          maskingRules = rlsConfig.maskingRules.map(rule => ({
+        } else if (dbInfra.maskingRules && dbInfra.maskingRules.length > 0) {
+          // Convert infrastructure masking rules to DynamicMaskingRule format
+          maskingRules = dbInfra.maskingRules.map(rule => ({
             table: rule.table,
             column: rule.column,
             maskingType: rule.maskingType,
@@ -230,17 +301,17 @@ export class RLSCLSService {
       this.validateUser(user);
       if (!maskingRules || maskingRules.length === 0) {
         throw new ValidationException(
-          'At least one masking rule is required. Please provide masking rules inline or configure them in the test configuration.'
+          'At least one masking rule is required. Please provide masking rules inline or configure them in the application infrastructure.'
         );
       }
 
       const result = await this.tester.testDynamicMasking(query, user, maskingRules);
 
       // Apply testLogic if config provided
-      if (rlsConfig?.testLogic) {
+      if (dbInfra?.testLogic) {
         // Run custom validations if present
-        if (rlsConfig.testLogic.customValidations && rlsConfig.testLogic.customValidations.length > 0) {
-          result.customValidationResults = rlsConfig.testLogic.customValidations.map(validation => ({
+        if (dbInfra.testLogic.customValidations && dbInfra.testLogic.customValidations.length > 0) {
+          result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
             name: validation.name,
             passed: this.evaluateCustomValidation(validation.condition, result),
             description: validation.description,
@@ -262,7 +333,8 @@ export class RLSCLSService {
   }
 
   async testCrossTenantIsolation(dto: {
-    configId?: string;
+    applicationId?: string;
+    databaseId?: string;
     tenant1?: string;
     tenant2?: string;
     testQueries?: TestQuery[];
@@ -271,16 +343,27 @@ export class RLSCLSService {
       let tenant1: string;
       let tenant2: string;
       let testQueries: TestQuery[];
-      let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let dbInfra: DatabaseInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'rls-cls') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
+          throw new ValidationException('Application has no database infrastructure configured');
         }
-        rlsConfig = config as RLSCLSConfigurationEntity;
-        // Use default test queries from config if available
-        testQueries = rlsConfig.testQueries || [];
+        
+        // Find specific database or use first one
+        if (dto.databaseId) {
+          dbInfra = application.infrastructure.databases.find(db => db.id === dto.databaseId);
+          if (!dbInfra) {
+            throw new NotFoundException(`Database ${dto.databaseId} not found in application infrastructure`);
+          }
+        } else {
+          dbInfra = application.infrastructure.databases[0];
+        }
+        
+        // Use default test queries from infrastructure if available
+        testQueries = dbInfra.testQueries || [];
         // For cross-tenant, we need tenant IDs - use defaults if not provided
         tenant1 = dto.tenant1 || 'tenant1';
         tenant2 = dto.tenant2 || 'tenant2';
@@ -307,7 +390,7 @@ export class RLSCLSService {
       const result = await this.tester.testCrossTenantIsolation(tenant1, tenant2, testQueries);
 
       // Apply testLogic if config provided
-      if (rlsConfig?.testLogic?.validateCrossTenant !== false) {
+      if (dbInfra?.testLogic?.validateCrossTenant !== false) {
         // validateCrossTenant is true by default, so we validate unless explicitly disabled
         // The result already contains isolation verification, but we can add additional checks
         if (!result.isolationVerified) {
@@ -316,8 +399,8 @@ export class RLSCLSService {
       }
 
       // Run custom validations if present
-      if (rlsConfig?.testLogic?.customValidations && rlsConfig.testLogic.customValidations.length > 0) {
-        result.customValidationResults = rlsConfig.testLogic.customValidations.map(validation => ({
+      if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
+        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
@@ -338,49 +421,55 @@ export class RLSCLSService {
   }
 
   async testPolicyBypass(dto: {
-    configId?: string;
+    applicationId?: string;
+    databaseId?: string;
     userId?: string;
     resourceId?: string;
     resourceType?: string;
   }) {
     try {
-      let rlsConfig: RLSCLSConfigurationEntity | null = null;
+      let dbInfra: DatabaseInfrastructure | null = null;
       let userId: string;
       let resourceId: string;
       let resourceType: string;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'rls-cls') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an RLS/CLS configuration`);
-        }
-        rlsConfig = config as RLSCLSConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Use test resources from config if not provided inline
+        if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
+          throw new ValidationException('Application has no database infrastructure configured');
+        }
+        
+        // Find specific database or use first one
+        if (dto.databaseId) {
+          dbInfra = application.infrastructure.databases.find(db => db.id === dto.databaseId);
+          if (!dbInfra) {
+            throw new NotFoundException(`Database ${dto.databaseId} not found in application infrastructure`);
+          }
+        } else {
+          dbInfra = application.infrastructure.databases[0];
+        }
+        
+        // Resource information must be provided inline (not stored in infrastructure)
         if (dto.resourceId && dto.resourceType) {
           resourceId = dto.resourceId;
           resourceType = dto.resourceType;
-        } else if (rlsConfig.testResources && rlsConfig.testResources.length > 0) {
-          // Use first test resource from config
-          const testResource = rlsConfig.testResources[0];
-          resourceId = testResource.resourceId;
-          resourceType = testResource.resourceType;
         } else {
           throw new ValidationException(
-            'Resource information is required. Please provide resourceId and resourceType inline or configure test resources in the test configuration.'
+            'Resource information is required. Please provide resourceId and resourceType inline.'
           );
         }
         
         userId = dto.userId || 'test-user';
       } else {
         if (!dto.userId) {
-          throw new ValidationException('userId is required when configId is not provided');
+          throw new ValidationException('userId is required when applicationId is not provided');
         }
         if (!dto.resourceId) {
-          throw new ValidationException('resourceId is required when configId is not provided');
+          throw new ValidationException('resourceId is required when applicationId is not provided');
         }
         if (!dto.resourceType) {
-          throw new ValidationException('resourceType is required when configId is not provided');
+          throw new ValidationException('resourceType is required when applicationId is not provided');
         }
         userId = dto.userId;
         resourceId = dto.resourceId;
@@ -403,12 +492,12 @@ export class RLSCLSService {
       const result = await this.tester.testPolicyBypassAttempts(user, resource);
 
       // Apply testLogic if config provided
-      if (rlsConfig?.testLogic) {
+      if (dbInfra?.testLogic) {
         // Run custom validations if present
-        if (rlsConfig.testLogic.customValidations && rlsConfig.testLogic.customValidations.length > 0) {
+        if (dbInfra.testLogic.customValidations && dbInfra.testLogic.customValidations.length > 0) {
           result.forEach((testResult, index) => {
-            if (rlsConfig?.testLogic?.customValidations) {
-              testResult.customValidationResults = rlsConfig.testLogic.customValidations.map(validation => ({
+            if (dbInfra?.testLogic?.customValidations) {
+              testResult.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
                 name: validation.name,
                 passed: this.evaluateCustomValidation(validation.condition, testResult),
                 description: validation.description,
@@ -419,7 +508,7 @@ export class RLSCLSService {
       }
 
       // Apply validationRules if config provided
-      if (rlsConfig?.validationRules) {
+      if (dbInfra?.validationRules) {
         result.forEach(testResult => {
           testResult.validationApplied = true;
         });

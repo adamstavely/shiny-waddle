@@ -36,7 +36,11 @@ export class DatabaseConfigDto {
 export class TestRLSCoverageDto {
   @IsOptional()
   @IsString()
-  configId?: string;
+  applicationId?: string;
+
+  @IsOptional()
+  @IsString()
+  databaseId?: string;
 
   @IsOptional()
   @IsObject()
@@ -48,7 +52,11 @@ export class TestRLSCoverageDto {
 export class TestCLSCoverageDto {
   @IsOptional()
   @IsString()
-  configId?: string;
+  applicationId?: string;
+
+  @IsOptional()
+  @IsString()
+  databaseId?: string;
 
   @IsOptional()
   @IsObject()
@@ -101,7 +109,11 @@ export class TestQueryDto {
 export class TestCrossTenantIsolationDto {
   @IsOptional()
   @IsString()
-  configId?: string;
+  applicationId?: string;
+
+  @IsOptional()
+  @IsString()
+  databaseId?: string;
 
   @IsOptional()
   @IsString()

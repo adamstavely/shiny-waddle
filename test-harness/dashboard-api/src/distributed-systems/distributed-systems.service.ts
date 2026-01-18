@@ -1,8 +1,8 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { DistributedSystemsConfigurationEntity, RegionConfig } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { DistributedSystemsInfrastructure, RegionConfig } from '../applications/entities/application.entity';
 
 export interface DistributedTestRequest {
   name: string;
@@ -12,7 +12,7 @@ export interface DistributedTestRequest {
   action?: string;
   regions?: string[];
   timeout?: number;
-  configId?: string;
+  applicationId?: string;
 }
 
 @Injectable()
@@ -22,8 +22,8 @@ export class DistributedSystemsService {
   private testResults: any[] = [];
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly testConfigurationsService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {
     this.loadConfig();
   }
@@ -95,23 +95,23 @@ export class DistributedSystemsService {
   }
 
   async runTest(request: DistributedTestRequest): Promise<any> {
-    // Load regions from config if configId is provided
+    // Load regions from application infrastructure if applicationId is provided
     let regionsToUse = this.regions;
-    if (request.configId) {
+    if (request.applicationId) {
       try {
-        const config = await this.testConfigurationsService.findOne(request.configId);
-        if (config.type === 'distributed-systems') {
-          const dsConfig = config as DistributedSystemsConfigurationEntity;
-          regionsToUse = dsConfig.regions || [];
+        const application = await this.applicationsService.findOne(request.applicationId);
+        if (application.infrastructure?.distributedSystems) {
+          const distSysInfra = application.infrastructure.distributedSystems;
+          regionsToUse = distSysInfra.regions || [];
         }
       } catch (error) {
-        // If config not found, fall back to default regions
-        console.warn(`Config ${request.configId} not found, using default regions`);
+        // If application not found, fall back to default regions
+        console.warn(`Application ${request.applicationId} not found or has no distributed systems infrastructure, using default regions`);
       }
     }
 
     if (regionsToUse.length === 0) {
-      throw new Error('No regions configured. Please configure regions in the test configuration.');
+      throw new Error('No regions configured. Please configure regions in the application infrastructure.');
     }
 
     // In a real implementation, this would use the DistributedSystemsTester

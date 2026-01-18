@@ -2,8 +2,8 @@ import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nest
 import { DLPTester } from '../../../services/dlp-tester';
 import { User, DataOperation, TestQuery, DLPPattern } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { DLPConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { DLPInfrastructure } from '../applications/entities/application.entity';
 import { validateDLPConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
@@ -12,51 +12,67 @@ export class DLPService {
   private tester: DLPTester;
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly configService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {
     this.tester = new DLPTester();
   }
 
-  async testExfiltration(dto: { configId?: string; user?: User; dataOperation?: DataOperation }) {
+  async testExfiltration(dto: { applicationId?: string; user?: User; dataOperation?: DataOperation }) {
     try {
       let user: User;
       let dataOperation: DataOperation;
-      let dlpConfig: DLPConfigurationEntity | null = null;
+      let dlpInfra: DLPInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'dlp') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a DLP configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.dlp) {
+          throw new ValidationException('Application has no DLP infrastructure configured');
         }
-        dlpConfig = config as DLPConfigurationEntity;
+        
+        dlpInfra = application.infrastructure.dlp;
         
         // Validate configuration completeness (warnings only for DLP as patterns are optional)
-        const validationErrors = validateDLPConfig(dlpConfig);
+        const validationErrors = validateDLPConfig({
+          id: application.id,
+          name: application.name,
+          type: 'dlp' as const,
+          patterns: dlpInfra.patterns,
+          bulkExportLimits: dlpInfra.bulkExportLimits,
+          piiDetectionRules: dlpInfra.piiDetectionRules,
+          exportRestrictions: dlpInfra.exportRestrictions,
+          aggregationRequirements: dlpInfra.aggregationRequirements,
+          fieldRestrictions: dlpInfra.fieldRestrictions,
+          joinRestrictions: dlpInfra.joinRestrictions,
+          testLogic: dlpInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
         if (validationErrors.length > 0 && validationErrors.some(e => !e.message.includes('recommended'))) {
-          const errorMessage = formatValidationErrors(validationErrors, dlpConfig.name);
+          const errorMessage = formatValidationErrors(validationErrors, application.name);
           throw new ValidationException(
-            `Configuration '${dlpConfig.name}' has validation issues for DLP exfiltration test:\n${errorMessage}`
+            `DLP infrastructure for application '${application.name}' has validation issues for exfiltration test:\n${errorMessage}`
           );
         }
         
-        // DLP configs don't store user/operation, so we need them from request
-        // But we can use patterns and contract rules from config
+        // Use patterns and restrictions from infrastructure
         const testerConfig: any = {};
-        if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          testerConfig.patterns = dlpConfig.patterns;
+        if (dlpInfra.patterns && dlpInfra.patterns.length > 0) {
+          testerConfig.patterns = dlpInfra.patterns;
         }
-        if (dlpConfig.exportRestrictions) {
-          testerConfig.exportRestrictions = dlpConfig.exportRestrictions;
+        if (dlpInfra.exportRestrictions) {
+          testerConfig.exportRestrictions = dlpInfra.exportRestrictions;
         }
-        if (dlpConfig.aggregationRequirements) {
-          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        if (dlpInfra.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpInfra.aggregationRequirements;
         }
-        if (dlpConfig.fieldRestrictions) {
-          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        if (dlpInfra.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpInfra.fieldRestrictions;
         }
-        if (dlpConfig.joinRestrictions) {
-          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
+        if (dlpInfra.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpInfra.joinRestrictions;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new DLPTester(testerConfig);
@@ -84,10 +100,10 @@ export class DLPService {
       const result = await this.tester.testDataExfiltration(user, dataOperation);
 
       // Apply testLogic if config provided
-      if (dlpConfig?.testLogic) {
+      if (dlpInfra?.testLogic) {
         // Apply custom checks if present
-        if (dlpConfig.testLogic.customChecks && dlpConfig.testLogic.customChecks.length > 0) {
-          result.customCheckResults = dlpConfig.testLogic.customChecks.map(check => ({
+        if (dlpInfra.testLogic.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
+          result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
             name: check.name,
             passed: this.evaluateCustomCheck(check.condition, result),
             description: check.description,
@@ -109,7 +125,7 @@ export class DLPService {
   }
 
   async validateAPIResponse(dto: {
-    configId?: string;
+    applicationId?: string;
     apiResponse: any;
     allowedFields?: string[];
     piiFields?: string[];
@@ -117,30 +133,32 @@ export class DLPService {
     try {
       let allowedFields: string[];
       let piiFields: string[];
-      let dlpConfig: DLPConfigurationEntity | null = null;
+      let dlpInfra: DLPInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'dlp') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a DLP configuration`);
-        }
-        dlpConfig = config as DLPConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Use patterns and piiDetectionRules from config
-        if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          this.tester = new DLPTester({ patterns: dlpConfig.patterns });
+        if (!application.infrastructure?.dlp) {
+          throw new ValidationException('Application has no DLP infrastructure configured');
+        }
+        
+        dlpInfra = application.infrastructure.dlp;
+        
+        // Use patterns from infrastructure
+        if (dlpInfra.patterns && dlpInfra.patterns.length > 0) {
+          this.tester = new DLPTester({ patterns: dlpInfra.patterns });
         }
 
         // Extract allowed fields from patterns (fields that should be allowed)
         allowedFields = dto.allowedFields || [];
         
         // Extract PII fields from piiDetectionRules
-        piiFields = dto.piiFields || (dlpConfig.piiDetectionRules?.map(rule => rule.fieldName) || []);
+        piiFields = dto.piiFields || (dlpInfra.piiDetectionRules?.map(rule => rule.fieldName) || []);
 
         // Apply testLogic.validateAPIResponses flag
-        if (dlpConfig.testLogic?.validateAPIResponses === false) {
+        if (dlpInfra.testLogic?.validateAPIResponses === false) {
           // If explicitly disabled, skip validation
-          return { validated: false, skipped: true, reason: 'API response validation disabled in configuration' };
+          return { validated: false, skipped: true, reason: 'API response validation disabled in infrastructure' };
         }
       } else {
         allowedFields = dto.allowedFields || [];
@@ -164,8 +182,8 @@ export class DLPService {
       );
 
       // Apply testLogic custom checks if present
-      if (dlpConfig?.testLogic?.customChecks && dlpConfig.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpConfig.testLogic.customChecks.map(check => ({
+      if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
+        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
           name: check.name,
           passed: this.evaluateCustomCheck(check.condition, result),
           description: check.description,
@@ -185,38 +203,40 @@ export class DLPService {
     }
   }
 
-  async testQueryValidation(dto: { configId?: string; query: TestQuery; user: User; expectedFields?: string[] }) {
+  async testQueryValidation(dto: { applicationId?: string; query: TestQuery; user: User; expectedFields?: string[] }) {
     try {
       let expectedFields: string[];
-      let dlpConfig: DLPConfigurationEntity | null = null;
+      let dlpInfra: DLPInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'dlp') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a DLP configuration`);
-        }
-        dlpConfig = config as DLPConfigurationEntity;
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
         
-        // Use patterns and contract rules from config
+        if (!application.infrastructure?.dlp) {
+          throw new ValidationException('Application has no DLP infrastructure configured');
+        }
+        
+        dlpInfra = application.infrastructure.dlp;
+        
+        // Use patterns and restrictions from infrastructure
         const testerConfig: any = {};
-        if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          testerConfig.patterns = dlpConfig.patterns;
+        if (dlpInfra.patterns && dlpInfra.patterns.length > 0) {
+          testerConfig.patterns = dlpInfra.patterns;
         }
-        if (dlpConfig.fieldRestrictions) {
-          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        if (dlpInfra.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpInfra.fieldRestrictions;
         }
-        if (dlpConfig.joinRestrictions) {
-          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
+        if (dlpInfra.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpInfra.joinRestrictions;
         }
-        if (dlpConfig.aggregationRequirements) {
-          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        if (dlpInfra.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpInfra.aggregationRequirements;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new DLPTester(testerConfig);
         }
 
         // Extract expected fields from piiDetectionRules if not provided
-        expectedFields = dto.expectedFields || (dlpConfig.piiDetectionRules?.map(rule => rule.fieldName) || []);
+        expectedFields = dto.expectedFields || (dlpInfra.piiDetectionRules?.map(rule => rule.fieldName) || []);
       } else {
         expectedFields = dto.expectedFields || [];
       }
@@ -239,8 +259,8 @@ export class DLPService {
       );
 
       // Apply testLogic custom checks if present
-      if (dlpConfig?.testLogic?.customChecks && dlpConfig.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpConfig.testLogic.customChecks.map(check => ({
+      if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
+        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
           name: check.name,
           passed: this.evaluateCustomCheck(check.condition, result),
           description: check.description,
@@ -261,40 +281,43 @@ export class DLPService {
   }
 
   async testBulkExport(dto: {
-    configId?: string;
+    applicationId?: string;
     user?: User;
     exportRequest?: { type: 'csv' | 'json' | 'excel' | 'api'; recordCount: number };
   }) {
     try {
       let user: User;
       let exportRequest: { type: 'csv' | 'json' | 'excel' | 'api'; recordCount: number };
-      let dlpConfig: DLPConfigurationEntity | null = null;
+      let dlpInfra: DLPInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'dlp') {
-          throw new ValidationException(`Configuration ${dto.configId} is not a DLP configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.dlp) {
+          throw new ValidationException('Application has no DLP infrastructure configured');
         }
-        dlpConfig = config as DLPConfigurationEntity;
-        // Use bulk export limits and contract rules from config if available
+        
+        dlpInfra = application.infrastructure.dlp;
+        
+        // Use bulk export limits and restrictions from infrastructure
         const testerConfig: any = {};
-        if (dlpConfig.bulkExportLimits) {
-          testerConfig.bulkExportLimits = dlpConfig.bulkExportLimits;
+        if (dlpInfra.bulkExportLimits) {
+          testerConfig.bulkExportLimits = dlpInfra.bulkExportLimits;
         }
-        if (dlpConfig.patterns && dlpConfig.patterns.length > 0) {
-          testerConfig.patterns = dlpConfig.patterns;
+        if (dlpInfra.patterns && dlpInfra.patterns.length > 0) {
+          testerConfig.patterns = dlpInfra.patterns;
         }
-        if (dlpConfig.exportRestrictions) {
-          testerConfig.exportRestrictions = dlpConfig.exportRestrictions;
+        if (dlpInfra.exportRestrictions) {
+          testerConfig.exportRestrictions = dlpInfra.exportRestrictions;
         }
-        if (dlpConfig.aggregationRequirements) {
-          testerConfig.aggregationRequirements = dlpConfig.aggregationRequirements;
+        if (dlpInfra.aggregationRequirements) {
+          testerConfig.aggregationRequirements = dlpInfra.aggregationRequirements;
         }
-        if (dlpConfig.fieldRestrictions) {
-          testerConfig.fieldRestrictions = dlpConfig.fieldRestrictions;
+        if (dlpInfra.fieldRestrictions) {
+          testerConfig.fieldRestrictions = dlpInfra.fieldRestrictions;
         }
-        if (dlpConfig.joinRestrictions) {
-          testerConfig.joinRestrictions = dlpConfig.joinRestrictions;
+        if (dlpInfra.joinRestrictions) {
+          testerConfig.joinRestrictions = dlpInfra.joinRestrictions;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new DLPTester(testerConfig);
@@ -324,8 +347,8 @@ export class DLPService {
       }
 
       // Apply testLogic.checkBulkExports flag
-      if (dlpConfig?.testLogic?.checkBulkExports === false) {
-        return { checked: false, skipped: true, reason: 'Bulk export checking disabled in configuration' };
+      if (dlpInfra?.testLogic?.checkBulkExports === false) {
+        return { checked: false, skipped: true, reason: 'Bulk export checking disabled in infrastructure' };
       }
 
       // Extract fields from export request if available
@@ -336,8 +359,8 @@ export class DLPService {
       });
 
       // Apply testLogic custom checks if present
-      if (dlpConfig?.testLogic?.customChecks && dlpConfig.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpConfig.testLogic.customChecks.map(check => ({
+      if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
+        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
           name: check.name,
           passed: this.evaluateCustomCheck(check.condition, result),
           description: check.description,

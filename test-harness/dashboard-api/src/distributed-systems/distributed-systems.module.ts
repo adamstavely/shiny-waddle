@@ -1,10 +1,10 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { DistributedSystemsController } from './distributed-systems.controller';
 import { DistributedSystemsService } from './distributed-systems.service';
-import { TestConfigurationsModule } from '../test-configurations/test-configurations.module';
+import { ApplicationsModule } from '../applications/applications.module';
 
 @Module({
-  imports: [forwardRef(() => TestConfigurationsModule)],
+  imports: [forwardRef(() => ApplicationsModule)],
   controllers: [DistributedSystemsController],
   providers: [DistributedSystemsService],
   exports: [DistributedSystemsService],

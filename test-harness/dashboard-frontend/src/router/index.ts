@@ -134,8 +134,7 @@ const router = createRouter({
     },
     {
       path: '/tests/individual',
-      name: 'Tests',
-      component: () => import('../views/Tests.vue'),
+      redirect: '/tests',
     },
     {
       path: '/tests/individual/new',

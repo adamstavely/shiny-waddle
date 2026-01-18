@@ -54,7 +54,6 @@ export interface TestSuite {
     allowedFields?: Record<string, string[]>;
     requiredFilters?: Record<string, Filter[]>;
     disallowedJoins?: Record<string, string[]>;
-    contracts?: Contract[];
     datasets?: Dataset[];
     privacyThresholds?: PrivacyThreshold[];
     statisticalFidelityTargets?: StatisticalFidelityTarget[];
@@ -122,30 +121,6 @@ export interface Filter {
     field: string;
     operator: '=' | '!=' | '>' | '<' | '>=' | '<=' | 'IN' | 'NOT IN' | 'LIKE';
     value: any;
-}
-/**
- * @deprecated Contract and ContractRequirement types are deprecated.
- * Contract rules should now be configured directly in DLP test configuration
- * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
- */
-export interface Contract {
-    name: string;
-    dataOwner: string;
-    requirements: ContractRequirement[];
-    machineReadable?: boolean;
-    schema?: any;
-}
-/**
- * @deprecated Contract and ContractRequirement types are deprecated.
- * Contract rules should now be configured directly in DLP test configuration
- * (exportRestrictions, aggregationRequirements, fieldRestrictions, joinRestrictions).
- */
-export interface ContractRequirement {
-    id: string;
-    description: string;
-    type: 'field-restriction' | 'aggregation-requirement' | 'join-restriction' | 'export-restriction';
-    rule: any;
-    enforcement: 'hard' | 'soft';
 }
 export interface Dataset {
     name: string;

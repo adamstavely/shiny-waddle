@@ -836,8 +836,10 @@ export class TestResultsService {
       const suiteArray = Array.isArray(suites) ? suites : [];
 
       // Get all configs from suites in this harness
+      // Note: testConfigurationIds is deprecated - configurations are now managed via application infrastructure
       for (const suiteId of harness.testSuiteIds) {
         const suite = suiteArray.find((s: any) => s.id === suiteId);
+        // Legacy support: check for deprecated testConfigurationIds field
         if (suite && suite.testConfigurationIds) {
           suite.testConfigurationIds.forEach((id: string) => configIds.add(id));
         }

@@ -13,7 +13,6 @@ export interface TestSuiteEntity {
   score: number;
   testType: string; // Required: single test type (e.g., 'access-control', 'data-behavior')
   domain: string; // Required: domain for this test suite
-  testTypes: string[]; // Deprecated: kept for backward compatibility, should match testType
   enabled: boolean;
   createdAt: Date;
   updatedAt: Date;

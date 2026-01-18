@@ -2,8 +2,8 @@ import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nest
 import { APIGatewayTester } from '../../../services/api-gateway-tester';
 import { APIGatewayPolicy, APIRequest } from '../../../core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { TestConfigurationsService } from '../test-configurations/test-configurations.service';
-import { APIGatewayConfigurationEntity } from '../test-configurations/entities/test-configuration.entity';
+import { ApplicationsService } from '../applications/applications.service';
+import { APIGatewayInfrastructure } from '../applications/entities/application.entity';
 import { validateAPIGatewayConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
 @Injectable()
@@ -12,38 +12,51 @@ export class APIGatewayService {
   private tester: APIGatewayTester;
 
   constructor(
-    @Inject(forwardRef(() => TestConfigurationsService))
-    private readonly configService: TestConfigurationsService,
+    @Inject(forwardRef(() => ApplicationsService))
+    private readonly applicationsService: ApplicationsService,
   ) {
     this.tester = new APIGatewayTester();
   }
 
-  async testGatewayPolicy(dto: { configId?: string; policy?: APIGatewayPolicy; request: APIRequest }) {
+  async testGatewayPolicy(dto: { applicationId?: string; policy?: APIGatewayPolicy; request: APIRequest }) {
     try {
       let policy: APIGatewayPolicy;
-      let agConfig: APIGatewayConfigurationEntity | null = null;
+      let gatewayInfra: APIGatewayInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'api-gateway') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an API gateway configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.apiGateway) {
+          throw new ValidationException('Application has no API Gateway infrastructure configured');
         }
-        agConfig = config as APIGatewayConfigurationEntity;
+        
+        gatewayInfra = application.infrastructure.apiGateway;
         
         // Validate configuration completeness (warnings only for API Gateway as fields are optional)
-        const validationErrors = validateAPIGatewayConfig(agConfig);
+        const validationErrors = validateAPIGatewayConfig({
+          id: application.id,
+          name: application.name,
+          type: 'api-gateway' as const,
+          rateLimitConfig: gatewayInfra.rateLimitConfig,
+          serviceAuthConfig: gatewayInfra.serviceAuthConfig,
+          gatewayPolicies: gatewayInfra.gatewayPolicies,
+          testLogic: gatewayInfra.testLogic,
+          enabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
         if (validationErrors.length > 0 && validationErrors.some(e => !e.message.includes('recommended'))) {
-          const errorMessage = formatValidationErrors(validationErrors, agConfig.name);
+          const errorMessage = formatValidationErrors(validationErrors, application.name);
           throw new ValidationException(
-            `Configuration '${agConfig.name}' has validation issues for gateway policy test:\n${errorMessage}`
+            `API Gateway infrastructure for application '${application.name}' has validation issues for gateway policy test:\n${errorMessage}`
           );
         }
 
-        // Use gatewayPolicies from config if policy not provided inline
-        if (!dto.policy && agConfig.gatewayPolicies && agConfig.gatewayPolicies.length > 0) {
+        // Use gatewayPolicies from infrastructure if policy not provided inline
+        if (!dto.policy && gatewayInfra.gatewayPolicies && gatewayInfra.gatewayPolicies.length > 0) {
           // Match policy by endpoint pattern if request provided
           if (dto.request?.endpoint) {
-            const matchedPolicy = agConfig.gatewayPolicies.find(p => {
+            const matchedPolicy = gatewayInfra.gatewayPolicies.find(p => {
               const pattern = p.endpoint.replace(/\*/g, '.*');
               return new RegExp(`^${pattern}$`).test(dto.request.endpoint);
             });
@@ -51,15 +64,15 @@ export class APIGatewayService {
               policy = matchedPolicy as APIGatewayPolicy;
             } else {
               // Use first policy as default
-              policy = agConfig.gatewayPolicies[0] as APIGatewayPolicy;
+              policy = gatewayInfra.gatewayPolicies[0] as APIGatewayPolicy;
             }
           } else {
-            policy = agConfig.gatewayPolicies[0] as APIGatewayPolicy;
+            policy = gatewayInfra.gatewayPolicies[0] as APIGatewayPolicy;
           }
         } else if (dto.policy) {
           policy = dto.policy;
         } else {
-          throw new ValidationException('Gateway policy is required (either in config or request)');
+          throw new ValidationException('Gateway policy is required (either in infrastructure or request)');
         }
       } else {
         policy = dto.policy!;
@@ -81,10 +94,10 @@ export class APIGatewayService {
       const result = await this.tester.testGatewayPolicy(policy, dto.request);
 
       // Apply testLogic if config provided
-      if (agConfig?.testLogic) {
+      if (gatewayInfra?.testLogic) {
         // Run custom validations if present
-        if (agConfig.testLogic.customValidations && agConfig.testLogic.customValidations.length > 0) {
-          result.customValidationResults = agConfig.testLogic.customValidations.map(validation => ({
+        if (gatewayInfra.testLogic.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
+          result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
             name: validation.name,
             passed: this.evaluateCustomValidation(validation.condition, result),
             description: validation.description,
@@ -105,25 +118,28 @@ export class APIGatewayService {
     }
   }
 
-  async testRateLimiting(dto: { configId?: string; endpoint?: string; requests?: number }) {
+  async testRateLimiting(dto: { applicationId?: string; endpoint?: string; requests?: number }) {
     try {
       let endpoint: string;
       let requests: number;
-      let agConfig: APIGatewayConfigurationEntity | null = null;
+      let gatewayInfra: APIGatewayInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'api-gateway') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an API gateway configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.apiGateway) {
+          throw new ValidationException('Application has no API Gateway infrastructure configured');
         }
-        agConfig = config as APIGatewayConfigurationEntity;
+        
+        gatewayInfra = application.infrastructure.apiGateway;
+        
         // Apply rate limit config if available
         const testerConfig: any = {};
-        if (agConfig.rateLimitConfig) {
-          testerConfig.rateLimitConfig = agConfig.rateLimitConfig;
+        if (gatewayInfra.rateLimitConfig) {
+          testerConfig.rateLimitConfig = gatewayInfra.rateLimitConfig;
         }
-        if (agConfig.serviceAuthConfig) {
-          testerConfig.serviceAuthConfig = agConfig.serviceAuthConfig;
+        if (gatewayInfra.serviceAuthConfig) {
+          testerConfig.serviceAuthConfig = gatewayInfra.serviceAuthConfig;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new APIGatewayTester(testerConfig);
@@ -146,15 +162,15 @@ export class APIGatewayService {
       }
 
       // Apply testLogic.validateRateLimiting flag
-      if (agConfig?.testLogic?.validateRateLimiting === false) {
-        return { validated: false, skipped: true, reason: 'Rate limiting validation disabled in configuration' };
+      if (gatewayInfra?.testLogic?.validateRateLimiting === false) {
+        return { validated: false, skipped: true, reason: 'Rate limiting validation disabled in infrastructure' };
       }
 
       const result = await this.tester.testRateLimiting(endpoint, requests);
 
       // Apply testLogic custom validations if present
-      if (agConfig?.testLogic?.customValidations && agConfig.testLogic.customValidations.length > 0) {
-        result.customValidationResults = agConfig.testLogic.customValidations.map(validation => ({
+      if (gatewayInfra?.testLogic?.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
+        result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
@@ -174,16 +190,18 @@ export class APIGatewayService {
     }
   }
 
-  async testAPIVersioning(dto: { configId?: string; version: string; endpoint: string }) {
+  async testAPIVersioning(dto: { applicationId?: string; version: string; endpoint: string }) {
     try {
-      let agConfig: APIGatewayConfigurationEntity | null = null;
+      let gatewayInfra: APIGatewayInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'api-gateway') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an API gateway configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.apiGateway) {
+          throw new ValidationException('Application has no API Gateway infrastructure configured');
         }
-        agConfig = config as APIGatewayConfigurationEntity;
+        
+        gatewayInfra = application.infrastructure.apiGateway;
       }
 
       if (!dto.version || typeof dto.version !== 'string') {
@@ -200,10 +218,10 @@ export class APIGatewayService {
       const result = await this.tester.testAPIVersioning(dto.version, dto.endpoint);
 
       // Apply testLogic if config provided
-      if (agConfig?.testLogic) {
+      if (gatewayInfra?.testLogic) {
         // Run custom validations if present
-        if (agConfig.testLogic.customValidations && agConfig.testLogic.customValidations.length > 0) {
-          result.customValidationResults = agConfig.testLogic.customValidations.map(validation => ({
+        if (gatewayInfra.testLogic.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
+          result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
             name: validation.name,
             passed: this.evaluateCustomValidation(validation.condition, result),
             description: validation.description,
@@ -224,25 +242,28 @@ export class APIGatewayService {
     }
   }
 
-  async testServiceAuth(dto: { configId?: string; source?: string; target?: string }) {
+  async testServiceAuth(dto: { applicationId?: string; source?: string; target?: string }) {
     try {
       let source: string;
       let target: string;
-      let agConfig: APIGatewayConfigurationEntity | null = null;
+      let gatewayInfra: APIGatewayInfrastructure | null = null;
 
-      if (dto.configId) {
-        const config = await this.configService.findOne(dto.configId);
-        if (config.type !== 'api-gateway') {
-          throw new ValidationException(`Configuration ${dto.configId} is not an API gateway configuration`);
+      if (dto.applicationId) {
+        const application = await this.applicationsService.findOne(dto.applicationId);
+        
+        if (!application.infrastructure?.apiGateway) {
+          throw new ValidationException('Application has no API Gateway infrastructure configured');
         }
-        agConfig = config as APIGatewayConfigurationEntity;
+        
+        gatewayInfra = application.infrastructure.apiGateway;
+        
         // Apply service auth config if available
         const testerConfig: any = {};
-        if (agConfig.serviceAuthConfig) {
-          testerConfig.serviceAuthConfig = agConfig.serviceAuthConfig;
+        if (gatewayInfra.serviceAuthConfig) {
+          testerConfig.serviceAuthConfig = gatewayInfra.serviceAuthConfig;
         }
-        if (agConfig.rateLimitConfig) {
-          testerConfig.rateLimitConfig = agConfig.rateLimitConfig;
+        if (gatewayInfra.rateLimitConfig) {
+          testerConfig.rateLimitConfig = gatewayInfra.rateLimitConfig;
         }
         if (Object.keys(testerConfig).length > 0) {
           this.tester = new APIGatewayTester(testerConfig);
@@ -265,15 +286,15 @@ export class APIGatewayService {
       }
 
       // Apply testLogic.checkServiceAuth flag
-      if (agConfig?.testLogic?.checkServiceAuth === false) {
-        return { checked: false, skipped: true, reason: 'Service auth checking disabled in configuration' };
+      if (gatewayInfra?.testLogic?.checkServiceAuth === false) {
+        return { checked: false, skipped: true, reason: 'Service auth checking disabled in infrastructure' };
       }
 
       const result = await this.tester.testServiceToServiceAuth(source, target);
 
       // Apply testLogic custom validations if present
-      if (agConfig?.testLogic?.customValidations && agConfig.testLogic.customValidations.length > 0) {
-        result.customValidationResults = agConfig.testLogic.customValidations.map(validation => ({
+      if (gatewayInfra?.testLogic?.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
+        result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
