@@ -21,7 +21,6 @@
             </p>
             <div class="hero-actions">
               <button @click="navigateTo('/tests/suites')" class="btn-primary">View Test Suites</button>
-              <button @click="navigateTo('/tests/library')" class="btn-secondary">Browse Test Library</button>
             </div>
           </div>
           <div class="hero-visual">
@@ -242,10 +241,6 @@
           <List class="action-icon" />
           <span>View Test Suites</span>
         </button>
-        <button @click="navigateTo('/tests/library')" class="action-card">
-          <BookOpen class="action-icon" />
-          <span>Browse Test Library</span>
-        </button>
         <button @click="navigateTo('/tests/findings')" class="action-card">
           <AlertCircle class="action-icon" />
           <span>View Findings</span>
@@ -266,7 +261,6 @@ import {
   Battery,
   Layers,
   List,
-  BookOpen,
   AlertCircle,
   Settings,
   Plus

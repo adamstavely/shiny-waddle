@@ -11,7 +11,6 @@ import PlatformConfigOverview from '../views/PlatformConfigOverview.vue';
 import TestBatteries from '../views/TestBatteries.vue';
 import TestHarnesses from '../views/TestHarnesses.vue';
 import TestSuites from '../views/TestSuites.vue';
-import TestLibrary from '../views/TestLibrary.vue';
 import Findings from '../views/Findings.vue';
 import TestSuiteBuilder from '../views/TestSuiteBuilder.vue';
 import TestSuiteDetail from '../views/TestSuiteDetail.vue';
@@ -202,11 +201,6 @@ const router = createRouter({
       path: '/tests/suites/builder/:id',
       name: 'TestSuiteBuilderEdit',
       component: TestSuiteBuilder,
-    },
-    {
-      path: '/tests/library',
-      name: 'TestLibrary',
-      component: TestLibrary,
     },
     {
       path: '/tests/findings',

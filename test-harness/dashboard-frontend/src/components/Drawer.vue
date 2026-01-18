@@ -343,7 +343,7 @@ const activeCategory = ref<string | null>(null);
 const testDesignLibraryPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
-  '/tests/individual', '/tests/library', '/tests/findings',
+  '/tests/individual', '/tests/findings',
   '/tests/history'
 ];
 
