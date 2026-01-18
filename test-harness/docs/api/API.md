@@ -453,6 +453,14 @@ Tests Row-Level Security (RLS) policy coverage.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "databaseId": "db-456"
+}
+```
+
+**Alternative Request Body (inline configuration):**
+```json
+{
   "database": {
     "type": "postgresql",
     "host": "localhost",
@@ -463,6 +471,8 @@ Tests Row-Level Security (RLS) policy coverage.
   }
 }
 ```
+
+**Note:** Either provide `applicationId` and `databaseId` to use infrastructure configuration from an application, or provide a full `database` object for inline testing.
 
 **Response:**
 ```json
@@ -485,6 +495,14 @@ Tests Column-Level Security (CLS) policy coverage.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "databaseId": "db-456"
+}
+```
+
+**Alternative Request Body (inline configuration):**
+```json
+{
   "database": {
     "type": "postgresql",
     "host": "localhost",
@@ -495,6 +513,8 @@ Tests Column-Level Security (CLS) policy coverage.
   }
 }
 ```
+
+**Note:** Either provide `applicationId` and `databaseId` to use infrastructure configuration from an application, or provide a full `database` object for inline testing.
 
 **Response:**
 ```json
@@ -575,6 +595,8 @@ Tests cross-tenant data isolation.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "databaseId": "db-456",
   "tenant1": "tenant-1",
   "tenant2": "tenant-2",
   "testQueries": [
@@ -586,6 +608,8 @@ Tests cross-tenant data isolation.
   ]
 }
 ```
+
+**Note:** `applicationId` and `databaseId` are optional. If provided, the test will use the database configuration from the application's infrastructure. Otherwise, provide `testQueries` directly.
 
 **Response:**
 ```json
@@ -649,6 +673,7 @@ Tests data exfiltration detection.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "user": {
     "id": "user-123",
     "email": "test@example.com",
@@ -663,6 +688,8 @@ Tests data exfiltration detection.
   }
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the DLP configuration from the application's infrastructure. Otherwise, provide `user` and `dataOperation` directly.
 
 **Response:**
 ```json
@@ -692,6 +719,7 @@ Validates API responses for sensitive data leakage.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "apiResponse": {
     "id": "123",
     "name": "test"
@@ -700,6 +728,8 @@ Validates API responses for sensitive data leakage.
   "piiFields": ["email", "ssn"]
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the DLP configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -726,6 +756,7 @@ Validates queries for sensitive data access.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "query": {
     "name": "test-query",
     "sql": "SELECT id, name FROM users",
@@ -740,6 +771,8 @@ Validates queries for sensitive data access.
   "expectedFields": ["id", "name"]
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the DLP configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -768,6 +801,7 @@ Tests bulk export controls.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "user": {
     "id": "user-123",
     "email": "test@example.com",
@@ -780,6 +814,8 @@ Tests bulk export controls.
   }
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the DLP configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -811,6 +847,7 @@ Tests API gateway policy enforcement.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "policy": {
     "id": "policy-123",
     "name": "Test Policy",
@@ -826,6 +863,8 @@ Tests API gateway policy enforcement.
   }
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the API Gateway configuration from the application's infrastructure. Otherwise, provide `policy` and `request` directly.
 
 **Response:**
 ```json
@@ -853,10 +892,13 @@ Tests API rate limiting.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "endpoint": "/api/test",
   "requests": 100
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the API Gateway configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -880,10 +922,13 @@ Tests API versioning.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "version": "v1",
   "endpoint": "/api/test"
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the API Gateway configuration from the application's infrastructure.
 
 **Response:**
 ```json
