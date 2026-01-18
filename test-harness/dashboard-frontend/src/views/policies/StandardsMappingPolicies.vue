@@ -134,7 +134,7 @@
                 </div>
                 <div v-if="selectedControl" class="form-group">
                   <label>Control Name</label>
-                  <input v-model="mappingForm.controlName" type="text" readonly :value="selectedControl.title" />
+                  <input v-model="mappingForm.controlName" type="text" readonly />
                 </div>
                 <div class="form-group">
                   <label>Mapping Type</label>
