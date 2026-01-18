@@ -828,7 +828,7 @@ const refreshData = async () => {
 
 const runBattery = () => {
   // Navigate to runs page or show run modal
-  router.push(`/runs?applicationId=${applicationId.value}`);
+  router.push(`/insights/runs?applicationId=${applicationId.value}`);
 };
 
 const scheduleRuns = () => {

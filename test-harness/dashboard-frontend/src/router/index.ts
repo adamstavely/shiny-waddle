@@ -20,7 +20,6 @@ import TestBatteryCreate from '../views/TestBatteryCreate.vue';
 import TestHarnessDetail from '../views/TestHarnessDetail.vue';
 import TestHarnessCreate from '../views/TestHarnessCreate.vue';
 import Reports from '../views/Reports.vue';
-import RunsAndReports from '../views/RunsAndReports.vue';
 import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
 import Insights from '../views/insights/Insights.vue';
@@ -237,11 +236,6 @@ const router = createRouter({
       path: '/platform-config',
       name: 'PlatformConfigOverview',
       component: PlatformConfigOverview,
-    },
-    {
-      path: '/runs',
-      name: 'RunsAndReports',
-      redirect: '/insights/runs',
     },
     {
       path: '/policies',

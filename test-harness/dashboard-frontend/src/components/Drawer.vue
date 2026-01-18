@@ -383,7 +383,6 @@ const insightsReportsPages = [
   '/insights/runs',
   '/insights/reports',
   '/insights/trends',
-  '/runs'
 ];
 
 // Determine active category based on current route

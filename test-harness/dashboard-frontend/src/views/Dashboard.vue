@@ -155,7 +155,7 @@
       <div class="section">
         <div class="section-header">
           <h2 class="section-title">Recent Test Battery Runs</h2>
-          <router-link to="/runs" class="view-all-link">View All</router-link>
+          <router-link to="/insights/runs" class="view-all-link">View All</router-link>
         </div>
         <div v-if="recentRuns.length === 0" class="empty-state">
           <p>No recent battery runs</p>
@@ -237,7 +237,7 @@
             <BookOpen class="action-icon" />
             <span>Test Design Library</span>
           </router-link>
-          <router-link to="/runs" class="quick-action-card">
+          <router-link to="/insights/runs" class="quick-action-card">
             <PlayCircle class="action-icon" />
             <span>View All Runs</span>
           </router-link>
@@ -355,7 +355,7 @@ const loadData = async () => {
 };
 
 const runBattery = () => {
-  router.push('/runs');
+  router.push('/insights/runs');
 };
 
 const onboardApp = () => {
@@ -363,7 +363,7 @@ const onboardApp = () => {
 };
 
 const viewRun = (runId: string) => {
-  router.push(`/runs?runId=${runId}`);
+  router.push(`/insights/runs?runId=${runId}`);
 };
 
 const viewIssue = (issue: any) => {

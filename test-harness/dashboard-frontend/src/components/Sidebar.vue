@@ -123,7 +123,6 @@ const insightsReportsPages = [
   '/insights/runs',
   '/insights/reports',
   '/insights/trends',
-  '/runs' // Legacy redirect
 ];
 
 const isActive = (path: string): boolean => {
