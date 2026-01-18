@@ -855,6 +855,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Teleport } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import {
   Settings,
@@ -1384,11 +1385,11 @@ const editApplication = (app: any) => {
 };
 
 const viewHistory = (appId: string) => {
-  window.location.href = `/test-history?applicationId=${appId}`;
+  router.push({ path: '/tests/history', query: { applicationId: appId } });
 };
 
 const viewApplicationDetail = (appId: string) => {
-  window.location.href = `/admin/applications/${appId}`;
+  router.push({ path: `/admin/applications/${appId}` });
 };
 
 const viewTestResult = (result: any) => {
