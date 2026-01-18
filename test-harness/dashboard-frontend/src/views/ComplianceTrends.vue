@@ -22,15 +22,6 @@
         </select>
       </div>
       <div class="filter-group">
-        <label>Test Configuration</label>
-        <select v-model="filters.testConfigurationId" @change="loadMetrics">
-          <option value="">All Configurations</option>
-          <option v-for="config in testConfigurations" :key="config.id" :value="config.id">
-            {{ config.name }}
-          </option>
-        </select>
-      </div>
-      <div class="filter-group">
         <label>Time Period</label>
         <select v-model="filters.period" @change="loadMetrics">
           <option value="day">Daily</option>
@@ -253,14 +244,12 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const metrics = ref<ComplianceMetrics | null>(null);
 const applications = ref<any[]>([]);
-const testConfigurations = ref<any[]>([]);
 const recentExecutions = ref<any[]>([]);
 const showResultModal = ref(false);
 const selectedResult = ref<any>(null);
 
 const filters = ref({
   applicationId: '',
-  testConfigurationId: '',
   period: 'day' as 'day' | 'week' | 'month',
   startDate: '',
   endDate: '',
@@ -273,9 +262,6 @@ const loadMetrics = async () => {
     const params: any = {};
     if (filters.value.applicationId) {
       params.applicationId = filters.value.applicationId;
-    }
-    if (filters.value.testConfigurationId) {
-      params.testConfigurationId = filters.value.testConfigurationId;
     }
     if (filters.value.startDate) {
       params.startDate = filters.value.startDate;
@@ -313,14 +299,6 @@ const loadApplications = async () => {
   }
 };
 
-const loadTestConfigurations = async () => {
-  try {
-    const response = await axios.get('/api/test-configurations');
-    testConfigurations.value = response.data;
-  } catch (err) {
-    console.error('Error loading test configurations:', err);
-  }
-};
 
 const getPassRateClass = (passRate: number) => {
   if (passRate >= 90) return 'pass-rate-excellent';
@@ -346,8 +324,8 @@ const formatDateTime = (date: Date | string) => {
   return d.toLocaleString();
 };
 
-const viewTestHistory = (configId: string) => {
-  router.push(`/test-history?testConfigurationId=${configId}`);
+const viewTestHistory = (applicationId: string) => {
+  router.push(`/test-history?applicationId=${applicationId}`);
 };
 
 const loadRecentExecutions = async () => {
@@ -355,9 +333,6 @@ const loadRecentExecutions = async () => {
     const params: any = { limit: 10 };
     if (filters.value.applicationId) {
       params.applicationId = filters.value.applicationId;
-    }
-    if (filters.value.testConfigurationId) {
-      params.testConfigurationId = filters.value.testConfigurationId;
     }
     const response = await axios.get('/api/test-results', { params });
     recentExecutions.value = response.data.map((r: any) => ({
@@ -385,7 +360,7 @@ onMounted(async () => {
   filters.value.endDate = endDate.toISOString().split('T')[0];
   filters.value.startDate = startDate.toISOString().split('T')[0];
   
-  await Promise.all([loadApplications(), loadTestConfigurations(), loadMetrics(), loadRecentExecutions()]);
+  await Promise.all([loadApplications(), loadMetrics(), loadRecentExecutions()]);
 });
 </script>
 

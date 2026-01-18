@@ -10,7 +10,7 @@
       </div>
       <div class="card-stats">
         <div class="stat-item">
-          <span class="stat-label">Configs</span>
+          <span class="stat-label">Suites</span>
           <span class="stat-value">{{ configCount }}</span>
         </div>
         <div class="stat-item" v-if="lastRunStatus || lastRunStatusProp">
@@ -24,73 +24,17 @@
     </div>
 
     <div v-if="isExpanded" class="card-content">
-      <!-- Configuration Selector -->
+      <!-- Configuration section removed - infrastructure is now part of Application -->
       <div class="config-section">
         <div class="section-header">
           <Settings class="section-icon" />
-          <h4>Configurations</h4>
-          <button @click.stop="showCreateConfig = true" class="btn-small">
-            <Plus class="btn-icon-small" />
-            New
+          <h4>Infrastructure</h4>
+        </div>
+        <div class="empty-configs">
+          <p>Infrastructure is now managed at the Application level. Go to Applications to configure infrastructure.</p>
+          <button @click.stop="$router.push('/applications')" class="btn-small">
+            View Applications
           </button>
-        </div>
-        <div v-if="configurations.length === 0" class="empty-configs">
-          <p>No configurations yet. Create one to get started.</p>
-        </div>
-        <div v-else class="configs-list">
-            <div
-              v-for="config in configurations"
-              :key="config.id"
-              class="config-item"
-            >
-            <div class="config-info">
-              <div class="config-header">
-                <span class="config-name">{{ config.name }}</span>
-                <span class="config-status" :class="config.enabled ? 'enabled' : 'disabled'">
-                  {{ config.enabled ? 'Enabled' : 'Disabled' }}
-                </span>
-              </div>
-              <div v-if="configUsage[config.id]" class="config-usage">
-                <div v-if="configUsage[config.id].suites.length > 0" class="usage-item">
-                  <span class="usage-label">Used by:</span>
-                  <div class="usage-badges">
-                    <span
-                      v-for="suite in configUsage[config.id].suites"
-                      :key="suite.id"
-                      class="usage-badge suite-badge"
-                      :title="suite.name"
-                    >
-                      {{ suite.name }}
-                    </span>
-                  </div>
-                </div>
-                <div v-if="configUsage[config.id].harnesses.length > 0" class="usage-item">
-                  <span class="usage-label">In harnesses:</span>
-                  <div class="usage-badges">
-                    <span
-                      v-for="harness in configUsage[config.id].harnesses"
-                      :key="harness.id"
-                      class="usage-badge harness-badge"
-                      :title="harness.name"
-                    >
-                      {{ harness.name }}
-                    </span>
-                  </div>
-                </div>
-                <div v-if="configUsage[config.id].suites.length === 0 && configUsage[config.id].harnesses.length === 0" class="usage-item">
-                  <span class="usage-label muted">Not used by any test suites</span>
-                </div>
-              </div>
-            </div>
-            <div class="config-actions">
-              <button @click.stop="editConfig(config)" class="icon-btn" title="Edit">
-                <Edit class="icon-small" />
-              </button>
-              <button @click.stop="deleteConfig(config.id)" class="icon-btn danger" title="Delete">
-                <Trash2 class="icon-small" />
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -236,14 +180,15 @@ const toggleExpand = async () => {
 };
 
 const loadConfigurations = async () => {
+  // Test configurations have been moved to Application.infrastructure
+  // This component should now show test suites or tests instead
   loading.value = true;
   try {
-    const response = await axios.get(`/api/test-configurations?type=${props.type}`);
-    configurations.value = response.data || [];
-    // Load last run status for this test type
+    // TODO: Update to load test suites or tests for this type instead
+    configurations.value = [];
     await loadLastRunStatus();
   } catch (err) {
-    console.error('Error loading configurations:', err);
+    console.error('Error loading data:', err);
     configurations.value = [];
   } finally {
     loading.value = false;
@@ -252,40 +197,9 @@ const loadConfigurations = async () => {
 
 const loadLastRunStatus = async () => {
   try {
-    // Get all configurations of this type
-    const configIds = configurations.value.map(c => c.id);
-    if (configIds.length === 0) {
-      lastRunStatus.value = undefined;
-      return;
-    }
-
-    // Get the most recent test result for any configuration of this type
-    const resultsPromises = configIds.map(async (configId) => {
-      try {
-        const response = await axios.get(`/api/test-results/test-configuration/${configId}?limit=1`);
-        return response.data && response.data.length > 0 ? response.data[0] : null;
-      } catch (err) {
-        return null;
-      }
-    });
-
-    const results = await Promise.all(resultsPromises);
-    const validResults = results.filter(r => r !== null);
-    
-    if (validResults.length > 0) {
-      // Sort by timestamp and get the most recent
-      validResults.sort((a, b) => {
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
-        return timeB - timeA;
-      });
-      
-      const mostRecent = validResults[0];
-      lastRunStatus.value = mostRecent.status === 'passed' ? 'passed' : 'failed';
-      lastRunTimestamp.value = new Date(mostRecent.timestamp);
-    } else {
-      lastRunStatus.value = undefined;
-    }
+    // TODO: Update to load test results for this test type from test suites
+    // For now, return undefined since test configurations are gone
+    lastRunStatus.value = undefined;
   } catch (err) {
     console.error('Error loading last run status:', err);
     lastRunStatus.value = undefined;
@@ -300,18 +214,8 @@ const editConfig = (config: any) => {
 };
 
 const deleteConfig = async (id: string) => {
-  if (!confirm('Are you sure you want to delete this configuration?')) {
-    return;
-  }
-  
-  try {
-    await axios.delete(`/api/test-configurations/${id}`);
-    await loadConfigurations();
-    await loadUsageData();
-  } catch (err) {
-    console.error('Error deleting configuration:', err);
-    alert('Failed to delete configuration');
-  }
+  // Test configurations have been removed - this function is no longer needed
+  console.warn('Test configurations have been removed. Use Application.infrastructure instead.');
 };
 
 // Test execution removed - tests run automatically in CI/CD during builds

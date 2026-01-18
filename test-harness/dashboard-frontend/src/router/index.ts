@@ -46,7 +46,6 @@ import PolicyValidation from '../views/PolicyValidation.vue';
 import IdentityProviders from '../views/IdentityProviders.vue';
 import NIST800207 from '../views/NIST800207.vue';
 import CICDSecurityGates from '../views/CICDSecurityGates.vue';
-import TestConfigurations from '../views/TestConfigurations.vue';
 import TestHistory from '../views/TestHistory.vue';
 import ComplianceTrends from '../views/ComplianceTrends.vue';
 import DeveloperFindingsDashboard from '../views/DeveloperFindingsDashboard.vue';
@@ -222,7 +221,7 @@ const router = createRouter({
     {
       path: '/tests/configurations',
       name: 'TestConfigurations',
-      component: TestConfigurations,
+      redirect: '/applications', // Redirect to applications where infrastructure is managed
     },
     {
       path: '/tests/history',

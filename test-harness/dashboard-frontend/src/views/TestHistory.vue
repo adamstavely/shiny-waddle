@@ -191,14 +191,12 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const results = ref<TestResult[]>([]);
 const applications = ref<any[]>([]);
-const testConfigurations = ref<any[]>([]);
 const totalResults = ref(0);
 const currentPage = ref(1);
 const pageSize = 20;
 
 const filters = ref({
   applicationId: '',
-  testConfigurationId: '',
   status: '',
   branch: '',
   startDate: '',
@@ -215,15 +213,6 @@ const applicationOptions = computed(() => {
   ];
 });
 
-const testConfigurationOptions = computed(() => {
-  return [
-    { label: 'All Configurations', value: '' },
-    ...testConfigurations.value.map(config => ({
-      label: config.name,
-      value: config.id,
-    })),
-  ];
-});
 
 const statusOptions = [
   { label: 'All Statuses', value: '' },
@@ -258,9 +247,6 @@ const loadResults = async () => {
 
     if (filters.value.applicationId) {
       params.applicationId = filters.value.applicationId;
-    }
-    if (filters.value.testConfigurationId) {
-      params.testConfigurationId = filters.value.testConfigurationId;
     }
     if (filters.value.status) {
       params.status = filters.value.status;
@@ -301,14 +287,6 @@ const loadApplications = async () => {
   }
 };
 
-const loadTestConfigurations = async () => {
-  try {
-    const response = await axios.get('/api/test-configurations');
-    testConfigurations.value = response.data;
-  } catch (err) {
-    console.error('Error loading test configurations:', err);
-  }
-};
 
 const previousPage = () => {
   if (currentPage.value > 1) {
@@ -364,14 +342,11 @@ const loadFiltersFromQuery = () => {
   if (urlParams.get('applicationId')) {
     filters.value.applicationId = urlParams.get('applicationId') || '';
   }
-  if (urlParams.get('testConfigurationId')) {
-    filters.value.testConfigurationId = urlParams.get('testConfigurationId') || '';
-  }
 };
 
 onMounted(async () => {
   loadFiltersFromQuery();
-  await Promise.all([loadApplications(), loadTestConfigurations(), loadResults()]);
+  await Promise.all([loadApplications(), loadResults()]);
 });
 </script>
 
