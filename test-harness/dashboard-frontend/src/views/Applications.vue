@@ -286,16 +286,18 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 1.5rem;
 }
 
 .page-title {
   font-size: 2rem;
   font-weight: 600;
-  margin: 0.5rem 0;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
 }
 
 .page-description {
-  color: #666;
+  color: #a0aec0;
   margin: 0;
 }
 
