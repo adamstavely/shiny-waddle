@@ -376,72 +376,72 @@ function closeModal() {
 }
 
 .resource-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: var(--transition-slow);
 }
 
 .resource-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(79, 172, 254, 0.4);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .resource-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .resource-title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .resource-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
   flex: 1;
 }
 
 .resource-sensitivity {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
 .sensitivity-public {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-sensitivity-public-bg);
+  color: var(--color-sensitivity-public);
 }
 
 .sensitivity-internal {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-sensitivity-internal-bg);
+  color: var(--color-sensitivity-internal);
 }
 
 .sensitivity-confidential {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-sensitivity-confidential-bg);
+  color: var(--color-sensitivity-confidential);
 }
 
 .sensitivity-restricted {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-sensitivity-restricted-bg);
+  color: var(--color-sensitivity-restricted);
 }
 
 .resource-meta {
   display: flex;
-  gap: 16px;
-  font-size: 0.875rem;
-  color: #a0aec0;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .resource-type {
@@ -449,84 +449,84 @@ function closeModal() {
 }
 
 .resource-application {
-  padding: 2px 8px;
-  background: rgba(79, 172, 254, 0.1);
-  border-radius: 4px;
-  color: #4facfe;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: 2px var(--spacing-sm);
+  background: var(--color-info-bg);
+  border-radius: var(--border-radius-xs);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .resource-attributes {
-  margin-bottom: 16px;
-  padding: 12px;
-  background: rgba(15, 20, 25, 0.4);
-  border-radius: 8px;
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg-overlay);
+  border-radius: var(--border-radius-md);
 }
 
 .attributes-preview {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .attribute-preview {
   display: flex;
   justify-content: space-between;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .attr-key {
-  color: #718096;
+  color: var(--color-text-muted);
 }
 
 .attr-value {
-  color: #ffffff;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
 }
 
 .more-attributes {
-  font-size: 0.75rem;
-  color: #4facfe;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
   font-style: italic;
 }
 
 .resource-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  color: #4facfe;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   flex: 1;
   justify-content: center;
 }
 
 .action-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--color-info-bg);
+  border-color: var(--border-color-primary-active);
 }
 
 .delete-btn {
   border-color: rgba(252, 129, 129, 0.3);
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .delete-btn:hover {
-  background: rgba(252, 129, 129, 0.1);
+  background: var(--color-error-bg);
   border-color: rgba(252, 129, 129, 0.5);
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .action-icon {
@@ -537,30 +537,30 @@ function closeModal() {
 .empty-state {
   text-align: center;
   padding: 80px 40px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
 }
 
 .empty-icon {
   width: 64px;
   height: 64px;
-  color: #4facfe;
-  margin: 0 auto 24px;
+  color: var(--color-primary);
+  margin: 0 auto var(--spacing-lg);
   opacity: 0.5;
 }
 
 .empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .empty-state p {
-  font-size: 1rem;
-  color: #a0aec0;
-  margin-bottom: 24px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
 }
 </style>
 

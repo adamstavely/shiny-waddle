@@ -28,12 +28,12 @@
               <svg viewBox="0 0 250 200" class="sentinel-svg" preserveAspectRatio="xMidYMid meet">
                   <defs>
                   <linearGradient id="sentinelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
                   <linearGradient id="sentinelGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
                   </linearGradient>
                 </defs>
                 
@@ -65,7 +65,7 @@
                 <!-- Central checkmark/verification symbol -->
                 <path 
                   d="M 110 100 L 120 110 L 140 85" 
-                  stroke="#00f2fe" 
+                  :style="{ stroke: 'var(--color-secondary)' }" 
                   stroke-width="4" 
                   fill="none" 
                   stroke-linecap="round" 

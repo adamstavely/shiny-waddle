@@ -159,7 +159,8 @@
               v-for="level in levels"
               :key="level.id"
               class="level-card"
-              :style="{ borderLeftColor: level.color || '#4facfe' }"
+              :style="{ '--level-border-color': level.color || 'var(--color-primary)' }"
+              class="level-card-dynamic"
             >
               <div class="level-header">
                 <h3 class="level-name">{{ level.name }}</h3>
@@ -181,7 +182,7 @@
         </div>
 
         <!-- Classification Rules Section -->
-        <div class="classification-section" style="margin-top: 32px;">
+        <div class="classification-section mt-xl">
           <div class="section-header">
             <h2 class="section-title">Classification Rules</h2>
             <button @click="showCreateRuleModal = true" class="btn-primary">
@@ -335,7 +336,7 @@
             </div>
           </div>
         </div>
-        <div class="classification-section" style="margin-top: 32px;">
+        <div class="classification-section mt-xl">
           <div class="section-header">
             <h2 class="section-title">Allowlists</h2>
             <button @click="showCreateAllowlistModal = true" class="btn-primary">
@@ -2559,11 +2560,15 @@ onMounted(() => {
 }
 
 .level-card {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-left: 4px solid;
-  border-radius: 8px;
-  padding: 16px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+}
+
+.level-card-dynamic {
+  border-left-color: var(--level-border-color, var(--color-primary));
 }
 
 .level-header {

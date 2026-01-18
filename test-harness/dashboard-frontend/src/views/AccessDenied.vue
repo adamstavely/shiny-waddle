@@ -18,12 +18,12 @@
           <svg viewBox="0 0 200 200" class="access-denied-svg" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
               </linearGradient>
               <linearGradient id="lockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#fc8181;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                <stop offset="0%" :style="{ stopColor: 'var(--color-error)', stopOpacity: 1 }" />
+                <stop offset="100%" :style="{ stopColor: 'var(--color-error-dark)', stopOpacity: 1 }" />
               </linearGradient>
             </defs>
             

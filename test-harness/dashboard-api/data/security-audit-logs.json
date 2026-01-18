@@ -1,5 +1,28 @@
 [
   {
+    "id": "ee142fc6-d784-41f0-8ae9-e883afc524d4",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/v1/platform-config/baselines",
+    "description": "Data write operation: POST /api/v1/platform-config/baselines",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/v1/platform-config/baselines",
+    "timestamp": "2026-01-18T02:42:45.334Z",
+    "success": false,
+    "errorMessage": "HTTP 401",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/v1/platform-config/baselines",
+      "query": {},
+      "bodySize": "50"
+    },
+    "requestId": "req-1768704165332-666q068hy",
+    "responseCode": 401,
+    "duration": 0
+  },
+  {
     "id": "6a76c9bf-9d13-40d0-81dc-0d9793c12a11",
     "type": "data-write",
     "severity": "medium",

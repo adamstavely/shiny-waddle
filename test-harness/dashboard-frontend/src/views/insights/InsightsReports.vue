@@ -52,7 +52,7 @@
     </div>
     
     <!-- Saved Reports Section -->
-    <div class="reports-section" style="margin-top: 32px;">
+    <div class="reports-section mt-xl">
       <h2 class="section-title">Saved Reports</h2>
       <Reports />
     </div>

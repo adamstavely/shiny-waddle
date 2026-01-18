@@ -25,8 +25,8 @@
           <svg viewBox="0 0 250 200" class="not-found-svg" preserveAspectRatio="xMidYMid meet">
             <defs>
               <linearGradient id="compassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
               </linearGradient>
             </defs>
             
@@ -190,7 +190,7 @@ const goBack = () => {
 .decoration-circle {
   position: absolute;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  background: linear-gradient(135deg, var(--color-info-bg) 0%, rgba(0, 242, 254, 0.1) 100%);
   filter: blur(60px);
   animation: float 20s ease-in-out infinite;
 }
@@ -235,11 +235,11 @@ const goBack = () => {
   position: relative;
   z-index: 10;
   text-align: center;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  background: var(--gradient-card-full);
+  border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: 24px;
-  padding: 48px 64px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  padding: var(--spacing-2xl) 64px;
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -273,7 +273,7 @@ const goBack = () => {
 .code-digit {
   font-size: 8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -315,16 +315,16 @@ const goBack = () => {
 
 
 .error-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
   line-height: 1.2;
 }
 
 .error-message {
-  font-size: 1.125rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
   line-height: 1.6;
   margin-bottom: 40px;
   max-width: 500px;
@@ -357,24 +357,24 @@ const goBack = () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #0f1419;
+  background: var(--gradient-primary);
+  color: var(--color-bg-primary);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.4);
+  box-shadow: var(--shadow-primary-hover);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #4facfe;
-  border: 2px solid rgba(79, 172, 254, 0.3);
+  color: var(--color-primary);
+  border: var(--border-width-medium) solid var(--border-color-secondary);
 }
 
 .btn-secondary:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--color-info-bg);
+  border-color: var(--border-color-primary-active);
 }
 
 .btn-icon {
@@ -383,13 +383,13 @@ const goBack = () => {
 }
 
 .quick-links {
-  border-top: 1px solid rgba(79, 172, 254, 0.2);
-  padding-top: 32px;
+  border-top: var(--border-width-thin) solid var(--border-color-primary);
+  padding-top: var(--spacing-xl);
 }
 
 .quick-links-title {
-  font-size: 0.875rem;
-  color: #718096;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -417,18 +417,18 @@ const goBack = () => {
   padding: 12px 16px;
   border-radius: 8px;
   background: rgba(79, 172, 254, 0.05);
-  border: 1px solid rgba(79, 172, 254, 0.1);
-  color: #a0aec0;
+  border: var(--border-width-thin) solid var(--border-color-muted);
+  color: var(--color-text-secondary);
   text-decoration: none;
-  transition: all 0.2s;
-  font-size: 0.875rem;
-  font-weight: 500;
+  transition: var(--transition-all);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .quick-link:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.3);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  border-color: var(--border-color-secondary);
+  color: var(--color-primary);
   transform: translateY(-2px);
 }
 

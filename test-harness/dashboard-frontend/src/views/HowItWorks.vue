@@ -28,15 +28,15 @@
               <svg viewBox="0 0 400 300" class="workflow-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="workflowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
                   <linearGradient id="workflowGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.6" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.4" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.6 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.4 }" />
                   </linearGradient>
                   <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                    <polygon points="0 0, 10 3, 0 6" fill="#4facfe" />
+                    <polygon points="0 0, 10 3, 0 6" :style="{ fill: 'var(--color-primary)' }" />
                   </marker>
                 </defs>
                 

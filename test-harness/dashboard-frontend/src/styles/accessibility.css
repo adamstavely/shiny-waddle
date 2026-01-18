@@ -17,9 +17,9 @@
 
 /* Focus visible styles - WCAG 2.4.7 Focus Visible */
 *:focus-visible {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--border-radius-sm);
 }
 
 /* Remove default focus outline for mouse users, keep for keyboard */
@@ -34,7 +34,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -64,105 +64,106 @@ textarea:focus-visible,
 
 /* Ensure sufficient color contrast for text */
 /* WCAG AA requires 4.5:1 for normal text, 3:1 for large text */
+/* Note: These classes use design tokens which maintain WCAG AA contrast ratios */
 .text-primary {
-  color: #ffffff; /* Contrast ratio: 12.6:1 on #0f1419 */
+  color: var(--color-text-primary); /* Contrast ratio: 12.6:1 on #0f1419 */
 }
 
 .text-secondary {
-  color: #a0aec0; /* Contrast ratio: 4.6:1 on #0f1419 */
+  color: var(--color-text-secondary); /* Contrast ratio: 4.6:1 on #0f1419 */
 }
 
 .text-muted {
-  color: #718096; /* Contrast ratio: 3.1:1 on #0f1419 - acceptable for large text */
+  color: var(--color-text-muted); /* Contrast ratio: 3.1:1 on #0f1419 - acceptable for large text */
 }
 
 /* Ensure links are distinguishable - WCAG 1.4.1 Use of Color */
 a {
-  color: #4facfe;
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
 a:visited {
-  color: #00f2fe;
+  color: var(--color-secondary);
 }
 
 a:hover,
 a:focus {
-  color: #00f2fe;
+  color: var(--color-secondary);
   text-decoration: underline;
 }
 
 /* Form labels must be visible - WCAG 3.3.2 Labels or Instructions */
 label {
   display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #ffffff;
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 /* Error messages must be clearly identified - WCAG 3.3.1 Error Identification */
 .error-message {
-  color: #f56565;
-  font-weight: 500;
-  margin-top: 4px;
+  color: var(--color-error);
+  font-weight: var(--font-weight-medium);
+  margin-top: var(--spacing-xs);
   display: block;
 }
 
 .error-message::before {
   content: 'Error: ';
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 /* Success messages */
 .success-message {
-  color: #48bb78;
-  font-weight: 500;
-  margin-top: 4px;
+  color: var(--color-success);
+  font-weight: var(--font-weight-medium);
+  margin-top: var(--spacing-xs);
   display: block;
 }
 
 /* Required field indicators - WCAG 3.3.2 Labels or Instructions */
 .required::after {
   content: ' *';
-  color: #f56565;
-  font-weight: 700;
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
 }
 
 /* Ensure headings have proper hierarchy - WCAG 2.4.6 Headings and Labels */
 h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-md);
 }
 
 h2 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 0.875rem;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
 }
 
 h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
 }
 
 h4 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.625rem;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
 }
 
 h5 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-xs);
 }
 
 h6 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Ensure buttons have sufficient size - WCAG 2.5.5 Target Size */
@@ -172,7 +173,7 @@ input[type="button"],
 input[type="submit"] {
   min-height: 44px;
   min-width: 44px;
-  padding: 12px 24px;
+  padding: var(--spacing-sm) var(--spacing-lg);
 }
 
 /* Icon-only buttons should have accessible labels */
@@ -194,9 +195,9 @@ input[type="submit"] {
   position: absolute;
   width: 16px;
   height: 16px;
-  border: 2px solid #4facfe;
+  border: var(--border-width-medium) solid var(--color-primary);
   border-top-color: transparent;
-  border-radius: 50%;
+  border-radius: var(--border-radius-full);
   animation: spin 0.6s linear infinite;
 }
 
@@ -214,14 +215,14 @@ table {
 
 th {
   text-align: left;
-  font-weight: 600;
-  padding: 12px;
-  border-bottom: 2px solid rgba(79, 172, 254, 0.3);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width-medium) solid var(--border-color-secondary);
 }
 
 td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 /* Ensure images have alt text - WCAG 1.1.1 Non-text Content */
@@ -231,7 +232,7 @@ img {
 }
 
 img[alt=""] {
-  border: 2px dashed #718096;
+  border: var(--border-width-medium) dashed var(--color-text-muted);
 }
 
 /* Ensure form inputs are properly labeled */
@@ -240,24 +241,24 @@ select,
 textarea {
   display: block;
   width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  background: rgba(26, 31, 46, 0.8);
-  color: #ffffff;
-  font-size: 1rem;
+  padding: var(--spacing-sm);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-bg-overlay-dark);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
 }
 
 input:invalid,
 select:invalid,
 textarea:invalid {
-  border-color: #f56565;
+  border-color: var(--color-error);
 }
 
 input:invalid:focus,
 select:invalid:focus,
 textarea:invalid:focus {
-  outline-color: #f56565;
+  outline-color: var(--color-error);
 }
 
 /* Ensure modals and dialogs are accessible - WCAG 2.4.3 Focus Order */
@@ -267,11 +268,11 @@ textarea:invalid:focus {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1000;
-  background: #1a1f2e;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 12px;
-  padding: 24px;
+  z-index: var(--z-index-modal);
+  background: var(--color-bg-secondary);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
@@ -299,19 +300,19 @@ main:focus,
   position: absolute;
   top: -40px;
   left: 0;
-  background: #4facfe;
-  color: #0f1419;
-  padding: 8px 16px;
+  background: var(--color-primary);
+  color: var(--color-bg-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
   text-decoration: none;
-  font-weight: 600;
-  z-index: 10000;
-  border-radius: 0 0 4px 0;
-  transition: top 0.2s;
+  font-weight: var(--font-weight-semibold);
+  z-index: var(--z-index-skip-link);
+  border-radius: 0 0 var(--border-radius-xs) 0;
+  transition: top var(--transition-base);
 }
 
 .skip-link:focus {
   top: 0;
-  outline: 3px solid #00f2fe;
+  outline: 3px solid var(--color-secondary);
   outline-offset: 2px;
 }
 
@@ -324,13 +325,13 @@ main:focus,
 /* Ensure tooltips are accessible */
 [role="tooltip"] {
   position: absolute;
-  background: #1a1f2e;
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  z-index: 1000;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  z-index: var(--z-index-tooltip);
   max-width: 200px;
 }
 
@@ -340,7 +341,7 @@ nav[aria-label="Breadcrumb"] ul {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 /* Ensure loading indicators are announced */
@@ -375,29 +376,29 @@ nav[aria-label="Breadcrumb"] ul {
 }
 
 [role="progressbar"]:focus {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Ensure tables have proper structure */
 table caption {
   text-align: left;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: #ffffff;
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-primary);
 }
 
 /* Ensure form fields have proper error association */
 input[aria-invalid="true"],
 select[aria-invalid="true"],
 textarea[aria-invalid="true"] {
-  border-color: #f56565;
+  border-color: var(--color-error);
 }
 
 input[aria-invalid="true"]:focus,
 select[aria-invalid="true"]:focus,
 textarea[aria-invalid="true"]:focus {
-  outline-color: #f56565;
+  outline-color: var(--color-error);
 }
 
 /* Ensure live regions are properly announced */
@@ -418,7 +419,7 @@ textarea[aria-invalid="true"]:focus {
 
 /* Ensure regions have proper labels */
 [role="region"]:not([aria-labelledby]):not([aria-label]) {
-  outline: 2px dashed #fbbf24;
+  outline: var(--border-width-medium) dashed var(--color-warning);
   outline-offset: 2px;
 }
 
@@ -485,8 +486,8 @@ nav[aria-label*="breadcrumb" i] li {
 
 nav[aria-label*="breadcrumb" i] li:not(:last-child)::after {
   content: '/';
-  margin: 0 8px;
-  color: #a0aec0;
+  margin: 0 var(--spacing-sm);
+  color: var(--color-text-secondary);
 }
 
 /* Ensure search inputs are properly labeled */
@@ -542,28 +543,28 @@ h2 + h6 {
 /* Ensure proper landmark structure */
 main:focus,
 [role="main"]:focus {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* Ensure proper form structure */
 fieldset {
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  padding: 16px;
-  margin: 0 0 16px 0;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  margin: 0 0 var(--spacing-md) 0;
 }
 
 legend {
-  padding: 0 8px;
-  font-weight: 600;
-  color: #ffffff;
+  padding: 0 var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 /* Ensure proper button groups */
 .button-group {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .button-group [role="button"],
@@ -574,39 +575,39 @@ legend {
 /* Ensure proper tab navigation */
 [role="tablist"] {
   display: flex;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 [role="tab"] {
-  padding: 12px 16px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: #a0aec0;
+  border-bottom: var(--border-width-medium) solid transparent;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 [role="tab"]:hover {
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 [role="tab"][aria-selected="true"] {
-  color: #4facfe;
-  border-bottom-color: #4facfe;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 [role="tab"]:focus {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: -3px;
 }
 
 [role="tabpanel"] {
-  padding: 16px;
+  padding: var(--spacing-md);
 }
 
 [role="tabpanel"]:focus {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 

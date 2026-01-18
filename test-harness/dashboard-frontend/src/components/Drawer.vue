@@ -19,7 +19,7 @@
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
       <!-- Test Design Library Category -->
       <div v-if="activeCategory === 'test-design-library'" :key="`test-design-library-${activeCategory}`" class="drawer-category" data-category="test-design-library">
-        <div class="category-items" style="padding: 0 12px 16px;">
+        <div class="category-items category-items-padded">
           <a
             href="/tests"
             @click.prevent="handleNavClick('/tests')"
@@ -65,7 +65,7 @@
 
       <!-- Policies & Config Category -->
       <div v-if="activeCategory === 'policies-config'" :key="`policies-config-${activeCategory}`" class="drawer-category" data-category="policies-config">
-        <div class="category-items" style="padding: 0 12px 16px;">
+        <div class="category-items category-items-padded">
           <a
             href="/policies"
             @click.prevent="handleNavClick('/policies')"
@@ -146,7 +146,7 @@
             <Container class="item-icon" />
             <span>IDP / Kubernetes</span>
           </a>
-          <div style="height: 16px;"></div>
+          <div class="category-spacer"></div>
           <a
             href="/resources"
             @click.prevent="handleNavClick('/resources')"
@@ -184,7 +184,7 @@
 
       <!-- Insights & Reports Category -->
       <div v-if="activeCategory === 'insights-reports'" :key="`insights-reports-${activeCategory}`" class="drawer-category" data-category="insights-reports">
-        <div class="category-items" style="padding: 0 12px 16px;">
+        <div class="category-items category-items-padded">
           <a
             href="/insights"
             @click.prevent="handleNavClick('/insights')"
@@ -246,7 +246,7 @@
 
       <!-- Admin Category -->
       <div v-if="activeCategory === 'admin'" :key="`admin-${activeCategory}`" class="drawer-category" data-category="admin">
-        <div class="category-items" style="padding: 0 12px 16px;">
+        <div class="category-items category-items-padded">
           <a
             href="/admin"
             @click.prevent="handleNavClick('/admin')"
@@ -526,8 +526,8 @@ watch(() => route.path, (newPath) => {
   left: 80px;
   width: 240px;
   height: calc(100vh - 64px);
-  background: linear-gradient(180deg, #1a1f2e 0%, #0f1419 100%);
-  border-right: 1px solid rgba(79, 172, 254, 0.2);
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+  border-right: var(--border-width-thin) solid var(--border-color-primary);
   display: flex;
   flex-direction: column;
   z-index: 20;
@@ -549,17 +549,17 @@ watch(() => route.path, (newPath) => {
   height: 44px; /* Increased to meet WCAG target size */
   min-width: 44px; /* Ensure minimum size */
   min-height: 44px; /* Ensure minimum size */
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 25; /* High z-index to ensure it's always on top */
-  color: #4facfe;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: var(--color-primary);
+  transition: var(--transition-all);
+  box-shadow: var(--shadow-sm);
   flex-shrink: 0; /* Prevent button from shrinking */
   visibility: visible !important; /* Ensure button is always visible */
   opacity: 1 !important; /* Ensure button is fully opaque */
@@ -575,13 +575,13 @@ watch(() => route.path, (newPath) => {
 }
 
 .drawer-toggle:hover {
-  background: rgba(79, 172, 254, 0.2);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--color-info-bg);
+  border-color: var(--border-color-primary-active);
   transform: scale(1.05);
 }
 
 .drawer-toggle:focus-visible {
-  outline: 3px solid #4facfe;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -591,7 +591,7 @@ watch(() => route.path, (newPath) => {
   stroke-width: 2;
   flex-shrink: 0;
   display: block;
-  color: #4facfe;
+  color: var(--color-primary);
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -600,7 +600,7 @@ watch(() => route.path, (newPath) => {
 .drawer-toggle .toggle-icon {
   opacity: 1 !important;
   visibility: visible !important;
-  color: #4facfe !important;
+  color: var(--color-primary) !important;
   stroke: currentColor;
   fill: none;
 }
@@ -611,7 +611,7 @@ watch(() => route.path, (newPath) => {
   width: 20px !important;
   height: 20px !important;
   display: block !important;
-  color: #4facfe !important;
+  color: var(--color-primary) !important;
   stroke: currentColor !important;
   fill: none !important;
   opacity: 1 !important;
@@ -621,11 +621,11 @@ watch(() => route.path, (newPath) => {
 
 .drawer-nav {
   flex: 1;
-  padding: 24px 0;
+  padding: var(--spacing-lg) 0;
   padding-top: 72px; /* Space for toggle button */
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: var(--spacing-xl);
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%; /* Ensure nav takes full width of drawer */
@@ -639,28 +639,28 @@ watch(() => route.path, (newPath) => {
 .drawer-category {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
 .category-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 20px 8px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  padding: 0 20px var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 .category-icon {
   width: 18px;
   height: 18px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
 .category-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #718096;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
@@ -669,8 +669,8 @@ watch(() => route.path, (newPath) => {
 .category-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .category-section:last-child {
@@ -682,8 +682,8 @@ watch(() => route.path, (newPath) => {
   align-items: center;
   gap: 8px;
   padding: 0 20px 6px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.08);
-  margin-top: 8px;
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
+  margin-top: var(--spacing-sm);
 }
 
 .section-header:first-child {
@@ -693,15 +693,15 @@ watch(() => route.path, (newPath) => {
 .section-icon {
   width: 16px;
   height: 16px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
   opacity: 0.8;
 }
 
 .section-title {
   font-size: 0.7rem;
-  font-weight: 600;
-  color: #718096;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
@@ -711,32 +711,40 @@ watch(() => route.path, (newPath) => {
 .category-items {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 12px;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-md);
+}
+
+.category-items-padded {
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.category-spacer {
+  height: var(--spacing-md);
 }
 
 .drawer-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  color: #a0aec0;
+  gap: var(--spacing-md);
+  padding: 10px var(--spacing-md);
+  color: var(--color-text-secondary);
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s;
-  font-size: 0.9rem;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-all);
+  font-size: var(--font-size-sm);
   border-left: 3px solid transparent;
 }
 
 .drawer-item:hover {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .drawer-item-active {
   background: rgba(79, 172, 254, 0.15);
-  color: #4facfe;
-  border-left-color: #4facfe;
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
 }
 
 .item-icon {
@@ -756,12 +764,12 @@ watch(() => route.path, (newPath) => {
 }
 
 .drawer::-webkit-scrollbar-thumb {
-  background: rgba(79, 172, 254, 0.3);
-  border-radius: 2px;
+  background: var(--border-color-secondary);
+  border-radius: var(--border-radius-sm);
 }
 
 .drawer::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-primary-active);
 }
 </style>
 

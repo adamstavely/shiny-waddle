@@ -30,12 +30,12 @@
               <svg viewBox="0 0 250 200" class="access-control-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="accessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
                   <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
                   </linearGradient>
                 </defs>
                 
@@ -53,9 +53,9 @@
                 
                 <!-- Policy Document -->
                 <rect x="30" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
-                <line x1="40" y1="75" x2="70" y2="75" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
-                <line x1="40" y1="85" x2="65" y2="85" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
-                <line x1="40" y1="95" x2="70" y2="95" stroke="#00f2fe" stroke-width="2" opacity="0.8"/>
+                <line x1="40" y1="75" x2="70" y2="75" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
+                <line x1="40" y1="85" x2="65" y2="85" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
+                <line x1="40" y1="95" x2="70" y2="95" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
                 
                 <!-- Resource Folder -->
                 <rect x="170" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
@@ -67,12 +67,9 @@
                 
                 <!-- User Icon -->
                 <circle cx="125" cy="140" r="20" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
-                <circle cx="125" cy="130" r="8" fill="#00f2fe" opacity="0.9"/>
+                <circle cx="125" cy="130" r="8" :style="{ fill: 'var(--color-secondary)', opacity: 0.9 }"/>
                 <path d="M 105 160 Q 105 150, 125 150 Q 145 150, 145 160" 
-                      stroke="#00f2fe" 
-                      stroke-width="3" 
-                      fill="none" 
-                      opacity="0.9"/>
+                      :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', opacity: 0.9 }"/>
                 
                 <!-- Connection lines -->
                 <line x1="80" y1="90" x2="110" y2="100" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
@@ -80,13 +77,13 @@
                 <line x1="125" y1="120" x2="125" y2="140" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
                 
                 <!-- Checkmark symbols -->
-                <path d="M 45 80 L 52 87 L 62 72" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-                <path d="M 185 80 L 192 87 L 202 72" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 45 80 L 52 87 L 62 72" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
+                <path d="M 185 80 L 192 87 L 202 72" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
                 
                 <!-- Accent dots -->
-                <circle cx="125" cy="50" r="3" fill="#00f2fe" opacity="0.8"/>
-                <circle cx="60" cy="90" r="2.5" fill="#4facfe" opacity="0.7"/>
-                <circle cx="190" cy="90" r="2.5" fill="#4facfe" opacity="0.7"/>
+                <circle cx="125" cy="50" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.8 }"/>
+                <circle cx="60" cy="90" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <circle cx="190" cy="90" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
               </svg>
             </div>
           </div>
@@ -235,9 +232,9 @@ onMounted(() => {
   position: relative;
   border-radius: 24px;
   padding: 48px 64px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  background: var(--gradient-card-full);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -262,30 +259,30 @@ onMounted(() => {
 }
 
 .hero-title {
-  font-size: 4rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
   line-height: 1.1;
   letter-spacing: -1px;
 }
 
 .hero-subtitle {
   display: block;
-  font-size: 2rem;
-  margin-top: 12px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  font-size: var(--font-size-2xl);
+  margin-top: var(--spacing-md);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .hero-description {
-  font-size: 1.125rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
   line-height: 1.6;
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .hero-actions {
@@ -295,34 +292,34 @@ onMounted(() => {
 
 .btn-primary,
 .btn-secondary {
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   border: none;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #ffffff;
+  background: var(--gradient-primary);
+  color: var(--color-text-primary);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 .btn-secondary {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
 }
 
 .btn-secondary:hover {
   background: rgba(79, 172, 254, 0.2);
-  border-color: rgba(79, 172, 254, 0.5);
+  border-color: var(--border-color-primary-active);
 }
 
 .hero-visual {
@@ -346,15 +343,15 @@ onMounted(() => {
 }
 
 .section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .section-description {
-  font-size: 1.125rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
   margin-bottom: 2rem;
 }
 
@@ -365,53 +362,53 @@ onMounted(() => {
 }
 
 .explanation-card {
-  background: rgba(26, 31, 46, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
   padding: 1.5rem;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .explanation-card:hover {
-  background: rgba(26, 31, 46, 0.8);
-  border-color: rgba(79, 172, 254, 0.4);
+  background: var(--color-bg-overlay-dark);
+  border-color: var(--border-color-primary-hover);
   transform: translateY(-2px);
 }
 
 .explanation-icon {
   width: 48px;
   height: 48px;
-  color: #4facfe;
-  margin-bottom: 1rem;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
 }
 
 .explanation-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin-bottom: 0.75rem;
 }
 
 .explanation-text {
   font-size: 0.95rem;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   line-height: 1.6;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .explanation-link {
-  color: #4facfe;
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .explanation-link:hover {
-  color: #00f2fe;
+  color: var(--color-secondary);
 }
 
 .stats-section {
@@ -425,26 +422,26 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: rgba(26, 31, 46, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
   padding: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: all 0.2s;
+  gap: var(--spacing-md);
+  transition: var(--transition-all);
 }
 
 .stat-card:hover {
-  background: rgba(26, 31, 46, 0.8);
-  border-color: rgba(79, 172, 254, 0.4);
+  background: var(--color-bg-overlay-dark);
+  border-color: var(--border-color-primary-hover);
   transform: translateY(-2px);
 }
 
 .stat-icon {
   width: 48px;
   height: 48px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -453,16 +450,16 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   line-height: 1;
   margin-bottom: 0.25rem;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 @media (max-width: 768px) {

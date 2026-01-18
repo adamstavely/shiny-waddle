@@ -363,8 +363,8 @@
             <label>RLS/CLS Configuration *</label>
             
             <!-- Database Configuration -->
-            <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Database Configuration</h4>
+            <div class="form-section">
+              <h4 class="form-section-title">Database Configuration</h4>
               <div class="form-grid">
                 <div class="form-group">
                   <label>Database Type *</label>
@@ -405,8 +405,8 @@
             </div>
 
             <!-- Test Queries -->
-            <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Test Queries</h4>
+            <div class="form-section">
+              <h4 class="form-section-title">Test Queries</h4>
               <div v-for="(query, index) in form.rlsCls.testQueries" :key="index" class="endpoint-item">
                 <div class="form-grid">
                   <div class="form-group">
@@ -445,8 +445,8 @@
             </div>
 
             <!-- Validation Rules -->
-            <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Validation Rules</h4>
+            <div class="form-section">
+              <h4 class="form-section-title">Validation Rules</h4>
               <div class="form-grid">
                 <div class="form-group">
                   <label>Minimum RLS Coverage (%)</label>
@@ -465,8 +465,8 @@
             </div>
 
             <!-- Masking Rules -->
-            <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Masking Rules</h4>
+            <div class="form-section">
+              <h4 class="form-section-title">Masking Rules</h4>
               <div v-for="(rule, index) in form.rlsCls.maskingRules" :key="index" class="endpoint-item">
                 <div class="form-grid">
                   <div class="form-group">
@@ -809,8 +809,8 @@
           </div>
           
           <!-- Regions - Required for all test types -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Regions</h4>
+          <div class="form-section">
+            <h4 class="form-section-title">Regions</h4>
             <div v-for="(region, index) in form.distributedSystems.regions" :key="index" class="endpoint-item">
               <div class="form-grid">
                 <div class="form-group">
@@ -845,8 +845,8 @@
           </div>
 
           <!-- Policy Sync - For policy-consistency and eventual-consistency -->
-          <div v-if="form.distributedSystems.testType === 'policy-consistency' || form.distributedSystems.testType === 'eventual-consistency'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Policy Sync Configuration</h4>
+          <div v-if="form.distributedSystems.testType === 'policy-consistency' || form.distributedSystems.testType === 'eventual-consistency'" class="form-section">
+            <h4 class="form-section-title">Policy Sync Configuration</h4>
             <div class="form-group">
               <label>
                 <input v-model="form.distributedSystems.policySync.enabled" type="checkbox" />
@@ -871,8 +871,8 @@
           </div>
 
           <!-- Coordination - For synchronization and transaction -->
-          <div v-if="form.distributedSystems.testType === 'synchronization' || form.distributedSystems.testType === 'transaction'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Coordination</h4>
+          <div v-if="form.distributedSystems.testType === 'synchronization' || form.distributedSystems.testType === 'transaction'" class="form-section">
+            <h4 class="form-section-title">Coordination</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label>Coordination Type *</label>
@@ -892,8 +892,8 @@
           </div>
 
           <!-- Synchronization Settings - For synchronization test type -->
-          <div v-if="form.distributedSystems.testType === 'synchronization'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Synchronization Settings</h4>
+          <div v-if="form.distributedSystems.testType === 'synchronization'" class="form-section">
+            <h4 class="form-section-title">Synchronization Settings</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label>Sync Interval (seconds)</label>
@@ -909,8 +909,8 @@
           </div>
 
           <!-- Transaction Settings - For transaction test type -->
-          <div v-if="form.distributedSystems.testType === 'transaction'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Transaction Settings</h4>
+          <div v-if="form.distributedSystems.testType === 'transaction'" class="form-section">
+            <h4 class="form-section-title">Transaction Settings</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label>Transaction Timeout (seconds)</label>
@@ -931,8 +931,8 @@
           </div>
 
           <!-- Consistency Level - For eventual-consistency test type -->
-          <div v-if="form.distributedSystems.testType === 'eventual-consistency'" class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Consistency Settings</h4>
+          <div v-if="form.distributedSystems.testType === 'eventual-consistency'" class="form-section">
+            <h4 class="form-section-title">Consistency Settings</h4>
             <div class="form-grid">
               <div class="form-group">
                 <label>Consistency Level *</label>
@@ -1011,9 +1011,9 @@
           </div>
 
           <!-- Security Controls to Validate -->
-          <div class="form-section" style="margin-top: 1rem; padding: 1rem; background: rgba(15, 20, 25, 0.4); border-radius: 6px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 1rem; color: #ffffff;">Security Controls to Validate *</h4>
-            <p class="field-help" style="margin-bottom: 1rem;">Select which security controls to validate during testing</p>
+          <div class="form-section">
+            <h4 class="form-section-title">Security Controls to Validate *</h4>
+            <p class="field-help field-help-spaced">Select which security controls to validate during testing</p>
             <div class="form-grid">
               <div class="form-group">
                 <label>
@@ -2307,9 +2307,9 @@ onMounted(() => {
 }
 
 .field-help {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
-  margin: 0.25rem 0 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin: var(--spacing-xs) 0 0 0;
 }
 
 .form-help {

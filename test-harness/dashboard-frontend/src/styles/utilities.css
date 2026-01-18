@@ -1,0 +1,476 @@
+/**
+ * Utility Classes
+ * Reusable utility classes for common styling patterns
+ * These classes use design tokens for consistency
+ */
+
+/* ============================================
+   BACKGROUND UTILITIES
+   ============================================ */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-card {
+  background: var(--gradient-card);
+}
+
+.bg-card-alt {
+  background: var(--gradient-card-alt);
+}
+
+.bg-overlay {
+  background: var(--color-bg-overlay);
+}
+
+.bg-overlay-light {
+  background: var(--color-bg-overlay-light);
+}
+
+.bg-overlay-dark {
+  background: var(--color-bg-overlay-dark);
+}
+
+.bg-success {
+  background-color: var(--color-success);
+}
+
+.bg-warning {
+  background-color: var(--color-warning);
+}
+
+.bg-error {
+  background-color: var(--color-error);
+}
+
+.bg-info {
+  background-color: var(--color-info);
+}
+
+/* Background with opacity */
+.bg-primary-alpha {
+  background-color: var(--color-primary);
+  opacity: var(--opacity-hover);
+}
+
+.bg-success-alpha {
+  background: var(--color-success-bg);
+}
+
+.bg-warning-alpha {
+  background: var(--color-warning-bg);
+}
+
+.bg-error-alpha {
+  background: var(--color-error-bg);
+}
+
+.bg-info-alpha {
+  background: var(--color-info-bg);
+}
+
+/* ============================================
+   TEXT COLOR UTILITIES
+   ============================================ */
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-disabled {
+  color: var(--color-text-disabled);
+}
+
+.text-brand {
+  color: var(--color-primary);
+}
+
+.text-brand-secondary {
+  color: var(--color-secondary);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-info {
+  color: var(--color-info);
+}
+
+/* ============================================
+   GRADIENT UTILITIES
+   ============================================ */
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.gradient-card {
+  background: var(--gradient-card);
+}
+
+.gradient-card-alt {
+  background: var(--gradient-card-alt);
+}
+
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   BORDER UTILITIES
+   ============================================ */
+.border-primary {
+  border: var(--border-width-thin) solid var(--border-color-primary);
+}
+
+.border-primary-hover {
+  border-color: var(--border-color-primary-hover);
+}
+
+.border-primary-active {
+  border-color: var(--border-color-primary-active);
+}
+
+.border-secondary {
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+}
+
+.border-muted {
+  border: var(--border-width-thin) solid var(--border-color-muted);
+}
+
+.border-success {
+  border-color: var(--color-success);
+}
+
+.border-warning {
+  border-color: var(--color-warning);
+}
+
+.border-error {
+  border-color: var(--color-error);
+}
+
+.border-radius-sm {
+  border-radius: var(--border-radius-sm);
+}
+
+.border-radius-md {
+  border-radius: var(--border-radius-md);
+}
+
+.border-radius-lg {
+  border-radius: var(--border-radius-lg);
+}
+
+.border-radius-xl {
+  border-radius: var(--border-radius-xl);
+}
+
+.border-radius-full {
+  border-radius: var(--border-radius-full);
+}
+
+/* ============================================
+   SHADOW UTILITIES
+   ============================================ */
+.shadow-xs {
+  box-shadow: var(--shadow-xs);
+}
+
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+.shadow-primary {
+  box-shadow: var(--shadow-primary);
+}
+
+.shadow-primary-hover {
+  box-shadow: var(--shadow-primary-hover);
+}
+
+/* ============================================
+   BUTTON UTILITIES
+   ============================================ */
+.btn-base {
+  padding: 12px 24px;
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-all);
+  border: none;
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--color-bg-primary);
+}
+
+.btn-primary:hover {
+  opacity: var(--opacity-active);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-primary-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border: var(--border-width-medium) solid var(--border-color-secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--color-info-bg);
+  border-color: var(--border-color-primary-active);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: var(--border-width-thin) solid var(--border-color-muted);
+}
+
+.btn-ghost:hover {
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  border-color: var(--border-color-primary);
+}
+
+/* ============================================
+   CARD UTILITIES
+   ============================================ */
+.card {
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+  transition: var(--transition-all);
+}
+
+.card:hover {
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.card-alt {
+  background: var(--gradient-card-alt);
+}
+
+/* ============================================
+   FORM UTILITIES
+   ============================================ */
+.form-section {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg-overlay);
+  border-radius: var(--border-radius-md);
+}
+
+.form-section-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.field-help-spaced {
+  margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   SENSITIVITY/STATUS BADGE UTILITIES
+   ============================================ */
+.badge {
+  padding: 4px 12px;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+}
+
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.badge-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.badge-info {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.badge-public {
+  background: var(--color-sensitivity-public-bg);
+  color: var(--color-sensitivity-public);
+}
+
+.badge-internal {
+  background: var(--color-sensitivity-internal-bg);
+  color: var(--color-sensitivity-internal);
+}
+
+.badge-confidential {
+  background: var(--color-sensitivity-confidential-bg);
+  color: var(--color-sensitivity-confidential);
+}
+
+.badge-restricted {
+  background: var(--color-sensitivity-restricted-bg);
+  color: var(--color-sensitivity-restricted);
+}
+
+/* ============================================
+   SPACING UTILITIES (extends responsive.css)
+   ============================================ */
+/* Additional spacing utilities beyond what's in responsive.css */
+.px-sm {
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+}
+
+.py-sm {
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+.px-md {
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
+}
+
+.py-md {
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+}
+
+.px-lg {
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
+}
+
+.py-lg {
+  padding-top: var(--spacing-lg);
+  padding-bottom: var(--spacing-lg);
+}
+
+.mt-xs {
+  margin-top: var(--spacing-xs);
+}
+
+.mt-sm {
+  margin-top: var(--spacing-sm);
+}
+
+.mt-md {
+  margin-top: var(--spacing-md);
+}
+
+.mt-lg {
+  margin-top: var(--spacing-lg);
+}
+
+.mt-xl {
+  margin-top: var(--spacing-xl);
+}
+
+.mt-2xl {
+  margin-top: var(--spacing-2xl);
+}
+
+.mb-sm {
+  margin-bottom: var(--spacing-sm);
+}
+
+.mb-md {
+  margin-bottom: var(--spacing-md);
+}
+
+.mb-lg {
+  margin-bottom: var(--spacing-lg);
+}
+
+.mb-xl {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* ============================================
+   TRANSITION UTILITIES
+   ============================================ */
+.transition-fast {
+  transition: var(--transition-fast);
+}
+
+.transition-base {
+  transition: var(--transition-base);
+}
+
+.transition-slow {
+  transition: var(--transition-slow);
+}
+
+.transition-all {
+  transition: var(--transition-all);
+}
+
+/* ============================================
+   FOCUS UTILITIES
+   ============================================ */
+.focus-ring {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--border-radius-sm);
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}

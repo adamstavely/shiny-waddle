@@ -57,20 +57,20 @@ defineProps<{
 }
 
 .breadcrumb-link {
-  color: #4facfe;
+  color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.2s;
-  padding: 4px 0;
+  transition: var(--transition-color);
+  padding: var(--spacing-xs) 0;
 }
 
 .breadcrumb-link:hover {
-  color: #00f2fe;
+  color: var(--color-secondary);
   text-decoration: underline;
 }
 
 .breadcrumb-current {
-  color: #a0aec0;
-  font-weight: 500;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
 }
 </style>
 

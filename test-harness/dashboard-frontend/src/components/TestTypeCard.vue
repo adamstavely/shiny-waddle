@@ -366,16 +366,16 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
 
 <style scoped>
 .test-type-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
   overflow: hidden;
-  transition: all 0.3s;
+  transition: var(--transition-slow);
 }
 
 .test-type-card:hover {
-  border-color: rgba(79, 172, 254, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-primary);
 }
 
 .card-header {
@@ -397,7 +397,7 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
 .card-icon {
   width: 32px;
   height: 32px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -406,10 +406,10 @@ const lastRunStatusProp = computed(() => props.lastRunStatus);
 }
 
 .card-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 4px 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
 }
 
 .card-description {

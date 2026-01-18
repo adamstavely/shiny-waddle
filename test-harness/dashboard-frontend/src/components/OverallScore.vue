@@ -13,31 +13,31 @@ defineProps<{
 
 <style scoped>
 .overall-score {
-  background: linear-gradient(135deg, #1a2332 0%, #2d3748 100%);
-  border-radius: 12px;
-  padding: 40px;
+  background: var(--gradient-card-alt);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-2xl);
   text-align: center;
-  margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .score-value {
-  font-size: 5em;
-  font-weight: bold;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  font-size: var(--font-size-6xl);
+  font-weight: var(--font-weight-bold);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 20px 0;
+  margin: var(--spacing-lg) 0;
 }
 
 .score-label {
-  color: #a0aec0;
-  font-size: 1.2em;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 500;
+  letter-spacing: var(--letter-spacing-widest);
+  font-weight: var(--font-weight-medium);
 }
 </style>
 

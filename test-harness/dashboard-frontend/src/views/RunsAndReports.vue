@@ -178,7 +178,7 @@
           </div>
         </div>
         
-        <div class="reports-section" style="margin-top: 32px;">
+        <div class="reports-section mt-xl">
           <h2 class="section-title">Saved Reports</h2>
           <Reports />
         </div>
@@ -468,15 +468,15 @@ watch(activeTab, (newTab) => {
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .page-description {
   font-size: 1.1rem;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .tabs-container {
@@ -485,35 +485,35 @@ watch(activeTab, (newTab) => {
 
 .tabs {
   display: flex;
-  gap: 8px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  gap: var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .tab-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: #a0aec0;
+  border-bottom: var(--border-width-medium) solid transparent;
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   position: relative;
   bottom: -1px;
 }
 
 .tab-button:hover {
-  color: #ffffff;
+  color: var(--color-text-primary);
   background: rgba(79, 172, 254, 0.05);
 }
 
 .tab-button.active {
-  color: #4facfe;
-  border-bottom-color: #4facfe;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   background: rgba(79, 172, 254, 0.05);
 }
 
@@ -544,13 +544,13 @@ watch(activeTab, (newTab) => {
 
 .search-input,
 .filter-date {
-  padding: 10px 16px;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  color: #ffffff;
+  padding: 10px var(--spacing-md);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
   font-size: 0.9rem;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .search-input {
@@ -566,7 +566,7 @@ watch(activeTab, (newTab) => {
 .search-input:focus,
 .filter-date:focus {
   outline: none;
-  border-color: #4facfe;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
 }
 
@@ -574,19 +574,19 @@ watch(activeTab, (newTab) => {
 .error-state {
   text-align: center;
   padding: 80px 40px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .error-state {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .runs-table-container {
   overflow-x: auto;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
 }
 
 .runs-table {
@@ -596,17 +596,17 @@ watch(activeTab, (newTab) => {
 
 .runs-table th {
   text-align: left;
-  padding: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #a0aec0;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .runs-table td {
-  padding: 12px;
-  color: #ffffff;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  padding: var(--spacing-sm);
+  color: var(--color-text-primary);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 .run-row {
@@ -625,53 +625,53 @@ watch(activeTab, (newTab) => {
 }
 
 .harness-tag {
-  padding: 4px 10px;
-  background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  color: #4facfe;
+  padding: var(--spacing-xs) 10px;
+  background: var(--color-info-bg);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 6px var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
   display: inline-block;
 }
 
 .status-completed,
 .status-passed {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-failed {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .status-running {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 
 .score {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .score-high {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .score-medium {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .score-low {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .actions-cell {

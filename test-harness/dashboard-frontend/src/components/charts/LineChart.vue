@@ -15,7 +15,7 @@
           :y1="padding + (i - 1) * (chartHeight / 4)"
           :x2="width - padding"
           :y2="padding + (i - 1) * (chartHeight / 4)"
-          stroke="rgba(79, 172, 254, 0.1)"
+          :style="{ stroke: 'var(--border-color-muted)' }"
           stroke-width="1"
         />
       </g>
@@ -54,7 +54,7 @@
         :x="point.x"
         :y="height - padding + 20"
         text-anchor="middle"
-        fill="#a0aec0"
+        :style="{ fill: 'var(--color-text-secondary)' }"
         font-size="10"
       >
         {{ point.label }}
@@ -88,7 +88,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   height: 250,
-  color: '#4facfe'
+  color: 'var(--color-primary)'
 });
 
 const width = 600;

@@ -216,7 +216,7 @@
                 <option value="api-security">API Security</option>
                 <option value="data-pipeline">Data Pipeline</option>
               </select>
-              <small style="color: #718096; font-size: 0.75rem; margin-top: 4px; display: block;">
+              <small class="text-muted text-xs mt-xs" style="display: block;">
                 Each test suite must have exactly one test type. All tests in this suite will be of the selected type.
               </small>
               <div v-if="form.testType" class="test-type-info">
@@ -871,11 +871,11 @@ watch([() => route.params.id, () => route.name], () => {
 .error {
   text-align: center;
   padding: 40px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .error {
-  color: #f87171;
+  color: var(--color-error);
 }
 
 .detail-header {
@@ -902,9 +902,9 @@ watch([() => route.params.id, () => route.name], () => {
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -973,14 +973,14 @@ watch([() => route.params.id, () => route.name], () => {
 }
 
 .enabled-badge.disabled {
-  background: rgba(160, 174, 192, 0.2);
-  color: #a0aec0;
+  background: var(--color-gray-400-alpha-20);
+  color: var(--color-text-secondary);
 }
 
 .suite-meta {
-  font-size: 1rem;
-  color: #a0aec0;
-  margin: 8px 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: var(--spacing-sm) 0;
 }
 
 .source-path {
@@ -1014,20 +1014,20 @@ watch([() => route.params.id, () => route.name], () => {
 }
 
 .action-btn.save-btn {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #ffffff;
+  background: var(--gradient-primary);
+  color: var(--color-text-primary);
 }
 
 .action-btn.run-btn {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: var(--border-width-thin) solid var(--border-success);
 }
 
 .action-btn.cancel-btn {
-  background: rgba(160, 174, 192, 0.1);
-  color: #a0aec0;
-  border: 1px solid rgba(160, 174, 192, 0.2);
+  background: var(--color-gray-400-alpha-10);
+  color: var(--color-text-secondary);
+  border: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 .action-btn:hover:not(:disabled) {
@@ -1047,39 +1047,39 @@ watch([() => route.params.id, () => route.name], () => {
 
 .tabs-container {
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--spacing-xs);
   overflow-x: auto;
 }
 
 .tab-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 20px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: #a0aec0;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-bottom: var(--border-width-medium) solid transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   white-space: nowrap;
 }
 
 .tab-button:hover {
-  color: #4facfe;
+  color: var(--color-primary);
   background: rgba(79, 172, 254, 0.05);
 }
 
 .tab-button.active {
-  color: #4facfe;
-  border-bottom-color: #4facfe;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   background: rgba(79, 172, 254, 0.1);
 }
 
@@ -1114,11 +1114,11 @@ watch([() => route.params.id, () => route.name], () => {
 
 /* Tests Section Styling - matches form-section */
 .tests-section {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .tests-list {
@@ -1158,22 +1158,22 @@ watch([() => route.params.id, () => route.name], () => {
 }
 
 .test-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .version-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) 10px;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .test-description {

@@ -29,12 +29,12 @@
               <svg viewBox="0 0 250 200" class="test-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="testGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
                   <linearGradient id="testGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
                   </linearGradient>
                 </defs>
                 
@@ -60,16 +60,16 @@
                 <line x1="125" y1="145" x2="125" y2="90" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
                 
                 <!-- Checkmark symbols -->
-                <path d="M 40 40 L 50 50 L 65 30" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-                <path d="M 105 55 L 115 65 L 130 45" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-                <path d="M 170 70 L 180 80 L 195 60" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-                <path d="M 105 140 L 115 150 L 130 130" stroke="#00f2fe" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 40 40 L 50 50 L 65 30" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
+                <path d="M 105 55 L 115 65 L 130 45" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
+                <path d="M 170 70 L 180 80 L 195 60" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
+                <path d="M 105 140 L 115 150 L 130 130" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
                 
                 <!-- Accent dots -->
-                <circle cx="125" cy="100" r="3" fill="#00f2fe" opacity="0.8"/>
-                <circle cx="60" cy="45" r="2.5" fill="#4facfe" opacity="0.7"/>
-                <circle cx="190" cy="75" r="2.5" fill="#4facfe" opacity="0.7"/>
-                <circle cx="125" cy="145" r="2.5" fill="#00f2fe" opacity="0.6"/>
+                <circle cx="125" cy="100" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.8 }"/>
+                <circle cx="60" cy="45" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <circle cx="190" cy="75" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <circle cx="125" cy="145" r="2.5" :style="{ fill: 'var(--color-secondary)', opacity: 0.6 }"/>
               </svg>
             </div>
           </div>

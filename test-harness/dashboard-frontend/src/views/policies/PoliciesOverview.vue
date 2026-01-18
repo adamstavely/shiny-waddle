@@ -29,12 +29,12 @@
               <svg viewBox="0 0 250 200" class="policy-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="policyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
                   <linearGradient id="policyGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0.6" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
                   </linearGradient>
                 </defs>
                 
@@ -50,12 +50,12 @@
                 <rect x="95" y="120" width="60" height="40" rx="4" fill="url(#policyGradient)" opacity="0.2" stroke="url(#policyGradient)" stroke-width="1.5"/>
                 
                 <!-- Checkmark in center -->
-                <path d="M 110 95 L 125 110 L 145 85" stroke="#00f2fe" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+                <path d="M 110 95 L 125 110 L 145 85" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '4', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
                 
                 <!-- Accent dots -->
-                <circle cx="60" cy="80" r="3" fill="#4facfe" opacity="0.7"/>
-                <circle cx="190" cy="80" r="3" fill="#4facfe" opacity="0.7"/>
-                <circle cx="125" cy="140" r="3" fill="#00f2fe" opacity="0.6"/>
+                <circle cx="60" cy="80" r="3" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <circle cx="190" cy="80" r="3" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <circle cx="125" cy="140" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.6 }"/>
               </svg>
             </div>
           </div>

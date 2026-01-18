@@ -128,7 +128,7 @@
     </div>
 
     <!-- SLA Violations -->
-    <div class="section-header" style="margin-top: 48px;">
+    <div class="section-header mt-2xl">
       <h2 class="section-title">SLA Violations</h2>
       <p class="section-description">Track violations against SLA policies</p>
     </div>
@@ -557,88 +557,88 @@ onMounted(() => {
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 8px 0;
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .page-description {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
   text-align: center;
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #4facfe;
-  margin-bottom: 8px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .stat-on-track .stat-value {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .stat-at-risk .stat-value {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .stat-breached .stat-value {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .section-header {
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .section-header-inline {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .section-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #fff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text-primary);
 }
 
 .section-description {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .policies-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 24px;
-  margin-bottom: 48px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
 }
 
 .policy-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .policy-card-header {
@@ -665,39 +665,39 @@ onMounted(() => {
 }
 
 .badge-critical {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
-  border: 1px solid rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid rgba(252, 129, 129, 0.3);
 }
 
 .badge-high {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: var(--border-width-thin) solid rgba(251, 191, 36, 0.3);
 }
 
 .badge-medium {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
+  background: var(--color-info-bg);
+  color: var(--color-info);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
 }
 
 .badge-low {
   background: rgba(160, 174, 192, 0.2);
-  color: #a0aec0;
-  border: 1px solid rgba(160, 174, 192, 0.3);
+  color: var(--color-text-secondary);
+  border: var(--border-width-thin) solid rgba(160, 174, 192, 0.3);
 }
 
 .policy-name {
   font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  color: #fff;
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--color-text-primary);
 }
 
 .policy-description {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 

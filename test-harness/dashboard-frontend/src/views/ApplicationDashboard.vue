@@ -94,14 +94,14 @@
               <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="appTrendGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.3 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0 }" />
                   </linearGradient>
                 </defs>
                 <polyline
                   :points="trendPoints"
                   fill="url(#appTrendGradient)"
-                  stroke="#4facfe"
+                  :style="{ stroke: 'var(--color-primary)' }"
                   stroke-width="2"
                 />
               </svg>
@@ -120,14 +120,14 @@
               <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="execGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.3 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0 }" />
                   </linearGradient>
                 </defs>
                 <polyline
                   :points="executionTrendPoints"
                   fill="url(#execGradient)"
-                  stroke="#00f2fe"
+                  :style="{ stroke: 'var(--color-secondary)' }"
                   stroke-width="2"
                 />
               </svg>
@@ -398,15 +398,15 @@ onBeforeUnmount(() => {
 
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .page-description {
   font-size: 1.1rem;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .header-actions {
@@ -420,17 +420,17 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 10px 20px;
   background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  color: #4facfe;
-  font-weight: 500;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .action-btn:hover:not(:disabled) {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--color-info-bg);
+  border-color: var(--border-color-primary-active);
 }
 
 .action-btn:disabled {
@@ -464,24 +464,24 @@ onBeforeUnmount(() => {
 }
 
 .metric-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
   padding: 20px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .metric-icon {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  border-radius: var(--border-radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -491,13 +491,13 @@ onBeforeUnmount(() => {
 }
 
 .metric-icon.passed {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .metric-icon.failed {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .metric-content {
@@ -505,27 +505,27 @@ onBeforeUnmount(() => {
 }
 
 .metric-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  margin-bottom: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .metric-value {
   font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .metric-value.passed {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .metric-value.failed {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .metric-value.violations {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .section {
@@ -536,18 +536,18 @@ onBeforeUnmount(() => {
 
 .section-title {
   font-size: 1.75rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 24px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-md);
 }
 
 .section-icon {
   width: 24px;
   height: 24px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -566,17 +566,17 @@ onBeforeUnmount(() => {
 }
 
 .trend-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
 }
 
 .trend-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
 }
 
 .trend-chart {

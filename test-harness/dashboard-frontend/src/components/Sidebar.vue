@@ -181,8 +181,8 @@ watch(() => route.path, (newPath) => {
   left: 0;
   height: calc(100vh - 64px);
   width: 80px;
-  background: linear-gradient(180deg, #1a1f2e 0%, #0f1419 100%);
-  border-right: 1px solid rgba(79, 172, 254, 0.2);
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+  border-right: var(--border-width-thin) solid var(--border-color-primary);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -217,7 +217,7 @@ watch(() => route.path, (newPath) => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: linear-gradient(180deg, transparent 0%, #0f1419 20%);
+  background: linear-gradient(180deg, transparent 0%, var(--color-bg-primary) 20%);
   padding-top: 8px;
   padding-bottom: 16px;
   z-index: 10;
@@ -232,10 +232,10 @@ watch(() => route.path, (newPath) => {
   margin: 0 8px;
   border-radius: 8px;
   text-decoration: none;
-  color: #a0aec0;
-  transition: all 0.2s;
+  color: var(--color-text-secondary);
+  transition: var(--transition-all);
   cursor: pointer;
-  border: 1px solid transparent;
+  border: var(--border-width-thin) solid transparent;
   position: relative;
   background: transparent;
   font-family: inherit;
@@ -243,15 +243,15 @@ watch(() => route.path, (newPath) => {
 }
 
 .nav-item:hover {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  border-color: rgba(79, 172, 254, 0.2);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  border-color: var(--border-color-primary);
 }
 
 .nav-item-active {
   background: rgba(79, 172, 254, 0.15);
-  border-color: rgba(79, 172, 254, 0.3);
-  color: #4facfe;
+  border-color: var(--border-color-secondary);
+  color: var(--color-primary);
 }
 
 .nav-item-active::before {
@@ -262,8 +262,8 @@ watch(() => route.path, (newPath) => {
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
-  border-radius: 0 2px 2px 0;
+  background: var(--gradient-primary);
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
 }
 
 .nav-icon {

@@ -23,7 +23,7 @@
           :y1="padding + (i - 1) * (chartHeight / 4)"
           :x2="width - padding"
           :y2="padding + (i - 1) * (chartHeight / 4)"
-          stroke="rgba(79, 172, 254, 0.1)"
+          :style="{ stroke: 'var(--border-color-muted)' }"
           stroke-width="1"
         />
       </g>

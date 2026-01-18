@@ -122,14 +122,14 @@
               <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="teamTrendGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.3 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0 }" />
                   </linearGradient>
                 </defs>
                 <polyline
                   :points="trendPoints"
                   fill="url(#teamTrendGradient)"
-                  stroke="#4facfe"
+                  :style="{ stroke: 'var(--color-primary)' }"
                   stroke-width="2"
                 />
               </svg>
@@ -148,14 +148,14 @@
               <svg class="chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="appsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#00f2fe;stop-opacity:0.3" />
-                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:0" />
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.3 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0 }" />
                   </linearGradient>
                 </defs>
                 <polyline
                   :points="applicationsTrendPoints"
                   fill="url(#appsGradient)"
-                  stroke="#00f2fe"
+                  :style="{ stroke: 'var(--color-secondary)' }"
                   stroke-width="2"
                 />
               </svg>

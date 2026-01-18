@@ -8,8 +8,8 @@
         <!-- Grid lines -->
         <defs>
           <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#4facfe;stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:#4facfe;stop-opacity:0.4" />
+            <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
+            <stop offset="100%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.4 }" />
           </linearGradient>
         </defs>
         
