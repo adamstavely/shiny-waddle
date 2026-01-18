@@ -1384,6 +1384,8 @@ const editApplication = (app: any) => {
   showCreateModal.value = true;
 };
 
+const router = useRouter();
+
 const viewHistory = (appId: string) => {
   router.push({ path: '/tests/history', query: { applicationId: appId } });
 };
