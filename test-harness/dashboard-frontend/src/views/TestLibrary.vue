@@ -71,12 +71,9 @@ const getLastRunStatusForType = (type: string): string => {
 };
 
 const loadConfigurations = async () => {
-  try {
-    const response = await axios.get('/api/test-configurations');
-    configurations.value = response.data || [];
-  } catch (err) {
-    console.error('Error loading configurations:', err);
-  }
+  // Test configurations removed - infrastructure is now part of applications
+  // Return empty array for now
+  configurations.value = [];
 };
 
 const loadLastRunStatusForTypes = async () => {
@@ -103,7 +100,8 @@ const loadLastRunStatusForTypes = async () => {
 };
 
 const handleEditConfig = (type: string) => {
-  router.push({ path: '/tests/configurations', query: { type } });
+  // Test configurations removed - navigate to applications to manage infrastructure
+  router.push({ path: '/applications' });
 };
 
 const handleViewResult = (type: string) => {

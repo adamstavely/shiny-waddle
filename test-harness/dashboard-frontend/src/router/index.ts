@@ -219,11 +219,6 @@ const router = createRouter({
       component: () => import('../views/TestDetail.vue'),
     },
     {
-      path: '/tests/configurations',
-      name: 'TestConfigurations',
-      redirect: '/applications', // Redirect to applications where infrastructure is managed
-    },
-    {
       path: '/tests/history',
       name: 'TestHistory',
       component: TestHistory,

@@ -425,7 +425,8 @@ const loadTestSuites = async () => {
 
 const loadConfigurations = async () => {
   try {
-    const response = await axios.get('/api/test-configurations');
+    // Test configurations removed - infrastructure is now part of applications
+    const response = { data: [] };
     configurations.value = response.data || [];
   } catch (err) {
     console.error('Error loading configurations:', err);

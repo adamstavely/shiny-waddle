@@ -15,7 +15,7 @@
               <span class="hero-subtitle">Comprehensive Testing Framework</span>
             </h1>
             <p class="hero-description">
-              Organize and manage your security tests through a hierarchical structure of configurations, 
+              Organize and manage your security tests through a hierarchical structure of tests, 
               suites, harnesses, and batteries. Track results, manage findings, and ensure continuous 
               compliance with automated testing workflows.
             </p>
@@ -90,11 +90,11 @@
           <!-- Background -->
           <rect width="1000" height="600" fill="transparent" />
           
-          <!-- Level 1: Test Configurations -->
-          <g class="diagram-level" data-level="configs">
+          <!-- Level 1: Applications (Infrastructure) -->
+          <g class="diagram-level" data-level="applications">
             <rect x="50" y="50" width="180" height="100" rx="8" class="diagram-box config-box" />
-            <text x="140" y="95" text-anchor="middle" class="diagram-title">Test Configurations</text>
-            <text x="140" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.configurations }}</text>
+            <text x="140" y="95" text-anchor="middle" class="diagram-title">Applications</text>
+            <text x="140" y="115" text-anchor="middle" class="diagram-subtitle">{{ stats.applications }}</text>
           </g>
           
           <!-- Level 2: Individual Tests -->
@@ -126,7 +126,7 @@
           </g>
           
           <!-- Arrows -->
-          <!-- Configs → Tests -->
+          <!-- Applications → Tests (infrastructure used by tests) -->
           <path d="M 230 100 L 300 100" class="diagram-arrow" marker-end="url(#arrowhead)" />
           
           <!-- Tests → Suites -->
@@ -153,13 +153,13 @@
           <div class="step">
             <div class="step-number">1</div>
             <div class="step-content">
-              <strong>Test Configurations</strong> define how tests should run (user roles, policies, settings)
+              <strong>Application Infrastructure</strong> defines what infrastructure exists (databases, networks, APIs)
             </div>
           </div>
           <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
-              <strong>Individual Tests</strong> use configurations to validate specific security requirements
+              <strong>Individual Tests</strong> validate specific security requirements using infrastructure and policies
             </div>
           </div>
           <div class="step">
@@ -188,11 +188,11 @@
     <div class="stats-section">
       <h2 class="section-title">Quick Stats</h2>
       <div class="stats-grid">
-        <div class="stat-card" @click="navigateTo('/tests/configurations')">
+        <div class="stat-card" @click="navigateTo('/applications')">
           <Settings class="stat-icon" />
           <div class="stat-content">
-            <div class="stat-value">{{ stats.configurations }}</div>
-            <div class="stat-label">Test Configurations</div>
+            <div class="stat-value">{{ stats.applications }}</div>
+            <div class="stat-label">Applications</div>
           </div>
         </div>
         <div class="stat-card" @click="navigateTo('/tests/suites')">
@@ -282,7 +282,7 @@ const breadcrumbItems = [
 ];
 
 const stats = ref({
-  configurations: 0,
+  applications: 0,
   tests: 0,
   suites: 0,
   harnesses: 0,
@@ -293,16 +293,20 @@ const stats = ref({
 const loadStats = async () => {
   try {
     const [configsRes, suitesRes, harnessesRes, batteriesRes, resultsRes] = await Promise.all([
-      axios.get('/api/test-configurations').catch(() => ({ data: [] })),
+      // Test configurations removed - infrastructure is now part of applications
+      Promise.resolve({ data: [] }),
       axios.get('/api/v1/test-suites').catch(() => ({ data: [] })),
       axios.get('/api/v1/test-harnesses').catch(() => ({ data: [] })),
       axios.get('/api/v1/test-batteries').catch(() => ({ data: [] })),
       axios.get('/api/test-results?limit=1000').catch(() => ({ data: [] }))
     ]);
     
+    // Load applications count for infrastructure stat
+    const appsRes = await axios.get('/api/v1/applications').catch(() => ({ data: [] }));
+    
     stats.value = {
-      configurations: configsRes.data?.length || 0,
-      tests: configsRes.data?.length || 0, // Approximate
+      applications: appsRes.data?.length || 0,
+      tests: 0, // Will be loaded separately if needed
       suites: suitesRes.data?.length || 0,
       harnesses: harnessesRes.data?.length || 0,
       batteries: batteriesRes.data?.length || 0,

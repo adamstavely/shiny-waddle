@@ -487,21 +487,20 @@
               <span class="detail-value">{{ app.lastTestAt ? formatDate(app.lastTestAt) : 'Never' }}</span>
             </div>
             <div v-if="getAssignedTestConfigs(app.id).length > 0" class="detail-item full-width">
-              <span class="detail-label">Assigned Tests</span>
+              <span class="detail-label">Infrastructure</span>
               <div class="test-configs-list">
                 <span
-                  v-for="config in getAssignedTestConfigs(app.id)"
-                  :key="config.id || config"
+                  v-for="infra in getAssignedTestConfigs(app.id)"
+                  :key="infra.id"
                   class="test-config-badge"
                 >
-                  {{ typeof config === 'string' ? config : config.name }}
+                  {{ infra.name }} ({{ infra.type }})
                 </span>
               </div>
-              <p class="assignment-note">Test assignments are managed externally</p>
             </div>
             <div v-else class="detail-item full-width">
-              <span class="detail-label">Assigned Tests</span>
-              <span class="detail-value">No tests assigned</span>
+              <span class="detail-label">Infrastructure</span>
+              <span class="detail-value">No infrastructure configured</span>
             </div>
           </div>
 
@@ -519,7 +518,7 @@
               >
                 <div class="recent-test-info">
                   <span class="recent-test-time">{{ formatDateTime(result.timestamp) }}</span>
-                  <span class="recent-test-config">{{ result.testConfigurationName }}</span>
+                  <span class="recent-test-config">{{ result.applicationName || 'N/A' }}</span>
                 </div>
                 <div class="recent-test-meta">
                   <span class="test-status-badge" :class="`status-${result.status}`">
@@ -953,19 +952,26 @@ const loadApplications = async () => {
 };
 
 const loadTestConfigsForApps = async () => {
-  for (const app of applications.value) {
-    try {
-      const response = await axios.get(`/api/applications/${app.id}/test-configurations?expand=true`);
-      appTestConfigs.value[app.id] = response.data || [];
-    } catch (err) {
-      console.error(`Error loading test configs for app ${app.id}:`, err);
-      appTestConfigs.value[app.id] = [];
-    }
-  }
+  // Test configurations removed - infrastructure is now part of Application entity
+  // Clear any old data
+  appTestConfigs.value = {};
 };
 
 const getAssignedTestConfigs = (appId: string) => {
-  return appTestConfigs.value[appId] || [];
+  // Test configurations removed - check application.infrastructure instead
+  const app = applications.value.find(a => a.id === appId);
+  if (app?.infrastructure) {
+    // Return infrastructure summary
+    const infra = [];
+    if (app.infrastructure.databases?.length) {
+      infra.push(...app.infrastructure.databases.map((db: any) => ({ id: db.id, name: db.name, type: 'database' })));
+    }
+    if (app.infrastructure.networkSegments?.length) {
+      infra.push(...app.infrastructure.networkSegments.map((seg: any) => ({ id: seg.id, name: seg.name, type: 'network' })));
+    }
+    return infra;
+  }
+  return [];
 };
 
 const loadLatestResults = async () => {
