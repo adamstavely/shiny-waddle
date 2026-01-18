@@ -958,10 +958,13 @@ Tests service-to-service authentication.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
   "source": "service-1",
   "target": "service-2"
 }
 ```
+
+**Note:** `applicationId` is optional. If provided, the test will use the API Gateway configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -988,6 +991,14 @@ Tests firewall rule configuration.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "networkSegmentId": "segment-456"
+}
+```
+
+**Alternative Request Body (inline configuration):**
+```json
+{
   "rules": [
     {
       "name": "test-rule",
@@ -1001,6 +1012,8 @@ Tests firewall rule configuration.
   ]
 }
 ```
+
+**Note:** Either provide `applicationId` and `networkSegmentId` to use infrastructure configuration from an application, or provide `rules` directly for inline testing.
 
 **Response:**
 ```json
@@ -1031,10 +1044,14 @@ Tests service-to-service network connectivity.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "networkSegmentId": "segment-456",
   "source": "service-1",
   "target": "service-2"
 }
 ```
+
+**Note:** `applicationId` and `networkSegmentId` are optional. If provided, the test will use the network segment configuration from the application's infrastructure.
 
 **Response:**
 ```json
@@ -1062,6 +1079,14 @@ Validates network segmentation.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "networkSegmentId": "segment-456"
+}
+```
+
+**Alternative Request Body (inline configuration):**
+```json
+{
   "segments": [
     {
       "id": "segment-1",
@@ -1073,6 +1098,8 @@ Validates network segmentation.
   ]
 }
 ```
+
+**Note:** Either provide `applicationId` and `networkSegmentId` to use infrastructure configuration from an application, or provide `segments` directly for inline testing.
 
 **Response:**
 ```json
@@ -1100,6 +1127,14 @@ Tests service mesh policy enforcement.
 **Request Body:**
 ```json
 {
+  "applicationId": "app-123",
+  "networkSegmentId": "segment-456"
+}
+```
+
+**Alternative Request Body (inline configuration):**
+```json
+{
   "config": {
     "name": "test-mesh",
     "type": "istio",
@@ -1107,6 +1142,8 @@ Tests service mesh policy enforcement.
   }
 }
 ```
+
+**Note:** Either provide `applicationId` and `networkSegmentId` to use infrastructure configuration from an application, or provide `config` directly for inline testing.
 
 **Response:**
 ```json
@@ -1122,6 +1159,127 @@ Tests service mesh policy enforcement.
   "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
+
+### API Security
+
+#### Run API Security Test
+```http
+POST /api/api-security/tests
+```
+
+Runs API security tests for an application.
+
+**Request Body:**
+```json
+{
+  "applicationId": "app-123",
+  "context": {
+    "buildId": "build-456",
+    "runId": "run-789",
+    "commitSha": "abc123",
+    "branch": "main"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "testType": "api-security",
+  "testName": "API Security Test",
+  "passed": true,
+  "details": {
+    "config": {},
+    "endpoints": [],
+    "results": []
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Note:** The test uses the API Security configuration from the application's infrastructure (`application.infrastructure.apiSecurity`).
+
+### Distributed Systems
+
+#### Run Distributed Systems Test
+```http
+POST /api/distributed-systems/tests/run
+```
+
+Runs distributed systems tests for multi-region access and policy synchronization.
+
+**Request Body:**
+```json
+{
+  "applicationId": "app-123",
+  "regions": [
+    {
+      "id": "us-east-1",
+      "name": "US East",
+      "endpoint": "https://api-us-east.example.com"
+    }
+  ],
+  "testTypes": ["policy-sync", "region-isolation"]
+}
+```
+
+**Response:**
+```json
+{
+  "testType": "distributed-systems",
+  "testName": "Distributed Systems Test",
+  "passed": true,
+  "details": {
+    "regions": [],
+    "policySync": {},
+    "regionIsolation": {}
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Note:** If `applicationId` is provided, the test uses the Distributed Systems configuration from the application's infrastructure (`application.infrastructure.distributedSystems`). Otherwise, provide `regions` directly.
+
+### Data Pipeline
+
+#### Run Data Pipeline Test
+```http
+POST /api/data-pipeline/applications/:applicationId/test
+```
+
+Runs data pipeline tests for an application.
+
+**Path Parameters:**
+- `applicationId` (string, required): Application ID
+
+**Request Body:**
+```json
+{
+  "buildId": "build-456",
+  "runId": "run-789",
+  "commitSha": "abc123",
+  "branch": "main"
+}
+```
+
+**Response:**
+```json
+{
+  "testType": "data-pipeline",
+  "testName": "Data Pipeline Test",
+  "passed": true,
+  "details": {
+    "pipelineType": "etl",
+    "connection": {},
+    "dataSource": {},
+    "dataDestination": {},
+    "validationResults": []
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Note:** The test uses the Data Pipeline configuration from the application's infrastructure (`application.infrastructure.dataPipeline`).
 
 ## Compliance Endpoints
 
@@ -1310,35 +1468,44 @@ Checks all security gates for a pull request.
 }
 ```
 
-## Applications and Test Configurations Endpoints
+## Applications Endpoints
 
-### Application Test/Validator Management
+### Application Infrastructure Model
 
-Data stewards and cyber risk managers can toggle tests and validators on/off for specific applications.
+Applications now store their infrastructure configuration directly within the `Application` entity. Infrastructure configurations (databases, network segments, DLP, API Gateway, API Security, Distributed Systems, Data Pipelines) are stored in `application.infrastructure` rather than in separate test configuration entities.
 
-#### Toggle Test Configuration for Application
-
-Enable or disable a specific test configuration for an application.
-
-```http
-PATCH /api/applications/:id/test-configurations/:configId/toggle
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-- `configId` (string, required): Test configuration ID
-
-**Request Body:**
+**Infrastructure Structure:**
 ```json
 {
-  "enabled": true,
-  "reason": "Temporarily disabled for maintenance"
+  "infrastructure": {
+    "databases": [
+      {
+        "id": "db-123",
+        "name": "Primary Database",
+        "type": "postgresql",
+        "host": "localhost",
+        "port": 5432
+      }
+    ],
+    "networkSegments": [
+      {
+        "id": "segment-123",
+        "name": "Frontend Segment",
+        "firewallRules": []
+      }
+    ],
+    "dlp": { /* DLP configuration */ },
+    "apiGateway": { /* API Gateway configuration */ },
+    "apiSecurity": { /* API Security configuration */ },
+    "distributedSystems": { /* Distributed Systems configuration */ },
+    "dataPipeline": { /* Data Pipeline configuration */ }
+  }
 }
 ```
 
-**Response:** Application object with updated overrides
+### Application Test/Validator Management
 
-**Permissions Required:** `MANAGE_APPLICATION_TESTS` (Data Steward, Cyber Risk Manager, or Admin)
+Data stewards and cyber risk managers can toggle validators on/off for specific applications.
 
 #### Toggle Validator for Application
 
@@ -1363,37 +1530,6 @@ PATCH /api/applications/:id/validators/:validatorId/toggle
 **Response:** Application object with updated overrides
 
 **Permissions Required:** `MANAGE_APPLICATION_VALIDATORS` (Data Steward, Cyber Risk Manager, or Admin)
-
-#### Get Test Configuration Status
-
-Get the status of all test configurations for an application, including override information.
-
-```http
-GET /api/applications/:id/test-configurations/status
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-
-**Response:**
-```json
-[
-  {
-    "configId": "config-123",
-    "name": "RLS Coverage Test",
-    "type": "rls-cls",
-    "enabled": true,
-    "override": {
-      "enabled": false,
-      "reason": "Temporarily disabled",
-      "updatedBy": "user@example.com",
-      "updatedAt": "2024-01-15T10:00:00Z"
-    }
-  }
-]
-```
-
-**Permissions Required:** `READ_APPLICATIONS`
 
 #### Get Validator Status
 
@@ -1426,39 +1562,6 @@ GET /api/applications/:id/validators/status
 
 **Permissions Required:** `READ_APPLICATIONS`
 
-#### Bulk Toggle Test Configurations
-
-Toggle multiple test configurations at once.
-
-```http
-PATCH /api/applications/:id/test-configurations/bulk-toggle
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-
-**Request Body:**
-```json
-{
-  "items": [
-    {
-      "id": "config-123",
-      "enabled": true,
-      "reason": "Re-enabled after fix"
-    },
-    {
-      "id": "config-456",
-      "enabled": false,
-      "reason": "Temporarily disabled"
-    }
-  ]
-}
-```
-
-**Response:** Application object with updated overrides
-
-**Permissions Required:** `MANAGE_APPLICATION_TESTS`
-
 #### Bulk Toggle Validators
 
 Toggle multiple validators at once.
@@ -1487,22 +1590,6 @@ PATCH /api/applications/:id/validators/bulk-toggle
 
 **Permissions Required:** `MANAGE_APPLICATION_VALIDATORS`
 
-#### Remove Test Configuration Override
-
-Remove an override for a test configuration, reverting to default state.
-
-```http
-DELETE /api/applications/:id/test-configurations/:configId/override
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-- `configId` (string, required): Test configuration ID
-
-**Response:** Application object with override removed
-
-**Permissions Required:** `MANAGE_APPLICATION_TESTS`
-
 #### Remove Validator Override
 
 Remove an override for a validator, reverting to default state.
@@ -1519,92 +1606,9 @@ DELETE /api/applications/:id/validators/:validatorId/override
 
 **Permissions Required:** `MANAGE_APPLICATION_VALIDATORS`
 
-## Applications and Test Configurations Endpoints
-
-### Assign Test Configurations to Application
-
-Assign test configurations to an application. Test assignments are managed externally (not by users in the UI).
-
-```http
-POST /api/applications/:id/test-configurations
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-
-**Request Body:**
-```json
-{
-  "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"]
-}
-```
-
-**Response:**
-```json
-{
-  "id": "app-123",
-  "name": "My Application",
-  "type": "api",
-  "status": "active",
-  "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"],
-  "registeredAt": "2024-01-15T10:00:00Z",
-  "updatedAt": "2024-01-15T10:30:00Z"
-}
-```
-
-**Status Codes:**
-- `200` - Success
-- `400` - Bad Request (invalid test configuration IDs)
-- `404` - Application not found
-
-### Get Application Test Configurations
-
-Retrieve test configurations assigned to an application.
-
-```http
-GET /api/applications/:id/test-configurations
-```
-
-**Path Parameters:**
-- `id` (string, required): Application ID
-
-**Query Parameters:**
-- `expand` (boolean, optional): If `true`, returns full test configuration objects instead of just IDs
-
-**Response (without expand):**
-```json
-["config-id-1", "config-id-2", "config-id-3"]
-```
-
-**Response (with expand=true):**
-```json
-[
-  {
-    "id": "config-id-1",
-    "name": "RLS/CLS Test Config",
-    "type": "rls-cls",
-    "description": "Test configuration for RLS/CLS coverage",
-    "createdAt": "2024-01-10T10:00:00Z",
-    "updatedAt": "2024-01-10T10:00:00Z"
-  },
-  {
-    "id": "config-id-2",
-    "name": "DLP Test Config",
-    "type": "dlp",
-    "description": "Test configuration for DLP patterns",
-    "createdAt": "2024-01-11T10:00:00Z",
-    "updatedAt": "2024-01-11T10:00:00Z"
-  }
-]
-```
-
-**Status Codes:**
-- `200` - Success
-- `404` - Application not found
-
 ### Run Tests for Application (CI/CD Integration)
 
-Execute all assigned test configurations for an application. This is the primary endpoint for CI/CD pipeline integration.
+Execute tests for an application using its infrastructure configuration. This is the primary endpoint for CI/CD pipeline integration.
 
 ```http
 POST /api/applications/:id/run-tests
@@ -1633,8 +1637,7 @@ POST /api/applications/app-123/run-tests?buildId=build-456&commitSha=abc123def&b
   "failed": 0,
   "results": [
     {
-      "configId": "config-id-1",
-      "configName": "RLS/CLS Test Config",
+      "testType": "rls-cls",
       "passed": true,
       "result": {
         "passed": true,
@@ -1643,13 +1646,11 @@ POST /api/applications/app-123/run-tests?buildId=build-456&commitSha=abc123def&b
         "buildId": "build-456",
         "commitSha": "abc123def",
         "branch": "main",
-        "testConfigurationId": "config-id-1",
-        "testConfigurationName": "RLS/CLS Test Config",
         "timestamp": "2024-01-15T10:30:00Z"
       }
     },
     {
-      "configId": "config-id-2",
+      "testType": "dlp",
       "configName": "DLP Test Config",
       "passed": true,
       "result": {
@@ -1691,46 +1692,6 @@ POST /api/applications/app-123/run-tests?buildId=build-456&commitSha=abc123def&b
 - `404` - Application not found
 
 **Note:** If no test configurations are assigned to the application, the response will have `status: "passed"`, `totalTests: 0`, and an empty `results` array.
-
-### Get Applications Using Test Configuration
-
-Retrieve all applications that have a specific test configuration assigned.
-
-```http
-GET /api/test-configurations/:id/applications
-```
-
-**Path Parameters:**
-- `id` (string, required): Test configuration ID
-
-**Response:**
-```json
-[
-  {
-    "id": "app-123",
-    "name": "My Application",
-    "type": "api",
-    "status": "active",
-    "baseUrl": "https://api.example.com",
-    "team": "backend-team",
-    "registeredAt": "2024-01-15T10:00:00Z",
-    "lastTestAt": "2024-01-15T10:30:00Z",
-    "updatedAt": "2024-01-15T10:30:00Z"
-  },
-  {
-    "id": "app-456",
-    "name": "Another Application",
-    "type": "web",
-    "status": "active",
-    "registeredAt": "2024-01-16T10:00:00Z",
-    "updatedAt": "2024-01-16T10:00:00Z"
-  }
-]
-```
-
-**Status Codes:**
-- `200` - Success
-- `404` - Test configuration not found
 
 ## CI/CD Integration Examples
 
@@ -1816,19 +1777,9 @@ pipeline {
 }
 ```
 
-### Assigning Tests to Applications (External System)
-
-External systems can assign test configurations to applications:
-
-```bash
-curl -X POST "http://heimdall-api/api/applications/app-123/test-configurations" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "testConfigurationIds": ["config-id-1", "config-id-2", "config-id-3"]
-  }'
-```
-
 ## Test Results Endpoints
+
+**Note:** Test results may still contain `testConfigurationId` and `testConfigurationName` fields for backward compatibility with legacy data. New test results use infrastructure-based testing and may not include these fields.
 
 ### Query Test Results
 
@@ -1840,7 +1791,7 @@ GET /api/test-results
 
 **Query Parameters:**
 - `applicationId` (string, optional): Filter by application ID
-- `testConfigurationId` (string, optional): Filter by test configuration ID
+- `testConfigurationId` (string, optional): Filter by test configuration ID (deprecated, for legacy data only)
 - `buildId` (string, optional): Filter by CI/CD build ID
 - `branch` (string, optional): Filter by Git branch name
 - `status` (string, optional): Filter by status (`passed`, `failed`, `partial`, `error`)
