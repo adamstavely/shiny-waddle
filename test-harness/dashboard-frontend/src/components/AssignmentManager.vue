@@ -191,7 +191,7 @@ const loadHarnesses = async () => {
   loadingHarnesses.value = true;
   harnessesError.value = null;
   try {
-    const response = await axios.get(`/api/applications/${props.applicationId}/test-harnesses`);
+    const response = await axios.get(`/api/v1/applications/${props.applicationId}/test-harnesses`);
     assignedHarnesses.value = response.data || [];
   } catch (err: any) {
     harnessesError.value = err.response?.data?.message || 'Failed to load test harnesses';
@@ -205,7 +205,7 @@ const loadBatteries = async () => {
   loadingBatteries.value = true;
   batteriesError.value = null;
   try {
-    const response = await axios.get(`/api/applications/${props.applicationId}/test-batteries`);
+    const response = await axios.get(`/api/v1/applications/${props.applicationId}/test-batteries`);
     assignedBatteries.value = response.data || [];
   } catch (err: any) {
     batteriesError.value = err.response?.data?.message || 'Failed to load test batteries';

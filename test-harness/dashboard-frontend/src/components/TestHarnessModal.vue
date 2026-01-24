@@ -208,7 +208,7 @@ const loadApplications = async () => {
   loadingApplications.value = true;
   applicationsError.value = null;
   try {
-    const response = await axios.get('/api/applications');
+    const response = await axios.get("/api/v1/applications");
     availableApplications.value = response.data || [];
   } catch (err: any) {
     applicationsError.value = err.response?.data?.message || 'Failed to load applications';

@@ -280,7 +280,7 @@ const loadResults = async () => {
 
 const loadApplications = async () => {
   try {
-    const response = await axios.get('/api/applications');
+    const response = await axios.get("/api/v1/applications");
     applications.value = response.data;
   } catch (err) {
     console.error('Error loading applications:', err);

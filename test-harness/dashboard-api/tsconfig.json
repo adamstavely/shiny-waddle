@@ -11,8 +11,8 @@
     "outDir": "./dist",
     "baseUrl": "..",
     "paths": {
-      "../../core/*": ["core/*"],
-      "../../services/*": ["services/*"]
+      "../../core/*": ["../core/*"],
+      "../../services/*": ["../services/*"]
     },
     "incremental": true,
     "skipLibCheck": true,

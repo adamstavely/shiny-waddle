@@ -372,7 +372,7 @@ const loadApplications = async () => {
   try {
     const promises = harness.value.applicationIds.map(async (appId) => {
       try {
-        const response = await axios.get(`/api/applications/${appId}`);
+        const response = await axios.get(`/api/v1/applications/${appId}`);
         return response.data;
       } catch (err) {
         console.error(`Error loading application ${appId}:`, err);
@@ -411,7 +411,7 @@ const loadAvailableSuites = async () => {
 const loadAvailableApplications = async () => {
   loadingAvailableApplications.value = true;
   try {
-    const response = await axios.get('/api/applications');
+    const response = await axios.get("/api/v1/applications");
     const allApplications = response.data || [];
     // Filter out applications already assigned to the harness
     const currentApplicationIds = harness.value?.applicationIds || [];

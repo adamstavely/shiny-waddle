@@ -931,7 +931,7 @@ const loadApplications = async () => {
   try {
     loadingApplications.value = true;
     applicationsError.value = null;
-    const response = await axios.get('/api/applications');
+    const response = await axios.get("/api/v1/applications");
     applications.value = response.data.map((app: any) => ({
       ...app,
       registeredAt: new Date(app.registeredAt),
@@ -1416,7 +1416,7 @@ const formatDuration = (ms: number) => {
 
 const testApplication = async (app: any) => {
   try {
-    const response = await axios.post(`/api/applications/${app.id}/run-tests`);
+    const response = await axios.post(`/api/v1/applications/${app.id}/run-tests`);
     // Reload applications to update lastTestAt
     await loadApplications();
     // Reload test results
@@ -1450,7 +1450,7 @@ const deleteApplication = async (id: string) => {
   }
   
   try {
-    await axios.delete(`/api/applications/${id}`);
+    await axios.delete(`/api/v1/applications/${id}`);
     await loadApplications();
   } catch (err: any) {
     console.error('Error deleting application:', err);
@@ -1476,10 +1476,10 @@ const saveApplication = async () => {
 
     if (editingApp.value) {
       // Update existing
-      await axios.patch(`/api/applications/${editingApp.value.id}`, payload);
+      await axios.patch(`/api/v1/applications/${editingApp.value.id}`, payload);
     } else {
       // Create new
-      await axios.post('/api/applications', {
+      await axios.post("/api/v1/applications", {
         ...payload,
         id: appForm.value.id
       });

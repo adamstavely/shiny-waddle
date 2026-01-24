@@ -9,6 +9,7 @@
     "dashboard:api": "cd dashboard-api && npm run start:dev",
     "dashboard:frontend": "cd dashboard-frontend && npm run dev",
     "dashboard:install": "cd dashboard-api && npm install && cd ../dashboard-frontend && npm install",
+    "dashboard:start": "./start-local.sh",
     "build": "tsc",
     "lint": "eslint src --ext .ts"
   },

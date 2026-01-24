@@ -17,7 +17,7 @@ import { UpdateAlertRuleDto } from './dto/update-alert-rule.dto';
 import { CreateAlertChannelDto } from './dto/create-alert-channel.dto';
 import { UpdateAlertChannelDto } from './dto/update-alert-channel.dto';
 import { AlertQueryDto } from './dto/alert-query.dto';
-import { UnifiedFinding } from '../../../../core/unified-finding-schema';
+import { UnifiedFinding } from '../../../core/unified-finding-schema';
 
 @Controller('api/alerting')
 export class AlertingController {

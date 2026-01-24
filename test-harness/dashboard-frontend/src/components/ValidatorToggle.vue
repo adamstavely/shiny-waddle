@@ -105,7 +105,7 @@ const handleToggle = async () => {
   loading.value = true;
   try {
     await axios.patch(
-      `/api/applications/${props.applicationId}/validators/${props.validator.validatorId}/toggle`,
+      `/api/v1/applications/${props.applicationId}/validators/${props.validator.validatorId}/toggle`,
       { enabled, reason: toggleReason.value || undefined }
     );
     showToggleModal.value = false;
@@ -127,7 +127,7 @@ const handleRemoveOverride = async () => {
   loading.value = true;
   try {
     await axios.delete(
-      `/api/applications/${props.applicationId}/validators/${props.validator.validatorId}/override`
+      `/api/v1/applications/${props.applicationId}/validators/${props.validator.validatorId}/override`
     );
     emit('updated');
   } catch (error: any) {
