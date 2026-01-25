@@ -506,13 +506,14 @@ describe('Test Creation Workflow (Integration)', () => {
 - Accessibility
 
 **Target:** 50+ components with unit tests  
-**Progress:** 19 components tested ✅ (38% of target)  
-- Base components: BaseForm ✅, BaseModal ✅, BaseTable ✅  
+**Progress:** 23 components tested ✅ (46% of target)  
+- Base components: BaseForm ✅, BaseModal ✅, BaseTable ✅, BaseButton ✅, BaseCard ✅  
 - Navigation: Sidebar ✅, Drawer ✅, Breadcrumb ✅  
 - Charts: BarChart ✅, LineChart ✅, ComplianceScoreGauge ✅, RiskHeatmap ✅  
 - Forms: AccessControlTestForm ✅, DLPTestForm ✅, NetworkPolicyTestForm ✅, APISecurityTestForm ✅  
 - Modals: TestModal ✅, TestSuiteBuilderModal ✅, TestBatteryModal ✅, TestHarnessModal ✅  
-- Tables: TestResultsTable ✅
+- Tables: TestResultsTable ✅  
+- UI Components: StatusBadge ✅, EmptyState ✅, Dropdown ✅
 
 ### 5.2 Page Component Tests (Week 19)
 
@@ -853,7 +854,7 @@ test('user can create test', async ({ page }) => {
 
 ### 🚧 In Progress
 
-**Phase 5.1:** Component Unit Tests - **IN PROGRESS** (19/50+ components tested - 38% complete)
+**Phase 5.1:** Component Unit Tests - **IN PROGRESS** (23/50+ components tested - 46% complete)
 - ✅ Test utilities and setup files created
 - ✅ Base components tested (BaseForm, BaseModal, BaseTable)
 - ✅ Navigation components tested (Sidebar, Drawer, Breadcrumb)
@@ -861,6 +862,7 @@ test('user can create test', async ({ page }) => {
 - ✅ Form components tested (AccessControlTestForm, DLPTestForm, NetworkPolicyTestForm, APISecurityTestForm)
 - ✅ Modal components tested (TestModal, TestSuiteBuilderModal, TestBatteryModal, TestHarnessModal)
 - ✅ Table components tested (TestResultsTable)
+- ✅ Base UI components tested (BaseButton, BaseCard, StatusBadge, EmptyState, Dropdown)
 
 ### ✅ Recently Completed
 
@@ -928,7 +930,7 @@ test('user can create test', async ({ page }) => {
 - **100% utility & middleware test coverage** ✅
 - **12 new service test files** created in Phase 2.5: `api-security`, `cicd`, `cloud-provider`, `compliance-snapshots`, `context-detector`, `iam`, `remediation-automation`, `reports`, `scheduler`, `siem`, `test-loader` (172 tests total)
 - **9 integration test files** created (5 workflow tests + 2 database tests + 2 external service tests)
-- **19 frontend component test files** created (BaseForm, BaseModal, BaseTable, Sidebar, Drawer, Breadcrumb, BarChart, LineChart, ComplianceScoreGauge, RiskHeatmap, AccessControlTestForm, DLPTestForm, NetworkPolicyTestForm, APISecurityTestForm, TestModal, TestSuiteBuilderModal, TestBatteryModal, TestHarnessModal, TestResultsTable)
+- **23 frontend component test files** created (BaseForm, BaseModal, BaseTable, BaseButton, BaseCard, Sidebar, Drawer, Breadcrumb, BarChart, LineChart, ComplianceScoreGauge, RiskHeatmap, AccessControlTestForm, DLPTestForm, NetworkPolicyTestForm, APISecurityTestForm, TestModal, TestSuiteBuilderModal, TestBatteryModal, TestHarnessModal, TestResultsTable, StatusBadge, EmptyState, Dropdown)
 - **Frontend testing infrastructure** fully configured
 - **Test utilities and documentation** established
 
@@ -941,7 +943,7 @@ test('user can create test', async ({ page }) => {
 - **Database integration tests** - **Phase 3.2 COMPLETE** ✅ (File persistence layer tested)
 - **External service integration tests** - **Phase 3.3 COMPLETE** ✅ (API mocking and error handling tested)
 - **E2E test expansion** (11 more files needed)
-- **Frontend component tests** - **Phase 5.1 IN PROGRESS** ✅ (19 components tested: BaseForm, BaseModal, BaseTable, Sidebar, Drawer, Breadcrumb, BarChart, LineChart, ComplianceScoreGauge, RiskHeatmap, AccessControlTestForm, DLPTestForm, NetworkPolicyTestForm, APISecurityTestForm, TestModal, TestSuiteBuilderModal, TestBatteryModal, TestHarnessModal, TestResultsTable)
+- **Frontend component tests** - **Phase 5.1 IN PROGRESS** ✅ (23 components tested: BaseForm, BaseModal, BaseTable, BaseButton, BaseCard, Sidebar, Drawer, Breadcrumb, BarChart, LineChart, ComplianceScoreGauge, RiskHeatmap, AccessControlTestForm, DLPTestForm, NetworkPolicyTestForm, APISecurityTestForm, TestModal, TestSuiteBuilderModal, TestBatteryModal, TestHarnessModal, TestResultsTable, StatusBadge, EmptyState, Dropdown)
 - **Frontend E2E tests** (infrastructure ready, tests needed)
 - **CI/CD integration** with coverage gates
 
