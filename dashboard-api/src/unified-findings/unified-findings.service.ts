@@ -159,7 +159,7 @@ export class UnifiedFindingsService {
       }
 
       // Notify about new critical findings
-      if (isNew && finding.severity === 'critical' && this.notificationsService) {
+      if (isNew && finding.severity === 'critical') {
         try {
           const userIds = await this.getUsersToNotify(
             finding.asset.applicationId ? [finding.asset.applicationId] : undefined

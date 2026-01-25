@@ -199,9 +199,13 @@ export class RemediationAutomationService {
     }
 
     try {
-      const preferences = this.notificationsService.getUserPreferences(tracking.assignedTo);
+      const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+      if (!notificationsService) {
+        return;
+      }
+      const preferences = notificationsService.getUserPreferences(tracking.assignedTo);
       if (preferences.enabled) {
-        await this.notificationsService.createNotification({
+        await notificationsService.createNotification({
           userId: tracking.assignedTo,
           type: NotificationType.MILESTONE_DEADLINE,
           title: `Milestone Deadline Approaching`,

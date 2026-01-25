@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { Application, ApplicationType, ApplicationStatus } from '../applications/entities/application.entity';
+import { Application } from '../applications/entities/application.entity';
+import { ApplicationType, ApplicationStatus } from '../applications/dto/create-application.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
