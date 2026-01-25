@@ -1,0 +1,188 @@
+# Default values for heimdall
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+# API (Backend) Configuration
+api:
+  enabled: true
+  image:
+    repository: heimdall-api
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 3001
+    targetPort: 3001
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    NODE_ENV: production
+    PORT: "3001"
+    CORS_ORIGIN: "http://localhost:5173"  # Will be overridden by ingress
+    LOG_LEVEL: INFO
+    LOG_FORMAT: json
+    # HTTPS Configuration (optional)
+    HTTPS_ENABLED: "false"
+    # HTTPS_KEY_PATH: "/etc/ssl/private/key.pem"
+    # HTTPS_CERT_PATH: "/etc/ssl/certs/cert.pem"
+    # Encryption key (hex-encoded 32-byte key for AES-256)
+    # Generate with: openssl rand -hex 32
+    # ENCRYPTION_KEY: ""
+    # Data directory (where secrets and audit logs are stored)
+    DATA_DIR: "/app/data"
+  volumeMounts:
+    - name: data
+      mountPath: /app/data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: heimdall-api-data
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3001
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3001
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Frontend Configuration
+frontend:
+  enabled: true
+  image:
+    repository: heimdall-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    VITE_API_URL: ""  # Will be set based on ingress configuration
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: heimdall.local
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix
+  tls: []
+    # - secretName: heimdall-tls
+    #   hosts:
+    #     - heimdall.local
+
+# Persistent Volume Claims
+persistence:
+  enabled: true
+  api:
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Security Context
+securityContext:
+  api:
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+  frontend:
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+
+# Autoscaling
+autoscaling:
+  api:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  frontend:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  api:
+    enabled: false
+    minAvailable: 1
+  frontend:
+    enabled: false
+    minAvailable: 1

@@ -1,0 +1,18 @@
+{{- if and .Values.api.enabled .Values.podDisruptionBudget.api.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "heimdall.fullname" . }}-api
+  labels:
+    {{- include "heimdall.api.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.podDisruptionBudget.api.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.api.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.api.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.api.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "heimdall.api.selectorLabels" . | nindent 6 }}
+{{- end }}

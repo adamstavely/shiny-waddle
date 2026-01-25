@@ -1,0 +1,50 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  {{- if eq .path "/" }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}/
+  {{- end }}
+  {{- end }}
+{{- end }}
+
+  API: http{{ if .Values.ingress.tls }}s{{ end }}://{{ (index .Values.ingress.hosts 0).host }}/api
+{{- else if contains "NodePort" .Values.api.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "heimdall.fullname" . }}-api)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "API: http://$NODE_IP:$NODE_PORT"
+
+  export FRONTEND_NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "heimdall.fullname" . }}-frontend)
+  echo "Frontend: http://$NODE_IP:$FRONTEND_NODE_PORT"
+{{- else if contains "LoadBalancer" .Values.api.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "heimdall.fullname" . }}-api'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "heimdall.fullname" . }}-api --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "API: http://$SERVICE_IP:{{ .Values.api.service.port }}"
+
+  export FRONTEND_SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "heimdall.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Frontend: http://$FRONTEND_SERVICE_IP:{{ .Values.frontend.service.port }}"
+{{- else if contains "ClusterIP" .Values.api.service.type }}
+  echo "Access the API via port-forward:"
+  echo "  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "heimdall.fullname" . }}-api {{ .Values.api.service.port }}:{{ .Values.api.service.port }}"
+  echo ""
+  echo "Access the Frontend via port-forward:"
+  echo "  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "heimdall.fullname" . }}-frontend {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }}"
+{{- end }}
+
+2. Check pod status:
+  kubectl get pods --namespace {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "heimdall.name" . }}
+
+3. View logs:
+  API: kubectl logs --namespace {{ .Release.Namespace }} -l app.kubernetes.io/component=api --tail=100
+  Frontend: kubectl logs --namespace {{ .Release.Namespace }} -l app.kubernetes.io/component=frontend --tail=100
+
+{{- if .Values.api.env.ENCRYPTION_KEY }}
+4. Encryption key is configured via secret.
+{{- else }}
+4. WARNING: Encryption key is not set. Set api.env.ENCRYPTION_KEY in production!
+{{- end }}
+
+{{- if eq .Values.api.env.HTTPS_ENABLED "false" }}
+5. WARNING: HTTPS is disabled. Enable HTTPS in production for security!
+{{- end }}

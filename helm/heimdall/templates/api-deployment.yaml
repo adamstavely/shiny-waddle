@@ -1,0 +1,122 @@
+{{- if .Values.api.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "heimdall.fullname" . }}-api
+  labels:
+    {{- include "heimdall.api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "heimdall.api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/api-configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/api-secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "heimdall.api.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "heimdall.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          securityContext:
+            {{- toYaml .Values.securityContext.api | nindent 12 }}
+          image: "{{ include "heimdall.api.image" . }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.api.env.NODE_ENV | quote }}
+            - name: PORT
+              value: {{ .Values.api.env.PORT | quote }}
+            - name: CORS_ORIGIN
+              value: {{ include "heimdall.api.corsOrigin" . | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.api.env.LOG_LEVEL | quote }}
+            - name: LOG_FORMAT
+              value: {{ .Values.api.env.LOG_FORMAT | quote }}
+            - name: DATA_DIR
+              value: {{ .Values.api.env.DATA_DIR | quote }}
+            {{- if .Values.api.env.HTTPS_ENABLED }}
+            - name: HTTPS_ENABLED
+              value: {{ .Values.api.env.HTTPS_ENABLED | quote }}
+            {{- end }}
+            {{- if .Values.api.env.HTTPS_KEY_PATH }}
+            - name: HTTPS_KEY_PATH
+              value: {{ .Values.api.env.HTTPS_KEY_PATH | quote }}
+            {{- end }}
+            {{- if .Values.api.env.HTTPS_CERT_PATH }}
+            - name: HTTPS_CERT_PATH
+              value: {{ .Values.api.env.HTTPS_CERT_PATH | quote }}
+            {{- end }}
+            {{- if .Values.api.env.ENCRYPTION_KEY }}
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "heimdall.fullname" . }}-api-secret
+                  key: encryption-key
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.api.volumeMounts }}
+            {{- toYaml .Values.api.volumeMounts | nindent 12 }}
+            {{- end }}
+            {{- if .Values.api.env.HTTPS_KEY_PATH }}
+            - name: https-key
+              mountPath: {{ dir .Values.api.env.HTTPS_KEY_PATH }}
+              readOnly: true
+            {{- end }}
+            {{- if .Values.api.env.HTTPS_CERT_PATH }}
+            - name: https-cert
+              mountPath: {{ dir .Values.api.env.HTTPS_CERT_PATH }}
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.api.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.api.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+      {{- if .Values.api.volumes }}
+      volumes:
+        {{- toYaml .Values.api.volumes | nindent 8 }}
+      {{- end }}
+      {{- if .Values.api.env.HTTPS_KEY_PATH }}
+        - name: https-key
+          secret:
+            secretName: {{ include "heimdall.fullname" . }}-tls
+            items:
+              - key: tls.key
+                path: key.pem
+      {{- end }}
+      {{- if .Values.api.env.HTTPS_CERT_PATH }}
+        - name: https-cert
+          secret:
+            secretName: {{ include "heimdall.fullname" . }}-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+      {{- end }}
+      {{- with .Values.api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

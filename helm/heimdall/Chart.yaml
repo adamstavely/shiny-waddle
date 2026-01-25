@@ -1,0 +1,16 @@
+apiVersion: v2
+name: heimdall
+description: A Helm chart for Heimdall - Data Access Testing Framework
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - compliance
+  - testing
+  - access-control
+  - data-governance
+maintainers:
+  - name: Heimdall Team
+home: https://github.com/research-tracker/heimdall
+sources:
+  - https://github.com/research-tracker/heimdall

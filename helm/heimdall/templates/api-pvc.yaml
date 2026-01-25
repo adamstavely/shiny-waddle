@@ -1,0 +1,17 @@
+{{- if and .Values.api.enabled .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "heimdall.fullname" . }}-api-data
+  labels:
+    {{- include "heimdall.api.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.api.accessMode }}
+  {{- if .Values.persistence.api.storageClass }}
+  storageClassName: {{ .Values.persistence.api.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.api.size }}
+{{- end }}
