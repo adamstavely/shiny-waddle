@@ -11,8 +11,8 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { UnifiedFindingsService } from './unified-findings.service';
-import { UnifiedFinding } from '../../heimdall-framework/core/unified-finding-schema';
-import { ScannerResult } from '../../heimdall-framework/services/normalization-engine';
+import { UnifiedFinding } from '../../../heimdall-framework/core/unified-finding-schema';
+import { ScannerResult } from '../../../heimdall-framework/services/normalization-engine';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UserContext } from '../common/interfaces/user-context.interface';
 

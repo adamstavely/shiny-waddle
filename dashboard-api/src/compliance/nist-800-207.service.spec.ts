@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { NIST800207Service } from './nist-800-207.service';
-import { NIST800207Compliance } from '../../heimdall-framework/services/nist-800-207-compliance';
+import { NIST800207Compliance } from '../../../heimdall-framework/services/nist-800-207-compliance';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

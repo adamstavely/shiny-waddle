@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { IAMIntegration, SSOConfig, RBACConfig, PAMConfig, IdPConfig, User, Role, Permission } from '../../../../services/iam-integration';
+import { IAMIntegration, SSOConfig, RBACConfig, PAMConfig, IdPConfig, User, Role, Permission } from '../../../../heimdall-framework/services/iam-integration';
 
 @Injectable()
 export class IAMService {

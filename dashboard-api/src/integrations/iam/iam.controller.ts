@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpStatus, HttpException } from '@nestjs/common';
 import { IAMService } from './iam.service';
-import { SSOConfig, RBACConfig, PAMConfig, IdPConfig } from '../../../../services/iam-integration';
+import { SSOConfig, RBACConfig, PAMConfig, IdPConfig } from '../../../../heimdall-framework/services/iam-integration';
 
 @Controller('api/integrations/iam')
 export class IAMController {

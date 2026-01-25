@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PolicyValidationTester } from '../../heimdall-framework/services/policy-validation-tester';
-import { PolicyDecisionPoint } from '../../heimdall-framework/services/policy-decision-point';
-import { ABACPolicy, Resource, AccessControlConfig } from '../../heimdall-framework/core/types';
-import { PolicyTestCase } from '../../heimdall-framework/services/policy-as-code';
+import { PolicyValidationTester } from '../../../heimdall-framework/services/policy-validation-tester';
+import { PolicyDecisionPoint } from '../../../heimdall-framework/services/policy-decision-point';
+import { ABACPolicy, Resource, AccessControlConfig } from '../../../heimdall-framework/core/types';
+import { PolicyTestCase } from '../../../heimdall-framework/services/policy-as-code';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 @Injectable()

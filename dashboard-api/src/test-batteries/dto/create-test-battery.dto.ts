@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BatteryExecutionConfig } from '../../../../core/types';
+import { BatteryExecutionConfig } from '../../../../heimdall-framework/core/types';
 
 class BatteryExecutionConfigDto implements BatteryExecutionConfig {
   @IsOptional()

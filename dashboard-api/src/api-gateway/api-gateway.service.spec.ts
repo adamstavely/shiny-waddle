@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { APIGatewayService } from './api-gateway.service';
-import { APIGatewayTester } from '../../heimdall-framework/services/api-gateway-tester';
+import { APIGatewayTester } from '../../../heimdall-framework/services/api-gateway-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

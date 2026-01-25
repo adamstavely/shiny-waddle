@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { NetworkPolicyService } from './network-policy.service';
-import { NetworkMicrosegmentationTester } from '../../heimdall-framework/services/network-microsegmentation-tester';
+import { NetworkMicrosegmentationTester } from '../../../heimdall-framework/services/network-microsegmentation-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

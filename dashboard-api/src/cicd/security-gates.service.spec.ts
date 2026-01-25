@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { SecurityGatesService } from './security-gates.service';
-import { CICDSecurityGates } from '../../heimdall-framework/services/cicd-security-gates';
+import { CICDSecurityGates } from '../../../heimdall-framework/services/cicd-security-gates';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

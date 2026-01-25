@@ -1,4 +1,4 @@
-import { AlertRule, AlertCondition } from '../../../../services/alerting-engine';
+import { AlertRule, AlertCondition } from '../../../../heimdall-framework/services/alerting-engine';
 
 export interface AlertRuleEntity extends AlertRule {
   createdAt: Date;

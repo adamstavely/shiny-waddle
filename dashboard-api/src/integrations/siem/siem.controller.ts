@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, HttpStatus, HttpException } from '@nestjs/common';
 import { SIEMService } from './siem.service';
-import { SIEMConfig } from '../../../../services/siem-integration';
-import { UnifiedFinding } from '../../../../core/unified-finding-schema';
+import { SIEMConfig } from '../../../../heimdall-framework/services/siem-integration';
+import { UnifiedFinding } from '../../../../heimdall-framework/core/unified-finding-schema';
 
 @Controller('api/integrations/siem')
 export class SIEMController {

@@ -35,7 +35,12 @@ export class PlatformConfigService {
         const data = await fs.readFile(this.dataFile, 'utf-8');
         if (!data || data.trim() === '') {
           this.baselines = [];
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save platform config baselines file, continuing with empty array:', saveError);
+          }
           return;
         }
         const parsed = JSON.parse(data);
@@ -47,11 +52,21 @@ export class PlatformConfigService {
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.baselines = [];
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save platform config baselines file, continuing with empty array:', saveError);
+          }
         } else if (readError instanceof SyntaxError) {
           this.logger.error('JSON parsing error, initializing empty:', readError.message);
           this.baselines = [];
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save platform config baselines file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }

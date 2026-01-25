@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { SIEMIntegration, SIEMConfig, BaseSIEMAdapter, SplunkAdapter, QRadarAdapter, SentinelAdapter } from '../../../../services/siem-integration';
-import { UnifiedFinding } from '../../../../core/unified-finding-schema';
+import { SIEMIntegration, SIEMConfig, BaseSIEMAdapter, SplunkAdapter, QRadarAdapter, SentinelAdapter } from '../../../../heimdall-framework/services/siem-integration';
+import { UnifiedFinding } from '../../../../heimdall-framework/core/unified-finding-schema';
 
 @Injectable()
 export class SIEMService {

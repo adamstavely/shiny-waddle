@@ -11,7 +11,7 @@ import {
   IsIn,
 } from 'class-validator';
 import { TestSuiteStatus } from '../entities/test-suite.entity';
-import { TestDomain } from '../../../../core/types';
+import { TestDomain } from '../../../../heimdall-framework/core/types';
 
 // Valid test types
 const VALID_TEST_TYPES = [

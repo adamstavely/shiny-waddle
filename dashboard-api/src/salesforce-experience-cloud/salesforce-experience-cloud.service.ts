@@ -20,7 +20,7 @@ import {
   SalesforceExperienceCloudTester,
   SalesforceExperienceCloudConfig,
   SalesforceExperienceCloudTestResult,
-} from '../../heimdall-framework/services/salesforce-experience-cloud-tester';
+} from '../../../heimdall-framework/services/salesforce-experience-cloud-tester';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';

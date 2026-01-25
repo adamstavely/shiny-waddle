@@ -1,5 +1,5 @@
 import { ApplicationType, ApplicationStatus } from '../dto/create-application.dto';
-import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, ServiceMeshConfig } from '../../../../core/types';
+import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, ServiceMeshConfig } from '../../../../heimdall-framework/core/types';
 
 export interface ValidatorOverride {
   enabled: boolean;

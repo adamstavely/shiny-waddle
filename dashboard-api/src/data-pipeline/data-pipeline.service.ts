@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
-import { DataPipelineTester, PipelineTestConfig, PipelineTest } from '../../heimdall-framework/services/data-pipeline-tester';
+import { DataPipelineTester, PipelineTestConfig, PipelineTest } from '../../../heimdall-framework/services/data-pipeline-tester';
 import { ApplicationsService } from '../applications/applications.service';
 import { DataPipelineInfrastructure } from '../applications/entities/application.entity';
 

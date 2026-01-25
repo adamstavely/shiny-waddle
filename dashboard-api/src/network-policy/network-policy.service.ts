@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
-import { NetworkMicrosegmentationTester } from '../../heimdall-framework/services/network-microsegmentation-tester';
-import { ServiceMeshConfig } from '../../heimdall-framework/services/service-mesh-integration';
-import { FirewallRule, NetworkSegment } from '../../heimdall-framework/core/types';
+import { NetworkMicrosegmentationTester } from '../../../heimdall-framework/services/network-microsegmentation-tester';
+import { ServiceMeshConfig } from '../../../heimdall-framework/services/service-mesh-integration';
+import { FirewallRule, NetworkSegment } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { ApplicationsService } from '../applications/applications.service';
 import { NetworkSegmentInfrastructure } from '../applications/entities/application.entity';

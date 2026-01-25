@@ -1,4 +1,4 @@
-import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, User, ServiceMeshConfig } from '../../../../core/types';
+import { DatabaseConfig, TestQuery, FirewallRule, NetworkSegment, DLPPattern, User, ServiceMeshConfig } from '../../../../heimdall-framework/core/types';
 
 export type TestConfigurationType = 'rls-cls' | 'network-policy' | 'dlp' | 'api-gateway' | 'distributed-systems' | 'api-security' | 'data-pipeline';
 

@@ -1,9 +1,9 @@
 import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { UnifiedFinding } from '../../heimdall-framework/core/unified-finding-schema';
-import { NormalizationEngine, ScannerResult } from '../../heimdall-framework/services/normalization-engine';
-import { ECSAdapter } from '../../heimdall-framework/services/ecs-adapter';
+import { UnifiedFinding } from '../../../heimdall-framework/core/unified-finding-schema';
+import { NormalizationEngine, ScannerResult } from '../../../heimdall-framework/services/normalization-engine';
+import { ECSAdapter } from '../../../heimdall-framework/services/ecs-adapter';
 import {
   normalizeToCurrentVersion,
   detectSchemaVersion,
@@ -13,23 +13,23 @@ import {
   getSchemaVersion,
   getAvailableVersions,
   validateSchemaVersion,
-} from '../../heimdall-framework/core/schema-versioning';
+} from '../../../heimdall-framework/core/schema-versioning';
 // Import migrations to register them
-import '../../../core/schema-migrations';
+import '../../../heimdall-framework/core/schema-migrations';
 import {
   EnhancedRiskScorer,
   EnhancedRiskScore,
   RiskAggregation,
-} from '../../heimdall-framework/services/enhanced-risk-scorer';
+} from '../../../heimdall-framework/services/enhanced-risk-scorer';
 import { ApplicationsService } from '../applications/applications.service';
 import {
   FindingCorrelationEngine,
   CorrelationResult,
-} from '../../heimdall-framework/services/finding-correlation-engine';
+} from '../../../heimdall-framework/services/finding-correlation-engine';
 import {
   AttackPathAnalyzer,
   AttackPathAnalysis,
-} from '../../heimdall-framework/services/attack-path-analyzer';
+} from '../../../heimdall-framework/services/attack-path-analyzer';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsersService } from '../users/users.service';
 import { AlertingService } from '../alerting/alerting.service';

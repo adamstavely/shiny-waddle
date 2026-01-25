@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
-import { DLPTester } from '../../heimdall-framework/services/dlp-tester';
-import { User, DataOperation, TestQuery, DLPPattern } from '../../heimdall-framework/core/types';
+import { DLPTester } from '../../../heimdall-framework/services/dlp-tester';
+import { User, DataOperation, TestQuery, DLPPattern } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { ApplicationsService } from '../applications/applications.service';
 import { DLPInfrastructure } from '../applications/entities/application.entity';

@@ -1,6 +1,6 @@
 import { IsString, IsBoolean, IsArray, IsOptional, IsEnum, ValidateNested, IsObject, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
-import { AlertCondition } from '../../../../services/alerting-engine';
+import { AlertCondition } from '../../../../heimdall-framework/services/alerting-engine';
 
 export class AlertConditionDto implements AlertCondition {
   @IsString()

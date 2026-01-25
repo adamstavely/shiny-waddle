@@ -11,8 +11,8 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { getDomainFromTestType } from '../../heimdall-framework/core/domain-mapping';
-import { TestType } from '../../heimdall-framework/core/types';
+import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
+import { TestType } from '../../../heimdall-framework/core/types';
 
 interface MigrationResult {
   testsUpdated: number;

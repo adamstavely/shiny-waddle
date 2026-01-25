@@ -10,7 +10,7 @@
 
 import { TestsService } from '../tests/tests.service';
 import { PoliciesService } from '../policies/policies.service';
-import { AccessControlTest } from '../../heimdall-framework/core/types';
+import { AccessControlTest } from '../../../heimdall-framework/core/types';
 
 /**
  * Main migration function

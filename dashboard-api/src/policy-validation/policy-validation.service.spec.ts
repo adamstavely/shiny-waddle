@@ -4,8 +4,8 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { PolicyValidationService } from './policy-validation.service';
-import { PolicyValidationTester } from '../../heimdall-framework/services/policy-validation-tester';
-import { PolicyDecisionPoint } from '../../heimdall-framework/services/policy-decision-point';
+import { PolicyValidationTester } from '../../../heimdall-framework/services/policy-validation-tester';
+import { PolicyDecisionPoint } from '../../../heimdall-framework/services/policy-decision-point';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

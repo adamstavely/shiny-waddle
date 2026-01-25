@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsArray, IsObject, IsOptional, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ABACPolicy, Resource } from '../../../../core/types';
-import { PolicyTestCase } from '../../../../services/policy-as-code';
+import { ABACPolicy, Resource } from '../../../../heimdall-framework/core/types';
+import { PolicyTestCase } from '../../../../heimdall-framework/services/policy-as-code';
 
 export class DetectConflictsDto {
   @IsNotEmpty()

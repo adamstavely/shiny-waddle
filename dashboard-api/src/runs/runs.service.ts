@@ -52,7 +52,14 @@ export class RunsService {
         }
       }
 
-      const results = await this.testResultsService.query(queryFilters);
+      let results: any[] = [];
+      try {
+        results = await this.testResultsService.query(queryFilters);
+      } catch (queryError) {
+        // If query fails, return empty array instead of throwing
+        this.logger.warn('Error querying test results for runs, returning empty array:', queryError);
+        return [];
+      }
 
       // Group results by runId to create battery runs
       const runsByRunId = new Map<string, any>();
@@ -108,7 +115,8 @@ export class RunsService {
       );
     } catch (error) {
       this.logger.error('Error in findAll:', error);
-      throw error;
+      // Return empty array instead of throwing to prevent dashboard from failing
+      return [];
     }
   }
 

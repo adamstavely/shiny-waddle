@@ -1,8 +1,8 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { UnifiedFindingsService } from '../unified-findings/unified-findings.service';
 import { TestResultsService } from '../test-results/test-results.service';
-import { getDomainFromTestType, getDomainDisplayName } from '../../heimdall-framework/core/domain-mapping';
-import { TestType } from '../../heimdall-framework/core/types';
+import { getDomainFromTestType, getDomainDisplayName } from '../../../heimdall-framework/core/domain-mapping';
+import { TestType } from '../../../heimdall-framework/core/types';
 
 @Injectable()
 export class ComplianceScoresService {

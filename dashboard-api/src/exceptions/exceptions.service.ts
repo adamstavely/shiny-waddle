@@ -68,12 +68,22 @@ export class ExceptionsService {
           }));
         } else {
           this.exceptions = [];
-          await this.saveExceptions();
+          try {
+            await this.saveExceptions();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save exceptions file, continuing with empty array:', saveError);
+          }
         }
       } catch (readError: any) {
         if (readError.code === 'ENOENT' || readError instanceof SyntaxError) {
           this.exceptions = [];
-          await this.saveExceptions();
+          try {
+            await this.saveExceptions();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save exceptions file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }
@@ -91,12 +101,22 @@ export class ExceptionsService {
           }));
         } else {
           this.allowlists = [];
-          await this.saveAllowlists();
+          try {
+            await this.saveAllowlists();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save allowlists file, continuing with empty array:', saveError);
+          }
         }
       } catch (readError: any) {
         if (readError.code === 'ENOENT' || readError instanceof SyntaxError) {
           this.allowlists = [];
-          await this.saveAllowlists();
+          try {
+            await this.saveAllowlists();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save allowlists file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }

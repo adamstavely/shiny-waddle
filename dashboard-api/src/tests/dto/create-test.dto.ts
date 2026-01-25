@@ -11,7 +11,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TestType, TestDomain } from '../../../../core/types';
+import { TestType, TestDomain } from '../../../../heimdall-framework/core/types';
 
 export class CreateAccessControlTestDto {
   @IsNotEmpty()

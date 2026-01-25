@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { RLSCLSService } from './rls-cls.service';
-import { RLSCLSTester } from '../../heimdall-framework/services/rls-cls-tester';
+import { RLSCLSTester } from '../../../heimdall-framework/services/rls-cls-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

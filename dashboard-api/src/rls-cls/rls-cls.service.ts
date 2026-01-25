@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
-import { RLSCLSTester } from '../../heimdall-framework/services/rls-cls-tester';
-import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '../../heimdall-framework/core/types';
+import { RLSCLSTester } from '../../../heimdall-framework/services/rls-cls-tester';
+import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { ApplicationsService } from '../applications/applications.service';
 import { DatabaseInfrastructure } from '../applications/entities/application.entity';

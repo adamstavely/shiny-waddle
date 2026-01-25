@@ -9,8 +9,8 @@ import { ValidatorsService } from '../validators/validators.service';
 import { TestHarnessesService } from '../test-harnesses/test-harnesses.service';
 import { TestBatteriesService } from '../test-batteries/test-batteries.service';
 import { ContextDetectorService } from '../cicd/context-detector.service';
-import { getDomainFromTestType, getDomainDisplayName } from '../../heimdall-framework/core/domain-mapping';
-import { TestType } from '../../heimdall-framework/core/types';
+import { getDomainFromTestType, getDomainDisplayName } from '../../../heimdall-framework/core/domain-mapping';
+import { TestType } from '../../../heimdall-framework/core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -627,47 +627,60 @@ export class ApplicationsService {
    * Get issues across all applications
    */
   async getAllIssues(limit?: number, priority?: string): Promise<any[]> {
-    await this.loadApplications();
-    
-    // Get failed test results as issues from all applications
-    const results = await this.testResultsService.query({
-      status: 'failed',
-      limit: limit ? limit * 2 : undefined, // Get more to account for filtering
-    });
-    
-    const issues = results.map(result => ({
-      id: result.id,
-      title: `Test failed: ${result.testConfigurationName || 'Unknown Test'}`,
-      description: result.error || 'Test execution failed',
-      domain: this.getDomainFromTestType(result.testConfigurationType || ''),
-      priority: this.getPriorityFromResult(result),
-      applicationId: result.applicationId,
-      applicationName: result.applicationName,
-      timestamp: result.timestamp,
-    }));
-    
-    // Filter by priority if specified
-    let filteredIssues = issues;
-    if (priority) {
-      const priorities = priority.split(',');
-      filteredIssues = issues.filter(issue => priorities.includes(issue.priority));
+    try {
+      await this.loadApplications();
+      
+      // Get failed test results as issues from all applications
+      let results: any[] = [];
+      try {
+        results = await this.testResultsService.query({
+          status: 'failed',
+          limit: limit ? limit * 2 : undefined, // Get more to account for filtering
+        });
+      } catch (queryError) {
+        // If query fails, return empty array instead of throwing
+        this.logger.warn('Error querying test results for issues, returning empty array:', queryError);
+        return [];
+      }
+      
+      const issues = results.map(result => ({
+        id: result.id,
+        title: `Test failed: ${result.testConfigurationName || 'Unknown Test'}`,
+        description: result.error || 'Test execution failed',
+        domain: this.getDomainFromTestType(result.testConfigurationType || ''),
+        priority: this.getPriorityFromResult(result),
+        applicationId: result.applicationId,
+        applicationName: result.applicationName,
+        timestamp: result.timestamp,
+      }));
+      
+      // Filter by priority if specified
+      let filteredIssues = issues;
+      if (priority) {
+        const priorities = priority.split(',');
+        filteredIssues = issues.filter(issue => priorities.includes(issue.priority));
+      }
+      
+      // Sort by priority (critical, high, medium, low) and timestamp
+      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      filteredIssues.sort((a, b) => {
+        const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 99) - 
+                             (priorityOrder[b.priority as keyof typeof priorityOrder] || 99);
+        if (priorityDiff !== 0) return priorityDiff;
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+      
+      // Apply limit after filtering and sorting
+      if (limit) {
+        return filteredIssues.slice(0, limit);
+      }
+      
+      return filteredIssues;
+    } catch (error) {
+      this.logger.error('Error in getAllIssues:', error);
+      // Return empty array instead of throwing to prevent dashboard from failing
+      return [];
     }
-    
-    // Sort by priority (critical, high, medium, low) and timestamp
-    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    filteredIssues.sort((a, b) => {
-      const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 99) - 
-                           (priorityOrder[b.priority as keyof typeof priorityOrder] || 99);
-      if (priorityDiff !== 0) return priorityDiff;
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    });
-    
-    // Apply limit after filtering and sorting
-    if (limit) {
-      return filteredIssues.slice(0, limit);
-    }
-    
-    return filteredIssues;
   }
 
   /**

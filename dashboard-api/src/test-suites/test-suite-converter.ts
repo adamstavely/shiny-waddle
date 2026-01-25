@@ -4,7 +4,7 @@
  * Utilities for converting between TypeScript test suite files and JSON format
  */
 
-import { TestSuite } from '../../heimdall-framework/core/types';
+import { TestSuite } from '../../../heimdall-framework/core/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 

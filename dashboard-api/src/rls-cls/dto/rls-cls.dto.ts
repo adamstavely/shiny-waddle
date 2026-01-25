@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsObject, IsArray, ValidateNested, IsOptional, IsIn, IsNumber, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DatabaseConfig, TestQuery, User, DynamicMaskingRule } from '../../../../core/types';
+import { DatabaseConfig, TestQuery, User, DynamicMaskingRule } from '../../../../heimdall-framework/core/types';
 
 export class DatabaseConfigDto {
   @IsNotEmpty()

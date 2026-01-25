@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { MultiCloudIntegration, CloudProviderConfig, MultiCloudFinding, CloudProviderSummary } from '../../../../services/multi-cloud-integration';
+import { MultiCloudIntegration, CloudProviderConfig, MultiCloudFinding, CloudProviderSummary } from '../../../../heimdall-framework/services/multi-cloud-integration';
 
 @Injectable()
 export class CloudProviderService {

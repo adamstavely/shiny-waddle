@@ -8,7 +8,7 @@ import {
   IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ABACPolicy } from '../../../../core/types';
+import { ABACPolicy } from '../../../../heimdall-framework/core/types';
 
 export class ValidateEnvironmentDto {
   @IsNotEmpty()

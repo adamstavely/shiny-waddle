@@ -1,4 +1,4 @@
-import { Alert, AggregatedAlert } from '../../../../services/alerting-engine';
+import { Alert, AggregatedAlert } from '../../../../heimdall-framework/services/alerting-engine';
 
 export interface AlertEntity extends Alert {
   createdAt: Date;

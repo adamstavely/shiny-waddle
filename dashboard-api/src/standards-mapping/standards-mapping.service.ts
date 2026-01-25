@@ -44,7 +44,12 @@ export class StandardsMappingService {
         const data = await fs.readFile(this.dataFile, 'utf-8');
         if (!data || data.trim() === '') {
           this.initializeDefaults();
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - defaults are already initialized
+            this.logger.warn('Failed to save standards mapping file, continuing with defaults:', saveError);
+          }
           return;
         }
         const parsed = JSON.parse(data);
@@ -57,11 +62,21 @@ export class StandardsMappingService {
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.initializeDefaults();
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - defaults are already initialized
+            this.logger.warn('Failed to save standards mapping file, continuing with defaults:', saveError);
+          }
         } else if (readError instanceof SyntaxError) {
           this.logger.error('JSON parsing error, initializing defaults:', readError.message);
           this.initializeDefaults();
-          await this.saveData();
+          try {
+            await this.saveData();
+          } catch (saveError) {
+            // Ignore save errors - defaults are already initialized
+            this.logger.warn('Failed to save standards mapping file, continuing with defaults:', saveError);
+          }
         } else {
           throw readError;
         }

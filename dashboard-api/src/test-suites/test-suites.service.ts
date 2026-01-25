@@ -6,8 +6,8 @@ import { TestSuiteEntity, TestSuiteStatus } from './entities/test-suite.entity';
 import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { parseTypeScriptTestSuite, convertJSONToTypeScript } from './test-suite-converter';
-import { getDomainFromTestType } from '../../heimdall-framework/core/domain-mapping';
-import { TestType } from '../../heimdall-framework/core/types';
+import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
+import { TestType } from '../../../heimdall-framework/core/types';
 
 @Injectable()
 export class TestSuitesService {

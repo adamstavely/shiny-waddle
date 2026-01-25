@@ -1,4 +1,4 @@
-import { Test, TestVersion } from '../../../../core/types';
+import { Test, TestVersion } from '../../../../heimdall-framework/core/types';
 
 export interface TestEntity extends Test {
   // Test entity matches the core Test type

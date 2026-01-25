@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, HttpStatus, HttpException } from '@nestjs/common';
 import { CloudProviderService } from './cloud-provider.service';
-import { CloudProviderConfig, MultiCloudFinding } from '../../../../services/multi-cloud-integration';
+import { CloudProviderConfig, MultiCloudFinding } from '../../../../heimdall-framework/services/multi-cloud-integration';
 
 @Controller('api/integrations/cloud-providers')
 export class CloudProviderController {

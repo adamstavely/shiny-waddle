@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
-import { APIGatewayTester } from '../../heimdall-framework/services/api-gateway-tester';
-import { APIGatewayPolicy, APIRequest } from '../../heimdall-framework/core/types';
+import { APIGatewayTester } from '../../../heimdall-framework/services/api-gateway-tester';
+import { APIGatewayPolicy, APIRequest } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { ApplicationsService } from '../applications/applications.service';
 import { APIGatewayInfrastructure } from '../applications/entities/application.entity';

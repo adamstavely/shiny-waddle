@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { DLPService } from './dlp.service';
-import { DLPTester } from '../../heimdall-framework/services/dlp-tester';
+import { DLPTester } from '../../../heimdall-framework/services/dlp-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

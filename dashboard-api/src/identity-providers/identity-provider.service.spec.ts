@@ -4,7 +4,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { IdentityProviderService } from './identity-provider.service';
-import { IdentityProviderTester } from '../../heimdall-framework/services/identity-provider-tester';
+import { IdentityProviderTester } from '../../../heimdall-framework/services/identity-provider-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

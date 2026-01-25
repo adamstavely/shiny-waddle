@@ -1,4 +1,4 @@
-import { BatteryExecutionConfig } from '../../../../core/types';
+import { BatteryExecutionConfig } from '../../../../heimdall-framework/core/types';
 
 export interface TestBatteryEntity {
   id: string;

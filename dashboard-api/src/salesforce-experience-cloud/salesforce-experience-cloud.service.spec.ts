@@ -5,7 +5,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { SalesforceExperienceCloudService } from './salesforce-experience-cloud.service';
-import { SalesforceExperienceCloudTester } from '../../heimdall-framework/services/salesforce-experience-cloud-tester';
+import { SalesforceExperienceCloudTester } from '../../../heimdall-framework/services/salesforce-experience-cloud-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CICDSecurityGates } from '../../heimdall-framework/services/cicd-security-gates';
-import { SecurityGateConfig, PullRequest, ABACPolicy } from '../../heimdall-framework/core/types';
+import { CICDSecurityGates } from '../../../heimdall-framework/services/cicd-security-gates';
+import { SecurityGateConfig, PullRequest, ABACPolicy } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 @Injectable()

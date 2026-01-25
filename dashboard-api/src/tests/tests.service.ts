@@ -13,9 +13,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { TestEntity } from './entities/test.entity';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
-import { Test, TestVersion, AccessControlTest, TestType } from '../../heimdall-framework/core/types';
+import { Test, TestVersion, AccessControlTest, TestType } from '../../../heimdall-framework/core/types';
 import { PoliciesService } from '../policies/policies.service';
-import { getDomainFromTestType } from '../../heimdall-framework/core/domain-mapping';
+import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
 
 @Injectable()
 export class TestsService {

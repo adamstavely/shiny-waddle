@@ -11,7 +11,7 @@ import {
   APISecurityTestResultEntity,
   APITestType,
 } from './entities/api-security.entity';
-import { APISecurityTester, APISecurityTestConfig } from '../../heimdall-framework/services/api-security-tester';
+import { APISecurityTester, APISecurityTestConfig } from '../../../heimdall-framework/services/api-security-tester';
 import { ApplicationsService } from '../applications/applications.service';
 import { APISecurityInfrastructure } from '../applications/entities/application.entity';
 import { AppLogger } from '../common/services/logger.service';

@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IdentityProviderTester } from '../../heimdall-framework/services/identity-provider-tester';
+import { IdentityProviderTester } from '../../../heimdall-framework/services/identity-provider-tester';
 import {
   User,
   OktaPolicyTest,
   AzureADConditionalAccessPolicy,
   GCPIAMBinding,
-} from '../../heimdall-framework/core/types';
+} from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 @Injectable()

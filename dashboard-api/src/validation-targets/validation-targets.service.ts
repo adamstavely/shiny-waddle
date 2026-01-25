@@ -47,7 +47,12 @@ export class ValidationTargetsService {
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.targets = [];
-          await this.saveTargets();
+          try {
+            await this.saveTargets();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save validation targets file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }
@@ -72,7 +77,12 @@ export class ValidationTargetsService {
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.rules = [];
-          await this.saveRules();
+          try {
+            await this.saveRules();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save validation rules file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }
@@ -96,7 +106,12 @@ export class ValidationTargetsService {
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.results = [];
-          await this.saveResults();
+          try {
+            await this.saveResults();
+          } catch (saveError) {
+            // Ignore save errors - data is already set to empty array
+            this.logger.warn('Failed to save validation results file, continuing with empty array:', saveError);
+          }
         } else {
           throw readError;
         }

@@ -6,7 +6,7 @@ import {
   IsIn,
   IsEnum,
 } from 'class-validator';
-import { TestDomain } from '../../../../core/types';
+import { TestDomain } from '../../../../heimdall-framework/core/types';
 
 // Valid test types (kept for backward compatibility)
 const VALID_TEST_TYPES = [
