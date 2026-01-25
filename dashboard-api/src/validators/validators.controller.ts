@@ -76,5 +76,11 @@ export class ValidatorsController {
   async disable(@Param('id') id: string): Promise<ValidatorEntity> {
     return this.validatorsService.disable(id);
   }
+
+  @Post('discover')
+  @HttpCode(HttpStatus.OK)
+  async discover(): Promise<{ message: string; discovered: number }> {
+    return this.validatorsService.discoverAndRegisterValidators();
+  }
 }
 

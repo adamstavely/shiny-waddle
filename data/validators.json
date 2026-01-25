@@ -1,1 +1,137 @@
-[]
+[
+  {
+    "id": "abac-correctness",
+    "name": "ABAC Correctness Validator",
+    "description": "Validates ABAC implementation correctness including attributes, completeness, performance, and conflicts",
+    "testType": "access-control",
+    "version": "1.0.0",
+    "metadata": {
+      "supportedTestTypes": [
+        "access-control"
+      ],
+      "requiredConfig": [
+        "accessControlConfig"
+      ],
+      "optionalConfig": [],
+      "tags": [
+        "abac",
+        "correctness",
+        "validation",
+        "policies",
+        "access-control"
+      ]
+    },
+    "config": {
+      "accessControlConfig": {
+        "policyMode": "abac",
+        "abacPolicies": []
+      }
+    },
+    "enabled": true,
+    "registeredAt": "2026-01-25T05:00:28.041Z",
+    "testCount": 0,
+    "successCount": 0,
+    "failureCount": 0,
+    "updatedAt": "2026-01-25T05:00:28.041Z"
+  },
+  {
+    "id": "access-control",
+    "name": "Access Control Validator",
+    "description": "Validates RBAC/ABAC access control policies",
+    "testType": "access-control",
+    "version": "1.0.0",
+    "metadata": {
+      "supportedTestTypes": [
+        "access-control"
+      ],
+      "requiredConfig": [
+        "accessControlConfig"
+      ],
+      "optionalConfig": [],
+      "tags": [
+        "rbac",
+        "abac",
+        "policies",
+        "access-control"
+      ]
+    },
+    "config": {
+      "accessControlConfig": {
+        "policyMode": "rbac"
+      }
+    },
+    "enabled": true,
+    "registeredAt": "2026-01-25T05:00:28.041Z",
+    "testCount": 0,
+    "successCount": 0,
+    "failureCount": 0,
+    "updatedAt": "2026-01-25T05:00:28.041Z"
+  },
+  {
+    "id": "salesforce",
+    "name": "Salesforce Validator",
+    "description": "Validator discovered from SalesforceValidator",
+    "testType": "access-control",
+    "version": "1.0.0",
+    "metadata": {},
+    "config": {},
+    "enabled": true,
+    "registeredAt": "2026-01-25T05:00:28.041Z",
+    "testCount": 0,
+    "successCount": 0,
+    "failureCount": 0,
+    "updatedAt": "2026-01-25T05:00:28.041Z"
+  },
+  {
+    "id": "salesforce-experience-cloud",
+    "name": "Salesforce Experience Cloud Validator",
+    "description": "Tests Salesforce Experience Cloud applications for security misconfigurations using aura-inspector",
+    "testType": "salesforce-experience-cloud",
+    "version": "1.0.0",
+    "metadata": {
+      "supportedTestTypes": [
+        "salesforce-experience-cloud"
+      ],
+      "requiredConfig": [
+        "url"
+      ],
+      "optionalConfig": [
+        "cookies",
+        "objectList",
+        "app",
+        "aura",
+        "context",
+        "token",
+        "noGraphQL",
+        "proxy",
+        "insecure",
+        "auraRequestFile"
+      ],
+      "tags": [
+        "salesforce",
+        "experience-cloud",
+        "security",
+        "aura-inspector"
+      ],
+      "exampleConfig": {
+        "url": "https://example.force.com",
+        "cookies": "sid=...;",
+        "app": "/myApp",
+        "aura": "/aura",
+        "objectList": [
+          "Account",
+          "Contact"
+        ]
+      }
+    },
+    "config": {
+      "url": "https://placeholder.example.com"
+    },
+    "enabled": true,
+    "registeredAt": "2026-01-25T05:00:28.041Z",
+    "testCount": 0,
+    "successCount": 0,
+    "failureCount": 0,
+    "updatedAt": "2026-01-25T05:00:28.041Z"
+  }
+]

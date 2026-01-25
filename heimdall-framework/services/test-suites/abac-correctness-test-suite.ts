@@ -74,24 +74,24 @@ export class ABACCorrectnessTestSuite {
     if (config.attributes && config.attributes.length > 0) {
       for (const attribute of config.attributes) {
         try {
-        const attributeResult = await this.attributeValidator.validateAttributeDefinition(attribute);
-        results.push({
-          testType: 'access-control',
-          testName: `ABAC Attribute Validation - ${attribute.name}`,
-          passed: attributeResult.passed,
-          details: attributeResult,
-          timestamp: new Date(),
-        });
-      } catch (error: any) {
-        results.push({
-          testType: 'access-control',
-          testName: `ABAC Attribute Validation - ${attribute.name}`,
-          passed: false,
-          details: { error: error.message },
-          timestamp: new Date(),
-          error: error.message,
-        });
-      }
+          const attributeResult = await this.attributeValidator.validateAttributeDefinition(attribute);
+          results.push({
+            testType: 'access-control',
+            testName: `ABAC Attribute Validation - ${attribute.name}`,
+            passed: attributeResult.passed,
+            details: attributeResult,
+            timestamp: new Date(),
+          });
+        } catch (error: any) {
+          results.push({
+            testType: 'access-control',
+            testName: `ABAC Attribute Validation - ${attribute.name}`,
+            passed: false,
+            details: { error: error.message },
+            timestamp: new Date(),
+            error: error.message,
+          });
+        }
     }
 
     // Test 2: Policy Completeness
@@ -103,23 +103,24 @@ export class ABACCorrectnessTestSuite {
           actions: ['read', 'write', 'delete', 'create'],
           policies: config.policies,
         };
-      const completenessResult = await this.completenessTester.testPolicyCompleteness(completenessConfig);
-      results.push({
-        testType: 'access-control',
-        testName: 'ABAC Policy Completeness Test',
-        passed: completenessResult.passed,
-        details: completenessResult,
-        timestamp: new Date(),
-      });
-    } catch (error: any) {
-      results.push({
-        testType: 'access-control',
-        testName: 'ABAC Policy Completeness Test',
-        passed: false,
-        details: { error: error.message },
-        timestamp: new Date(),
-        error: error.message,
-      });
+        const completenessResult = await this.completenessTester.testPolicyCompleteness(completenessConfig);
+        results.push({
+          testType: 'access-control',
+          testName: 'ABAC Policy Completeness Test',
+          passed: completenessResult.passed,
+          details: completenessResult,
+          timestamp: new Date(),
+        });
+      } catch (error: any) {
+        results.push({
+          testType: 'access-control',
+          testName: 'ABAC Policy Completeness Test',
+          passed: false,
+          details: { error: error.message },
+          timestamp: new Date(),
+          error: error.message,
+        });
+      }
     }
 
     // Test 3: Performance Testing

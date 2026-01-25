@@ -5,6 +5,7 @@ import {
   Logger,
   Inject,
   forwardRef,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
@@ -16,19 +17,60 @@ import { UpdateTestDto } from './dto/update-test.dto';
 import { Test, TestVersion, AccessControlTest, TestType } from '../../../heimdall-framework/core/types';
 import { PoliciesService } from '../policies/policies.service';
 import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
+import { TestDiscoveryService } from './test-discovery.service';
 
 @Injectable()
-export class TestsService {
+export class TestsService implements OnModuleInit {
   private readonly logger = new Logger(TestsService.name);
   private readonly testsFile = path.join(process.cwd(), 'data', 'tests.json');
   private tests: TestEntity[] = [];
 
   constructor(
     private readonly moduleRef: ModuleRef,
-  ) {
-    this.loadTests().catch(err => {
-      this.logger.error('Error loading tests on startup:', err);
-    });
+    private readonly discoveryService: TestDiscoveryService,
+  ) {}
+
+  async onModuleInit() {
+    // Load existing tests from file first
+    await this.loadTests();
+    // Auto-discover tests from framework on module initialization
+    await this.discoverAndRegisterTests();
+  }
+
+  /**
+   * Discover tests from framework and register them if they don't exist
+   */
+  private async discoverAndRegisterTests(): Promise<void> {
+    try {
+      const discoveredTests = await this.discoveryService.discoverTests();
+      
+      for (const discovered of discoveredTests) {
+        // Check if test already exists
+        const existing = this.tests.find(t => t.id === discovered.id);
+        
+        if (!existing) {
+          // Add discovered test
+          this.tests.push(discovered);
+          this.logger.log(`Auto-registered test: ${discovered.name} (${discovered.id})`);
+        } else {
+          // Update metadata if version changed or description improved
+          if (existing.version < discovered.version || 
+              (existing.description === '' && discovered.description !== '')) {
+            existing.version = discovered.version;
+            existing.description = discovered.description || existing.description;
+            existing.updatedAt = new Date();
+            this.logger.log(`Updated test metadata: ${discovered.name} (${discovered.id})`);
+          }
+        }
+      }
+
+      // Save updated tests list
+      if (discoveredTests.length > 0) {
+        await this.saveTests();
+      }
+    } catch (error: any) {
+      this.logger.error(`Error discovering tests: ${error.message}`, error.stack);
+    }
   }
 
   private async loadTests(): Promise<void> {

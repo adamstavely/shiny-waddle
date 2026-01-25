@@ -1,19 +1,70 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, OnModuleInit, Logger } from '@nestjs/common';
 import { CreateValidatorDto, ValidatorStatus } from './dto/create-validator.dto';
 import { UpdateValidatorDto } from './dto/update-validator.dto';
 import { ValidatorEntity } from './entities/validator.entity';
+import { ValidatorDiscoveryService } from './validator-discovery.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 @Injectable()
-export class ValidatorsService {
+export class ValidatorsService implements OnModuleInit {
+  private readonly logger = new Logger(ValidatorsService.name);
   private readonly validatorsFile = path.join(process.cwd(), '..', 'data', 'validators.json');
   private validators: ValidatorEntity[] = [];
 
-  constructor() {
-    this.loadValidators().catch(err => {
-      console.error('Error loading validators on startup:', err);
-    });
+  constructor(private readonly discoveryService: ValidatorDiscoveryService) {}
+
+  async onModuleInit() {
+    // Load existing validators from file first
+    await this.loadValidators();
+    // Auto-discover validators from framework on module initialization
+    await this.discoverAndRegisterValidators();
+  }
+
+  /**
+   * Discover validators from framework and register them if they don't exist
+   */
+  async discoverAndRegisterValidators(): Promise<{ message: string; discovered: number }> {
+    try {
+      const discoveredValidators = await this.discoveryService.discoverValidators();
+      
+      for (const discovered of discoveredValidators) {
+        // Check if validator already exists
+        const existing = this.validators.find(v => v.id === discovered.id);
+        
+        if (!existing) {
+          // Add discovered validator
+          this.validators.push(discovered);
+          this.logger.log(`Auto-registered validator: ${discovered.name} (${discovered.id})`);
+        } else {
+          // Update metadata if version changed
+          if (existing.version !== discovered.version) {
+            existing.version = discovered.version;
+            existing.description = discovered.description;
+            existing.metadata = discovered.metadata;
+            existing.updatedAt = new Date();
+            this.logger.log(`Updated validator metadata: ${discovered.name} (${discovered.id})`);
+          }
+        }
+      }
+
+      // Save updated validators list
+      if (discoveredValidators.length > 0) {
+        await this.saveValidators();
+      }
+
+      const newCount = discoveredValidators.filter(d => 
+        !this.validators.find(v => v.id === d.id)
+      ).length;
+
+      return {
+        message: `Discovered ${discoveredValidators.length} validators, ${newCount} new`,
+        discovered: newCount,
+      };
+    } catch (error: any) {
+      this.logger.error(`Error discovering validators: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   private async loadValidators(): Promise<void> {
@@ -41,7 +92,7 @@ export class ValidatorsService {
         }
       }
     } catch (error) {
-      console.error('Error loading validators:', error);
+      this.logger.error('Error loading validators:', error);
       this.validators = [];
     }
   }
@@ -55,7 +106,7 @@ export class ValidatorsService {
         'utf-8',
       );
     } catch (error) {
-      console.error('Error saving validators:', error);
+      this.logger.error('Error saving validators:', error);
       throw error;
     }
   }
