@@ -106,6 +106,14 @@
             <FileSearch class="item-icon" />
             <span>Findings</span>
           </a>
+          <a
+            href="/batch-operations"
+            @click.prevent="handleNavClick('/batch-operations')"
+            :class="['drawer-item', isActive('/batch-operations') ? 'drawer-item-active' : '']"
+          >
+            <PlayCircle class="item-icon" />
+            <span>Batch Operations</span>
+          </a>
         </div>
       </div>
 
@@ -140,6 +148,16 @@
             <span>Resources</span>
           </a>
 
+          <!-- Templates -->
+          <a
+            href="/templates"
+            @click.prevent="handleNavClick('/templates')"
+            :class="['drawer-item', isActive('/templates') ? 'drawer-item-active' : '']"
+          >
+            <FileCode class="item-icon" />
+            <span>Templates</span>
+          </a>
+
           <!-- Data Classification -->
           <a
             href="/policies/data-classification"
@@ -160,7 +178,7 @@
           <a
             href="/admin"
             @click.prevent="handleNavClick('/admin')"
-            :class="['drawer-item', currentPath.value === '/admin' ? 'drawer-item-active' : '']"
+            :class="['drawer-item', currentPath === '/admin' ? 'drawer-item-active' : '']"
           >
             <LayoutDashboard class="item-icon" />
             <span>Overview</span>
@@ -247,7 +265,8 @@ import {
   KeyRound,
   Cloud,
   BarChart3,
-  PlayCircle
+  PlayCircle,
+  FileCode
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -268,7 +287,8 @@ const testDesignLibraryPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/individual', '/tests/findings',
-  '/tests/history'
+  '/tests/history',
+  '/batch-operations'
 ];
 
 // Policies & Config pages
@@ -276,7 +296,8 @@ const policiesConfigPages = [
   '/policies',
   '/policies/access-control',
   '/policies/data-classification',
-  '/resources'
+  '/resources',
+  '/templates'
 ];
 
 // Admin pages

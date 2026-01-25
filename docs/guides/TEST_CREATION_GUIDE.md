@@ -4,12 +4,95 @@ This guide explains how to create test suites for TestOrchestrator. You'll learn
 
 ## Table of Contents
 
-1. [Test Suite Overview](#test-suite-overview)
-2. [Creating a Test Suite](#creating-a-test-suite)
-3. [Test Types](#test-types)
-4. [Configuration Reference](#configuration-reference)
-5. [Best Practices](#best-practices)
-6. [Examples](#examples)
+1. [Understanding Tests and Policies](#understanding-tests-and-policies)
+2. [Test Suite Overview](#test-suite-overview)
+3. [Creating a Test Suite](#creating-a-test-suite)
+4. [Test Types](#test-types)
+5. [Configuration Reference](#configuration-reference)
+6. [Best Practices](#best-practices)
+7. [Examples](#examples)
+
+## Understanding Tests and Policies
+
+### The Policy-Test Relationship
+
+**Key Concept**: Each test validates exactly one policy (1:1 relationship).
+
+- **One Policy** → Can have **multiple tests** (test different scenarios)
+- **One Test** → Validates **exactly one policy** (via `policyId`)
+
+### Workflow: Template → Policy → Test
+
+The typical workflow is:
+
+```
+Template → Policies → Tests → Test Execution → Results
+```
+
+1. **Create Policies**: Use [Policy Templates](./TEMPLATE_GUIDE.md) or manually create policies
+2. **Create Tests**: For each policy, create tests that validate different scenarios
+3. **Group Tests**: Organize tests into test suites
+4. **Run Tests**: Execute test suites to validate policies work correctly
+
+### Example: Testing a Policy
+
+If you have a policy that allows `admin` role to read `dataset` resources:
+
+```typescript
+// Policy: "Admin can read datasets"
+{
+  id: "policy-1",
+  name: "Admin Dataset Read",
+  effect: "allow",
+  conditions: [
+    { attribute: "subject.role", operator: "equals", value: "admin" },
+    { attribute: "resource.type", operator: "equals", value: "dataset" }
+  ]
+}
+
+// Test 1: Verify admin CAN read (positive test)
+{
+  name: "Admin can read dataset",
+  testType: "access-control",
+  policyId: "policy-1", // ← Links to the policy
+  inputs: {
+    subject: { role: "admin" },
+    resource: { type: "dataset", id: "ds-123" },
+    action: "read"
+  },
+  expected: { allowed: true } // Should allow
+}
+
+// Test 2: Verify non-admin CANNOT read (negative test)
+{
+  name: "User cannot read dataset",
+  testType: "access-control",
+  policyId: "policy-1", // ← Same policy
+  inputs: {
+    subject: { role: "user" }, // Different role
+    resource: { type: "dataset", id: "ds-123" },
+    action: "read"
+  },
+  expected: { allowed: false } // Should deny
+}
+```
+
+### Testing Template-Generated Policies
+
+If you create policies from templates (recommended), see the [Template Guide](./TEMPLATE_GUIDE.md#testing-template-generated-policies) for detailed instructions on creating tests for template-generated policies.
+
+**Quick Example:**
+```bash
+# 1. Create policies from template
+heimdall template create rbac \
+  --application-name "MyApp" \
+  --roles admin,user \
+  --resources dataset \
+  --actions read
+
+# 2. Create tests for the generated policies
+# (See TEMPLATE_GUIDE.md for details)
+```
 
 ## Test Suite Overview
 
@@ -76,14 +159,39 @@ export const myTestSuite: TestSuite = {
 }
 ```
 
-### Step 3: Configure Test Types
+### Step 3: Link Tests to Policies
+
+For access control tests, each test must reference a policy via `policyId`:
+
+```typescript
+{
+  testIds: [
+    "test-1", // References policy-1
+    "test-2", // References policy-2
+    // ...
+  ]
+}
+
+// Each test has:
+{
+  id: "test-1",
+  name: "Admin can read dataset",
+  testType: "access-control",
+  policyId: "policy-1", // ← Required: links test to policy
+  inputs: { /* ... */ },
+  expected: { /* ... */ }
+}
+```
+
+**Important**: When creating tests, you must have policies created first. See [POLICY_CREATION_GUIDE.md](./POLICY_CREATION_GUIDE.md) or [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md) for creating policies.
+
+### Step 4: Configure Test Types
 
 Enable the test types you want to run:
 
 ```typescript
 {
-  includeAccessControlTests: true,    // Test PDP decisions
-  includeDatasetHealthTests: false,   // Test privacy/statistics
+  testType: "access-control", // Single test type per suite
   // ...
 }
 ```

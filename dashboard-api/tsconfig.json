@@ -22,7 +22,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src/**/*", "../core/**/*", "../services/**/*"],
+  "include": ["src/**/*", "../heimdall-framework/core/**/*", "../heimdall-framework/services/**/*", "../heimdall-framework/tests/**/*", "../heimdall-framework/cli/templates/**/*", "../heimdall-framework/cli/formats/**/*"],
   "exclude": ["node_modules", "dist"]
 }
 

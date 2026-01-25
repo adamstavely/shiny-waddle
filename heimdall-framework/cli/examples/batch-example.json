@@ -1,0 +1,24 @@
+{
+  "operations": [
+    {
+      "type": "test",
+      "suite": "default",
+      "output": "test-results-default",
+      "config": "./config/runtime-config.json"
+    },
+    {
+      "type": "validate",
+      "policyFile": "./policies/abac-policies.json",
+      "output": "validation-results"
+    },
+    {
+      "type": "report",
+      "output": "final-report"
+    }
+  ],
+  "config": {
+    "outputDir": "./reports",
+    "parallel": false,
+    "stopOnError": true
+  }
+}

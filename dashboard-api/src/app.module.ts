@@ -51,6 +51,8 @@ import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/s
 import { ApplicationDataModule } from './shared/application-data.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
+import { TemplatesModule } from './templates/templates.module';
+import { BatchOperationsModule } from './batch-operations/batch-operations.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -108,6 +110,8 @@ import { AppController } from './app.controller';
     SalesforceExperienceCloudModule,
     RealtimeModule,
     ElasticsearchModule,
+    TemplatesModule,
+    BatchOperationsModule,
   ],
   controllers: [AppController],
   providers: [

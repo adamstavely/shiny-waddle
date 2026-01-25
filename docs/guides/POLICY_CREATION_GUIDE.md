@@ -5,11 +5,14 @@ This guide explains how to create and configure access control policies for Test
 ## Table of Contents
 
 1. [Policy Types Overview](#policy-types-overview)
-2. [Creating RBAC Policies](#creating-rbac-policies)
-3. [Creating ABAC Policies](#creating-abac-policies)
-4. [Policy Structure Reference](#policy-structure-reference)
-5. [Best Practices](#best-practices)
-6. [Examples](#examples)
+2. [Creating Policies from Templates](#creating-policies-from-templates) ⭐ **Recommended**
+3. [Creating RBAC Policies](#creating-rbac-policies)
+4. [Creating ABAC Policies](#creating-abac-policies)
+5. [Policy Structure Reference](#policy-structure-reference)
+6. [Best Practices](#best-practices)
+7. [Examples](#examples)
+
+> **💡 Tip**: For most use cases, we recommend starting with [Policy Templates](./TEMPLATE_GUIDE.md) to quickly create policies, then customize as needed. This guide covers manual policy creation for advanced scenarios.
 
 ## Policy Types Overview
 
@@ -38,7 +41,41 @@ ABAC policies grant or deny access based on multiple attributes from:
 - Policies need to be more dynamic and flexible
 - You have complex business rules
 
+## Creating Policies from Templates
+
+**⭐ Recommended Approach**: Before manually creating policies, consider using [Policy Templates](./TEMPLATE_GUIDE.md). Templates provide:
+
+- **Faster creation**: Generate multiple policies in seconds
+- **Best practices**: Templates encode proven security patterns
+- **Compliance support**: HIPAA, GDPR templates include required controls
+- **Consistency**: All policies follow the same structure
+
+**Quick Start:**
+```bash
+# List available templates
+heimdall template list
+
+# Preview a template
+heimdall template preview rbac
+
+# Create policies from template
+heimdall template create rbac \
+  --application-name "MyApp" \
+  --roles admin,user,viewer \
+  --resources dataset,report \
+  --actions read,write
+```
+
+**After creating policies from templates:**
+1. Review the generated policies
+2. Create tests to validate the policies (see [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md#testing-template-generated-policies))
+3. Customize policies as needed
+
+For detailed information about templates and the template → policy → test workflow, see the [Template Guide](./TEMPLATE_GUIDE.md).
+
 ## Creating RBAC Policies
+
+> **Note**: This section covers manual policy creation. For most use cases, consider using [Policy Templates](./TEMPLATE_GUIDE.md) instead.
 
 ### Step 1: Define Policy Structure
 
@@ -541,7 +578,9 @@ export ABAC_POLICIES_PATH=./policies/my-abac-policies.json
 
 ## Next Steps
 
-- See [TEST_CREATION_GUIDE.md](./TEST_CREATION_GUIDE.md) for creating test suites
-- Review [examples](../examples/) for complete examples
-- Check [policies](../policies/) for reference implementations
+- **Using Templates?** See [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md) for creating policies from templates and testing them
+- **Creating Tests?** See [TEST_CREATION_GUIDE.md](./TEST_CREATION_GUIDE.md) for creating test suites
+- **Quick Reference?** See [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) for quick examples
+- **Examples?** Review [examples](../examples/) for complete examples
+- **Reference Implementations?** Check [policies](../policies/) for reference implementations
 

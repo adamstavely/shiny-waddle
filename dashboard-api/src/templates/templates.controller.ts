@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
 import { CreateFromTemplateDto } from './dto/create-from-template.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('api/templates')
 export class TemplatesController {
@@ -17,12 +18,14 @@ export class TemplatesController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @Public()
   async listTemplates() {
     return this.templatesService.listTemplates();
   }
 
   @Get(':name')
   @HttpCode(HttpStatus.OK)
+  @Public()
   async getTemplate(@Param('name') name: string) {
     return this.templatesService.getTemplate(name);
   }

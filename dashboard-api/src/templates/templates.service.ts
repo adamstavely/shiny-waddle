@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import * as path from 'path';
 import {
   listTemplates,
@@ -25,22 +25,30 @@ import {
 import { CreateFromTemplateDto } from './dto/create-from-template.dto';
 import { ABACPolicy } from '../../../heimdall-framework/core/types';
 import { PoliciesService } from '../policies/policies.service';
-import { CreatePolicyDto, PolicyType, PolicyEffect } from '../policies/dto/create-policy.dto';
+import { CreatePolicyDto, PolicyType } from '../policies/dto/create-policy.dto';
+import { PolicyEffect } from '../policies/dto/create-policy.dto';
 
 @Injectable()
 export class TemplatesService {
+  private readonly logger = new Logger(TemplatesService.name);
+
   constructor(private readonly policiesService: PoliciesService) {}
 
   async listTemplates() {
-    const templateNames = listTemplates();
-    return templateNames.map(name => {
-      const template = getTemplate(name as TemplateName);
-      return {
-        name,
-        displayName: template?.name || name.toUpperCase(),
-        description: template?.description || '',
-      };
-    });
+    try {
+      const templateNames = listTemplates();
+      return templateNames.map(name => {
+        const template = getTemplate(name as TemplateName);
+        return {
+          name,
+          displayName: template?.name || name.toUpperCase(),
+          description: template?.description || '',
+        };
+      });
+    } catch (error: any) {
+      this.logger.error(`Error listing templates: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async getTemplate(name: string) {

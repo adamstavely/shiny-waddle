@@ -2,6 +2,8 @@
 
 Quick reference for common tasks when creating policies and tests.
 
+> **💡 Tip**: For most use cases, start with [Policy Templates](./TEMPLATE_GUIDE.md) to quickly create policies, then create tests to validate them.
+
 ## Policy Quick Reference
 
 ### RBAC Policy Template
@@ -226,6 +228,7 @@ ABAC_POLICIES_PATH=./policies/my-policies.json npm run test:compliance
 
 ## Need More Help?
 
+- **Template Guide**: See [TEMPLATE_GUIDE.md](./TEMPLATE_GUIDE.md) for creating policies from templates and testing them
 - **Detailed Guides**: See [POLICY_CREATION_GUIDE.md](./POLICY_CREATION_GUIDE.md) and [TEST_CREATION_GUIDE.md](./TEST_CREATION_GUIDE.md)
 - **Examples**: Check `examples/` directory
 - **Reference**: See `policies/` and `tests/` directories

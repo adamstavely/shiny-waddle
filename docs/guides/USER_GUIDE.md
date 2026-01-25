@@ -1454,7 +1454,8 @@ npm run dashboard:frontend
 
 ### Documentation
 
-- **[Policy Creation Guide](./POLICY_CREATION_GUIDE.md)**: How to create RBAC and ABAC policies
+- **[Template Guide](./TEMPLATE_GUIDE.md)**: ⭐ **Recommended** - Quick guide to creating policies from templates and testing them
+- **[Policy Creation Guide](./POLICY_CREATION_GUIDE.md)**: How to manually create RBAC and ABAC policies
 - **[Test Creation Guide](./TEST_CREATION_GUIDE.md)**: Step-by-step guide for creating test suites
 - **[Validator Creation Guide](./VALIDATOR_CREATION_GUIDE.md)**: How to create custom validators
 - **[Quick Reference](./QUICK_REFERENCE.md)**: Quick reference for common tasks

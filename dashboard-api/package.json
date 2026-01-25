@@ -60,6 +60,8 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0",
     "nock": "^13.5.0",
-    "@types/nock": "^13.5.0"
+    "@types/nock": "^13.5.0",
+    "commander": "^11.0.0",
+    "commander": "^11.0.0"
   }
 }

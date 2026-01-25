@@ -53,6 +53,8 @@ import SalesforceExperienceCloudConfigDetail from '../views/SalesforceExperience
 import SalesforceExperienceCloudTestRunner from '../views/SalesforceExperienceCloud/TestRunner.vue';
 import SalesforceExperienceCloudResultsList from '../views/SalesforceExperienceCloud/ResultsList.vue';
 import SalesforceExperienceCloudResultDetail from '../views/SalesforceExperienceCloud/ResultDetail.vue';
+import Templates from '../views/Templates.vue';
+import BatchOperations from '../views/BatchOperations.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -393,6 +395,16 @@ const router = createRouter({
       path: '/salesforce-experience-cloud/results/:id',
       name: 'SalesforceExperienceCloudResultDetail',
       component: SalesforceExperienceCloudResultDetail,
+    },
+    {
+      path: '/templates',
+      name: 'Templates',
+      component: Templates,
+    },
+    {
+      path: '/batch-operations',
+      name: 'BatchOperations',
+      component: BatchOperations,
     },
     {
       path: '/:pathMatch(.*)*',

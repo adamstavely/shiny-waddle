@@ -4,6 +4,7 @@ import { ApplicationsController } from './applications.controller';
 import { TestResultsModule } from '../test-results/test-results.module';
 import { ValidatorsModule } from '../validators/validators.module';
 import { CICDModule } from '../cicd/cicd.module';
+import { SecurityModule } from '../security/security.module';
 
 @Module({
   controllers: [ApplicationsController],
@@ -13,6 +14,7 @@ import { CICDModule } from '../cicd/cicd.module';
     forwardRef(() => TestResultsModule),
     forwardRef(() => ValidatorsModule),
     CICDModule,
+    SecurityModule,
   ],
 })
 export class ApplicationsModule {}
