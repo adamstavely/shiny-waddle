@@ -264,7 +264,7 @@ const { data: metrics, loading, error, reload } = useApiDataAuto(
       params.endDate = filters.value.endDate;
     }
 
-    const response = await axios.get('/api/test-results/compliance/metrics', { params });
+    const response = await axios.get('/api/v1/test-results/compliance/metrics', { params });
     return {
       ...response.data,
       period: {
@@ -335,7 +335,7 @@ const loadRecentExecutions = async () => {
     if (filters.value.applicationId) {
       params.applicationId = filters.value.applicationId;
     }
-    const response = await axios.get('/api/test-results', { params });
+    const response = await axios.get('/api/v1/test-results', { params });
     recentExecutions.value = response.data.map((r: any) => ({
       ...r,
       timestamp: new Date(r.timestamp),

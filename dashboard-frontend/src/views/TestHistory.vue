@@ -261,7 +261,7 @@ const loadResults = async () => {
       params.endDate = filters.value.endDate;
     }
 
-    const response = await axios.get('/api/test-results', { params });
+    const response = await axios.get('/api/v1/test-results', { params });
     results.value = response.data.map((r: any) => ({
       ...r,
       timestamp: new Date(r.timestamp),
@@ -312,7 +312,7 @@ const deleteResult = async (id: string) => {
     return;
   }
   try {
-    await axios.delete(`/api/test-results/${id}`);
+    await axios.delete(`/api/v1/test-results/${id}`);
     await loadResults();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Failed to delete test result';

@@ -614,7 +614,7 @@ const getRemediationStatusLabel = (status: string): string => {
 
 const loadTestResults = async () => {
   try {
-    const response = await axios.get('/api/test-results?limit=1000');
+    const response = await axios.get('/api/v1/test-results?limit=1000');
     if (response.data) {
       testResults.value = response.data.map((r: any) => ({
         ...r,
@@ -697,7 +697,7 @@ const deleteTestResult = async (id: string) => {
     return;
   }
   try {
-    await axios.delete(`/api/test-results/${id}`);
+    await axios.delete(`/api/v1/test-results/${id}`);
     const index = testResults.value.findIndex(r => r.id === id);
     if (index !== -1) {
       testResults.value.splice(index, 1);

@@ -354,7 +354,7 @@ const loadStats = async () => {
       axios.get('/api/v1/test-suites').catch(() => ({ data: [] })),
       axios.get('/api/v1/test-harnesses').catch(() => ({ data: [] })),
       axios.get('/api/v1/test-batteries').catch(() => ({ data: [] })),
-      axios.get('/api/test-results?limit=1000').catch(() => ({ data: [] }))
+      axios.get('/api/v1/test-results?limit=1000').catch(() => ({ data: [] }))
     ]);
     
     // Load applications count for infrastructure stat
