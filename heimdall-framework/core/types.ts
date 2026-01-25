@@ -75,7 +75,11 @@ export type TestType =
   | 'k8s-security'
   | 'k8s-workload'
   | 'idp-compliance'
-  | 'servicenow-config';
+  | 'servicenow-config'
+  | 'environment-config'
+  | 'secrets-management'
+  | 'config-drift'
+  | 'environment-policies';
 
 // Baseline configuration for platform config test suites
 export interface BaselineConfig {

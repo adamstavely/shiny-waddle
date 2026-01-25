@@ -121,12 +121,12 @@
               <span>Access Control</span>
             </a>
             <a
-              href="/policies/exceptions"
-              @click.prevent="handleNavClick('/policies/exceptions')"
-              :class="['drawer-item', isActive('/policies/exceptions') ? 'drawer-item-active' : '']"
+              href="/resources"
+              @click.prevent="handleNavClick('/resources')"
+              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
             >
-              <AlertTriangle class="item-icon" />
-              <span>Exceptions</span>
+              <Database class="item-icon" />
+              <span>Resources</span>
             </a>
           </div>
 
@@ -162,29 +162,6 @@
             </a>
           </div>
 
-          <!-- Configuration & Testing Section -->
-          <div class="category-section">
-            <div class="section-header">
-              <FileCheck class="section-icon" />
-              <span class="section-title">Configuration & Testing</span>
-            </div>
-            <a
-              href="/resources"
-              @click.prevent="handleNavClick('/resources')"
-              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-            >
-              <Database class="item-icon" />
-              <span>Resources</span>
-            </a>
-            <a
-              href="/environment-config-testing"
-              @click.prevent="handleNavClick('/environment-config-testing')"
-              :class="['drawer-item', isActive('/environment-config-testing') ? 'drawer-item-active' : '']"
-            >
-              <Settings class="item-icon" />
-              <span>Environment Config Testing</span>
-            </a>
-          </div>
         </div>
       </div>
 
@@ -303,11 +280,9 @@ const policiesConfigPages = [
   '/policies',
   '/policies/access-control',
   '/policies/data-classification',
-  '/policies/exceptions',
   '/policies/standards-mapping',
   '/policies/data-contracts',
-  '/resources',
-  '/environment-config-testing'
+  '/resources'
 ];
 
 // Admin pages
@@ -333,8 +308,9 @@ const getCategoryFromRoute = (path: string): string | null => {
       testDesignLibraryPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'test-design-library';
   }
-  // Check if it's a policies & config page
-  if (policiesConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
+  // Check if it's a policies & config page (exclude exceptions which is top-level)
+  if (path !== '/policies/exceptions' && !path.startsWith('/policies/exceptions/') &&
+      policiesConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'policies-config';
   }
   // Check if it's an admin page

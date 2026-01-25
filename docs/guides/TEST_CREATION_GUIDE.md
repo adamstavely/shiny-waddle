@@ -286,6 +286,232 @@ interface StatisticalFidelityTarget {
 }
 ```
 
+### 3. Platform Configuration Tests
+
+Tests that validate platform instances (Salesforce, Elastic, Kubernetes, ServiceNow) against desired baseline configurations.
+
+#### Overview
+
+Platform configuration tests validate that live platform instances match your desired baseline configuration. The baseline defines the "golden state" that all instances should conform to.
+
+**Key Concepts:**
+- **Baseline Configuration**: The desired state configuration (e.g., encryption settings, security policies)
+- **Platform Instance**: The live system being validated (stored as an Application)
+- **Validation Rules**: Tests that compare instance config against baseline (auto-generated or custom)
+
+#### Configuration
+
+```typescript
+{
+  testType: 'salesforce-config',  // or 'elastic-config', 'idp-compliance', etc.
+  application: 'production-salesforce-org',  // Platform instance (Application)
+  team: 'platform-team',
+  baselineConfig: {
+    platform: 'salesforce',
+    environment: 'production',
+    version: '1.0',
+    config: {
+      encryption: {
+        enabled: true,
+        fieldEncryption: {
+          enabled: true,
+          algorithm: 'AES-256'
+        },
+        platformEncryption: {
+          enabled: true
+        }
+      },
+      fieldLevelSecurity: {
+        enforced: true,
+        requireMFA: true
+      },
+      sharingRules: {
+        externalSharingEnabled: false,
+        publicGroupsRestricted: true
+      },
+      auditLogging: {
+        enabled: true,
+        retentionDays: 90
+      }
+    }
+  }
+}
+```
+
+#### Supported Platform Test Types
+
+- `salesforce-config` - Salesforce configuration validation
+- `salesforce-security` - Salesforce security settings
+- `elastic-config` - Elasticsearch configuration
+- `elastic-security` - Elasticsearch security
+- `k8s-security` - Kubernetes security policies
+- `k8s-workload` - Kubernetes workload configuration
+- `idp-compliance` - Identity Provider compliance
+- `servicenow-config` - ServiceNow configuration
+
+#### Baseline Configuration Structure
+
+```typescript
+interface BaselineConfig {
+  platform: 'salesforce' | 'elastic' | 'idp-kubernetes' | 'servicenow';
+  environment: string;  // 'production', 'staging', 'development'
+  version: string;      // e.g., '1.0', '2.1'
+  config: Record<string, any>;  // Platform-specific configuration structure
+}
+```
+
+#### Defining Baseline Elements
+
+**Via UI (Test Suite Builder):**
+
+1. Select a platform config test type (e.g., `salesforce-config`)
+2. Navigate to the "Baseline Config" tab
+3. Select Platform, Environment, and Version
+4. Enter configuration JSON in the textarea:
+
+```json
+{
+  "encryption": {
+    "enabled": true,
+    "fieldEncryption": {
+      "enabled": true
+    }
+  },
+  "fieldLevelSecurity": {
+    "enforced": true
+  }
+}
+```
+
+**Via TypeScript/JSON:**
+
+```typescript
+import { TestSuite } from '../../core/types';
+
+export const salesforceBaselineSuite: TestSuite = {
+  name: 'Salesforce HIPAA Baseline',
+  application: 'prod-salesforce-org',
+  team: 'compliance-team',
+  testType: 'salesforce-config',
+  domain: 'platform_config',
+  baselineConfig: {
+    platform: 'salesforce',
+    environment: 'production',
+    version: '1.0',
+    config: {
+      encryption: {
+        enabled: true,
+        fieldEncryption: { enabled: true }
+      },
+      // ... more config
+    }
+  },
+  testIds: [],  // Tests will be auto-generated from baseline config
+  enabled: true,
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+```
+
+#### Platform-Specific Configuration Examples
+
+**Salesforce:**
+```json
+{
+  "encryption": {
+    "enabled": true,
+    "fieldEncryption": { "enabled": true },
+    "platformEncryption": { "enabled": true }
+  },
+  "fieldLevelSecurity": {
+    "enforced": true,
+    "requireMFA": true
+  },
+  "sharingRules": {
+    "externalSharingEnabled": false
+  }
+}
+```
+
+**Elasticsearch:**
+```json
+{
+  "security": {
+    "enabled": true,
+    "ssl": {
+      "enabled": true,
+      "certificateRequired": true
+    }
+  },
+  "encryption": {
+    "atRest": { "enabled": true },
+    "inTransit": { "enabled": true }
+  }
+}
+```
+
+**Kubernetes/IDP:**
+```json
+{
+  "networkPolicies": {
+    "enforced": true,
+    "defaultDeny": true
+  },
+  "rbac": {
+    "enabled": true,
+    "leastPrivilege": true
+  },
+  "podSecurity": {
+    "standards": "restricted"
+  }
+}
+```
+
+#### Auto-Generated Validation Rules
+
+When you define a baseline configuration, validation rules are automatically generated from the config structure. Each config property becomes a validation check:
+
+- `encryption.enabled === true` → Test validates encryption is enabled
+- `fieldLevelSecurity.enforced === true` → Test validates FLS is enforced
+- `sharingRules.externalSharingEnabled === false` → Test validates external sharing is disabled
+
+#### Custom Validation Rules
+
+You can also add custom validation rules as individual Tests:
+
+```typescript
+{
+  id: 'custom-rule-1',
+  name: 'All Profiles Have MFA',
+  testType: 'salesforce-config',
+  domain: 'platform_config',
+  platform: 'salesforce',
+  check: 'allProfilesHaveMFA()',
+  severity: 'high',
+  autoGenerated: false
+}
+```
+
+#### Creating Platform Instances
+
+Platform instances are stored as Applications with platform-specific infrastructure:
+
+```typescript
+{
+  id: 'prod-salesforce-org',
+  name: 'Production Salesforce Org',
+  infrastructure: {
+    platformInstance: {
+      platform: 'salesforce',
+      connection: {
+        endpoint: 'https://mycompany.salesforce.com',
+        credentials: { /* encrypted */ }
+      }
+    }
+  }
+}
+```
+
 ## Configuration Reference
 
 ### Complete Test Suite Example

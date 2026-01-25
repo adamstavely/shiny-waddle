@@ -8,8 +8,8 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/test-design-library', '/admin', '/policies', '/targets'].includes(item.path)"
-            :to="item.path"
+            v-if="item.path !== '/policies/exceptions'"
+            :to="item.path === '/test-design-library' ? '/tests' : item.path"
             :class="[
               'nav-item',
               isActive(item.path) ? 'nav-item-active' : ''
@@ -44,8 +44,8 @@
     <!-- Admin Item - Pinned at Bottom -->
     <div class="nav-admin-section">
       <div class="nav-divider" aria-hidden="true"></div>
-      <button
-        @click="handleNavClick('/admin')"
+      <router-link
+        to="/admin"
         :class="[
           'nav-item',
           isActive('/admin') ? 'nav-item-active' : ''
@@ -54,7 +54,7 @@
       >
         <component :is="UserCog" class="nav-icon" />
         <span class="nav-label">Admin</span>
-      </button>
+      </router-link>
     </div>
   </aside>
 </template>
@@ -82,7 +82,9 @@ import {
   KeyRound,
   BookOpen,
   PlayCircle,
-  Target
+  Target,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -94,6 +96,8 @@ const menuItems = [
   { path: '/targets', label: 'Targets', icon: Target, divider: false },
   { path: '/test-design-library', label: 'Tests', icon: BookOpen, divider: false },
   { path: '/policies', label: 'Policies', icon: FileText, divider: false },
+  { path: '/policies/exceptions', label: 'Exceptions', icon: AlertTriangle, divider: false },
+  { path: '/validators', label: 'Validators', icon: CheckCircle, divider: false },
 ];
 
 // Test Design Library pages
@@ -109,8 +113,12 @@ const policiesConfigPages = [
   '/policies',
   '/resources',
   '/configuration-validation',
-  '/environment-config-testing',
   '/salesforce-experience-cloud'
+];
+
+// Exceptions is a top-level page
+const exceptionsPages = [
+  '/policies/exceptions'
 ];
 
 // Insights & Reports pages
@@ -139,10 +147,17 @@ const isActive = (path: string): boolean => {
     return targetsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/test-design-library') {
-    return testDesignLibraryPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+    // Map to /tests overview page
+    return currentPath.value === '/tests' || testDesignLibraryPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/policies') {
     return policiesConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
+  if (path === '/policies/exceptions') {
+    return exceptionsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
+  }
+  if (path === '/validators') {
+    return currentPath.value === '/validators' || currentPath.value.startsWith('/validators/');
   }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
@@ -151,28 +166,8 @@ const isActive = (path: string): boolean => {
 };
 
 const handleNavClick = (path: string) => {
-  // For drawer items, open the drawer with that category's content
-  if (path === '/targets') {
-    // Emit event to open drawer with targets category
-    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'targets' } }));
-    return;
-  }
-  if (path === '/test-design-library') {
-    // Emit event to open drawer with test-design-library category
-    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'test-design-library' } }));
-    return;
-  }
-  if (path === '/policies') {
-    // Emit event to open drawer with policies-config category
-    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'policies-config' } }));
-    return;
-  }
-  if (path === '/admin') {
-    // Emit event to open drawer with admin category
-    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'admin' } }));
-    return;
-  }
-  // Use Vue Router for navigation
+  // Only handle exceptions as a special case (if needed)
+  // All other items now navigate directly to their overview pages
   router.push(path);
 };
 

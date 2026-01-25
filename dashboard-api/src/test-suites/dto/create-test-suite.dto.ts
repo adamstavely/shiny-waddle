@@ -37,6 +37,10 @@ const VALID_TEST_TYPES = [
   'k8s-workload',
   'idp-compliance',
   'servicenow-config',
+  'environment-config',
+  'secrets-management',
+  'config-drift',
+  'environment-policies',
 ] as const;
 
 export class CreateTestSuiteDto {

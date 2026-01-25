@@ -32,7 +32,6 @@
       />
       <AdminBannersTab v-else-if="activeTab === 'banners'" />
       <AdminApplicationsTab v-else-if="activeTab === 'applications'" />
-      <AdminValidatorsTab v-else-if="activeTab === 'validators'" />
     </div>
   </div>
 </template>
@@ -51,7 +50,6 @@ import TabNavigation, { type Tab } from '../components/TabNavigation.vue';
 import AdminOverviewTab from './admin/AdminOverviewTab.vue';
 import AdminBannersTab from './admin/AdminBannersTab.vue';
 import AdminApplicationsTab from './admin/AdminApplicationsTab.vue';
-import AdminValidatorsTab from './admin/AdminValidatorsTab.vue';
 import axios from 'axios';
 
 const route = useRoute();
@@ -63,7 +61,7 @@ const breadcrumbItems = [
 ];
 
 // Initialize active tab from route query or default
-const activeTab = ref<'overview' | 'applications' | 'banners' | 'validators'>(
+const activeTab = ref<'overview' | 'applications' | 'banners'>(
   (route.query.tab as string | undefined) || 'overview'
 );
 
@@ -73,8 +71,7 @@ const applications = ref<any[]>([]);
 const tabs = computed<Tab[]>(() => [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
   { id: 'applications', label: 'Applications', icon: Layers },
-  { id: 'banners', label: 'Banners', icon: Megaphone },
-  { id: 'validators', label: 'Validators', icon: Shield }
+  { id: 'banners', label: 'Banners', icon: Megaphone }
 ]);
 
 const applicationsCount = computed(() => applications.value.length);

@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Teleport } from 'vue';
 import {
   AlertTriangle,
@@ -112,11 +112,11 @@ import {
 import Breadcrumb from '../../components/Breadcrumb.vue';
 import axios from 'axios';
 
-const breadcrumbItems = [
+const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
   { label: 'Policies', to: '/policies' },
   { label: 'Exceptions' }
-];
+]);
 
 // Data
 const exceptions = ref<any[]>([]);
