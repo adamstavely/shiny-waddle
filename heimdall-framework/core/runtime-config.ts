@@ -95,6 +95,27 @@ export interface RuntimeTestConfig {
   };
 
   /**
+   * Salesforce Experience Cloud configuration
+   */
+  salesforceExperienceCloud?: {
+    url: string;
+    cookies?: string;
+    outputDir?: string;
+    objectList?: string[];
+    app?: string;
+    aura?: string;
+    context?: string;
+    token?: string;
+    noGraphQL?: boolean;
+    proxy?: string;
+    insecure?: boolean;
+    auraRequestFile?: string;
+    auraInspectorPath?: string;
+    timeout?: number;
+    pythonPath?: string;
+  };
+
+  /**
    * Additional custom configuration values
    */
   [key: string]: any;

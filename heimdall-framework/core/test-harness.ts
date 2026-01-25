@@ -16,10 +16,12 @@ import {
   AccessControlTest,
   DatasetHealthTest,
   PlatformConfigTest,
+  SalesforceExperienceCloudTest,
   ABACPolicy,
 } from './types';
 import { RuntimeTestConfig } from './runtime-config';
 import { mergeRuntimeConfig } from './config-loader';
+import { SalesforceExperienceCloudTester, SalesforceExperienceCloudConfig } from '../services/salesforce-experience-cloud-tester';
 
 // Test loader interface - implementations should load tests by IDs
 export interface TestLoader {
@@ -121,6 +123,8 @@ export class TestOrchestrator {
       case 'idp-compliance':
       case 'servicenow-config':
         return this.runPlatformConfigTest(test as PlatformConfigTest, suite);
+      case 'salesforce-experience-cloud':
+        return this.runSalesforceExperienceCloudTest(test as SalesforceExperienceCloudTest, suite);
       default:
         throw new Error(`Test type ${test.testType} execution not yet implemented`);
     }
@@ -235,6 +239,135 @@ export class TestOrchestrator {
     }
 
     return await this.platformConfigTester.execute(test, suite, application);
+  }
+
+  /**
+   * Run a single Salesforce Experience Cloud test
+   */
+  async runSalesforceExperienceCloudTest(test: SalesforceExperienceCloudTest, suite: TestSuite): Promise<TestResult> {
+    try {
+      // Get configuration from suite runtime config
+      const runtimeConfig = suite.runtimeConfig as any;
+      const testConfig: SalesforceExperienceCloudConfig = {
+        url: runtimeConfig?.url || runtimeConfig?.salesforceExperienceCloud?.url,
+        cookies: runtimeConfig?.cookies || runtimeConfig?.salesforceExperienceCloud?.cookies,
+        outputDir: runtimeConfig?.outputDir || runtimeConfig?.salesforceExperienceCloud?.outputDir,
+        objectList: runtimeConfig?.objectList || runtimeConfig?.salesforceExperienceCloud?.objectList,
+        app: runtimeConfig?.app || runtimeConfig?.salesforceExperienceCloud?.app,
+        aura: runtimeConfig?.aura || runtimeConfig?.salesforceExperienceCloud?.aura,
+        context: runtimeConfig?.context || runtimeConfig?.salesforceExperienceCloud?.context,
+        token: runtimeConfig?.token || runtimeConfig?.salesforceExperienceCloud?.token,
+        noGraphQL: runtimeConfig?.noGraphQL ?? runtimeConfig?.salesforceExperienceCloud?.noGraphQL,
+        proxy: runtimeConfig?.proxy || runtimeConfig?.salesforceExperienceCloud?.proxy,
+        insecure: runtimeConfig?.insecure ?? runtimeConfig?.salesforceExperienceCloud?.insecure,
+        auraRequestFile: runtimeConfig?.auraRequestFile || runtimeConfig?.salesforceExperienceCloud?.auraRequestFile,
+        auraInspectorPath: runtimeConfig?.auraInspectorPath || runtimeConfig?.salesforceExperienceCloud?.auraInspectorPath,
+        timeout: runtimeConfig?.timeout || runtimeConfig?.salesforceExperienceCloud?.timeout,
+        pythonPath: runtimeConfig?.pythonPath || runtimeConfig?.salesforceExperienceCloud?.pythonPath,
+      };
+
+      if (!testConfig.url) {
+        throw new Error('Salesforce Experience Cloud URL is required in test suite runtime config');
+      }
+
+      const tester = new SalesforceExperienceCloudTester(testConfig);
+      let testResult: any;
+
+      // Execute based on test subtype
+      switch (test.testSubtype) {
+        case 'guest-access':
+          testResult = await tester.testGuestAccess();
+          break;
+        case 'authenticated-access':
+          testResult = await tester.testAuthenticatedAccess();
+          break;
+        case 'graphql':
+          testResult = await tester.testGraphQLCapability();
+          break;
+        case 'self-registration':
+          testResult = await tester.testSelfRegistration();
+          break;
+        case 'record-lists':
+          testResult = await tester.testRecordListComponents();
+          break;
+        case 'home-urls':
+          testResult = await tester.testHomeURLs();
+          break;
+        case 'object-access':
+          if (!testConfig.objectList || testConfig.objectList.length === 0) {
+            throw new Error('objectList is required for object-access test');
+          }
+          testResult = await tester.testObjectAccess(testConfig.objectList);
+          break;
+        case 'full-audit':
+          // Full audit returns multiple results, but we'll return the first one
+          const auditResults = await tester.runFullAudit();
+          testResult = auditResults[0] || {
+            testType: 'salesforce-experience-cloud',
+            testName: 'Full Audit',
+            passed: false,
+            details: { error: 'No results from full audit' },
+            timestamp: new Date(),
+          };
+          break;
+        default:
+          throw new Error(`Unknown Salesforce Experience Cloud test subtype: ${test.testSubtype}`);
+      }
+
+      // Check expected results if provided
+      let passed = testResult.passed;
+      if (test.expected) {
+        if (test.expected.maxSeverity && testResult.details?.findings) {
+          const severities = ['low', 'medium', 'high', 'critical'];
+          const maxFoundSeverity = testResult.details.findings.reduce((max: string, f: any) => {
+            const currentIdx = severities.indexOf(f.severity || 'low');
+            const maxIdx = severities.indexOf(max);
+            return currentIdx > maxIdx ? f.severity : max;
+          }, 'low');
+          const expectedIdx = severities.indexOf(test.expected.maxSeverity);
+          const foundIdx = severities.indexOf(maxFoundSeverity);
+          if (foundIdx > expectedIdx) {
+            passed = false;
+          }
+        }
+        if (test.expected.maxFindings !== undefined && testResult.details?.findings) {
+          if (testResult.details.findings.length > test.expected.maxFindings) {
+            passed = false;
+          }
+        }
+        if (test.expected.passed !== undefined) {
+          passed = testResult.passed === test.expected.passed;
+        }
+      }
+
+      return {
+        testType: test.testType,
+        testName: test.name || testResult.testName,
+        passed,
+        details: {
+          ...testResult.details,
+          testSubtype: test.testSubtype,
+          configUrl: testConfig.url,
+        },
+        timestamp: testResult.timestamp || new Date(),
+        testId: test.id,
+        testVersion: test.version,
+      };
+    } catch (error: any) {
+      return {
+        testType: test.testType,
+        testName: test.name,
+        passed: false,
+        details: {
+          error: error.message,
+          testSubtype: test.testSubtype,
+        },
+        timestamp: new Date(),
+        testId: test.id,
+        testVersion: test.version,
+        error: error.message,
+      };
+    }
   }
 
   /**

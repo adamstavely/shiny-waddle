@@ -9,7 +9,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { TestLoader } from '../../../heimdall-framework/core/test-harness';
-import { Test, PlatformConfigTest, ABACPolicy } from '../../../heimdall-framework/core/types';
+import { Test, PlatformConfigTest, SalesforceExperienceCloudTest, ABACPolicy } from '../../../heimdall-framework/core/types';
 import { Application } from '../applications/entities/application.entity';
 
 @Injectable()
@@ -129,6 +129,18 @@ export class TestLoaderService implements TestLoader {
         configPath: test.configPath,
         expected: test.expected || { passed: true },
       } as PlatformConfigTest;
+    }
+
+    // Salesforce Experience Cloud tests need special handling
+    if (test.testType === 'salesforce-experience-cloud') {
+      return {
+        ...test,
+        testType: 'salesforce-experience-cloud',
+        domain: test.domain || 'salesforce',
+        testSubtype: test.testSubtype || 'guest-access',
+        configId: test.configId,
+        expected: test.expected || { passed: true },
+      } as SalesforceExperienceCloudTest;
     }
 
     // Return as-is for other test types

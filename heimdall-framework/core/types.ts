@@ -376,6 +376,25 @@ export interface PlatformConfigTest extends BaseTest {
   };
 }
 
+// Salesforce Experience Cloud Test - for Salesforce Experience Cloud security testing
+export interface SalesforceExperienceCloudTest extends BaseTest {
+  testType: 'salesforce-experience-cloud';
+  domain: 'salesforce' | 'security';
+  
+  // Test subtype (guest-access, authenticated-access, graphql, etc.)
+  testSubtype: 'guest-access' | 'authenticated-access' | 'graphql' | 'self-registration' | 'record-lists' | 'home-urls' | 'object-access' | 'full-audit';
+  
+  // Configuration reference (config stored in runtimeConfig)
+  configId?: string; // Optional reference to Salesforce Experience Cloud config
+  
+  // Expected result
+  expected?: {
+    passed: boolean;
+    maxSeverity?: 'critical' | 'high' | 'medium' | 'low';
+    maxFindings?: number;
+  };
+}
+
 // Discriminated union for Test
 export type Test =
   | AccessControlTest
@@ -387,7 +406,8 @@ export type Test =
   | DistributedSystemsTest
   | APISecurityTest
   | DataPipelineTest
-  | PlatformConfigTest;
+  | PlatformConfigTest
+  | SalesforceExperienceCloudTest;
 
 export interface User {
   id: string;

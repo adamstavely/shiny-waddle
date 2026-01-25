@@ -30,6 +30,7 @@ const VALID_TEST_TYPES = [
   'data-contract',
   'salesforce-config',
   'salesforce-security',
+  'salesforce-experience-cloud',
   'elastic-config',
   'elastic-security',
   'k8s-security',
