@@ -155,5 +155,34 @@ export class TestSuitesController {
     this.logger.log(`Getting harnesses using test suite: ${id}`);
     return this.testSuitesService.getUsedInHarnesses(id);
   }
+
+  @Public()
+  @Post(':id/run')
+  @HttpCode(HttpStatus.OK)
+  async runTestSuite(@Param('id') id: string): Promise<{
+    suiteId: string;
+    suiteName: string;
+    status: 'passed' | 'failed' | 'partial';
+    totalTests: number;
+    passed: number;
+    failed: number;
+    results: any[];
+    timestamp: Date;
+  }> {
+    this.logger.log(`Running test suite: ${id}`);
+    return this.testSuitesService.runTestSuite(id);
+  }
+
+  @Public()
+  @Get(':id/results')
+  @HttpCode(HttpStatus.OK)
+  async getTestResults(@Param('id') id: string): Promise<{
+    suiteId: string;
+    lastRun?: Date;
+    results: any[];
+  }> {
+    this.logger.log(`Getting test results for suite: ${id}`);
+    return this.testSuitesService.getTestResults(id);
+  }
 }
 

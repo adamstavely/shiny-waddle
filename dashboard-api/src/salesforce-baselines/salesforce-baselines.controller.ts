@@ -79,4 +79,16 @@ export class SalesforceBaselinesController {
     this.logger.log(`Detecting drift for Salesforce baseline ${id}`);
     return this.salesforceBaselinesService.detectDrift(id, dto.currentConfig);
   }
+
+  @Post(':id/validate')
+  @HttpCode(HttpStatus.OK)
+  async validateBaseline(@Param('id') id: string) {
+    this.logger.warn(
+      `[DEPRECATED] Baseline validation API used: POST /api/v1/salesforce/baselines/${id}/validate. ` +
+      `Use POST /api/v1/test-suites/${id}/run instead`
+    );
+    // For now, redirect to test suite run if migrated
+    // TODO: Implement adapter or keep existing validation logic
+    throw new Error('Baseline validation has been migrated to test suites. Use POST /api/v1/test-suites/:id/run');
+  }
 }

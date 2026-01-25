@@ -7,25 +7,65 @@ import { CreateTestSuiteDto } from './dto/create-test-suite.dto';
 import { UpdateTestSuiteDto } from './dto/update-test-suite.dto';
 import { parseTypeScriptTestSuite, convertJSONToTypeScript } from './test-suite-converter';
 import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
-import { TestType } from '../../../heimdall-framework/core/types';
+import { TestType, TestSuite, TestResult, TestConfiguration } from '../../../heimdall-framework/core/types';
+import { TestOrchestrator } from '../../../heimdall-framework/core/test-harness';
+import { TestLoaderService } from './test-loader.service';
 
 @Injectable()
 export class TestSuitesService {
   private readonly logger = new Logger(TestSuitesService.name);
   private readonly suitesFile = path.join(process.cwd(), 'data', 'test-suites.json');
+  private readonly resultsFile = path.join(process.cwd(), 'data', 'test-results.json');
   private readonly projectRoot = process.cwd().includes('dashboard-api') 
     ? path.join(process.cwd(), '..')
     : process.cwd();
   private suites: TestSuiteEntity[] = [];
   private filesystemSuites: Map<string, TestSuiteEntity> = new Map(); // keyed by sourcePath
+  private testLoader?: TestLoaderService;
+  private testOrchestrator?: TestOrchestrator;
 
-  constructor() {
+  constructor(testLoaderService?: TestLoaderService) {
     this.loadSuites().catch(err => {
       this.logger.error('Error loading test suites on startup:', err);
     });
     this.discoverFilesystemSuites().catch(err => {
       this.logger.error('Error discovering filesystem test suites on startup:', err);
     });
+    
+    // Initialize test loader if provided
+    this.testLoader = testLoaderService;
+  }
+
+  /**
+   * Get or create test loader
+   */
+  private getTestLoader(): TestLoaderService {
+    if (!this.testLoader) {
+      this.testLoader = new TestLoaderService();
+    }
+    return this.testLoader;
+  }
+
+  /**
+   * Get or create test orchestrator
+   */
+  private getTestOrchestrator(): TestOrchestrator {
+    if (!this.testOrchestrator) {
+      const config: TestConfiguration = {
+        accessControlConfig: {
+          policyEngine: 'custom',
+          cacheDecisions: true,
+          policyMode: 'hybrid',
+        },
+        datasetHealthConfig: {},
+        reportingConfig: {
+          outputFormat: 'json',
+          includeDetails: true,
+        },
+      };
+      this.testOrchestrator = new TestOrchestrator(config, this.getTestLoader());
+    }
+    return this.testOrchestrator;
   }
 
   private async loadSuites(): Promise<void> {
@@ -515,6 +555,185 @@ export class TestSuitesService {
     } catch (err) {
       this.logger.error('Error getting harnesses for suite:', err);
       return [];
+    }
+  }
+
+  /**
+   * Run a test suite and return results
+   */
+  async runTestSuite(suiteId: string): Promise<{
+    suiteId: string;
+    suiteName: string;
+    status: 'passed' | 'failed' | 'partial';
+    totalTests: number;
+    passed: number;
+    failed: number;
+    results: any[];
+    timestamp: Date;
+  }> {
+    await this.loadSuites();
+    
+    const suiteEntity = this.suites.find(s => s.id === suiteId);
+    if (!suiteEntity) {
+      throw new NotFoundException(`Test suite ${suiteId} not found`);
+    }
+
+    // Convert TestSuiteEntity to TestSuite format
+    const suite: TestSuite = {
+      id: suiteEntity.id,
+      name: suiteEntity.name,
+      application: suiteEntity.applicationId,
+      team: suiteEntity.team,
+      testType: suiteEntity.testType as TestType,
+      domain: suiteEntity.domain as any,
+      testIds: [], // Will be loaded by test loader
+      description: suiteEntity.description,
+      enabled: suiteEntity.enabled,
+      createdAt: suiteEntity.createdAt,
+      updatedAt: suiteEntity.updatedAt,
+      baselineConfig: (suiteEntity as any).baselineConfig,
+      runtimeConfig: {
+        environment: (suiteEntity as any).environment,
+        platformInstance: (suiteEntity as any).platformInstance,
+      },
+    };
+
+    // Load tests for this suite
+    // Note: We need to get testIds from somewhere - for now, we'll load all tests
+    // and filter by suite association (this is a limitation we'll need to address)
+    const testLoader = this.getTestLoader();
+    const allTests = await testLoader.loadTests([]);
+    
+    // For platform config tests, we need to find tests associated with this suite
+    // This is a temporary solution - ideally testIds would be stored in the suite
+    const suiteTests = allTests.filter((t: any) => {
+      // Match platform config tests that belong to this suite
+      if (t.testType === suite.testType) {
+        // Check if test references this suite or baseline
+        return t.suiteId === suiteId || t.baselineId === suiteId;
+      }
+      return false;
+    });
+
+    // If no tests found, try to get from suite.testIds if available
+    if (suiteTests.length === 0 && (suiteEntity as any).testIds) {
+      suite.testIds = (suiteEntity as any).testIds;
+      const tests = await this.testLoader.loadTests(suite.testIds);
+      suiteTests.push(...tests);
+    }
+
+    // Run tests
+    const orchestrator = this.getTestOrchestrator();
+    const results: TestResult[] = await orchestrator.runTestSuite(
+      suite,
+      suiteTests.length > 0 ? suiteTests : undefined
+    );
+
+    // Calculate status
+    const passed = results.filter(r => r.passed).length;
+    const failed = results.filter(r => !r.passed).length;
+    const totalTests = results.length;
+    const status: 'passed' | 'failed' | 'partial' = 
+      failed === 0 ? 'passed' : (passed === 0 ? 'failed' : 'partial');
+
+    // Save results
+    await this.saveTestResults(suiteId, results);
+
+    // Update suite last run time
+    suiteEntity.lastRun = new Date();
+    suiteEntity.status = status === 'passed' ? 'passing' : status === 'failed' ? 'failing' : 'pending';
+    suiteEntity.testCount = totalTests;
+    suiteEntity.score = totalTests > 0 ? Math.round((passed / totalTests) * 100) : 0;
+    await this.saveSuites();
+
+    return {
+      suiteId,
+      suiteName: suiteEntity.name,
+      status,
+      totalTests,
+      passed,
+      failed,
+      results: results.map(r => ({
+        testId: r.testId,
+        testName: r.testName,
+        testType: r.testType,
+        passed: r.passed,
+        details: r.details,
+        error: r.error,
+        timestamp: r.timestamp,
+      })),
+      timestamp: new Date(),
+    };
+  }
+
+  /**
+   * Get test results for a suite
+   */
+  async getTestResults(suiteId: string): Promise<{
+    suiteId: string;
+    lastRun?: Date;
+    results: any[];
+  }> {
+    try {
+      const content = await fs.readFile(this.resultsFile, 'utf-8');
+      if (!content || content.trim() === '') {
+        return { suiteId, results: [] };
+      }
+
+      const allResults = JSON.parse(content);
+      const suiteResults = allResults.filter((r: any) => r.suiteId === suiteId);
+
+      const suite = this.suites.find(s => s.id === suiteId);
+      
+      return {
+        suiteId,
+        lastRun: suite?.lastRun,
+        results: suiteResults,
+      };
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return { suiteId, results: [] };
+      }
+      this.logger.error('Error loading test results:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save test results
+   */
+  private async saveTestResults(suiteId: string, results: TestResult[]): Promise<void> {
+    try {
+      await fs.mkdir(path.dirname(this.resultsFile), { recursive: true });
+      
+      let allResults: any[] = [];
+      try {
+        const content = await fs.readFile(this.resultsFile, 'utf-8');
+        if (content && content.trim()) {
+          allResults = JSON.parse(content);
+        }
+      } catch (error: any) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+
+      // Remove old results for this suite
+      allResults = allResults.filter((r: any) => r.suiteId !== suiteId);
+
+      // Add new results
+      const suiteResults = results.map(r => ({
+        suiteId,
+        ...r,
+        timestamp: r.timestamp.toISOString(),
+      }));
+
+      allResults.push(...suiteResults);
+
+      await fs.writeFile(this.resultsFile, JSON.stringify(allResults, null, 2), 'utf-8');
+    } catch (error) {
+      this.logger.error('Error saving test results:', error);
+      throw error;
     }
   }
 }
