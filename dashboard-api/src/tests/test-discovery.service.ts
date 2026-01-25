@@ -33,8 +33,9 @@ export class TestDiscoveryService {
 
   /**
    * Map of test suite classes to their test types
+   * Note: EnvironmentConfigTestSuite doesn't extend BaseTestSuite, so we use a more generic type
    */
-  private readonly testSuiteMap = new Map<typeof BaseTestSuite, { testType: TestType; domain: TestDomain }>([
+  private readonly testSuiteMap = new Map<any, { testType: TestType; domain: TestDomain }>([
     [AuthenticationTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
     [AuthorizationTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
     [InjectionTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
