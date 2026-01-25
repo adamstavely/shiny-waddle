@@ -280,6 +280,7 @@ import {
   BookOpen,
   FileText,
   KeyRound,
+  Cloud,
   BarChart3,
   PlayCircle
 } from 'lucide-vue-next';
