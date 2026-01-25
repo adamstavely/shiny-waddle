@@ -103,27 +103,7 @@
           </div>
           <h3 class="feature-title">Access Control Testing</h3>
           <p class="feature-description">
-            Comprehensive testing for RBAC and ABAC policies with automated validation.
-          </p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">
-            <BarChart3 />
-          </div>
-          <h3 class="feature-title">Real-time Monitoring</h3>
-          <p class="feature-description">
-            Track compliance scores and violations in real-time with detailed analytics.
-          </p>
-        </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">
-            <FileText />
-          </div>
-          <h3 class="feature-title">Compliance Reports</h3>
-          <p class="feature-description">
-            Generate comprehensive reports for audits and governance documentation.
+            Comprehensive testing for RBAC and ABAC policies with automated validation and correctness checks.
           </p>
         </div>
         
@@ -131,9 +111,19 @@
           <div class="feature-icon">
             <TestTube />
           </div>
-          <h3 class="feature-title">Automated Test Suites</h3>
+          <h3 class="feature-title">Comprehensive Test Framework</h3>
           <p class="feature-description">
-            Create and run test suites to validate data access policies continuously.
+            Support for 20+ test types including API security, data pipelines, network policies, and platform configurations.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <Server />
+          </div>
+          <h3 class="feature-title">Platform Configuration</h3>
+          <p class="feature-description">
+            Validate platform configurations for Salesforce, Elastic, Kubernetes, and ServiceNow against baseline standards.
           </p>
         </div>
       </div>
@@ -142,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
+import { ShieldCheck, TestTube, Server } from 'lucide-vue-next';
 </script>
 
 <style scoped>
@@ -314,13 +304,19 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-lg);
 }
 
 @media (max-width: 1200px) {
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
   }
 }
 
