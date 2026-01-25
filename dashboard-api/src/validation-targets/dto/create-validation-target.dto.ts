@@ -26,8 +26,16 @@ export class CreateValidationTargetDto {
   @IsOptional()
   description?: string;
 
+  @IsString()
+  @IsOptional()
+  environment?: string; // production, staging, development
+
   @IsObject()
   connectionConfig: Record<string, any>;
+
+  @IsString()
+  @IsOptional()
+  baselineId?: string; // Reference to platform baseline
 
   @IsArray()
   @IsOptional()

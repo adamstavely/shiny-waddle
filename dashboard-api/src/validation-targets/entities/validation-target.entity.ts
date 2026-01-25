@@ -5,7 +5,9 @@ export interface ValidationTargetEntity {
   name: string;
   type: ValidationTargetType;
   description?: string;
+  environment?: string; // production, staging, development
   connectionConfig: Record<string, any>;
+  baselineId?: string; // Reference to platform baseline
   status: ValidationTargetStatus;
   ruleIds: string[];
   lastValidationAt?: Date;

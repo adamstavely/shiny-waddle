@@ -10,8 +10,16 @@ export class UpdateValidationTargetDto {
   description?: string;
 
   @IsOptional()
+  @IsString()
+  environment?: string;
+
+  @IsOptional()
   @IsObject()
   connectionConfig?: Record<string, any>;
+
+  @IsOptional()
+  @IsString()
+  baselineId?: string;
 
   @IsOptional()
   @IsArray()

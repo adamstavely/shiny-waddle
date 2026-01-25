@@ -78,11 +78,25 @@
                   <label>Environment</label>
                   <input v-model="baselineForm.environment" type="text" placeholder="e.g., production, staging" />
                 </div>
+                <div class="form-group">
+                  <label>
+                    Configuration (JSON)
+                    <span class="label-optional">Optional</span>
+                  </label>
+                  <textarea 
+                    v-model="baselineForm.configJson" 
+                    rows="6" 
+                    placeholder='{"key": "value", "nested": {"property": "value"}}'
+                    :class="['config-textarea', { 'config-textarea-error': configError }]"
+                  ></textarea>
+                  <p class="form-hint">Enter configuration as JSON. Leave empty to create with an empty config object.</p>
+                  <p v-if="configError" class="form-error">{{ configError }}</p>
+                </div>
                 <div class="form-actions">
                   <button type="button" @click="closeBaselineModal" class="btn-secondary">
                     Cancel
                   </button>
-                  <button type="submit" class="btn-primary">
+                  <button type="submit" class="btn-primary" :disabled="!!configError">
                     Create Baseline
                   </button>
                 </div>
@@ -96,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { Teleport } from 'vue';
 import {
   Settings,
@@ -126,8 +140,11 @@ const showCreateBaselineModal = ref(false);
 const baselineForm = ref({
   name: '',
   description: '',
-  environment: ''
+  environment: '',
+  configJson: ''
 });
+
+const configError = ref<string | null>(null);
 
 // API Calls
 const loadBaselines = async () => {
@@ -146,7 +163,8 @@ const loadBaselines = async () => {
 
 // Actions
 const openCreateBaselineModal = () => {
-  baselineForm.value = { name: '', description: '', environment: '' };
+  baselineForm.value = { name: '', description: '', environment: '', configJson: '' };
+  configError.value = null;
   showCreateBaselineModal.value = true;
 };
 
@@ -155,12 +173,41 @@ const closeBaselineModal = () => {
 };
 
 const saveBaseline = async () => {
+  // Validate and parse JSON config
+  configError.value = null;
+  let config: Record<string, any> | undefined = undefined;
+  
+  if (baselineForm.value.configJson.trim()) {
+    try {
+      config = JSON.parse(baselineForm.value.configJson);
+      if (typeof config !== 'object' || Array.isArray(config)) {
+        configError.value = 'Configuration must be a valid JSON object';
+        return;
+      }
+    } catch (err) {
+      configError.value = 'Invalid JSON format. Please check your syntax.';
+      return;
+    }
+  }
+  
   try {
-    await axios.post('/api/v1/platform-config/baselines', baselineForm.value);
+    const payload: any = {
+      name: baselineForm.value.name,
+      description: baselineForm.value.description,
+      environment: baselineForm.value.environment
+    };
+    
+    // Only include config if it was provided
+    if (config !== undefined) {
+      payload.config = config;
+    }
+    
+    await axios.post('/api/v1/platform-config/baselines', payload);
     await loadBaselines();
     closeBaselineModal();
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Failed to create baseline');
+    const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Failed to create baseline';
+    alert(errorMessage);
     console.error('Error creating baseline:', err);
   }
 };
@@ -184,6 +231,25 @@ const deleteBaseline = async (id: string) => {
     }
   }
 };
+
+// Watch configJson for real-time validation
+watch(() => baselineForm.value.configJson, (newValue) => {
+  if (!newValue || !newValue.trim()) {
+    configError.value = null;
+    return;
+  }
+  
+  try {
+    const parsed = JSON.parse(newValue);
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+      configError.value = 'Configuration must be a valid JSON object';
+    } else {
+      configError.value = null;
+    }
+  } catch (err) {
+    configError.value = 'Invalid JSON format. Please check your syntax.';
+  }
+});
 
 onMounted(() => {
   loadBaselines();
@@ -524,6 +590,16 @@ onMounted(() => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.label-optional {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-secondary);
+  font-style: italic;
 }
 
 .form-group input,
@@ -541,6 +617,34 @@ onMounted(() => {
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.config-textarea {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: var(--font-size-sm);
+}
+
+.config-textarea-error {
+  border-color: var(--color-error);
+}
+
+.config-textarea-error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-bg);
+}
+
+.form-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin: 0;
+  margin-top: calc(var(--spacing-xs) * -1);
+}
+
+.form-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  margin: 0;
+  margin-top: calc(var(--spacing-xs) * -1);
 }
 
 .form-group input:focus,

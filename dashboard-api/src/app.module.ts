@@ -44,11 +44,14 @@ import { TestsModule } from './tests/tests.module';
 import { AuthModule } from './auth/auth.module';
 import { RiskScoringModule } from './risk-scoring/risk-scoring.module';
 import { DataClassificationModule } from './data-classification/data-classification.module';
-import { PlatformConfigModule } from './platform-config/platform-config.module';
 import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
 import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { AlertingModule } from './alerting/alerting.module';
+import { SalesforceBaselinesModule } from './salesforce-baselines/salesforce-baselines.module';
+import { ElasticBaselinesModule } from './elastic-baselines/elastic-baselines.module';
+import { IDPKubernetesBaselinesModule } from './idp-kubernetes-baselines/idp-kubernetes-baselines.module';
+import { ServiceNowBaselinesModule } from './servicenow-baselines/servicenow-baselines.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -99,11 +102,14 @@ import { AppController } from './app.controller';
     TestsModule,
     RiskScoringModule,
     DataClassificationModule,
-    PlatformConfigModule,
     ExceptionsModule,
     StandardsMappingModule,
     SalesforceExperienceCloudModule,
     AlertingModule,
+    SalesforceBaselinesModule,
+    ElasticBaselinesModule,
+    IDPKubernetesBaselinesModule,
+    ServiceNowBaselinesModule,
   ],
   controllers: [AppController],
   providers: [

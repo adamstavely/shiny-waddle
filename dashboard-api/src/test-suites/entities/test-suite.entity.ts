@@ -1,3 +1,5 @@
+import { BaselineConfig } from '../../../../heimdall-framework/core/types';
+
 export type TestSuiteStatus = 'passing' | 'failing' | 'pending' | 'error';
 export type TestSuiteSourceType = 'json' | 'typescript';
 
@@ -20,5 +22,10 @@ export interface TestSuiteEntity {
   description?: string;
   sourceType?: TestSuiteSourceType; // 'json' for data/test-suites.json, 'typescript' for filesystem files
   sourcePath?: string; // Path to source file relative to project root
+  /**
+   * Baseline configuration for platform config test suites
+   * Contains the desired state configuration that tests validate against
+   */
+  baselineConfig?: BaselineConfig;
 }
 

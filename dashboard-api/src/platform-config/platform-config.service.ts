@@ -108,7 +108,7 @@ export class PlatformConfigService {
       name: dto.name,
       description: dto.description || '',
       environment: dto.environment,
-      config: dto.config,
+      config: dto.config || {},
       createdBy: dto.createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),

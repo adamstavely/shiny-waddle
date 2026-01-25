@@ -128,7 +128,9 @@ const isActive = (path: string): boolean => {
     return currentPath.value === '/dashboard' || currentPath.value === '/';
   }
   if (path === '/applications') {
-    return currentPath.value === '/applications' || currentPath.value.startsWith('/applications/');
+    return currentPath.value === '/applications' || 
+           currentPath.value.startsWith('/applications/') ||
+           currentPath.value.startsWith('/applications/platform-instances');
   }
   if (path === '/test-design-library') {
     return testDesignLibraryPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));

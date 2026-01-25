@@ -8,6 +8,16 @@ export interface ValidatorOverride {
   updatedAt?: Date;
 }
 
+// Platform Instance infrastructure (for migrated platform instances)
+export interface PlatformInstanceInfrastructure {
+  platform: 'salesforce' | 'elastic' | 'idp-kubernetes' | 'servicenow';
+  connection: {
+    endpoint?: string;
+    credentials?: Record<string, any>; // Encrypted
+  };
+  testSuiteId?: string; // Reference to Test Suite (migrated from baseline)
+}
+
 // Application Infrastructure Types
 export interface ApplicationInfrastructure {
   // Database infrastructure
@@ -30,6 +40,9 @@ export interface ApplicationInfrastructure {
   
   // Data Pipeline infrastructure
   dataPipeline?: DataPipelineInfrastructure;
+  
+  // Platform Instance infrastructure (for migrated platform instances)
+  platformInstance?: PlatformInstanceInfrastructure;
 }
 
 export interface DatabaseInfrastructure {

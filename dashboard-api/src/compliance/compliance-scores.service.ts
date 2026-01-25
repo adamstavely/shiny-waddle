@@ -84,7 +84,6 @@ export class ComplianceScoresService {
           'data-contracts': 'Data Contracts',
           'iam': 'IAM',
           'api-security': 'API Security',
-          'platform-config': 'Platform Config',
         };
         const domainName = domainMap[filters.domain.toLowerCase().replace(/\s+/g, '-')] || filters.domain;
         

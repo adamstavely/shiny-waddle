@@ -16,7 +16,8 @@ export type TestType =
   | 'elastic-security'
   | 'k8s-security'
   | 'k8s-workload'
-  | 'idp-compliance';
+  | 'idp-compliance'
+  | 'servicenow-config';
 
 export interface Policy {
   id: string;
@@ -272,6 +273,13 @@ export interface DataPipelineConfig {
   };
 }
 
+export interface BaselineConfig {
+  platform: 'salesforce' | 'elastic' | 'idp-kubernetes' | 'servicenow';
+  environment: string;
+  config: Record<string, any>;
+  version: string;
+}
+
 export interface TestSuite {
   id: string;
   name: string;
@@ -291,6 +299,10 @@ export interface TestSuite {
   testCount?: number;
   score?: number;
   testTypes?: string[];
+  /**
+   * Baseline configuration for platform config test suites
+   */
+  baselineConfig?: BaselineConfig;
 }
 
 export interface Application {

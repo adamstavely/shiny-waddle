@@ -9,9 +9,12 @@ import {
   Min,
   Max,
   IsIn,
+  IsObject,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { TestSuiteStatus } from '../entities/test-suite.entity';
-import { TestDomain } from '../../../../heimdall-framework/core/types';
+import { TestDomain, BaselineConfig } from '../../../../heimdall-framework/core/types';
 
 // Valid test types
 const VALID_TEST_TYPES = [
@@ -32,6 +35,7 @@ const VALID_TEST_TYPES = [
   'k8s-security',
   'k8s-workload',
   'idp-compliance',
+  'servicenow-config',
 ] as const;
 
 export class CreateTestSuiteDto {
@@ -87,5 +91,15 @@ export class CreateTestSuiteDto {
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
+
+  /**
+   * Baseline configuration for platform config test suites
+   * Contains the desired state configuration that tests validate against
+   */
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Object)
+  baselineConfig?: BaselineConfig;
 }
 

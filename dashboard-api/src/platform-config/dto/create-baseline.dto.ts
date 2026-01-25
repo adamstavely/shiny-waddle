@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNotEmpty, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsObject, ValidateIf } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateBaselineDto {
   @IsString()
@@ -13,9 +14,16 @@ export class CreateBaselineDto {
   @IsNotEmpty()
   environment: string;
 
+  @Transform(({ value }) => {
+    // Convert null, empty string, or missing value to undefined
+    if (value === null || value === '') {
+      return undefined;
+    }
+    return value;
+  })
+  @ValidateIf((o) => o.config !== undefined)
   @IsObject()
-  @IsNotEmpty()
-  config: Record<string, any>;
+  config?: Record<string, any>;
 
   @IsString()
   @IsOptional()

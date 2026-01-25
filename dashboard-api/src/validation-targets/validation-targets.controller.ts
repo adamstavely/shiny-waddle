@@ -15,8 +15,10 @@ import { CreateValidationTargetDto } from './dto/create-validation-target.dto';
 import { UpdateValidationTargetDto } from './dto/update-validation-target.dto';
 import { CreateValidationRuleDto } from './dto/create-validation-rule.dto';
 import { ValidationTargetEntity, ValidationRuleEntity, ValidationResultEntity } from './entities/validation-target.entity';
+import { Public } from '../auth/decorators/public.decorator';
 
-@Controller('api/validation-targets')
+@Controller('api/platform-instances')
+@Public()
 export class ValidationTargetsController {
   constructor(private readonly service: ValidationTargetsService) {}
 

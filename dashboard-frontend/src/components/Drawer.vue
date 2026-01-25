@@ -17,6 +17,28 @@
       />
     </button>
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
+      <!-- Applications Category -->
+      <div v-if="activeCategory === 'applications'" :key="`applications-${activeCategory}`" class="drawer-category" data-category="applications">
+        <div class="category-items category-items-padded">
+          <a
+            href="/applications"
+            @click.prevent="handleNavClick('/applications')"
+            :class="['drawer-item', isActive('/applications') && !isActive('/applications/platform-instances') ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
+          <a
+            href="/applications/platform-instances"
+            @click.prevent="handleNavClick('/applications/platform-instances')"
+            :class="['drawer-item', isActive('/applications/platform-instances') ? 'drawer-item-active' : '']"
+          >
+            <Settings class="item-icon" />
+            <span>Platform Instances</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Test Design Library Category -->
       <div v-if="activeCategory === 'test-design-library'" :key="`test-design-library-${activeCategory}`" class="drawer-category" data-category="test-design-library">
         <div class="category-items category-items-padded">
@@ -66,119 +88,143 @@
       <!-- Policies & Config Category -->
       <div v-if="activeCategory === 'policies-config'" :key="`policies-config-${activeCategory}`" class="drawer-category" data-category="policies-config">
         <div class="category-items category-items-padded">
+          <!-- Overview -->
           <a
             href="/policies"
             @click.prevent="handleNavClick('/policies')"
             :class="['drawer-item', isActive('/policies') ? 'drawer-item-active' : '']"
           >
-            <Shield class="item-icon" />
-            <span>Policies Overview</span>
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
           </a>
-          <a
-            href="/policies/access-control"
-            @click.prevent="handleNavClick('/policies/access-control')"
-            :class="['drawer-item', isActive('/policies/access-control') ? 'drawer-item-active' : '']"
-          >
-            <Shield class="item-icon" />
-            <span>Access Control</span>
-          </a>
-          <a
-            href="/policies/data-classification"
-            @click.prevent="handleNavClick('/policies/data-classification')"
-            :class="['drawer-item', isActive('/policies/data-classification') ? 'drawer-item-active' : '']"
-          >
-            <FileText class="item-icon" />
-            <span>Data Classification</span>
-          </a>
-          <a
-            href="/policies/platform-config"
-            @click.prevent="handleNavClick('/policies/platform-config')"
-            :class="['drawer-item', isActive('/policies/platform-config') ? 'drawer-item-active' : '']"
-          >
-            <Settings class="item-icon" />
-            <span>Platform Config</span>
-          </a>
-          <a
-            href="/policies/exceptions"
-            @click.prevent="handleNavClick('/policies/exceptions')"
-            :class="['drawer-item', isActive('/policies/exceptions') ? 'drawer-item-active' : '']"
-          >
-            <AlertTriangle class="item-icon" />
-            <span>Exceptions</span>
-          </a>
-          <a
-            href="/policies/standards-mapping"
-            @click.prevent="handleNavClick('/policies/standards-mapping')"
-            :class="['drawer-item', isActive('/policies/standards-mapping') ? 'drawer-item-active' : '']"
-          >
-            <CheckCircle2 class="item-icon" />
-            <span>Standards Mapping</span>
-          </a>
-          <a
-            href="/policies/data-contracts"
-            @click.prevent="handleNavClick('/policies/data-contracts')"
-            :class="['drawer-item', isActive('/policies/data-contracts') ? 'drawer-item-active' : '']"
-          >
-            <Database class="item-icon" />
-            <span>Data Contracts</span>
-          </a>
-          <a
-            href="/policies/salesforce"
-            @click.prevent="handleNavClick('/policies/salesforce')"
-            :class="['drawer-item', isActive('/policies/salesforce') ? 'drawer-item-active' : '']"
-          >
-            <Cloud class="item-icon" />
-            <span>Salesforce Baselines</span>
-          </a>
-          <a
-            href="/policies/elastic"
-            @click.prevent="handleNavClick('/policies/elastic')"
-            :class="['drawer-item', isActive('/policies/elastic') ? 'drawer-item-active' : '']"
-          >
-            <Server class="item-icon" />
-            <span>Elastic Baselines</span>
-          </a>
-          <a
-            href="/policies/idp-platform"
-            @click.prevent="handleNavClick('/policies/idp-platform')"
-            :class="['drawer-item', isActive('/policies/idp-platform') ? 'drawer-item-active' : '']"
-          >
-            <Container class="item-icon" />
-            <span>IDP / Kubernetes</span>
-          </a>
-          <div class="category-spacer"></div>
-          <a
-            href="/resources"
-            @click.prevent="handleNavClick('/resources')"
-            :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-          >
-            <Database class="item-icon" />
-            <span>Resources</span>
-          </a>
-          <a
-            href="/configuration-validation"
-            @click.prevent="handleNavClick('/configuration-validation')"
-            :class="['drawer-item', isActive('/configuration-validation') ? 'drawer-item-active' : '']"
-          >
-            <FileCheck class="item-icon" />
-            <span>Configuration Validation</span>
-          </a>
-          <a
-            href="/environment-config-testing"
-            @click.prevent="handleNavClick('/environment-config-testing')"
-            :class="['drawer-item', isActive('/environment-config-testing') ? 'drawer-item-active' : '']"
-          >
-            <Settings class="item-icon" />
-            <span>Environment Config Testing</span>
-          </a>
-          <a
-            href="/salesforce-experience-cloud"
-            @click.prevent="handleNavClick('/salesforce-experience-cloud')"
-            :class="['drawer-item', isActive('/salesforce-experience-cloud') ? 'drawer-item-active' : '']"
-          >
-            <Cloud class="item-icon" />
-            <span>Salesforce Experience Cloud</span>
-          </a>
+          
+          <!-- Access Control Policies Section -->
+          <div class="category-section">
+            <div class="section-header">
+              <Shield class="section-icon" />
+              <span class="section-title">Access Control</span>
+            </div>
+            <a
+              href="/policies/access-control"
+              @click.prevent="handleNavClick('/policies/access-control')"
+              :class="['drawer-item', isActive('/policies/access-control') ? 'drawer-item-active' : '']"
+            >
+              <Shield class="item-icon" />
+              <span>Access Control</span>
+            </a>
+            <a
+              href="/policies/exceptions"
+              @click.prevent="handleNavClick('/policies/exceptions')"
+              :class="['drawer-item', isActive('/policies/exceptions') ? 'drawer-item-active' : '']"
+            >
+              <AlertTriangle class="item-icon" />
+              <span>Exceptions</span>
+            </a>
+          </div>
+
+          <!-- Data Policies Section -->
+          <div class="category-section">
+            <div class="section-header">
+              <Database class="section-icon" />
+              <span class="section-title">Data Policies</span>
+            </div>
+            <a
+              href="/policies/data-classification"
+              @click.prevent="handleNavClick('/policies/data-classification')"
+              :class="['drawer-item', isActive('/policies/data-classification') ? 'drawer-item-active' : '']"
+            >
+              <FileText class="item-icon" />
+              <span>Data Classification</span>
+            </a>
+            <a
+              href="/policies/data-contracts"
+              @click.prevent="handleNavClick('/policies/data-contracts')"
+              :class="['drawer-item', isActive('/policies/data-contracts') ? 'drawer-item-active' : '']"
+            >
+              <Database class="item-icon" />
+              <span>Data Contracts</span>
+            </a>
+            <a
+              href="/policies/standards-mapping"
+              @click.prevent="handleNavClick('/policies/standards-mapping')"
+              :class="['drawer-item', isActive('/policies/standards-mapping') ? 'drawer-item-active' : '']"
+            >
+              <CheckCircle2 class="item-icon" />
+              <span>Standards Mapping</span>
+            </a>
+          </div>
+
+          <!-- Platform Baselines Section -->
+          <div class="category-section">
+            <div class="section-header">
+              <Settings class="section-icon" />
+              <span class="section-title">Platform Baselines</span>
+            </div>
+            <a
+              href="/policies/salesforce"
+              @click.prevent="handleNavClick('/policies/salesforce')"
+              :class="['drawer-item', isActive('/policies/salesforce') ? 'drawer-item-active' : '']"
+            >
+              <Cloud class="item-icon" />
+              <span>Salesforce</span>
+            </a>
+            <a
+              href="/policies/elastic"
+              @click.prevent="handleNavClick('/policies/elastic')"
+              :class="['drawer-item', isActive('/policies/elastic') ? 'drawer-item-active' : '']"
+            >
+              <Server class="item-icon" />
+              <span>Elastic</span>
+            </a>
+            <a
+              href="/policies/idp-platform"
+              @click.prevent="handleNavClick('/policies/idp-platform')"
+              :class="['drawer-item', isActive('/policies/idp-platform') ? 'drawer-item-active' : '']"
+            >
+              <Container class="item-icon" />
+              <span>IDP / Kubernetes</span>
+            </a>
+            <a
+              href="/policies/servicenow"
+              @click.prevent="handleNavClick('/policies/servicenow')"
+              :class="['drawer-item', isActive('/policies/servicenow') ? 'drawer-item-active' : '']"
+            >
+              <Workflow class="item-icon" />
+              <span>ServiceNow</span>
+            </a>
+          </div>
+
+          <!-- Configuration & Testing Section -->
+          <div class="category-section">
+            <div class="section-header">
+              <FileCheck class="section-icon" />
+              <span class="section-title">Configuration & Testing</span>
+            </div>
+            <a
+              href="/resources"
+              @click.prevent="handleNavClick('/resources')"
+              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
+            >
+              <Database class="item-icon" />
+              <span>Resources</span>
+            </a>
+            <a
+              href="/environment-config-testing"
+              @click.prevent="handleNavClick('/environment-config-testing')"
+              :class="['drawer-item', isActive('/environment-config-testing') ? 'drawer-item-active' : '']"
+            >
+              <Settings class="item-icon" />
+              <span>Environment Config Testing</span>
+            </a>
+            <a
+              href="/salesforce-experience-cloud"
+              @click.prevent="handleNavClick('/salesforce-experience-cloud')"
+              :class="['drawer-item', isActive('/salesforce-experience-cloud') ? 'drawer-item-active' : '']"
+            >
+              <Cloud class="item-icon" />
+              <span>Salesforce Experience Cloud</span>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -269,7 +315,8 @@ import {
   Container,
   Cloud,
   BarChart3,
-  PlayCircle
+  PlayCircle,
+  Workflow
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -277,6 +324,12 @@ const router = useRouter();
 const currentPath = ref(route.path);
 const isCollapsed = ref(true);
 const activeCategory = ref<string | null>(null);
+
+// Applications pages
+const applicationsPages = [
+  '/applications',
+  '/applications/platform-instances'
+];
 
 // Test Design Library pages
 const testDesignLibraryPages = [
@@ -291,15 +344,14 @@ const policiesConfigPages = [
   '/policies',
   '/policies/access-control',
   '/policies/data-classification',
-  '/policies/platform-config',
   '/policies/exceptions',
   '/policies/standards-mapping',
   '/policies/data-contracts',
   '/policies/salesforce',
   '/policies/elastic',
   '/policies/idp-platform',
+  '/policies/servicenow',
   '/resources',
-  '/configuration-validation',
   '/environment-config-testing',
   '/salesforce-experience-cloud'
 ];
@@ -316,6 +368,11 @@ const adminPages = [
 
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
+  // Check if it's an applications page
+  if (path === '/applications' || path.startsWith('/applications/') ||
+      applicationsPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'applications';
+  }
   // Check if it's a test design library page
   if (path === '/tests' || path.startsWith('/tests/') ||
       testDesignLibraryPages.some(page => path === page || path.startsWith(page + '/'))) {

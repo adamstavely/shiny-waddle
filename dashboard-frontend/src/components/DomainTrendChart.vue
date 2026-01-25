@@ -105,7 +105,6 @@ const domainColor = computed(() => {
     'data-contracts': '#4facfe',
     'iam': '#00f2fe',
     'api-security': '#43e97b',
-    'platform-config': '#fa709a',
   };
   return colors[domainId.value] || '#4facfe';
 });
