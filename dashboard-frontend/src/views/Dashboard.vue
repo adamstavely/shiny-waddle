@@ -242,7 +242,7 @@
             <span>View All Runs</span>
           </router-link>
           <router-link to="/policies" class="quick-action-card">
-            <Shield class="action-icon" />
+            <FileText class="action-icon" />
             <span>Policies</span>
           </router-link>
         </div>
@@ -261,7 +261,7 @@ import {
   AlertTriangle,
   Database,
   BookOpen,
-  Shield,
+  FileText,
   Battery,
   Layers
 } from 'lucide-vue-next';

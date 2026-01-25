@@ -91,7 +91,7 @@ const currentPath = ref(route.path);
 
 const menuItems = [
   { path: '/tests', label: 'Tests', icon: TestTube },
-  { path: '/policies', label: 'Policies', icon: Shield },
+  { path: '/policies', label: 'Policies', icon: FileText },
   { path: '/violations', label: 'Violations', icon: AlertTriangle },
   { path: '/history', label: 'History', icon: History },
   { path: '/admin', label: 'Admin', icon: Settings },
