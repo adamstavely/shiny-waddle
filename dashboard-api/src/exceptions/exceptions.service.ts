@@ -3,7 +3,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateExceptionDto } from './dto/create-exception.dto';
-import { CreateAllowlistDto } from './dto/create-allowlist.dto';
 
 export interface Exception {
   id: string;
@@ -23,25 +22,11 @@ export interface Exception {
   updatedAt: Date;
 }
 
-export interface Allowlist {
-  id: string;
-  name: string;
-  description: string;
-  type: 'ip' | 'user' | 'resource' | 'pattern';
-  values: string[];
-  policyIds?: string[];
-  enabled: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 @Injectable()
 export class ExceptionsService {
   private readonly logger = new Logger(ExceptionsService.name);
   private readonly exceptionsFile = path.join(process.cwd(), 'data', 'exceptions.json');
-  private readonly allowlistsFile = path.join(process.cwd(), 'data', 'allowlists.json');
   private exceptions: Exception[] = [];
-  private allowlists: Allowlist[] = [];
 
   constructor() {
     this.loadData().catch(err => {
@@ -88,43 +73,9 @@ export class ExceptionsService {
           throw readError;
         }
       }
-
-      // Load allowlists
-      try {
-        const allowlistsData = await fs.readFile(this.allowlistsFile, 'utf-8');
-        if (allowlistsData && allowlistsData.trim() !== '') {
-          const parsed = JSON.parse(allowlistsData);
-          this.allowlists = (Array.isArray(parsed) ? parsed : []).map((a: any) => ({
-            ...a,
-            createdAt: a.createdAt ? new Date(a.createdAt) : new Date(),
-            updatedAt: a.updatedAt ? new Date(a.updatedAt) : new Date(),
-          }));
-        } else {
-          this.allowlists = [];
-          try {
-            await this.saveAllowlists();
-          } catch (saveError) {
-            // Ignore save errors - data is already set to empty array
-            this.logger.warn('Failed to save allowlists file, continuing with empty array:', saveError);
-          }
-        }
-      } catch (readError: any) {
-        if (readError.code === 'ENOENT' || readError instanceof SyntaxError) {
-          this.allowlists = [];
-          try {
-            await this.saveAllowlists();
-          } catch (saveError) {
-            // Ignore save errors - data is already set to empty array
-            this.logger.warn('Failed to save allowlists file, continuing with empty array:', saveError);
-          }
-        } else {
-          throw readError;
-        }
-      }
     } catch (error) {
       this.logger.error('Error loading exceptions data:', error);
       this.exceptions = [];
-      this.allowlists = [];
     }
   }
 
@@ -134,16 +85,6 @@ export class ExceptionsService {
       await fs.writeFile(this.exceptionsFile, JSON.stringify(this.exceptions, null, 2), 'utf-8');
     } catch (error) {
       this.logger.error('Error saving exceptions:', error);
-      throw error;
-    }
-  }
-
-  private async saveAllowlists(): Promise<void> {
-    try {
-      await fs.mkdir(path.dirname(this.allowlistsFile), { recursive: true });
-      await fs.writeFile(this.allowlistsFile, JSON.stringify(this.allowlists, null, 2), 'utf-8');
-    } catch (error) {
-      this.logger.error('Error saving allowlists:', error);
       throw error;
     }
   }
@@ -216,50 +157,6 @@ export class ExceptionsService {
     };
     await this.saveExceptions();
     return this.exceptions[index];
-  }
-
-  async getAllowlists(): Promise<Allowlist[]> {
-    await this.loadData();
-    return [...this.allowlists];
-  }
-
-  async createAllowlist(dto: CreateAllowlistDto): Promise<Allowlist> {
-    await this.loadData();
-    const allowlist: Allowlist = {
-      id: uuidv4(),
-      ...dto,
-      enabled: dto.enabled !== undefined ? dto.enabled : true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.allowlists.push(allowlist);
-    await this.saveAllowlists();
-    return allowlist;
-  }
-
-  async updateAllowlist(id: string, dto: Partial<CreateAllowlistDto>): Promise<Allowlist> {
-    await this.loadData();
-    const index = this.allowlists.findIndex(a => a.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Allowlist with ID ${id} not found`);
-    }
-    this.allowlists[index] = {
-      ...this.allowlists[index],
-      ...dto,
-      updatedAt: new Date(),
-    };
-    await this.saveAllowlists();
-    return this.allowlists[index];
-  }
-
-  async deleteAllowlist(id: string): Promise<void> {
-    await this.loadData();
-    const index = this.allowlists.findIndex(a => a.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Allowlist with ID ${id} not found`);
-    }
-    this.allowlists.splice(index, 1);
-    await this.saveAllowlists();
   }
 }
 

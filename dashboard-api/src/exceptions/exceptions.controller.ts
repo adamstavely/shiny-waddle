@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { ExceptionsService } from './exceptions.service';
 import { CreateExceptionDto } from './dto/create-exception.dto';
-import { CreateAllowlistDto } from './dto/create-allowlist.dto';
 
 @Controller('api/v1/exceptions')
 export class ExceptionsController {
@@ -58,34 +57,6 @@ export class ExceptionsController {
   async approveException(@Param('id') id: string, @Body() body: { approver: string; notes?: string }) {
     this.logger.log(`Approving exception: ${id}`);
     return this.exceptionsService.approveException(id, body.approver, body.notes);
-  }
-
-  @Get('allowlists')
-  @HttpCode(HttpStatus.OK)
-  async getAllowlists() {
-    this.logger.log('Fetching all allowlists');
-    return this.exceptionsService.getAllowlists();
-  }
-
-  @Post('allowlists')
-  @HttpCode(HttpStatus.CREATED)
-  async createAllowlist(@Body(ValidationPipe) dto: CreateAllowlistDto) {
-    this.logger.log(`Creating allowlist: ${dto.name}`);
-    return this.exceptionsService.createAllowlist(dto);
-  }
-
-  @Put('allowlists/:id')
-  @HttpCode(HttpStatus.OK)
-  async updateAllowlist(@Param('id') id: string, @Body(ValidationPipe) dto: Partial<CreateAllowlistDto>) {
-    this.logger.log(`Updating allowlist: ${id}`);
-    return this.exceptionsService.updateAllowlist(id, dto);
-  }
-
-  @Delete('allowlists/:id')
-  @HttpCode(HttpStatus.OK)
-  async deleteAllowlist(@Param('id') id: string) {
-    this.logger.log(`Deleting allowlist: ${id}`);
-    return this.exceptionsService.deleteAllowlist(id);
   }
 }
 

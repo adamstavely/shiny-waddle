@@ -81,13 +81,6 @@
             <div class="stat-label">Classification Levels</div>
           </div>
         </div>
-        <div class="stat-card" @click="navigateTo('/policies/platform-config')">
-          <Settings class="stat-icon" />
-          <div class="stat-content">
-            <div class="stat-value">{{ stats.platformBaselines || 0 }}</div>
-            <div class="stat-label">Platform Baselines</div>
-          </div>
-        </div>
         <div class="stat-card" @click="navigateTo('/policies/exceptions')">
           <AlertTriangle class="stat-icon" />
           <div class="stat-content">
@@ -95,78 +88,101 @@
             <div class="stat-label">Active Exceptions</div>
           </div>
         </div>
+        <div class="stat-card" @click="navigateTo('/policies/salesforce')">
+          <Cloud class="stat-icon" />
+          <div class="stat-content">
+            <div class="stat-value">{{ stats.salesforceBaselines || 0 }}</div>
+            <div class="stat-label">Salesforce Baselines</div>
+          </div>
+        </div>
       </div>
     </div>
     
     <!-- Policy Types Section -->
     <div class="policy-types-section">
-      <h2 class="section-title">Policy Types</h2>
+      <h2 class="section-title">Policy Categories</h2>
       <p class="section-description">
-        Navigate to different policy management areas
+        Navigate to different policy management areas organized by category
       </p>
       
-      <div class="policy-types-grid">
-        <div class="policy-type-card" @click="navigateTo('/policies/access-control')">
-          <Shield class="policy-type-icon" />
-          <h3 class="policy-type-title">Access Control</h3>
-          <p class="policy-type-description">Manage RBAC and ABAC access control policies</p>
-          <div class="policy-type-badge">{{ stats.accessControlPolicies || 0 }} policies</div>
+      <!-- Access Control Policies Group -->
+      <div class="policy-group">
+        <div class="policy-group-header">
+          <Shield class="group-header-icon" />
+          <h3 class="policy-group-title">Access Control Policies</h3>
+          <p class="policy-group-description">Manage RBAC, ABAC, and exception policies</p>
         </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/data-classification')">
-          <FileText class="policy-type-icon" />
-          <h3 class="policy-type-title">Data Classification</h3>
-          <p class="policy-type-description">Define data classification levels and rules</p>
-          <div class="policy-type-badge">{{ stats.classificationLevels || 0 }} levels</div>
+        <div class="policy-types-grid">
+          <div class="policy-type-card" @click="navigateTo('/policies/access-control')">
+            <Shield class="policy-type-icon" />
+            <h4 class="policy-type-title">Access Control</h4>
+            <p class="policy-type-description">Manage RBAC and ABAC access control policies</p>
+            <div class="policy-type-badge">{{ stats.accessControlPolicies || 0 }} policies</div>
+          </div>
+          <div class="policy-type-card" @click="navigateTo('/policies/exceptions')">
+            <AlertTriangle class="policy-type-icon" />
+            <h4 class="policy-type-title">Exceptions</h4>
+            <p class="policy-type-description">Manage policy exceptions</p>
+            <div class="policy-type-badge">{{ stats.exceptions || 0 }} exceptions</div>
+          </div>
         </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/platform-config')">
-          <Settings class="policy-type-icon" />
-          <h3 class="policy-type-title">Platform Config</h3>
-          <p class="policy-type-description">Manage platform configuration baselines</p>
-          <div class="policy-type-badge">{{ stats.platformBaselines || 0 }} baselines</div>
+      </div>
+
+      <!-- Data Policies Group -->
+      <div class="policy-group">
+        <div class="policy-group-header">
+          <Database class="group-header-icon" />
+          <h3 class="policy-group-title">Data Policies</h3>
+          <p class="policy-group-description">Configure data classification, contracts, and compliance mappings</p>
         </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/exceptions')">
-          <AlertTriangle class="policy-type-icon" />
-          <h3 class="policy-type-title">Exceptions</h3>
-          <p class="policy-type-description">Manage policy exceptions and allowlists</p>
-          <div class="policy-type-badge">{{ stats.exceptions || 0 }} exceptions</div>
+        <div class="policy-types-grid">
+          <div class="policy-type-card" @click="navigateTo('/policies/data-classification')">
+            <FileText class="policy-type-icon" />
+            <h4 class="policy-type-title">Data Classification</h4>
+            <p class="policy-type-description">Define data classification levels and rules</p>
+            <div class="policy-type-badge">{{ stats.classificationLevels || 0 }} levels</div>
+          </div>
+          <div class="policy-type-card" @click="navigateTo('/policies/data-contracts')">
+            <Database class="policy-type-icon" />
+            <h4 class="policy-type-title">Data Contracts</h4>
+            <p class="policy-type-description">Configure data contract policies</p>
+            <div class="policy-type-badge">{{ stats.dataContracts || 0 }} contracts</div>
+          </div>
+          <div class="policy-type-card" @click="navigateTo('/policies/standards-mapping')">
+            <CheckCircle2 class="policy-type-icon" />
+            <h4 class="policy-type-title">Standards Mapping</h4>
+            <p class="policy-type-description">Map policies to compliance standards</p>
+            <div class="policy-type-badge">{{ stats.standards || 0 }} standards</div>
+          </div>
         </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/standards-mapping')">
-          <CheckCircle2 class="policy-type-icon" />
-          <h3 class="policy-type-title">Standards Mapping</h3>
-          <p class="policy-type-description">Map policies to compliance standards</p>
-          <div class="policy-type-badge">{{ stats.standards || 0 }} standards</div>
+      </div>
+
+      <!-- Platform Baselines Group -->
+      <div class="policy-group">
+        <div class="policy-group-header">
+          <Settings class="group-header-icon" />
+          <h3 class="policy-group-title">Platform Baselines</h3>
+          <p class="policy-group-description">Manage configuration baselines for platforms and services</p>
         </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/data-contracts')">
-          <Database class="policy-type-icon" />
-          <h3 class="policy-type-title">Data Contracts</h3>
-          <p class="policy-type-description">Configure data contract policies</p>
-          <div class="policy-type-badge">{{ stats.dataContracts || 0 }} contracts</div>
-        </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/salesforce')">
-          <Cloud class="policy-type-icon" />
-          <h3 class="policy-type-title">Salesforce Baselines</h3>
-          <p class="policy-type-description">Manage Salesforce configuration baselines</p>
-          <div class="policy-type-badge">{{ stats.salesforceBaselines || 0 }} baselines</div>
-        </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/elastic')">
-          <Server class="policy-type-icon" />
-          <h3 class="policy-type-title">Elastic Baselines</h3>
-          <p class="policy-type-description">Manage Elastic configuration baselines</p>
-          <div class="policy-type-badge">{{ stats.elasticBaselines || 0 }} baselines</div>
-        </div>
-        
-        <div class="policy-type-card" @click="navigateTo('/policies/idp-platform')">
-          <Container class="policy-type-icon" />
-          <h3 class="policy-type-title">IDP / Kubernetes</h3>
-          <p class="policy-type-description">Manage IDP and Kubernetes baselines</p>
-          <div class="policy-type-badge">{{ stats.idpBaselines || 0 }} baselines</div>
+        <div class="policy-types-grid">
+          <div class="policy-type-card" @click="navigateTo('/policies/salesforce')">
+            <Cloud class="policy-type-icon" />
+            <h4 class="policy-type-title">Salesforce</h4>
+            <p class="policy-type-description">Manage Salesforce configuration baselines</p>
+            <div class="policy-type-badge">{{ stats.salesforceBaselines || 0 }} baselines</div>
+          </div>
+          <div class="policy-type-card" @click="navigateTo('/policies/elastic')">
+            <Server class="policy-type-icon" />
+            <h4 class="policy-type-title">Elastic</h4>
+            <p class="policy-type-description">Manage Elastic configuration baselines</p>
+            <div class="policy-type-badge">{{ stats.elasticBaselines || 0 }} baselines</div>
+          </div>
+          <div class="policy-type-card" @click="navigateTo('/policies/idp-platform')">
+            <Container class="policy-type-icon" />
+            <h4 class="policy-type-title">IDP / Kubernetes</h4>
+            <p class="policy-type-description">Manage IDP and Kubernetes baselines</p>
+            <div class="policy-type-badge">{{ stats.idpBaselines || 0 }} baselines</div>
+          </div>
         </div>
       </div>
     </div>
@@ -183,13 +199,13 @@
           <Plus class="action-icon" />
           Create Classification Level
         </button>
-        <button @click="navigateTo('/policies/platform-config')" class="action-card">
-          <Plus class="action-icon" />
-          Create Platform Baseline
-        </button>
         <button @click="navigateTo('/policies/exceptions')" class="action-card">
           <Plus class="action-icon" />
           Request Exception
+        </button>
+        <button @click="navigateTo('/policies/salesforce')" class="action-card">
+          <Plus class="action-icon" />
+          Create Salesforce Baseline
         </button>
       </div>
     </div>
@@ -209,6 +225,7 @@ import {
   Cloud,
   Server,
   Container,
+  Workflow,
   Plus
 } from 'lucide-vue-next';
 import Breadcrumb from '../../components/Breadcrumb.vue';
@@ -224,7 +241,6 @@ const breadcrumbItems = [
 const stats = ref({
   accessControlPolicies: 0,
   classificationLevels: 0,
-  platformBaselines: 0,
   exceptions: 0,
   standards: 0,
   dataContracts: 0,
@@ -254,13 +270,13 @@ const loadStats = async () => {
     
     // Load other stats as APIs become available
     // For now, set defaults
-    stats.value.platformBaselines = 0;
     stats.value.exceptions = 0;
     stats.value.standards = 0;
     stats.value.dataContracts = 0;
     stats.value.salesforceBaselines = 0;
     stats.value.elasticBaselines = 0;
     stats.value.idpBaselines = 0;
+    stats.value.servicenowBaselines = 0;
   } catch (err) {
     console.error('Error loading stats:', err);
   }
@@ -495,8 +511,42 @@ onMounted(() => {
   margin-bottom: var(--spacing-sm);
 }
 
+.policy-group {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.policy-group-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
+}
+
+.group-header-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.policy-group-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.policy-group-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
 .policy-type-title {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin: 0;

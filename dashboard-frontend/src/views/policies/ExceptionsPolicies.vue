@@ -5,7 +5,7 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Exceptions</h1>
-          <p class="page-description">Manage policy exceptions and allowlists</p>
+          <p class="page-description">Manage policy exceptions</p>
         </div>
       </div>
     </div>
@@ -57,61 +57,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Allowlists Section -->
-      <div class="classification-section mt-xl">
-        <div class="section-header">
-          <h2 class="section-title">Allowlists</h2>
-          <button @click="openCreateAllowlistModal" class="btn-primary">
-            <Plus class="btn-icon" />
-            Create Allowlist
-          </button>
-        </div>
-        <div v-if="loadingAllowlists" class="loading-state">
-          <div class="loading-spinner"></div>
-          <p>Loading allowlists...</p>
-        </div>
-        <div v-else-if="allowlistsError" class="error-state">
-          <AlertTriangle class="error-icon" />
-          <p>{{ allowlistsError }}</p>
-          <button @click="loadAllowlists" class="btn-retry">Retry</button>
-        </div>
-        <div v-else-if="allowlists.length === 0" class="empty-state">
-          <AlertTriangle class="empty-icon" />
-          <h3>No allowlists defined</h3>
-          <p>Create your first allowlist to get started</p>
-        </div>
-        <div v-else class="allowlists-list">
-          <div v-for="allowlist in allowlists" :key="allowlist.id" class="allowlist-card">
-            <div class="allowlist-header">
-              <h4 class="allowlist-name">{{ allowlist.name }}</h4>
-              <span class="allowlist-status" :class="allowlist.enabled ? 'enabled' : 'disabled'">
-                {{ allowlist.enabled ? 'Enabled' : 'Disabled' }}
-              </span>
-            </div>
-            <p class="allowlist-description">{{ allowlist.description || 'No description' }}</p>
-            <div class="allowlist-details">
-              <div class="detail-item">
-                <span class="detail-label">Type:</span>
-                <span class="detail-value">{{ allowlist.type }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">Values:</span>
-                <span class="detail-value">{{ Array.isArray(allowlist.values) ? allowlist.values.join(', ') : allowlist.values }}</span>
-              </div>
-            </div>
-            <div class="allowlist-actions">
-              <button @click="toggleAllowlist(allowlist)" class="action-btn" :class="allowlist.enabled ? 'disable-btn' : 'enable-btn'">
-                {{ allowlist.enabled ? 'Disable' : 'Enable' }}
-              </button>
-              <button @click="deleteAllowlist(allowlist.id)" class="action-btn delete-btn">
-                <Trash2 class="action-icon" />
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Create Exception Modal -->
@@ -152,65 +97,6 @@
         </div>
       </Transition>
     </Teleport>
-
-    <!-- Create Allowlist Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="showCreateAllowlistModal" class="modal-overlay" @click="closeAllowlistModal">
-          <div class="modal-content" @click.stop>
-            <div class="modal-header">
-              <div class="modal-title-group">
-                <AlertTriangle class="modal-title-icon" />
-                <h2>Create Allowlist</h2>
-              </div>
-              <button @click="closeAllowlistModal" class="modal-close">
-                <X class="close-icon" />
-              </button>
-            </div>
-            <div class="modal-body">
-              <form @submit.prevent="saveAllowlist" class="form">
-                <div class="form-group">
-                  <label>Allowlist Name</label>
-                  <input v-model="allowlistForm.name" type="text" required />
-                </div>
-                <div class="form-group">
-                  <label>Description</label>
-                  <textarea v-model="allowlistForm.description" rows="3"></textarea>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Type</label>
-                    <Dropdown
-                      v-model="allowlistForm.type"
-                      :options="allowlistTypeOptions"
-                      placeholder="Select type..."
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label>
-                      <input v-model="allowlistForm.enabled" type="checkbox" />
-                      Enabled
-                    </label>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Values (comma-separated)</label>
-                  <textarea v-model="allowlistForm.valuesText" rows="4" placeholder="Enter values separated by commas"></textarea>
-                </div>
-                <div class="form-actions">
-                  <button type="button" @click="closeAllowlistModal" class="btn-secondary">
-                    Cancel
-                  </button>
-                  <button type="submit" class="btn-primary">
-                    Create Allowlist
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
   </div>
 </template>
 
@@ -223,7 +109,6 @@ import {
   Trash2,
   X
 } from 'lucide-vue-next';
-import Dropdown from '../../components/Dropdown.vue';
 import Breadcrumb from '../../components/Breadcrumb.vue';
 import axios from 'axios';
 
@@ -235,36 +120,17 @@ const breadcrumbItems = [
 
 // Data
 const exceptions = ref<any[]>([]);
-const allowlists = ref<any[]>([]);
 const loadingExceptions = ref(false);
-const loadingAllowlists = ref(false);
 const exceptionsError = ref<string | null>(null);
-const allowlistsError = ref<string | null>(null);
 
 // Modals
 const showCreateExceptionModal = ref(false);
-const showCreateAllowlistModal = ref(false);
 
 // Forms
 const exceptionForm = ref({
   name: '',
   reason: ''
 });
-
-const allowlistForm = ref({
-  name: '',
-  description: '',
-  type: 'ip',
-  enabled: true,
-  valuesText: ''
-});
-
-const allowlistTypeOptions = [
-  { label: 'IP Address', value: 'ip' },
-  { label: 'Domain', value: 'domain' },
-  { label: 'User', value: 'user' },
-  { label: 'Resource', value: 'resource' }
-];
 
 const formatDate = (date: Date | string): string => {
   if (!date) return 'Unknown';
@@ -289,20 +155,6 @@ const loadExceptions = async () => {
     console.error('Error loading exceptions:', err);
   } finally {
     loadingExceptions.value = false;
-  }
-};
-
-const loadAllowlists = async () => {
-  loadingAllowlists.value = true;
-  allowlistsError.value = null;
-  try {
-    const response = await axios.get('/api/v1/exceptions/allowlists');
-    allowlists.value = response.data || [];
-  } catch (err: any) {
-    allowlistsError.value = err.response?.data?.message || 'Failed to load allowlists';
-    console.error('Error loading allowlists:', err);
-  } finally {
-    loadingAllowlists.value = false;
   }
 };
 
@@ -354,72 +206,9 @@ const deleteException = async (id: string) => {
   }
 };
 
-// Allowlist Actions
-const openCreateAllowlistModal = () => {
-  allowlistForm.value = {
-    name: '',
-    description: '',
-    type: 'ip',
-    enabled: true,
-    valuesText: ''
-  };
-  showCreateAllowlistModal.value = true;
-};
-
-const closeAllowlistModal = () => {
-  showCreateAllowlistModal.value = false;
-};
-
-const saveAllowlist = async () => {
-  try {
-    const values = allowlistForm.value.valuesText
-      .split(',')
-      .map(v => v.trim())
-      .filter(v => v.length > 0);
-    
-    await axios.post('/api/v1/exceptions/allowlists', {
-      name: allowlistForm.value.name,
-      description: allowlistForm.value.description,
-      type: allowlistForm.value.type,
-      enabled: allowlistForm.value.enabled,
-      values: values
-    });
-    await loadAllowlists();
-    closeAllowlistModal();
-  } catch (err: any) {
-    alert(err.response?.data?.message || 'Failed to create allowlist');
-    console.error('Error creating allowlist:', err);
-  }
-};
-
-const toggleAllowlist = async (allowlist: any) => {
-  try {
-    await axios.put(`/api/v1/exceptions/allowlists/${allowlist.id}`, {
-      enabled: !allowlist.enabled
-    });
-    await loadAllowlists();
-  } catch (err: any) {
-    alert(err.response?.data?.message || 'Failed to toggle allowlist');
-    console.error('Error toggling allowlist:', err);
-  }
-};
-
-const deleteAllowlist = async (id: string) => {
-  if (confirm('Are you sure you want to delete this allowlist?')) {
-    try {
-      await axios.delete(`/api/v1/exceptions/allowlists/${id}`);
-      await loadAllowlists();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete allowlist');
-      console.error('Error deleting allowlist:', err);
-    }
-  }
-};
-
 // Load data on mount
 onMounted(() => {
   loadExceptions();
-  loadAllowlists();
 });
 </script>
 
@@ -594,15 +383,13 @@ onMounted(() => {
   margin: 0 0 var(--spacing-lg) 0;
 }
 
-.exceptions-list,
-.allowlists-list {
+.exceptions-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
-.exception-card,
-.allowlist-card {
+.exception-card {
   background: var(--color-bg-overlay-light);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-md);
@@ -610,21 +397,18 @@ onMounted(() => {
   transition: var(--transition-all);
 }
 
-.exception-card:hover,
-.allowlist-card:hover {
+.exception-card:hover {
   border-color: var(--border-color-primary-hover);
 }
 
-.exception-header,
-.allowlist-header {
+.exception-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-sm);
 }
 
-.exception-name,
-.allowlist-name {
+.exception-name {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
@@ -654,26 +438,7 @@ onMounted(() => {
   color: var(--color-error);
 }
 
-.allowlist-status {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-lg);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-}
-
-.allowlist-status.enabled {
-  background: var(--color-success-bg);
-  color: var(--color-success);
-}
-
-.allowlist-status.disabled {
-  background: var(--color-bg-tertiary);
-  opacity: 0.6;
-  color: var(--color-text-secondary);
-}
-
-.exception-description,
-.allowlist-description {
+.exception-description {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   margin: var(--spacing-sm) 0;
@@ -687,33 +452,7 @@ onMounted(() => {
   color: var(--color-text-muted);
 }
 
-.allowlist-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  margin: var(--spacing-sm) 0;
-  padding: var(--spacing-sm);
-  background: var(--color-bg-overlay-light);
-  border-radius: var(--border-radius-sm);
-}
-
-.detail-item {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.detail-label {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
-  min-width: 80px;
-}
-
-.detail-value {
-  color: var(--color-text-primary);
-}
-
-.exception-actions,
-.allowlist-actions {
+.exception-actions {
   display: flex;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
