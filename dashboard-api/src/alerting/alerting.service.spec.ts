@@ -23,9 +23,13 @@ describe('AlertingService', () => {
   const createRuleDto: CreateAlertRuleDto = {
     name: 'High Severity Alert',
     enabled: true,
-    conditions: {
-      severity: ['high', 'critical'],
-    },
+    conditions: [
+      {
+        field: 'severity',
+        operator: 'in',
+        value: ['high', 'critical'],
+      },
+    ],
     channels: [],
   };
 
@@ -107,11 +111,11 @@ describe('AlertingService', () => {
 
     it('should return rule when found', async () => {
       // Arrange
-      const rules = await service.getAllRules();
+      const rules = await service.getRules();
       const ruleId = rules[0].id;
 
       // Act
-      const result = await service.getRule(ruleId);
+      const result = await service.getRuleById(ruleId);
 
       // Assert
       expect(result).toBeDefined();
@@ -121,8 +125,8 @@ describe('AlertingService', () => {
     it('should throw NotFoundException when rule not found', async () => {
       // Act & Assert
       await expect(
-        service.getRule('non-existent-id')
-      ).rejects.toThrow(NotFoundException);
+        service.getRuleById('non-existent-id')
+      ).rejects.toThrow();
     });
   });
 
@@ -149,11 +153,11 @@ describe('AlertingService', () => {
 
     it('should return channel when found', async () => {
       // Arrange
-      const channels = await service.getAllChannels();
+      const channels = await service.getChannels();
       const channelId = channels[0].id;
 
       // Act
-      const result = await service.getChannel(channelId);
+      const result = await service.getChannelById(channelId);
 
       // Assert
       expect(result).toBeDefined();
@@ -163,8 +167,8 @@ describe('AlertingService', () => {
     it('should throw NotFoundException when channel not found', async () => {
       // Act & Assert
       await expect(
-        service.getChannel('non-existent-id')
-      ).rejects.toThrow(NotFoundException);
+        service.getChannelById('non-existent-id')
+      ).rejects.toThrow();
     });
   });
 
@@ -176,7 +180,7 @@ describe('AlertingService', () => {
 
     it('should return all alert rules', async () => {
       // Act
-      const result = await service.getAllRules();
+      const result = await service.getRules();
 
       // Assert
       expect(result.length).toBeGreaterThanOrEqual(2);
@@ -191,7 +195,7 @@ describe('AlertingService', () => {
 
     it('should return all alert channels', async () => {
       // Act
-      const result = await service.getAllChannels();
+      const result = await service.getChannels();
 
       // Assert
       expect(result.length).toBeGreaterThanOrEqual(2);

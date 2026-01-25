@@ -38,7 +38,7 @@ describe('ValidatorDiscoveryService', () => {
         expect(validator).toBeDefined();
         expect(validator.id).toBeDefined();
         expect(validator.name).toBeDefined();
-        expect(validator.type).toBeDefined();
+        expect(validator.testType).toBeDefined();
       }
     });
 

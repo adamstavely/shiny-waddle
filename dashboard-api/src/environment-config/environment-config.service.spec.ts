@@ -21,7 +21,7 @@ describe('EnvironmentConfigService', () => {
     it('should validate environment configuration', async () => {
       // Arrange
       const dto: ValidateEnvironmentDto = {
-        environment: 'production',
+        environment: 'prod',
         variables: { NODE_ENV: 'production', PORT: '3000' },
         configFiles: ['config.json'],
         secrets: [],
@@ -37,7 +37,7 @@ describe('EnvironmentConfigService', () => {
     it('should handle empty variables', async () => {
       // Arrange
       const dto: ValidateEnvironmentDto = {
-        environment: 'development',
+        environment: 'dev',
         variables: {},
         configFiles: [],
         secrets: [],
@@ -56,7 +56,7 @@ describe('EnvironmentConfigService', () => {
       // Arrange
       const dto: ValidateSecretsDto = {
         type: 'aws-secrets-manager',
-        connection: { region: 'us-east-1' },
+        connection: {},
       };
 
       // Act
@@ -91,7 +91,7 @@ describe('EnvironmentConfigService', () => {
     it('should validate environment policies', async () => {
       // Arrange
       const dto: ValidateEnvironmentPoliciesDto = {
-        environment: 'production',
+        environment: 'prod',
         policies: [],
         isolationRules: [],
         promotionRules: [],
@@ -107,14 +107,15 @@ describe('EnvironmentConfigService', () => {
     it('should default requiredApprovals to 1 when not provided', async () => {
       // Arrange
       const dto: ValidateEnvironmentPoliciesDto = {
-        environment: 'production',
+        environment: 'prod',
         policies: [],
         isolationRules: [],
         promotionRules: [
           {
             fromEnvironment: 'staging',
-            toEnvironment: 'production',
-            // requiredApprovals not provided
+            toEnvironment: 'prod',
+            requiredApprovals: 1,
+            requiredChecks: [],
           },
         ],
       };

@@ -18,11 +18,11 @@ describe('EnhancedRiskScoringService', () => {
     testConfigurationId: 'config-1',
     testConfigurationName: 'Test Config',
     testConfigurationType: 'api-security',
+    status: 'failed',
     passed: false,
     result: { error: 'Test failed' },
     timestamp: new Date(),
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -114,7 +114,7 @@ describe('EnhancedRiskScoringService', () => {
 
     it('should return risk heatmap data', async () => {
       // Act
-      const result = await service.getRiskHeatmap({});
+      const result = await service.generateHeatmapData({});
 
       // Assert
       expect(result).toBeDefined();
@@ -123,7 +123,7 @@ describe('EnhancedRiskScoringService', () => {
 
     it('should filter by applicationId', async () => {
       // Act
-      const result = await service.getRiskHeatmap({ applicationId: 'app-1' });
+      const result = await service.generateHeatmapData({ applicationId: 'app-1' });
 
       // Assert
       expect(testResultsService.query).toHaveBeenCalled();

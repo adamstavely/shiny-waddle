@@ -6,24 +6,26 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { DataPipelineService } from './data-pipeline.service';
 import { ApplicationsService } from '../applications/applications.service';
-import { ApplicationEntity } from '../applications/entities/application.entity';
+import { Application } from '../applications/entities/application.entity';
 
 describe('DataPipelineService', () => {
   let service: DataPipelineService;
   let applicationsService: jest.Mocked<ApplicationsService>;
 
-  const mockApplication: ApplicationEntity = {
+  const mockApplication: Application = {
     id: 'app-1',
     name: 'Test App',
+    type: 'web' as any,
+    status: 'active' as any,
     infrastructure: {
       dataPipeline: {
         pipelineType: 'etl',
-        connection: { host: 'localhost', port: 5432 },
-        dataSource: { type: 'postgres', database: 'source' },
-        dataDestination: { type: 's3', bucket: 'dest' },
+        connection: { type: 'custom', endpoint: 'localhost:5432' },
+        dataSource: { type: 'database', connectionString: 'postgres://localhost/source' },
+        dataDestination: { type: 'data-lake', connectionString: 's3://bucket/dest' },
       },
     },
-    createdAt: new Date(),
+    registeredAt: new Date(),
     updatedAt: new Date(),
   };
 
