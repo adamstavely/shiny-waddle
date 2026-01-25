@@ -104,17 +104,17 @@
     <!-- Assignment Manager Modal -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="showAssignmentManager && selectedApplicationId" class="modal-overlay" @click="showAssignmentManager = false">
+        <div v-if="assignmentModal.isOpen.value && assignmentModal.data.value" class="modal-overlay" @click="assignmentModal.close()">
           <div class="modal-content-large" @click.stop>
             <div class="modal-header">
               <h2>Manage Assignments</h2>
-              <button @click="showAssignmentManager = false" class="modal-close">
+              <button @click="assignmentModal.close()" class="modal-close">
                 <span class="close-icon">×</span>
               </button>
             </div>
             <div class="modal-body">
               <AssignmentManager
-                :application-id="selectedApplicationId"
+                :application-id="assignmentModal.data.value"
                 @updated="handleAssignmentUpdated"
               />
             </div>
@@ -126,29 +126,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Teleport, Transition } from 'vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import AssignmentManager from '../components/AssignmentManager.vue';
+import { useApiDataAuto } from '../composables/useApiData';
+import { useModal } from '../composables/useModal';
 
 const router = useRouter();
-const loading = ref(true);
-const error = ref<string | null>(null);
-const applications = ref<any[]>([]);
-const showAssignmentManager = ref(false);
-const selectedApplicationId = ref<string | null>(null);
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
   { label: 'Applications', to: '/applications' },
 ];
 
-const fetchApplications = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
-    
+// Use composable for API data fetching
+const { data: applications, loading, error, reload } = useApiDataAuto(
+  async () => {
     // Fetch applications
     const appsResponse = await fetch('/api/v1/applications');
     if (!appsResponse.ok) throw new Error('Failed to fetch applications');
@@ -201,14 +195,16 @@ const fetchApplications = async () => {
       })
     );
     
-    applications.value = appsWithAssignments;
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load applications';
-    console.error('Error fetching applications:', err);
-  } finally {
-    loading.value = false;
+    return appsWithAssignments;
+  },
+  {
+    initialData: [],
+    errorMessage: 'Failed to load applications',
   }
-};
+);
+
+// Use composable for modal state management
+const assignmentModal = useModal<string>();
 
 const getScoreClass = (score: number) => {
   if (score >= 90) return 'score-high';
@@ -252,12 +248,11 @@ const viewApplication = (id: string) => {
 };
 
 const manageAssignments = (id: string) => {
-  selectedApplicationId.value = id;
-  showAssignmentManager.value = true;
+  assignmentModal.open(id);
 };
 
 const handleAssignmentUpdated = () => {
-  fetchApplications();
+  reload();
 };
 
 const viewBattery = (id: string) => {
@@ -267,10 +262,6 @@ const viewBattery = (id: string) => {
 const viewHarness = (id: string) => {
   router.push({ path: `/tests/harnesses/${id}` });
 };
-
-onMounted(() => {
-  fetchApplications();
-});
 </script>
 
 <style scoped>
@@ -279,43 +270,43 @@ onMounted(() => {
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-xl);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1.5rem;
+  gap: var(--spacing-lg);
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 0.5rem 0;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .page-description {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .loading, .error {
-  padding: 2rem;
+  padding: var(--spacing-xl);
   text-align: center;
 }
 
 .error {
-  color: #d32f2f;
+  color: var(--color-error-dark);
 }
 
 .applications-table-container {
   overflow-x: auto;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
 }
 
 .applications-table {
@@ -325,23 +316,23 @@ onMounted(() => {
 
 .applications-table th {
   text-align: left;
-  padding: 12px 16px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #a0aec0;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
   white-space: nowrap;
 }
 
 .applications-table td {
-  padding: 16px;
-  color: #ffffff;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 .application-row {
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition-base);
 }
 
 .application-row:hover {
@@ -351,73 +342,73 @@ onMounted(() => {
 .app-name-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .app-name-cell strong {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .app-description {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 6px var(--spacing-sm);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
   display: inline-block;
 }
 
 .status-pass {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-degraded {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .status-fail {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .status-never {
   background: rgba(160, 174, 192, 0.2);
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .owner-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .owner {
-  font-size: 0.875rem;
-  color: #ffffff;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .team {
-  font-size: 0.75rem;
-  color: #a0aec0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .last-run {
-  font-size: 0.875rem;
-  color: #ffffff;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .never-run {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -428,91 +419,91 @@ onMounted(() => {
 }
 
 .battery-tag {
-  padding: 4px 10px;
+  padding: var(--spacing-xs) 10px;
   background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-  font-size: 0.75rem;
-  color: #4facfe;
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
 }
 
 .battery-tag.clickable {
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .battery-tag.clickable:hover {
-  background: rgba(79, 172, 254, 0.2);
-  border-color: rgba(79, 172, 254, 0.4);
+  background: var(--border-color-primary);
+  border-color: var(--border-color-primary-hover);
 }
 
 .no-assignments {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .compliance-score {
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-xs) 10px;
+  border-radius: var(--border-radius-sm);
   display: inline-block;
 }
 
 .compliance-score.score-high {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .compliance-score.score-medium {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .compliance-score.score-low {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .actions-cell {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .btn-link {
-  padding: 6px 12px;
+  padding: 6px var(--spacing-sm);
   background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 6px;
-  color: #4facfe;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-primary);
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
+  font-size: var(--font-size-sm);
+  transition: var(--transition-all);
 }
 
 .btn-link:hover {
   background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  border-color: var(--border-color-primary-active);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .btn-secondary {
-  padding: 0.5rem 1rem;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  border: var(--border-width-thin) solid var(--border-color-muted);
+  border-radius: var(--border-radius-xs);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .btn-secondary:hover {
-  background: #e0e0e0;
+  background: var(--color-bg-card);
 }
 
 /* Modal Styles */
@@ -522,59 +513,59 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--color-bg-overlay-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 2rem;
+  z-index: var(--z-index-modal);
+  padding: var(--spacing-xl);
 }
 
 .modal-content-large {
-  background: #1a1f2e;
-  border-radius: 16px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--border-radius-xl);
   width: 100%;
   max-width: 900px;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  padding: 0.5rem;
+  padding: var(--spacing-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-  font-size: 1.5rem;
+  border-radius: var(--border-radius-xs);
+  transition: var(--transition-all);
+  font-size: var(--font-size-2xl);
   line-height: 1;
 }
 
 .modal-close:hover {
   background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 .close-icon {
@@ -582,14 +573,14 @@ onMounted(() => {
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: var(--spacing-xl);
   overflow-y: auto;
   flex: 1;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s;
+  transition: var(--transition-slow);
 }
 
 .fade-enter-from,
