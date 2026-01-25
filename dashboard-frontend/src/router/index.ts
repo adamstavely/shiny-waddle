@@ -48,6 +48,11 @@ import DeveloperFindingsDashboard from '../views/DeveloperFindingsDashboard.vue'
 import PendingApprovals from '../views/PendingApprovals.vue';
 import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
+import SalesforceExperienceCloudConfigList from '../views/SalesforceExperienceCloud/ConfigList.vue';
+import SalesforceExperienceCloudConfigDetail from '../views/SalesforceExperienceCloud/ConfigDetail.vue';
+import SalesforceExperienceCloudTestRunner from '../views/SalesforceExperienceCloud/TestRunner.vue';
+import SalesforceExperienceCloudResultsList from '../views/SalesforceExperienceCloud/ResultsList.vue';
+import SalesforceExperienceCloudResultDetail from '../views/SalesforceExperienceCloud/ResultDetail.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -366,7 +371,28 @@ const router = createRouter({
     },
     {
       path: '/salesforce-experience-cloud',
-      redirect: '/tests/suites',
+      name: 'SalesforceExperienceCloud',
+      component: SalesforceExperienceCloudConfigList,
+    },
+    {
+      path: '/salesforce-experience-cloud/config/:id',
+      name: 'SalesforceExperienceCloudConfigDetail',
+      component: SalesforceExperienceCloudConfigDetail,
+    },
+    {
+      path: '/salesforce-experience-cloud/test-runner/:id',
+      name: 'SalesforceExperienceCloudTestRunner',
+      component: SalesforceExperienceCloudTestRunner,
+    },
+    {
+      path: '/salesforce-experience-cloud/results',
+      name: 'SalesforceExperienceCloudResultsList',
+      component: SalesforceExperienceCloudResultsList,
+    },
+    {
+      path: '/salesforce-experience-cloud/results/:id',
+      name: 'SalesforceExperienceCloudResultDetail',
+      component: SalesforceExperienceCloudResultDetail,
     },
     {
       path: '/:pathMatch(.*)*',

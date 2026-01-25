@@ -10,34 +10,39 @@ import { AppModule } from '../src/app.module';
 import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
 
 export async function createE2EApp(): Promise<INestApplication> {
-  const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
+  try {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-  const app = moduleFixture.createNestApplication();
-  
-  // Apply global validation pipe (same as main.ts)
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+    const app = moduleFixture.createNestApplication();
+    
+    // Apply global validation pipe (same as main.ts)
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
 
-  // Apply global exception filter (same as main.ts)
-  app.useGlobalFilters(new AllExceptionsFilter());
+    // Apply global exception filter (same as main.ts)
+    app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Enable CORS for testing
-  app.enableCors({
-    origin: '*',
-    credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization',
-  });
+    // Enable CORS for testing
+    app.enableCors({
+      origin: '*',
+      credentials: true,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type,Authorization',
+    });
 
-  await app.init();
-  return app;
+    await app.init();
+    return app;
+  } catch (error) {
+    console.error('Error creating E2E app:', error);
+    throw error;
+  }
 }
 
 

@@ -47,6 +47,7 @@ import { DataClassificationModule } from './data-classification/data-classificat
 import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
 import { AlertingModule } from './alerting/alerting.module';
+import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { ApplicationDataModule } from './shared/application-data.module';
 import { AppController } from './app.controller';
 
@@ -102,6 +103,7 @@ import { AppController } from './app.controller';
     ExceptionsModule,
     StandardsMappingModule,
     AlertingModule,
+    SalesforceExperienceCloudModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { Policy, PolicyVersion } from '../entities/policy.entity';
-import { TestResultsService } from '../../test-results/test-results.service';
 
 export interface VersionComparison {
   version1: string;
@@ -30,7 +30,7 @@ export interface ImpactAnalysis {
 @Injectable()
 export class PolicyVersioningService {
   constructor(
-    private readonly testResultsService: TestResultsService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   /**

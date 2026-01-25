@@ -14,7 +14,6 @@ describe('Identity Provider Controller (e2e)', () => {
     app = await createE2EApp();
   });
 
-  afterAll(async () => {
     await app.close();
   });
 
@@ -183,5 +182,3 @@ describe('Identity Provider Controller (e2e)', () => {
     });
   });
 });
-
-

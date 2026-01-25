@@ -14,7 +14,6 @@ describe('API Gateway Controller (e2e)', () => {
     app = await createE2EApp();
   });
 
-  afterAll(async () => {
     await app.close();
   });
 
@@ -141,5 +140,3 @@ describe('API Gateway Controller (e2e)', () => {
     });
   });
 });
-
-

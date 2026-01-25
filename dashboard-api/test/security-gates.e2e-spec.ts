@@ -14,7 +14,6 @@ describe('Security Gates Controller (e2e)', () => {
     app = await createE2EApp();
   });
 
-  afterAll(async () => {
     await app.close();
   });
 
@@ -102,4 +101,3 @@ describe('Security Gates Controller (e2e)', () => {
     });
   });
 });
-

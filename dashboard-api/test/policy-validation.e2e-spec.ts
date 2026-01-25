@@ -15,7 +15,6 @@ describe('Policy Validation Controller (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
   });
 
   const validPolicy: ABACPolicy = {
@@ -149,5 +148,3 @@ describe('Policy Validation Controller (e2e)', () => {
     });
   });
 });
-
-

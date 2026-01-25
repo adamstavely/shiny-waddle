@@ -11,11 +11,15 @@ describe('RLS/CLS Controller (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    app = await createE2EApp();
+    try {
+      app = await createE2EApp();
+    } catch (error) {
+      console.error('Failed to create E2E app:', error);
+      throw error;
+    }
   });
 
   afterAll(async () => {
-    await app.close();
   });
 
   const validDatabaseConfig: DatabaseConfig = {
@@ -249,4 +253,3 @@ describe('RLS/CLS Controller (e2e)', () => {
     });
   });
 });
-

@@ -15,7 +15,6 @@ describe('Salesforce Experience Cloud Controller (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
   });
 
   describe('POST /api/salesforce-experience-cloud/configs', () => {

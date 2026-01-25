@@ -24,7 +24,6 @@ describe('API Endpoint Coverage (e2e)', () => {
     app = await createE2EApp();
   });
 
-  afterAll(async () => {
     await app.close();
   });
 

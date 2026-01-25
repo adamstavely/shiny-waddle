@@ -14,7 +14,6 @@ describe('NIST 800-207 Controller (e2e)', () => {
     app = await createE2EApp();
   });
 
-  afterAll(async () => {
     await app.close();
   });
 
@@ -87,4 +86,3 @@ describe('NIST 800-207 Controller (e2e)', () => {
     });
   });
 });
-
