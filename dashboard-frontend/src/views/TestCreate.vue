@@ -48,6 +48,7 @@
                 placeholder="Select a test type..."
                 :disabled="isEditMode || !selectedCategory"
                 required
+                @change="handleTestTypeChange"
               />
               <p v-if="isEditMode" class="field-help">Test type cannot be changed after creation</p>
             </div>
@@ -167,6 +168,28 @@ const form = ref<Partial<Test>>({
     maskingRules: [],
     validationRules: { minRLSCoverage: 0, minCLSCoverage: 0, requiredPolicies: [] }
   },
+  // Distributed Systems
+  applicationId: '',
+  distributedTestType: undefined as 'multi-region' | 'policy-consistency' | 'policy-synchronization' | undefined,
+  multiRegionConfig: {
+    regions: [] as string[],
+    executionMode: 'parallel' as 'parallel' | 'sequential',
+    timeout: 30000,
+    user: { id: '' },
+    resource: { id: '' },
+    action: 'read',
+    expectedResult: undefined as boolean | undefined,
+  },
+  policyConsistencyConfig: {
+    regions: [] as string[],
+    policyIds: undefined as string[] | undefined,
+    checkTypes: ['version', 'configuration'] as ('version' | 'configuration' | 'evaluation')[],
+  },
+  policySyncConfig: {
+    regions: [] as string[],
+    policyId: undefined as string | undefined,
+    testScenarios: ['update-propagation', 'sync-timing'] as ('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[],
+  },
   // API Security
   apiVersion: { version: '', endpoint: '', deprecated: false, deprecationDate: '', sunsetDate: '' },
   gatewayPolicy: { gatewayType: '', endpoint: '', method: '', policyId: '', policyType: '' },
@@ -216,8 +239,12 @@ const testTypeOptions = {
     { label: 'IDP Compliance', value: 'idp-compliance' },
     { label: 'ServiceNow Config', value: 'servicenow-config' },
   ],
+  'Distributed Systems': [
+    { label: 'Multi-Region', value: 'distributed-systems:multi-region' },
+    { label: 'Policy Consistency', value: 'distributed-systems:policy-consistency' },
+    { label: 'Policy Synchronization', value: 'distributed-systems:policy-synchronization' },
+  ],
   'Data & Systems': [
-    { label: 'Distributed Systems', value: 'distributed-systems' },
     { label: 'Data Pipeline', value: 'data-pipeline' },
     { label: 'Data Contract', value: 'data-contract' },
     { label: 'Dataset Health', value: 'dataset-health' },
@@ -233,6 +260,7 @@ const testTypeOptions = {
 const categoryOptions = [
   { label: 'Access & Security', value: 'Access & Security' },
   { label: 'Platform Configuration', value: 'Platform Configuration' },
+  { label: 'Distributed Systems', value: 'Distributed Systems' },
   { label: 'Data & Systems', value: 'Data & Systems' },
   { label: 'Environment Configuration', value: 'Environment Configuration' },
 ];
@@ -247,10 +275,30 @@ const filteredTestTypeOptions = computed(() => {
 const handleCategoryChange = () => {
   // Reset test type when category changes
   form.value.testType = '';
+  form.value.distributedTestType = undefined;
+};
+
+const handleTestTypeChange = () => {
+  // For distributed systems, parse the value to extract testType and distributedTestType
+  if (typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:')) {
+    const parts = form.value.testType.split(':');
+    form.value.testType = 'distributed-systems';
+    form.value.distributedTestType = parts[1] as 'multi-region' | 'policy-consistency' | 'policy-synchronization';
+  } else {
+    // For other test types, ensure distributedTestType is cleared
+    if (form.value.testType !== 'distributed-systems') {
+      form.value.distributedTestType = undefined;
+    }
+  }
 };
 
 const testTypeFormComponent = computed(() => {
-  switch (form.value.testType) {
+  // Parse testType if it's a composite value
+  const actualTestType = typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:')
+    ? 'distributed-systems'
+    : form.value.testType;
+    
+  switch (actualTestType) {
     case 'access-control':
       return AccessControlTestForm;
     case 'dlp':
@@ -295,10 +343,10 @@ const getTestTypeLabel = (testType: string): string => {
     'access-control': 'Access Control',
     'network-policy': 'Network Policy',
     'dlp': 'Data Loss Prevention (DLP)',
+    'distributed-systems': 'Distributed Systems',
     'api-security': 'API Security',
     'api-gateway': 'API Gateway',
     'rls-cls': 'RLS/CLS',
-    'distributed-systems': 'Distributed Systems',
     'data-pipeline': 'Data Pipeline',
     'data-contract': 'Data Contract',
     'dataset-health': 'Dataset Health',
@@ -344,8 +392,40 @@ const validate = (): boolean => {
     if (!form.value.policyId) {
       validationErrors.value.push('A policy must be selected');
     }
-    if (!form.value.inputs?.subject?.role) {
-      validationErrors.value.push('Subject role is required');
+  }
+  
+  // Validation for distributed-systems tests
+  const actualTestType = typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:') 
+    ? 'distributed-systems' 
+    : form.value.testType;
+    
+  if (actualTestType === 'distributed-systems') {
+    if (!form.value.applicationId) {
+      validationErrors.value.push('An application with distributed systems infrastructure must be selected');
+    }
+    if (!form.value.distributedTestType) {
+      validationErrors.value.push('Distributed test type must be selected');
+    }
+    if (form.value.distributedTestType === 'multi-region') {
+      if (!form.value.multiRegionConfig?.regions || form.value.multiRegionConfig.regions.length === 0) {
+        validationErrors.value.push('At least one region must be selected for multi-region tests');
+      }
+    }
+    if (form.value.distributedTestType === 'policy-consistency') {
+      if (!form.value.policyConsistencyConfig?.regions || form.value.policyConsistencyConfig.regions.length < 2) {
+        validationErrors.value.push('At least 2 regions must be selected for policy consistency tests');
+      }
+      if (!form.value.policyConsistencyConfig?.checkTypes || form.value.policyConsistencyConfig.checkTypes.length === 0) {
+        validationErrors.value.push('At least one check type must be selected');
+      }
+    }
+    if (form.value.distributedTestType === 'policy-synchronization') {
+      if (!form.value.policySyncConfig?.regions || form.value.policySyncConfig.regions.length < 2) {
+        validationErrors.value.push('At least 2 regions must be selected for policy synchronization tests');
+      }
+      if (!form.value.policySyncConfig?.testScenarios || form.value.policySyncConfig.testScenarios.length === 0) {
+        validationErrors.value.push('At least one test scenario must be selected');
+      }
     }
     if (!form.value.inputs?.resource?.id || !form.value.inputs?.resource?.type) {
       validationErrors.value.push('Resource ID and type are required');
@@ -358,9 +438,22 @@ const validate = (): boolean => {
   return validationErrors.value.length === 0;
 };
 
-const getCategoryForTestType = (testType: string): string => {
+const getCategoryForTestType = (testType: string, distributedTestType?: string): string => {
+  // Handle distributed systems specially
+  if (testType === 'distributed-systems') {
+    return 'Distributed Systems';
+  }
+  
   for (const [category, types] of Object.entries(testTypeOptions)) {
-    if (types.some(t => t.value === testType)) {
+    if (types.some(t => {
+      // Handle distributed systems composite values
+      if (t.value.startsWith('distributed-systems:')) {
+        return testType === 'distributed-systems' && 
+               distributedTestType && 
+               t.value === `distributed-systems:${distributedTestType}`;
+      }
+      return t.value === testType;
+    })) {
       return category;
     }
   }
@@ -380,7 +473,14 @@ const loadTest = async () => {
     form.value.testType = test.value.testType;
     
     // Set category based on test type
-    selectedCategory.value = getCategoryForTestType(test.value.testType);
+    selectedCategory.value = getCategoryForTestType(test.value.testType, test.value.distributedTestType);
+    
+    // Set test type value (may need to be composite for distributed systems)
+    if (test.value.testType === 'distributed-systems' && test.value.distributedTestType) {
+      form.value.testType = `distributed-systems:${test.value.distributedTestType}` as any;
+    } else {
+      form.value.testType = test.value.testType;
+    }
     
     // Load test-type-specific data
     if (test.value.testType === 'access-control') {
@@ -408,17 +508,29 @@ const save = async () => {
   
   saving.value = true;
   try {
+    // Parse testType if it's a composite value (for distributed systems)
+    let actualTestType = form.value.testType;
+    if (typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:')) {
+      actualTestType = 'distributed-systems';
+    }
+    
     const payload: Partial<Test> = {
       name: form.value.name,
       description: form.value.description,
-      testType: form.value.testType,
+      testType: actualTestType as any,
     };
     
     // Add test-type-specific payload
-    if (form.value.testType === 'access-control') {
+    if (actualTestType === 'access-control') {
       payload.policyId = form.value.policyId;
       payload.inputs = form.value.inputs;
       payload.expected = form.value.expected;
+    } else if (actualTestType === 'distributed-systems') {
+      payload.applicationId = form.value.applicationId;
+      payload.distributedTestType = form.value.distributedTestType;
+      payload.multiRegionConfig = form.value.multiRegionConfig;
+      payload.policyConsistencyConfig = form.value.policyConsistencyConfig;
+      payload.policySyncConfig = form.value.policySyncConfig;
     }
     // Other test types would be added here
     

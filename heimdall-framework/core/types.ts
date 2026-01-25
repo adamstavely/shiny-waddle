@@ -268,20 +268,40 @@ export interface APIGatewayTest extends BaseTest {
 // Distributed Systems Test
 export interface DistributedSystemsTest extends BaseTest {
   testType: 'distributed-systems';
-  distributedTestType?: 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency';
-  region?: {
-    id: string;
-    name: string;
-    endpoint: string;
-    pdpEndpoint?: string;
+  distributedTestType: 'multi-region' | 'policy-consistency' | 'policy-synchronization';
+  applicationId?: string; // References application with distributed systems infrastructure
+  
+  // Multi-Region Test Configuration
+  multiRegionConfig?: {
+    regions: string[]; // Region IDs to test
+    executionMode?: 'parallel' | 'sequential';
+    timeout?: number;
+    user?: {
+      id: string;
+      attributes?: Record<string, any>;
+    };
+    resource?: {
+      id: string;
+      type?: string;
+      attributes?: Record<string, any>;
+    };
+    action?: string;
+    expectedResult?: boolean;
   };
-  regions?: Array<{
-    id: string;
-    name: string;
-    endpoint: string;
-    pdpEndpoint?: string;
-  }>;
-  expectedResult?: any;
+  
+  // Policy Consistency Test Configuration
+  policyConsistencyConfig?: {
+    regions: string[]; // Region IDs to check
+    policyIds?: string[]; // Specific policies to check, or all if not specified
+    checkTypes?: ('version' | 'configuration' | 'evaluation')[];
+  };
+  
+  // Policy Synchronization Test Configuration
+  policySyncConfig?: {
+    regions: string[]; // Region IDs to test
+    policyId?: string; // Specific policy to test, or all if not specified
+    testScenarios?: ('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[];
+  };
 }
 
 // API Security Enhanced Test

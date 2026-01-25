@@ -132,6 +132,59 @@ Quick reference for common tasks when creating policies and tests.
 // - joinRestrictions: { disallowedJoins }
 ```
 
+### Distributed Systems Test
+
+**Prerequisites:** Application must have `infrastructure.distributedSystems.regions` configured with at least 2 regions.
+
+#### Multi-Region Test
+
+```typescript
+{
+  testType: 'distributed-systems',
+  distributedTestType: 'multi-region',
+  applicationId: 'my-distributed-app',
+  multiRegionConfig: {
+    regions: ['us-east-1', 'eu-west-1'],
+    executionMode: 'parallel', // or 'sequential'
+    timeout: 30000,
+    user: { id: 'user-123', attributes: { role: 'admin' } },
+    resource: { id: 'resource-456', type: 'dataset' },
+    action: 'read',
+    expectedResult: true
+  }
+}
+```
+
+#### Policy Consistency Test
+
+```typescript
+{
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-consistency',
+  applicationId: 'my-distributed-app',
+  policyConsistencyConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    policyIds: ['policy-1'], // Optional: check specific policies
+    checkTypes: ['version', 'configuration', 'evaluation']
+  }
+}
+```
+
+#### Policy Synchronization Test
+
+```typescript
+{
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-synchronization',
+  applicationId: 'my-distributed-app',
+  policySyncConfig: {
+    regions: ['us-east-1', 'eu-west-1'],
+    policyId: 'policy-1', // Optional: test specific policy
+    testScenarios: ['update-propagation', 'sync-timing', 'sync-failure-recovery']
+  }
+}
+```
+
 ## File Locations
 
 - **Policies**: `policies/*.json`

@@ -78,8 +78,12 @@
                       <option value="idp-compliance">IDP Compliance</option>
                       <option value="servicenow-config">ServiceNow Config</option>
                     </optgroup>
+                    <optgroup label="Distributed Systems">
+                      <option value="distributed-systems">Multi-Region</option>
+                      <option value="distributed-systems">Policy Consistency</option>
+                      <option value="distributed-systems">Policy Synchronization</option>
+                    </optgroup>
                     <optgroup label="Data & Systems">
-                      <option value="distributed-systems">Distributed Systems</option>
                       <option value="data-pipeline">Data Pipeline</option>
                     </optgroup>
                     <optgroup label="Environment Configuration">

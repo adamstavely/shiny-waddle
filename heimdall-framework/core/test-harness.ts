@@ -8,6 +8,10 @@ import { AccessControlTester } from '../services/access-control-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
 import { PlatformConfigTester } from '../services/platform-config-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
+import { MultiRegionTestingService } from '../services/multi-region-testing.service';
+import { PolicyConsistencyChecker } from '../services/policy-consistency-checker.service';
+import { PolicySyncTester } from '../services/policy-sync-tester.service';
+import { PolicyDecisionPoint } from '../services/policy-decision-point';
 import { 
   TestResult, 
   TestSuite, 
@@ -17,6 +21,7 @@ import {
   DatasetHealthTest,
   PlatformConfigTest,
   SalesforceExperienceCloudTest,
+  DistributedSystemsTest,
   ABACPolicy,
 } from './types';
 import { RuntimeTestConfig } from './runtime-config';
@@ -125,6 +130,8 @@ export class TestOrchestrator {
         return this.runPlatformConfigTest(test as PlatformConfigTest, suite);
       case 'salesforce-experience-cloud':
         return this.runSalesforceExperienceCloudTest(test as SalesforceExperienceCloudTest, suite);
+      case 'distributed-systems':
+        return this.runDistributedSystemsTest(test as DistributedSystemsTest, suite);
       default:
         throw new Error(`Test type ${test.testType} execution not yet implemented`);
     }
@@ -375,6 +382,212 @@ export class TestOrchestrator {
    */
   async generateComplianceReport(results: TestResult[]): Promise<any> {
     return this.complianceReporter.generateReport(results);
+  }
+
+  /**
+   * Run a distributed systems test
+   */
+  async runDistributedSystemsTest(test: DistributedSystemsTest, suite: TestSuite): Promise<TestResult> {
+    const startTime = Date.now();
+    const result: TestResult = {
+      testType: 'distributed-systems',
+      testName: test.name,
+      testId: test.id,
+      testVersion: test.version,
+      passed: false,
+      timestamp: new Date(),
+      details: {},
+    };
+
+    try {
+      // Validate test configuration
+      if (!test.distributedTestType) {
+        throw new Error('distributedTestType is required for distributed systems tests');
+      }
+
+      // Load application to get region configuration
+      let application: any = null;
+      if (test.applicationId) {
+        application = await this.testLoader.loadApplication(test.applicationId);
+        if (!application?.infrastructure?.distributedSystems) {
+          throw new Error(`Application ${test.applicationId} does not have distributed systems infrastructure configured`);
+        }
+      } else {
+        throw new Error('applicationId is required for distributed systems tests');
+      }
+
+      const regions = application.infrastructure.distributedSystems.regions || [];
+      if (regions.length < 2) {
+        throw new Error('At least 2 regions are required for distributed systems testing');
+      }
+
+      // Convert regions to format expected by services
+      const regionConfigs = regions.map((region: any) => ({
+        id: region.id,
+        name: region.name,
+        endpoint: region.endpoint,
+        pdpEndpoint: region.pdpEndpoint,
+        timezone: region.timezone,
+        latency: region.latency,
+        credentials: region.credentials,
+      }));
+
+      // Route to appropriate service based on distributedTestType
+      switch (test.distributedTestType) {
+        case 'multi-region':
+          return await this.runMultiRegionTest(test, suite, regionConfigs, result);
+        
+        case 'policy-consistency':
+          return await this.runPolicyConsistencyTest(test, suite, regionConfigs, result);
+        
+        case 'policy-synchronization':
+          return await this.runPolicySynchronizationTest(test, suite, regionConfigs, result);
+        
+        default:
+          throw new Error(`Unknown distributed test type: ${test.distributedTestType}`);
+      }
+    } catch (error: any) {
+      result.passed = false;
+      result.error = error.message;
+      result.details = { error: error.message };
+      return result;
+    }
+  }
+
+  /**
+   * Run multi-region test
+   */
+  private async runMultiRegionTest(
+    test: DistributedSystemsTest,
+    suite: TestSuite,
+    regionConfigs: any[],
+    result: TestResult
+  ): Promise<TestResult> {
+    const config = test.multiRegionConfig || {};
+    const regionsToTest = config.regions 
+      ? regionConfigs.filter(r => config.regions!.includes(r.id))
+      : regionConfigs;
+
+    if (regionsToTest.length === 0) {
+      throw new Error('No regions found matching the specified region IDs');
+    }
+
+    const multiRegionService = new MultiRegionTestingService({
+      regions: regionsToTest,
+      executionMode: config.executionMode || 'parallel',
+      timeout: config.timeout || 30000,
+    }, new PolicyDecisionPoint({
+      policyEngine: 'custom',
+      cacheDecisions: true,
+    }));
+
+    const executionResult = await multiRegionService.executeMultiRegionTest({
+      name: test.name,
+      testType: 'access-control',
+      user: config.user,
+      resource: config.resource,
+      action: config.action,
+      regions: config.regions,
+      expectedResult: config.expectedResult,
+      timeout: config.timeout,
+    });
+
+    result.passed = executionResult.passed;
+    result.details = {
+      distributedTestType: 'multi-region',
+      aggregatedResult: executionResult.aggregatedResult,
+      regionResults: executionResult.regionResults,
+      coordinationMetrics: executionResult.coordinationMetrics,
+      errors: executionResult.errors,
+    };
+
+    return result;
+  }
+
+  /**
+   * Run policy consistency test
+   */
+  private async runPolicyConsistencyTest(
+    test: DistributedSystemsTest,
+    suite: TestSuite,
+    regionConfigs: any[],
+    result: TestResult
+  ): Promise<TestResult> {
+    const config = test.policyConsistencyConfig || {};
+    const regionsToCheck = config.regions
+      ? regionConfigs.filter(r => config.regions!.includes(r.id))
+      : regionConfigs;
+
+    if (regionsToCheck.length < 2) {
+      throw new Error('At least 2 regions are required for policy consistency checking');
+    }
+
+    const checker = new PolicyConsistencyChecker();
+    const report = await checker.checkConsistency(regionsToCheck, {
+      regions: config.regions || [],
+      policyIds: config.policyIds,
+      checkTypes: config.checkTypes,
+    });
+
+    result.passed = report.consistent;
+    result.details = {
+      distributedTestType: 'policy-consistency',
+      report: {
+        id: report.id,
+        timestamp: report.timestamp,
+        regionsChecked: report.regionsChecked,
+        policiesChecked: report.policiesChecked,
+        consistent: report.consistent,
+        inconsistencies: report.inconsistencies,
+        summary: report.summary,
+        recommendations: report.recommendations,
+      },
+    };
+
+    return result;
+  }
+
+  /**
+   * Run policy synchronization test
+   */
+  private async runPolicySynchronizationTest(
+    test: DistributedSystemsTest,
+    suite: TestSuite,
+    regionConfigs: any[],
+    result: TestResult
+  ): Promise<TestResult> {
+    const config = test.policySyncConfig || {};
+    const regionsToTest = config.regions
+      ? regionConfigs.filter(r => config.regions!.includes(r.id))
+      : regionConfigs;
+
+    if (regionsToTest.length < 2) {
+      throw new Error('At least 2 regions are required for policy synchronization testing');
+    }
+
+    const tester = new PolicySyncTester();
+    const report = await tester.testSynchronization(regionsToTest, {
+      regions: config.regions || [],
+      policyId: config.policyId,
+      testScenarios: config.testScenarios,
+    });
+
+    // Test passes if all test scenarios pass
+    const allPassed = report.testResults.every(tr => tr.passed);
+    result.passed = allPassed;
+    result.details = {
+      distributedTestType: 'policy-synchronization',
+      report: {
+        id: report.id,
+        timestamp: report.timestamp,
+        regionsTested: report.regionsTested,
+        testResults: report.testResults,
+        summary: report.summary,
+        recommendations: report.recommendations,
+      },
+    };
+
+    return result;
   }
 
   /**

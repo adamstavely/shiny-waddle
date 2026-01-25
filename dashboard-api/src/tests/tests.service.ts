@@ -18,6 +18,7 @@ import { Test, TestVersion, AccessControlTest, TestType } from '../../../heimdal
 import { PoliciesService } from '../policies/policies.service';
 import { getDomainFromTestType } from '../../../heimdall-framework/core/domain-mapping';
 import { TestDiscoveryService } from './test-discovery.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 
 @Injectable()
 export class TestsService implements OnModuleInit {
@@ -28,6 +29,7 @@ export class TestsService implements OnModuleInit {
   constructor(
     private readonly moduleRef: ModuleRef,
     private readonly discoveryService: TestDiscoveryService,
+    private readonly applicationDataService?: ApplicationDataService,
   ) {}
 
   async onModuleInit() {
@@ -144,6 +146,100 @@ export class TestsService implements OnModuleInit {
     }
   }
 
+  private async validateDistributedSystemsTest(dto: CreateTestDto): Promise<void> {
+    // Validate distributedTestType is required
+    if (!dto.distributedTestType) {
+      throw new BadRequestException('distributedTestType is required for distributed-systems tests');
+    }
+
+    // Validate applicationId is required
+    if (!dto.applicationId) {
+      throw new BadRequestException('applicationId is required for distributed-systems tests');
+    }
+
+    // Validate application exists and has distributed systems infrastructure
+    try {
+      if (this.applicationDataService) {
+        const application = await this.applicationDataService.findOne(dto.applicationId);
+        if (!application.infrastructure?.distributedSystems) {
+          throw new BadRequestException(
+            `Application ${dto.applicationId} does not have distributed systems infrastructure configured`
+          );
+        }
+
+        const regions = application.infrastructure.distributedSystems.regions || [];
+        if (regions.length < 2) {
+          throw new BadRequestException(
+            'Application must have at least 2 regions configured for distributed systems testing'
+          );
+        }
+
+        // Validate configuration based on distributedTestType
+        switch (dto.distributedTestType) {
+          case 'multi-region':
+            if (!dto.multiRegionConfig) {
+              throw new BadRequestException('multiRegionConfig is required for multi-region tests');
+            }
+            if (!dto.multiRegionConfig.regions || dto.multiRegionConfig.regions.length === 0) {
+              throw new BadRequestException('At least one region must be specified in multiRegionConfig.regions');
+            }
+            // Validate regions exist
+            const invalidRegions = dto.multiRegionConfig.regions.filter(
+              regionId => !regions.some((r: any) => r.id === regionId)
+            );
+            if (invalidRegions.length > 0) {
+              throw new BadRequestException(`Invalid region IDs: ${invalidRegions.join(', ')}`);
+            }
+            break;
+
+          case 'policy-consistency':
+            if (!dto.policyConsistencyConfig) {
+              throw new BadRequestException('policyConsistencyConfig is required for policy-consistency tests');
+            }
+            if (!dto.policyConsistencyConfig.regions || dto.policyConsistencyConfig.regions.length < 2) {
+              throw new BadRequestException('At least 2 regions must be specified for policy-consistency tests');
+            }
+            // Validate regions exist
+            const invalidConsistencyRegions = dto.policyConsistencyConfig.regions.filter(
+              regionId => !regions.some((r: any) => r.id === regionId)
+            );
+            if (invalidConsistencyRegions.length > 0) {
+              throw new BadRequestException(`Invalid region IDs: ${invalidConsistencyRegions.join(', ')}`);
+            }
+            break;
+
+          case 'policy-synchronization':
+            if (!dto.policySyncConfig) {
+              throw new BadRequestException('policySyncConfig is required for policy-synchronization tests');
+            }
+            if (!dto.policySyncConfig.regions || dto.policySyncConfig.regions.length < 2) {
+              throw new BadRequestException('At least 2 regions must be specified for policy-synchronization tests');
+            }
+            // Validate regions exist
+            const invalidSyncRegions = dto.policySyncConfig.regions.filter(
+              regionId => !regions.some((r: any) => r.id === regionId)
+            );
+            if (invalidSyncRegions.length > 0) {
+              throw new BadRequestException(`Invalid region IDs: ${invalidSyncRegions.join(', ')}`);
+            }
+            break;
+
+          default:
+            throw new BadRequestException(`Unknown distributedTestType: ${dto.distributedTestType}`);
+        }
+      }
+    } catch (error: any) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (error.message?.includes('not found')) {
+        throw new BadRequestException(`Application ${dto.applicationId} not found`);
+      }
+      this.logger.warn('Could not validate distributed systems test:', error.message);
+      throw error;
+    }
+  }
+
   private detectChanges(oldTest: TestEntity, newTest: Partial<TestEntity>): string[] {
     const changes: string[] = [];
     
@@ -179,6 +275,11 @@ export class TestsService implements OnModuleInit {
     // Validate policy for access-control tests
     if (dto.testType === 'access-control' && dto.policyId) {
       await this.validatePolicies([dto.policyId]);
+    }
+
+    // Validate distributed systems tests
+    if (dto.testType === 'distributed-systems') {
+      await this.validateDistributedSystemsTest(dto);
     }
 
     // Auto-populate domain from testType if not provided

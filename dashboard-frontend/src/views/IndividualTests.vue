@@ -57,8 +57,14 @@
           class="search-input"
         />
         <Dropdown
+          v-model="filterCategory"
+          :options="categoryOptions"
+          placeholder="All Categories"
+          class="filter-dropdown"
+        />
+        <Dropdown
           v-model="filterTestType"
-          :options="testTypeOptions"
+          :options="filteredTestTypeOptions"
           placeholder="All Test Types"
           class="filter-dropdown"
         />
@@ -168,11 +174,97 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 const searchQuery = ref('');
+const filterCategory = ref('');
 const filterTestType = ref('');
 const filterDomain = ref('');
 
+const testTypeOptionsByCategory = {
+  'Access & Security': [
+    { label: 'Access Control', value: 'access-control' },
+    { label: 'Network Policy', value: 'network-policy' },
+    { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
+    { label: 'API Security', value: 'api-security' },
+    { label: 'API Gateway', value: 'api-gateway' },
+    { label: 'RLS/CLS', value: 'rls-cls' },
+  ],
+  'Platform Configuration': [
+    { label: 'Salesforce Config', value: 'salesforce-config' },
+    { label: 'Salesforce Security', value: 'salesforce-security' },
+    { label: 'Salesforce Experience Cloud', value: 'salesforce-experience-cloud' },
+    { label: 'Elastic Config', value: 'elastic-config' },
+    { label: 'Elastic Security', value: 'elastic-security' },
+    { label: 'Kubernetes Security', value: 'k8s-security' },
+    { label: 'Kubernetes Workload', value: 'k8s-workload' },
+    { label: 'IDP Compliance', value: 'idp-compliance' },
+    { label: 'ServiceNow Config', value: 'servicenow-config' },
+  ],
+  'Distributed Systems': [
+    { label: 'Multi-Region', value: 'distributed-systems:multi-region' },
+    { label: 'Policy Consistency', value: 'distributed-systems:policy-consistency' },
+    { label: 'Policy Synchronization', value: 'distributed-systems:policy-synchronization' },
+  ],
+  'Data & Systems': [
+    { label: 'Data Pipeline', value: 'data-pipeline' },
+    { label: 'Data Contract', value: 'data-contract' },
+    { label: 'Dataset Health', value: 'dataset-health' },
+  ],
+  'Environment Configuration': [
+    { label: 'Environment Config', value: 'environment-config' },
+    { label: 'Secrets Management', value: 'secrets-management' },
+    { label: 'Configuration Drift', value: 'config-drift' },
+    { label: 'Environment Policies', value: 'environment-policies' },
+  ],
+};
+
+const categoryOptions = [
+  { label: 'All Categories', value: '' },
+  { label: 'Access & Security', value: 'Access & Security' },
+  { label: 'Platform Configuration', value: 'Platform Configuration' },
+  { label: 'Distributed Systems', value: 'Distributed Systems' },
+  { label: 'Data & Systems', value: 'Data & Systems' },
+  { label: 'Environment Configuration', value: 'Environment Configuration' },
+];
+
+const filteredTestTypeOptions = computed(() => {
+  if (filterCategory.value) {
+    const types = testTypeOptionsByCategory[filterCategory.value as keyof typeof testTypeOptionsByCategory] || [];
+    return [
+      { label: 'All Test Types', value: '' },
+      ...types
+    ];
+  }
+  // If no category selected, show all test types
+  return testTypeOptions.value;
+});
+
 const testTypeOptions = computed(() => {
-  const types = new Set(tests.value.map(t => t.testType));
+  // Include all possible test types, not just ones that exist
+  const allTestTypes = [
+    'access-control',
+    'dataset-health',
+    'rls-cls',
+    'network-policy',
+    'dlp',
+    'api-gateway',
+    'distributed-systems',
+    'api-security',
+    'data-pipeline',
+    'data-contract',
+    'salesforce-config',
+    'salesforce-security',
+    'salesforce-experience-cloud',
+    'elastic-config',
+    'elastic-security',
+    'k8s-security',
+    'k8s-workload',
+    'idp-compliance',
+    'servicenow-config',
+    'environment-config',
+    'secrets-management',
+    'config-drift',
+    'environment-policies'
+  ];
+  
   const typeLabels: Record<string, string> = {
     'access-control': 'Access Control',
     'dataset-health': 'Dataset Health',
@@ -191,12 +283,17 @@ const testTypeOptions = computed(() => {
     'elastic-security': 'Elastic Security',
     'k8s-security': 'K8s Security',
     'k8s-workload': 'K8s Workload',
-    'idp-compliance': 'IDP Compliance'
+    'idp-compliance': 'IDP Compliance',
+    'servicenow-config': 'ServiceNow Config',
+    'environment-config': 'Environment Config',
+    'secrets-management': 'Secrets Management',
+    'config-drift': 'Configuration Drift',
+    'environment-policies': 'Environment Policies'
   };
   
   return [
     { label: 'All Test Types', value: '' },
-    ...Array.from(types).map(t => ({
+    ...allTestTypes.map(t => ({
       label: typeLabels[t] || t,
       value: t
     }))
@@ -229,9 +326,27 @@ const filteredTests = computed(() => {
     const matchesSearch = !searchQuery.value || 
       test.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       (test.description && test.description.toLowerCase().includes(searchQuery.value.toLowerCase()));
+    
+    // Check if test type matches category filter
+    const matchesCategory = !filterCategory.value || 
+      (testTypeOptionsByCategory[filterCategory.value as keyof typeof testTypeOptionsByCategory] || [])
+        .some(opt => {
+          if (filterCategory.value === 'Distributed Systems') {
+            // For distributed systems, check if test has distributedTestType matching the option
+            const optValue = opt.value as string;
+            if (optValue.startsWith('distributed-systems:')) {
+              const expectedType = optValue.split(':')[1];
+              return test.testType === 'distributed-systems' && test.distributedTestType === expectedType;
+            }
+            return false;
+          }
+          // For other categories, check if testType matches
+          return opt.value === test.testType;
+        });
+    
     const matchesType = !filterTestType.value || test.testType === filterTestType.value;
     const matchesDomain = !filterDomain.value || test.domain === filterDomain.value;
-    return matchesSearch && matchesType && matchesDomain;
+    return matchesSearch && matchesCategory && matchesType && matchesDomain;
   });
 });
 
@@ -262,7 +377,12 @@ const getTestTypeLabel = (testType: string): string => {
     'elastic-security': 'Elastic Security',
     'k8s-security': 'K8s Security',
     'k8s-workload': 'K8s Workload',
-    'idp-compliance': 'IDP Compliance'
+    'idp-compliance': 'IDP Compliance',
+    'servicenow-config': 'ServiceNow Config',
+    'environment-config': 'Environment Config',
+    'secrets-management': 'Secrets Management',
+    'config-drift': 'Configuration Drift',
+    'environment-policies': 'Environment Policies',
   };
   return labels[testType] || testType;
 };

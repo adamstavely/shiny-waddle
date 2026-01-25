@@ -109,6 +109,93 @@
             </div>
           </div>
 
+          <!-- Distributed Systems Specific Info -->
+          <div v-if="test.testType === 'distributed-systems'" class="info-card">
+            <h3 class="card-title">
+              <Network class="title-icon" />
+              Distributed Systems Configuration
+            </h3>
+            <div class="info-list">
+              <div v-if="test.distributedTestType" class="info-item">
+                <span class="info-label">Test Subtype</span>
+                <span class="info-value">{{ getDistributedTestTypeLabel(test.distributedTestType) }}</span>
+              </div>
+              <div v-if="test.applicationId" class="info-item">
+                <span class="info-label">Application</span>
+                <span class="info-value">{{ getApplicationName(test.applicationId) || test.applicationId }}</span>
+              </div>
+              
+              <!-- Multi-Region Config -->
+              <div v-if="test.distributedTestType === 'multi-region' && test.multiRegionConfig" class="config-section">
+                <h4 class="config-section-title">Multi-Region Configuration</h4>
+                <div v-if="test.multiRegionConfig.regions" class="info-item">
+                  <span class="info-label">Regions</span>
+                  <span class="info-value">{{ test.multiRegionConfig.regions.join(', ') }}</span>
+                </div>
+                <div v-if="test.multiRegionConfig.executionMode" class="info-item">
+                  <span class="info-label">Execution Mode</span>
+                  <span class="info-value">{{ test.multiRegionConfig.executionMode }}</span>
+                </div>
+                <div v-if="test.multiRegionConfig.timeout" class="info-item">
+                  <span class="info-label">Timeout</span>
+                  <span class="info-value">{{ test.multiRegionConfig.timeout }}ms</span>
+                </div>
+                <div v-if="test.multiRegionConfig.user?.id" class="info-item">
+                  <span class="info-label">User ID</span>
+                  <span class="info-value">{{ test.multiRegionConfig.user.id }}</span>
+                </div>
+                <div v-if="test.multiRegionConfig.resource?.id" class="info-item">
+                  <span class="info-label">Resource ID</span>
+                  <span class="info-value">{{ test.multiRegionConfig.resource.id }}</span>
+                </div>
+                <div v-if="test.multiRegionConfig.action" class="info-item">
+                  <span class="info-label">Action</span>
+                  <span class="info-value">{{ test.multiRegionConfig.action }}</span>
+                </div>
+                <div v-if="test.multiRegionConfig.expectedResult !== undefined" class="info-item">
+                  <span class="info-label">Expected Result</span>
+                  <span class="info-value" :class="test.multiRegionConfig.expectedResult ? 'allowed' : 'denied'">
+                    {{ test.multiRegionConfig.expectedResult ? 'Allow' : 'Deny' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Policy Consistency Config -->
+              <div v-if="test.distributedTestType === 'policy-consistency' && test.policyConsistencyConfig" class="config-section">
+                <h4 class="config-section-title">Policy Consistency Configuration</h4>
+                <div v-if="test.policyConsistencyConfig.regions" class="info-item">
+                  <span class="info-label">Regions</span>
+                  <span class="info-value">{{ test.policyConsistencyConfig.regions.join(', ') }}</span>
+                </div>
+                <div v-if="test.policyConsistencyConfig.checkTypes" class="info-item">
+                  <span class="info-label">Check Types</span>
+                  <span class="info-value">{{ test.policyConsistencyConfig.checkTypes.join(', ') }}</span>
+                </div>
+                <div v-if="test.policyConsistencyConfig.policyIds" class="info-item">
+                  <span class="info-label">Policy IDs</span>
+                  <span class="info-value">{{ test.policyConsistencyConfig.policyIds.join(', ') }}</span>
+                </div>
+              </div>
+
+              <!-- Policy Sync Config -->
+              <div v-if="test.distributedTestType === 'policy-synchronization' && test.policySyncConfig" class="config-section">
+                <h4 class="config-section-title">Policy Synchronization Configuration</h4>
+                <div v-if="test.policySyncConfig.regions" class="info-item">
+                  <span class="info-label">Regions</span>
+                  <span class="info-value">{{ test.policySyncConfig.regions.join(', ') }}</span>
+                </div>
+                <div v-if="test.policySyncConfig.testScenarios" class="info-item">
+                  <span class="info-label">Test Scenarios</span>
+                  <span class="info-value">{{ test.policySyncConfig.testScenarios.join(', ') }}</span>
+                </div>
+                <div v-if="test.policySyncConfig.policyId" class="info-item">
+                  <span class="info-label">Policy ID</span>
+                  <span class="info-value">{{ test.policySyncConfig.policyId }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- API Security Specific Info -->
           <div v-if="test.testType === 'api-security'" class="info-card">
             <h3 class="card-title">
@@ -275,6 +362,7 @@ import {
   Shield,
   List,
   Eye,
+  Network,
 } from 'lucide-vue-next';
 import CrossLinkPanel from '../components/CrossLinkPanel.vue';
 import axios from 'axios';
@@ -285,6 +373,7 @@ const route = useRoute();
 
 const test = ref<any>(null);
 const policies = ref<any[]>([]);
+const applications = ref<any[]>([]);
 const suitesUsingTest = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -307,12 +396,14 @@ const loadTest = async () => {
   error.value = null;
   try {
     const testId = route.params.id as string;
-    const [testRes, policiesRes] = await Promise.all([
+    const [testRes, policiesRes, applicationsRes] = await Promise.all([
       axios.get(`/api/tests/${testId}`),
       axios.get('/api/policies'),
+      axios.get('/api/v1/applications'),
     ]);
     test.value = testRes.data;
     policies.value = policiesRes.data;
+    applications.value = applicationsRes.data || [];
     
     // Load suites using this test
     await loadSuitesUsingTest();
@@ -359,12 +450,35 @@ const getPolicyType = (policyId: string): string => {
   return policy?.type?.toUpperCase() || 'Unknown';
 };
 
+const getApplicationName = (applicationId: string): string => {
+  const application = applications.value.find(a => a.id === applicationId);
+  return application?.name || '';
+};
+
+const getDistributedTestTypeLabel = (type: string): string => {
+  const labels: Record<string, string> = {
+    'multi-region': 'Multi-Region Test',
+    'policy-consistency': 'Policy Consistency',
+    'policy-synchronization': 'Policy Synchronization',
+  };
+  return labels[type] || type;
+};
+
 const getTestConfiguration = (test: any): any => {
   if (test.testType === 'access-control') {
     return {
       policyId: test.policyId,
       inputs: test.inputs,
       expected: test.expected,
+    };
+  }
+  if (test.testType === 'distributed-systems') {
+    return {
+      distributedTestType: test.distributedTestType,
+      applicationId: test.applicationId,
+      multiRegionConfig: test.multiRegionConfig,
+      policyConsistencyConfig: test.policyConsistencyConfig,
+      policySyncConfig: test.policySyncConfig,
     };
   }
   return test;
@@ -596,6 +710,19 @@ onMounted(() => {
 
 .info-value.denied {
   color: #ef4444;
+}
+
+.config-section {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-thin) solid var(--border-color-muted);
+}
+
+.config-section-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .content-section {

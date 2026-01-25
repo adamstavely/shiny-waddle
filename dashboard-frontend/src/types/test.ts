@@ -257,14 +257,39 @@ export interface NetworkPolicyConfig {
 }
 
 export interface DistributedSystemsConfig {
-  testType: string;
-  regions: Region[];
-  coordination: {
-    type: string;
-    endpoint: string;
+  distributedTestType: 'multi-region' | 'policy-consistency' | 'policy-synchronization';
+  applicationId?: string;
+  
+  // Multi-Region Test Configuration
+  multiRegionConfig?: {
+    regions: string[];
+    executionMode?: 'parallel' | 'sequential';
+    timeout?: number;
+    user?: {
+      id: string;
+      attributes?: Record<string, any>;
+    };
+    resource?: {
+      id: string;
+      type?: string;
+      attributes?: Record<string, any>;
+    };
+    action?: string;
+    expectedResult?: boolean;
   };
-  policySync: {
-    consistencyLevel: string;
+  
+  // Policy Consistency Test Configuration
+  policyConsistencyConfig?: {
+    regions: string[];
+    policyIds?: string[];
+    checkTypes?: ('version' | 'configuration' | 'evaluation')[];
+  };
+  
+  // Policy Synchronization Test Configuration
+  policySyncConfig?: {
+    regions: string[];
+    policyId?: string;
+    testScenarios?: ('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[];
   };
 }
 

@@ -53,6 +53,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 import { TemplatesModule } from './templates/templates.module';
 import { BatchOperationsModule } from './batch-operations/batch-operations.module';
+import { DistributedModule } from './distributed/distributed.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -112,6 +113,7 @@ import { AppController } from './app.controller';
     ElasticsearchModule,
     TemplatesModule,
     BatchOperationsModule,
+    DistributedModule,
   ],
   controllers: [AppController],
   providers: [

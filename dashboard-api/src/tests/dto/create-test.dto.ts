@@ -323,12 +323,53 @@ export class CreateTestDto {
 
   // DistributedSystemsTest fields
   @IsOptional()
-  @IsEnum(['policy-consistency', 'multi-region', 'synchronization', 'transaction', 'eventual-consistency'])
-  distributedTestType?: 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency';
+  @IsString()
+  applicationId?: string; // References application with distributed systems infrastructure
+
+  @IsOptional()
+  @IsEnum(['multi-region', 'policy-consistency', 'policy-synchronization'])
+  distributedTestType?: 'multi-region' | 'policy-consistency' | 'policy-synchronization';
 
   @IsOptional()
   @IsObject()
-  region?: any;
+  @ValidateNested()
+  @Type(() => Object)
+  multiRegionConfig?: {
+    regions?: string[];
+    executionMode?: 'parallel' | 'sequential';
+    timeout?: number;
+    user?: {
+      id?: string;
+      attributes?: Record<string, any>;
+    };
+    resource?: {
+      id?: string;
+      type?: string;
+      attributes?: Record<string, any>;
+    };
+    action?: string;
+    expectedResult?: boolean;
+  };
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Object)
+  policyConsistencyConfig?: {
+    regions?: string[];
+    policyIds?: string[];
+    checkTypes?: ('version' | 'configuration' | 'evaluation')[];
+  };
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => Object)
+  policySyncConfig?: {
+    regions?: string[];
+    policyId?: string;
+    testScenarios?: ('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[];
+  };
 
   // APISecurityTest fields
   @IsOptional()

@@ -8,6 +8,10 @@ This guide explains how to create test suites for TestOrchestrator. You'll learn
 2. [Test Suite Overview](#test-suite-overview)
 3. [Creating a Test Suite](#creating-a-test-suite)
 4. [Test Types](#test-types)
+   - [Access Control Tests](#1-access-control-tests)
+   - [Dataset Health Tests](#2-dataset-health-tests)
+   - [Platform Configuration Tests](#3-platform-configuration-tests)
+   - [Distributed Systems Tests](#4-distributed-systems-tests)
 5. [Configuration Reference](#configuration-reference)
 6. [Best Practices](#best-practices)
 7. [Examples](#examples)
@@ -620,6 +624,427 @@ Platform instances are stored as Applications with platform-specific infrastruct
 }
 ```
 
+### 4. Distributed Systems Tests
+
+Tests that validate distributed systems behavior across multiple regions, including policy consistency and synchronization.
+
+#### Overview
+
+Distributed systems tests validate that your application behaves correctly when deployed across multiple regions. These tests ensure:
+
+- **Multi-Region Consistency**: Policies evaluate consistently across regions
+- **Policy Synchronization**: Policy updates propagate correctly across regions
+- **Coordination**: Multi-region operations coordinate properly
+
+**Key Concepts:**
+- **Application Infrastructure**: Applications must have distributed systems infrastructure configured with region definitions
+- **Test Subtypes**: Three types of distributed tests (multi-region, policy-consistency, policy-synchronization)
+- **Region Configuration**: Each region must have endpoint and PDP endpoint configured
+
+#### Prerequisites
+
+Before creating distributed systems tests, ensure:
+
+1. **Application with Distributed Infrastructure**: Your application must have `infrastructure.distributedSystems` configured:
+
+```typescript
+{
+  id: 'my-distributed-app',
+  name: 'My Distributed Application',
+  infrastructure: {
+    distributedSystems: {
+      regions: [
+        {
+          id: 'us-east-1',
+          name: 'US East (N. Virginia)',
+          endpoint: 'https://api-us-east.example.com',
+          pdpEndpoint: 'https://pdp-us-east.example.com',
+          timezone: 'America/New_York',
+          latency: 50,
+          credentials: { /* encrypted */ }
+        },
+        {
+          id: 'eu-west-1',
+          name: 'EU West (Ireland)',
+          endpoint: 'https://api-eu-west.example.com',
+          pdpEndpoint: 'https://pdp-eu-west.example.com',
+          timezone: 'Europe/Dublin',
+          latency: 100,
+          credentials: { /* encrypted */ }
+        },
+        {
+          id: 'ap-southeast-1',
+          name: 'Asia Pacific (Singapore)',
+          endpoint: 'https://api-ap-southeast.example.com',
+          pdpEndpoint: 'https://pdp-ap-southeast.example.com',
+          timezone: 'Asia/Singapore',
+          latency: 200,
+          credentials: { /* encrypted */ }
+        }
+      ]
+    }
+  }
+}
+```
+
+2. **At Least 2 Regions**: Distributed systems tests require at least 2 regions to be configured
+
+#### Test Subtypes
+
+##### 1. Multi-Region Test
+
+Tests that the same policy evaluation request produces consistent results across multiple regions.
+
+**Use Cases:**
+- Verify policy decisions are consistent across regions
+- Test coordination between regions
+- Validate latency and timeout handling
+
+**Configuration:**
+
+```typescript
+{
+  id: 'multi-region-test-1',
+  name: 'Multi-Region Access Control Test',
+  testType: 'distributed-systems',
+  distributedTestType: 'multi-region',
+  applicationId: 'my-distributed-app',
+  multiRegionConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'], // Region IDs
+    executionMode: 'parallel', // or 'sequential'
+    timeout: 30000, // milliseconds
+    user: {
+      id: 'user-123',
+      attributes: {
+        role: 'admin',
+        department: 'Engineering'
+      }
+    },
+    resource: {
+      id: 'resource-456',
+      type: 'dataset',
+      attributes: {
+        sensitivity: 'internal'
+      }
+    },
+    action: 'read',
+    expectedResult: true // Expected policy decision
+  }
+}
+```
+
+**Configuration Fields:**
+
+- `regions` (string[], required): Array of region IDs to test. Must match region IDs in application infrastructure.
+- `executionMode` ('parallel' | 'sequential', optional): How to execute tests across regions. Default: 'parallel'.
+- `timeout` (number, optional): Maximum time to wait for all regions to respond. Default: 30000ms.
+- `user` (object, optional): User context for policy evaluation.
+- `resource` (object, optional): Resource context for policy evaluation.
+- `action` (string, optional): Action to test (e.g., 'read', 'write').
+- `expectedResult` (boolean, optional): Expected policy decision result.
+
+**Example Result:**
+
+```typescript
+{
+  passed: true,
+  details: {
+    distributedTestType: 'multi-region',
+    aggregatedResult: {
+      consistent: true,
+      decision: true,
+      regionCount: 3
+    },
+    regionResults: [
+      {
+        regionId: 'us-east-1',
+        decision: true,
+        latency: 45,
+        timestamp: '2024-01-15T10:00:00Z'
+      },
+      {
+        regionId: 'eu-west-1',
+        decision: true,
+        latency: 98,
+        timestamp: '2024-01-15T10:00:00Z'
+      },
+      {
+        regionId: 'ap-southeast-1',
+        decision: true,
+        latency: 201,
+        timestamp: '2024-01-15T10:00:00Z'
+      }
+    ],
+    coordinationMetrics: {
+      totalTime: 201,
+      averageLatency: 114.67,
+      slowestRegion: 'ap-southeast-1'
+    }
+  }
+}
+```
+
+##### 2. Policy Consistency Test
+
+Tests that policies are consistent across regions (same versions, configurations, and evaluation results).
+
+**Use Cases:**
+- Verify policy versions match across regions
+- Check policy configurations are synchronized
+- Validate evaluation consistency
+
+**Configuration:**
+
+```typescript
+{
+  id: 'policy-consistency-test-1',
+  name: 'Policy Consistency Check',
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-consistency',
+  applicationId: 'my-distributed-app',
+  policyConsistencyConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    policyIds: ['policy-1', 'policy-2'], // Optional: specific policies, or all if omitted
+    checkTypes: ['version', 'configuration', 'evaluation'] // What to check
+  }
+}
+```
+
+**Configuration Fields:**
+
+- `regions` (string[], required): Array of region IDs to check. Must have at least 2 regions.
+- `policyIds` (string[], optional): Specific policy IDs to check. If omitted, checks all policies.
+- `checkTypes` (('version' | 'configuration' | 'evaluation')[], optional): Types of consistency checks to perform. Default: ['version', 'configuration'].
+
+**Check Types:**
+
+- `version`: Verifies policy versions match across regions
+- `configuration`: Verifies policy configurations (rules, conditions) match
+- `evaluation`: Verifies policy evaluation results are consistent for sample requests
+
+**Example Result:**
+
+```typescript
+{
+  passed: true,
+  details: {
+    distributedTestType: 'policy-consistency',
+    report: {
+      id: 'consistency-report-123',
+      timestamp: '2024-01-15T10:00:00Z',
+      regionsChecked: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+      policiesChecked: ['policy-1', 'policy-2'],
+      consistent: true,
+      inconsistencies: [],
+      summary: {
+        totalPolicies: 2,
+        consistentPolicies: 2,
+        inconsistentPolicies: 0
+      },
+      recommendations: []
+    }
+  }
+}
+```
+
+##### 3. Policy Synchronization Test
+
+Tests that policy updates propagate correctly across regions and handles synchronization scenarios.
+
+**Use Cases:**
+- Verify policy updates sync across regions
+- Test synchronization timing
+- Validate failure recovery scenarios
+
+**Configuration:**
+
+```typescript
+{
+  id: 'policy-sync-test-1',
+  name: 'Policy Synchronization Test',
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-synchronization',
+  applicationId: 'my-distributed-app',
+  policySyncConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    policyId: 'policy-1', // Optional: specific policy, or all if omitted
+    testScenarios: [
+      'update-propagation',
+      'sync-timing',
+      'sync-failure-recovery'
+    ]
+  }
+}
+```
+
+**Configuration Fields:**
+
+- `regions` (string[], required): Array of region IDs to test. Must have at least 2 regions.
+- `policyId` (string, optional): Specific policy ID to test. If omitted, tests all policies.
+- `testScenarios` (('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[], optional): Scenarios to test. Default: ['update-propagation', 'sync-timing'].
+
+**Test Scenarios:**
+
+- `update-propagation`: Tests that policy updates propagate to all regions
+- `sync-timing`: Tests synchronization timing and latency
+- `sync-failure-recovery`: Tests recovery from synchronization failures
+
+**Example Result:**
+
+```typescript
+{
+  passed: true,
+  details: {
+    distributedTestType: 'policy-synchronization',
+    report: {
+      id: 'sync-report-123',
+      timestamp: '2024-01-15T10:00:00Z',
+      regionsTested: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+      testResults: [
+        {
+          scenario: 'update-propagation',
+          passed: true,
+          propagationTime: 1250, // milliseconds
+          regionsSynced: 3
+        },
+        {
+          scenario: 'sync-timing',
+          passed: true,
+          averageSyncTime: 980,
+          maxSyncTime: 1250,
+          minSyncTime: 750
+        },
+        {
+          scenario: 'sync-failure-recovery',
+          passed: true,
+          recoveryTime: 2100,
+          regionsRecovered: 3
+        }
+      ],
+      summary: {
+        totalScenarios: 3,
+        passedScenarios: 3,
+        failedScenarios: 0
+      },
+      recommendations: []
+    }
+  }
+}
+```
+
+#### Creating Distributed Systems Tests
+
+**Via UI:**
+
+1. Navigate to **Tests** → **Individual Tests** → **Create Test**
+2. Select **Category**: "Data & Systems"
+3. Select **Test Type**: "Distributed Systems"
+4. Select **Application**: Choose an application with distributed systems infrastructure
+5. Select **Distributed Test Type**: Choose multi-region, policy-consistency, or policy-synchronization
+6. Configure subtype-specific settings:
+   - **Multi-Region**: Select regions, execution mode, user/resource inputs
+   - **Policy Consistency**: Select regions, check types, optional policy IDs
+   - **Policy Synchronization**: Select regions, test scenarios, optional policy ID
+7. Save the test
+
+**Via API:**
+
+```bash
+POST /api/tests
+Content-Type: application/json
+
+{
+  "name": "Multi-Region Access Control Test",
+  "description": "Tests access control consistency across US East, EU West, and AP Southeast regions",
+  "testType": "distributed-systems",
+  "applicationId": "my-distributed-app",
+  "distributedTestType": "multi-region",
+  "multiRegionConfig": {
+    "regions": ["us-east-1", "eu-west-1", "ap-southeast-1"],
+    "executionMode": "parallel",
+    "timeout": 30000,
+    "user": {
+      "id": "user-123",
+      "attributes": {
+        "role": "admin"
+      }
+    },
+    "resource": {
+      "id": "resource-456",
+      "type": "dataset"
+    },
+    "action": "read",
+    "expectedResult": true
+  }
+}
+```
+
+**Via TypeScript:**
+
+```typescript
+import { Test } from '../../core/types';
+
+export const multiRegionTest: Test = {
+  id: 'multi-region-test-1',
+  name: 'Multi-Region Access Control Test',
+  description: 'Tests access control consistency across regions',
+  testType: 'distributed-systems',
+  distributedTestType: 'multi-region',
+  applicationId: 'my-distributed-app',
+  multiRegionConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    executionMode: 'parallel',
+    timeout: 30000,
+    user: {
+      id: 'user-123',
+      attributes: { role: 'admin' }
+    },
+    resource: {
+      id: 'resource-456',
+      type: 'dataset'
+    },
+    action: 'read',
+    expectedResult: true
+  },
+  version: 1,
+  enabled: true
+};
+```
+
+#### Best Practices
+
+1. **Application Setup**: Ensure applications have proper distributed systems infrastructure configured before creating tests
+2. **Region Selection**: Select representative regions that cover your deployment geography
+3. **Execution Mode**: Use 'parallel' for performance, 'sequential' for debugging
+4. **Timeout Configuration**: Set appropriate timeouts based on expected latency (consider slowest region)
+5. **Policy Selection**: For consistency tests, test critical policies first
+6. **Test Scenarios**: Include all relevant synchronization scenarios for comprehensive coverage
+7. **Regular Testing**: Run distributed systems tests regularly to catch synchronization issues early
+
+#### Troubleshooting
+
+**Error: "Application does not have distributed systems infrastructure configured"**
+- Ensure the application has `infrastructure.distributedSystems.regions` configured
+- Verify at least 2 regions are defined
+
+**Error: "At least 2 regions are required"**
+- Add more regions to the application infrastructure
+- Or select fewer regions in the test configuration
+
+**Error: "Invalid region IDs"**
+- Verify region IDs in test configuration match region IDs in application infrastructure
+- Check for typos in region IDs
+
+**Tests Timing Out**
+- Increase timeout value in test configuration
+- Check network connectivity to regions
+- Consider using 'sequential' execution mode for debugging
+
+**Inconsistent Results**
+- Check policy versions across regions
+- Verify policy configurations match
+- Review region-specific policy overrides
+
 ## Configuration Reference
 
 ### Complete Test Suite Example
@@ -872,6 +1297,83 @@ export const datasetHealthTestSuite: TestSuite = {
   statisticalFidelityTargets: [
     { field: 'age', metric: 'mean', targetValue: 35.5, tolerance: 2.0 },
   ],
+};
+```
+
+### Example 5: Distributed Systems Test Suite
+
+```typescript
+import { Test } from '../core/types';
+
+// Multi-Region Test
+export const multiRegionTest: Test = {
+  id: 'multi-region-test-1',
+  name: 'Multi-Region Access Control Test',
+  description: 'Tests access control consistency across US East, EU West, and AP Southeast',
+  testType: 'distributed-systems',
+  distributedTestType: 'multi-region',
+  applicationId: 'my-distributed-app',
+  multiRegionConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    executionMode: 'parallel',
+    timeout: 30000,
+    user: {
+      id: 'user-123',
+      attributes: {
+        role: 'admin',
+        department: 'Engineering'
+      }
+    },
+    resource: {
+      id: 'resource-456',
+      type: 'dataset',
+      attributes: {
+        sensitivity: 'internal'
+      }
+    },
+    action: 'read',
+    expectedResult: true
+  },
+  version: 1,
+  enabled: true
+};
+
+// Policy Consistency Test
+export const policyConsistencyTest: Test = {
+  id: 'policy-consistency-test-1',
+  name: 'Policy Consistency Check',
+  description: 'Verifies policies are consistent across all regions',
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-consistency',
+  applicationId: 'my-distributed-app',
+  policyConsistencyConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    policyIds: ['policy-1', 'policy-2'], // Optional: check specific policies
+    checkTypes: ['version', 'configuration', 'evaluation']
+  },
+  version: 1,
+  enabled: true
+};
+
+// Policy Synchronization Test
+export const policySyncTest: Test = {
+  id: 'policy-sync-test-1',
+  name: 'Policy Synchronization Test',
+  description: 'Tests policy update propagation and synchronization',
+  testType: 'distributed-systems',
+  distributedTestType: 'policy-synchronization',
+  applicationId: 'my-distributed-app',
+  policySyncConfig: {
+    regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
+    policyId: 'policy-1', // Optional: test specific policy
+    testScenarios: [
+      'update-propagation',
+      'sync-timing',
+      'sync-failure-recovery'
+    ]
+  },
+  version: 1,
+  enabled: true
 };
 ```
 
