@@ -9,7 +9,31 @@
 const fs = require('fs');
 const path = require('path');
 
-const reportPath = path.join(__dirname, '../reports/compliance-report.json');
+const reportsDir = path.join(__dirname, '../reports');
+
+// Find the latest compliance report file
+let reportPath = path.join(reportsDir, 'compliance-report.json');
+
+// If the fixed name doesn't exist, find the latest timestamped report
+if (!fs.existsSync(reportPath)) {
+  const files = fs.readdirSync(reportsDir).filter(f => 
+    f.startsWith('compliance-report-') && f.endsWith('.json')
+  );
+  
+  if (files.length === 0) {
+    console.error('Compliance report not found. Tests may have failed to run.');
+    process.exit(1);
+  }
+  
+  // Sort by timestamp (extracted from filename) and get the latest
+  files.sort((a, b) => {
+    const timestampA = parseInt(a.match(/compliance-report-(\d+)\.json/)?.[1] || '0');
+    const timestampB = parseInt(b.match(/compliance-report-(\d+)\.json/)?.[1] || '0');
+    return timestampB - timestampA;
+  });
+  
+  reportPath = path.join(reportsDir, files[0]);
+}
 
 if (!fs.existsSync(reportPath)) {
   console.error('Compliance report not found. Tests may have failed to run.');
@@ -46,4 +70,3 @@ if (report.summary?.failedTests > 0) {
 
 console.log('✅ Compliance check passed');
 process.exit(0);
-

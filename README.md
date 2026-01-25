@@ -72,9 +72,6 @@ heimdall/
 │   └── index.ts             # Framework exports
 ├── dashboard-api/           # NestJS REST API backend
 ├── dashboard-frontend/      # Vue.js web UI
-├── ci-cd/                   # CI/CD integration scripts
-│   ├── github-actions.yml        # GitHub Actions workflow
-│   └── check-compliance.js       # Compliance check script
 ├── ephemeral/               # Ephemeral environment setup
 │   └── environment-setup.ts      # Per-PR environment creation
 └── examples/                # Example code
@@ -233,9 +230,13 @@ JSON files used for data persistence by the dashboard API (can be migrated to a 
 
 - **`environment-setup.ts`** - Utilities for creating per-PR ephemeral environments (uses the framework to run tests)
 
-#### `/ci-cd` - CI/CD Integration
+#### `/heimdall-framework/ci-cd` - CI/CD Integration
 
 - GitHub Actions workflows and scripts for CI/CD integration
+- **`github-actions.yml`** - GitHub Actions workflow for compliance testing
+- **`check-compliance.js`** - Compliance check script
+- **`check-security-gates.js`** - Security gates check script
+- **`pre-commit-hook.js`** - Pre-commit hook for security checks
 
 #### `/docs` - Documentation
 

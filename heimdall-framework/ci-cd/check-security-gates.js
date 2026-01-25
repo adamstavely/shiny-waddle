@@ -92,4 +92,3 @@ if (blockingFindings.length > 0) {
 
 // Exit with appropriate code
 process.exit(passed ? 0 : 1);
-

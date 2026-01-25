@@ -26,11 +26,12 @@ This document outlines the plan to integrate [Google's aura-inspector](https://g
 ### Component Structure
 
 ```
-test-harness/
-├── services/
-│   └── salesforce-experience-cloud-tester.ts    # Core service wrapping aura-inspector
-├── validators/
-│   └── salesforce-experience-cloud-validator.ts # Heimdall validator implementation
+.
+├── heimdall-framework/
+│   ├── services/
+│   │   └── salesforce-experience-cloud-tester.ts    # Core service wrapping aura-inspector
+│   └── validators/
+│       └── salesforce-experience-cloud-validator.ts # Heimdall validator implementation
 ├── dashboard-api/src/
 │   └── salesforce-experience-cloud/
 │       ├── salesforce-experience-cloud.module.ts
@@ -51,7 +52,7 @@ test-harness/
 ### Phase 1: Core Service Implementation
 
 #### 1.1 Create Python Wrapper Service
-**File**: `services/salesforce-experience-cloud-tester.ts`
+**File**: `heimdall-framework/services/salesforce-experience-cloud-tester.ts`
 
 **Purpose**: TypeScript service that wraps aura-inspector Python tool execution
 
@@ -96,7 +97,7 @@ export interface SalesforceExperienceCloudConfig {
 - Child process execution capability
 
 #### 1.2 Create Validator Implementation
-**File**: `validators/salesforce-experience-cloud-validator.ts`
+**File**: `heimdall-framework/validators/salesforce-experience-cloud-validator.ts`
 
 **Purpose**: Heimdall validator that uses the service
 
@@ -122,7 +123,7 @@ export interface SalesforceExperienceCloudConfig {
 ### Phase 2: Type System Updates
 
 #### 2.1 Update Core Types
-**File**: `core/types.ts`
+**File**: `heimdall-framework/core/types.ts`
 
 **Changes**:
 - Add `'salesforce-experience-cloud'` to `TestType` union
@@ -300,7 +301,7 @@ Example showing:
 - Handling results
 
 #### 6.2 Create Test Suite Templates
-**File**: `test-harness/tests/salesforce-experience-cloud-suite.json`
+**File**: `dashboard-api/data/test-suites.json` (add entries for Salesforce Experience Cloud test suites)
 
 JSON template for Salesforce Experience Cloud test suites.
 

@@ -86,7 +86,7 @@ The Heimdall dashboard has been rewritten with:
 
 #### 1. Install Dependencies
 
-From the `test-harness` directory:
+From the root directory:
 
 ```bash
 npm run dashboard:install

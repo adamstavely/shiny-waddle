@@ -38,11 +38,11 @@ jobs:
         if: always()
         with:
           name: compliance-test-results
-          path: test-harness/reports/*
+          path: heimdall-framework/reports/*
 
       - name: Check compliance status
         run: |
-          node test-harness/ci-cd/check-compliance.js
+          node heimdall-framework/ci-cd/check-compliance.js
         continue-on-error: false
 
       - name: Comment PR with results
@@ -51,7 +51,27 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const report = JSON.parse(fs.readFileSync('test-harness/reports/compliance-report.json', 'utf8'));
+            const path = require('path');
+            
+            // Find the latest compliance report
+            const reportsDir = 'heimdall-framework/reports';
+            let reportPath = path.join(reportsDir, 'compliance-report.json');
+            
+            if (!fs.existsSync(reportPath)) {
+              const files = fs.readdirSync(reportsDir).filter(f => 
+                f.startsWith('compliance-report-') && f.endsWith('.json')
+              );
+              if (files.length > 0) {
+                files.sort((a, b) => {
+                  const timestampA = parseInt(a.match(/compliance-report-(\d+)\.json/)?.[1] || '0');
+                  const timestampB = parseInt(b.match(/compliance-report-(\d+)\.json/)?.[1] || '0');
+                  return timestampB - timestampA;
+                });
+                reportPath = path.join(reportsDir, files[0]);
+              }
+            }
+            
+            const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
             
             const comment = `## Compliance Test Results
             
@@ -70,4 +90,3 @@ jobs:
               repo: context.repo.repo,
               body: comment
             });
-

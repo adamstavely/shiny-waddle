@@ -4,7 +4,6 @@
 
 ### Step 1: Install Dependencies (if not already done)
 ```bash
-cd test-harness
 npm run dashboard:install
 ```
 
@@ -14,7 +13,7 @@ npm run dashboard:install
 
 #### Terminal 1 - Start API:
 ```bash
-cd test-harness/dashboard-api
+cd dashboard-api
 npm run start:dev
 ```
 
@@ -25,7 +24,7 @@ Wait until you see:
 
 #### Terminal 2 - Start Frontend:
 ```bash
-cd test-harness/dashboard-frontend
+cd dashboard-frontend
 npm run dev
 ```
 
@@ -76,14 +75,14 @@ Open http://localhost:5173 in your browser.
 
 2. Reinstall dependencies:
    ```bash
-   cd test-harness/dashboard-api
+   cd dashboard-api
    rm -rf node_modules package-lock.json
    npm install
    ```
 
 3. Check for TypeScript compilation errors:
    ```bash
-   cd test-harness/dashboard-api
+   cd dashboard-api
    npx tsc --noEmit
    ```
 
@@ -91,14 +90,14 @@ Open http://localhost:5173 in your browser.
 
 1. Reinstall dependencies:
    ```bash
-   cd test-harness/dashboard-frontend
+   cd dashboard-frontend
    rm -rf node_modules package-lock.json
    npm install
    ```
 
 2. Check for errors:
    ```bash
-   cd test-harness/dashboard-frontend
+   cd dashboard-frontend
    npm run dev
    ```
 

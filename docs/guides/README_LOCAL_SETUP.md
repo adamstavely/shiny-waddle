@@ -11,7 +11,7 @@ This guide will help you run the Heimdall dashboard application locally.
 
 ### 1. Install Dependencies
 
-From the root directory (`test-harness/`), run:
+From the root directory, run:
 
 ```bash
 npm run dashboard:install
@@ -40,13 +40,11 @@ You have three options:
 From the root directory, run:
 
 ```bash
-cd test-harness
 npm run dashboard:start
 ```
 
 Or directly:
 ```bash
-cd test-harness
 ./start-local.sh
 ```
 
@@ -58,13 +56,11 @@ From the root directory, you can start both services using the root package.json
 
 **Terminal 1 - Start API:**
 ```bash
-cd test-harness
 npm run dashboard:api
 ```
 
 **Terminal 2 - Start Frontend:**
 ```bash
-cd test-harness
 npm run dashboard:frontend
 ```
 
@@ -72,13 +68,13 @@ npm run dashboard:frontend
 
 **Start API:**
 ```bash
-cd test-harness/dashboard-api
+cd dashboard-api
 npm run start:dev
 ```
 
 **Start Frontend:**
 ```bash
-cd test-harness/dashboard-frontend
+cd dashboard-frontend
 npm run dev
 ```
 
@@ -92,13 +88,14 @@ The frontend is configured to proxy API requests to the backend automatically.
 ## Project Structure
 
 ```
-test-harness/
+.
 ├── dashboard-api/          # NestJS backend (port 3001)
 │   ├── src/
 │   └── package.json
 ├── dashboard-frontend/      # Vue.js frontend (port 5173)
 │   ├── src/
 │   └── package.json
+├── heimdall-framework/     # Core testing framework
 └── package.json             # Root package with convenience scripts
 ```
 

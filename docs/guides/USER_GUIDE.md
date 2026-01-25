@@ -288,7 +288,7 @@ The Dashboard API provides REST endpoints for:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd test-harness
+cd shiny-waddle
 
 # Install dependencies
 npm install

@@ -5,6 +5,7 @@ reports/
 *.db
 .env
 .DS_Store
+.cursor
 coverage/
 
 # Compiled TypeScript output (should not be committed)

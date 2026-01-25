@@ -255,7 +255,7 @@ jobs:
 
       - name: Check security gates
         run: |
-          node test-harness/ci-cd/check-security-gates.js
+          node heimdall-framework/ci-cd/check-security-gates.js
         env:
           SEVERITY_THRESHOLD: ${config.severityThreshold}
           FAIL_ON_THRESHOLD: ${config.failOnThreshold}
@@ -300,7 +300,7 @@ security-gates:
   script:
     - npm ci
     - npm run security:scan
-    - node test-harness/ci-cd/check-security-gates.js
+    - node heimdall-framework/ci-cd/check-security-gates.js
   variables:
     SEVERITY_THRESHOLD: ${config.severityThreshold}
     FAIL_ON_THRESHOLD: ${config.failOnThreshold}
@@ -324,7 +324,7 @@ security-gates:
                 sh 'npm ci'
                 sh 'npm run security:scan'
                 sh '''
-                    node test-harness/ci-cd/check-security-gates.js
+                    node heimdall-framework/ci-cd/check-security-gates.js
                 '''
             }
             environment {

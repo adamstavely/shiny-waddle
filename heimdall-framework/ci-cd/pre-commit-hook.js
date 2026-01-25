@@ -68,4 +68,3 @@ if (blockingFindings.length > 0) {
 
 console.log(`✅ Pre-commit check passed: ${relevantFindings.length} findings, none blocking`);
 process.exit(0);
-

@@ -6,7 +6,7 @@ The API is now running! To start the frontend:
 
 ### Terminal 2 - Start Frontend:
 ```bash
-cd test-harness/dashboard-frontend
+cd dashboard-frontend
 npm run dev
 ```
 
@@ -28,7 +28,7 @@ Open http://localhost:5173
 
 To restart the API:
 ```bash
-cd test-harness/dashboard-api
+cd dashboard-api
 npm run start:dev
 ```
 
