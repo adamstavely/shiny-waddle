@@ -1983,6 +1983,234 @@ GET /api/test-results/compliance/trends
 ]
 ```
 
+## Test Suite Endpoints
+
+Test Suites are collections of tests grouped by test type. They can include platform configuration tests (formerly Platform Baselines) and other test types.
+
+### Create Test Suite
+
+Create a new test suite.
+
+```http
+POST /api/v1/test-suites
+```
+
+**Request Body:**
+```json
+{
+  "name": "Salesforce Production Baseline",
+  "application": "app-123",
+  "team": "Platform Team",
+  "testType": "salesforce-config",
+  "domain": "platform_config",
+  "description": "Production Salesforce configuration baseline",
+  "enabled": true,
+  "baselineConfig": {
+    "platform": "salesforce",
+    "environment": "production",
+    "version": "1.0.0",
+    "config": {
+      "encryption": {
+        "fieldEncryption": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": "suite-123",
+  "name": "Salesforce Production Baseline",
+  "application": "app-123",
+  "team": "Platform Team",
+  "testType": "salesforce-config",
+  "domain": "platform_config",
+  "description": "Production Salesforce configuration baseline",
+  "enabled": true,
+  "baselineConfig": {
+    "platform": "salesforce",
+    "environment": "production",
+    "version": "1.0.0",
+    "config": {}
+  },
+  "testIds": [],
+  "status": "pending",
+  "testCount": 0,
+  "score": 0,
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+### List Test Suites
+
+Get all test suites, optionally filtered by application, team, domain, or test type.
+
+```http
+GET /api/v1/test-suites
+```
+
+**Query Parameters:**
+- `applicationId` (string, optional): Filter by application ID
+- `team` (string, optional): Filter by team name
+- `domain` (string, optional): Filter by domain (e.g., `platform_config`)
+- `testType` (string, optional): Filter by test type
+
+**Response:**
+```json
+[
+  {
+    "id": "suite-123",
+    "name": "Salesforce Production Baseline",
+    "application": "app-123",
+    "team": "Platform Team",
+    "testType": "salesforce-config",
+    "domain": "platform_config",
+    "enabled": true,
+    "status": "passing",
+    "testCount": 5,
+    "score": 100,
+    "lastRun": "2024-01-15T10:30:00Z",
+    "baselineConfig": {
+      "platform": "salesforce",
+      "environment": "production",
+      "version": "1.0.0"
+    }
+  }
+]
+```
+
+### Get Test Suite
+
+Get a specific test suite by ID.
+
+```http
+GET /api/v1/test-suites/:id
+```
+
+**Response:** Same as individual test suite object in list response
+
+### Update Test Suite
+
+Update an existing test suite.
+
+```http
+PUT /api/v1/test-suites/:id
+```
+
+**Request Body:** Same as create, with fields to update
+
+### Delete Test Suite
+
+Delete a test suite.
+
+```http
+DELETE /api/v1/test-suites/:id
+```
+
+**Response:** `204 No Content`
+
+### Run Test Suite
+
+Execute all tests in a test suite. This endpoint runs the tests and returns results immediately.
+
+```http
+POST /api/v1/test-suites/:id/run
+```
+
+**Path Parameters:**
+- `id` (string, required): Test suite ID
+
+**Response:**
+```json
+{
+  "suiteId": "suite-123",
+  "suiteName": "Salesforce Production Baseline",
+  "status": "passed",
+  "totalTests": 5,
+  "passed": 5,
+  "failed": 0,
+  "results": [
+    {
+      "testId": "test-1",
+      "testName": "Field Encryption Enabled",
+      "testType": "salesforce-config",
+      "passed": true,
+      "details": {
+        "currentValue": true,
+        "expectedValue": true,
+        "configPath": "encryption.fieldEncryption.enabled"
+      },
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+**Status Values:**
+- `passed`: All tests passed
+- `failed`: All tests failed
+- `partial`: Some tests passed, some failed
+
+**Note:** For platform config test suites, the test suite must have either:
+- `runtimeConfig.platformInstance.connection` configured, OR
+- An associated application with `infrastructure.platformInstance.connection` configured
+
+### Get Test Results
+
+Get test execution results for a test suite.
+
+```http
+GET /api/v1/test-suites/:id/results
+```
+
+**Path Parameters:**
+- `id` (string, required): Test suite ID
+
+**Response:**
+```json
+{
+  "suiteId": "suite-123",
+  "lastRun": "2024-01-15T10:30:00Z",
+  "results": [
+    {
+      "suiteId": "suite-123",
+      "testId": "test-1",
+      "testName": "Field Encryption Enabled",
+      "testType": "salesforce-config",
+      "passed": true,
+      "details": {},
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+### Enable Test Suite
+
+Enable a test suite (allows it to run).
+
+```http
+PATCH /api/v1/test-suites/:id/enable
+```
+
+**Response:** Updated test suite object
+
+### Disable Test Suite
+
+Disable a test suite (prevents it from running).
+
+```http
+PATCH /api/v1/test-suites/:id/disable
+```
+
+**Response:** Updated test suite object
+
 ## Test Harness Endpoints
 
 Test Harnesses are collections of test suites that can be assigned to applications.
