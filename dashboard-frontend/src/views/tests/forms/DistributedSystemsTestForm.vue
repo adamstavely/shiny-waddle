@@ -64,7 +64,7 @@
       <div class="form-group">
         <label>Execution Mode</label>
         <Dropdown
-          v-model="form.multiRegionConfig.executionMode"
+          v-model="form.multiRegionConfig!.executionMode"
           :options="executionModeOptions"
           placeholder="Select execution mode..."
           class="form-input"
@@ -74,7 +74,7 @@
       <div class="form-group">
         <label>Timeout (ms)</label>
         <input
-          v-model.number="form.multiRegionConfig.timeout"
+          v-model.number="form.multiRegionConfig!.timeout"
           type="number"
           placeholder="30000"
           class="form-input"
@@ -84,7 +84,7 @@
       <div class="form-group">
         <label>User ID</label>
         <input
-          v-model="form.multiRegionConfig.user.id"
+          v-model="form.multiRegionConfig!.user!.id"
           type="text"
           placeholder="user-123"
           class="form-input"
@@ -94,7 +94,7 @@
       <div class="form-group">
         <label>Resource ID</label>
         <input
-          v-model="form.multiRegionConfig.resource.id"
+          v-model="form.multiRegionConfig!.resource!.id"
           type="text"
           placeholder="resource-456"
           class="form-input"
@@ -104,7 +104,7 @@
       <div class="form-group">
         <label>Action</label>
         <input
-          v-model="form.multiRegionConfig.action"
+          v-model="form.multiRegionConfig!.action"
           type="text"
           placeholder="read"
           class="form-input"
@@ -114,7 +114,7 @@
       <div class="form-group">
         <label>Expected Result</label>
         <Dropdown
-          v-model="form.multiRegionConfig.expectedResult"
+          v-model="form.multiRegionConfig!.expectedResult"
           :options="expectedResultOptions"
           placeholder="Select expected result..."
           class="form-input"
@@ -157,7 +157,7 @@
             <input
               type="checkbox"
               value="version"
-              :checked="form.policyConsistencyConfig.checkTypes.includes('version')"
+              :checked="form.policyConsistencyConfig?.checkTypes?.includes('version') || false"
               @change="toggleCheckType('version')"
             />
             <span>Version Consistency</span>
@@ -166,7 +166,7 @@
             <input
               type="checkbox"
               value="configuration"
-              :checked="form.policyConsistencyConfig.checkTypes.includes('configuration')"
+              :checked="form.policyConsistencyConfig?.checkTypes?.includes('configuration') || false"
               @change="toggleCheckType('configuration')"
             />
             <span>Configuration Consistency</span>
@@ -175,7 +175,7 @@
             <input
               type="checkbox"
               value="evaluation"
-              :checked="form.policyConsistencyConfig.checkTypes.includes('evaluation')"
+              :checked="form.policyConsistencyConfig?.checkTypes?.includes('evaluation') || false"
               @change="toggleCheckType('evaluation')"
             />
             <span>Evaluation Consistency</span>
@@ -231,7 +231,7 @@
             <input
               type="checkbox"
               value="update-propagation"
-              :checked="form.policySyncConfig.testScenarios.includes('update-propagation')"
+              :checked="form.policySyncConfig?.testScenarios?.includes('update-propagation') || false"
               @change="toggleTestScenario('update-propagation')"
             />
             <span>Update Propagation</span>
@@ -240,7 +240,7 @@
             <input
               type="checkbox"
               value="sync-timing"
-              :checked="form.policySyncConfig.testScenarios.includes('sync-timing')"
+              :checked="form.policySyncConfig?.testScenarios?.includes('sync-timing') || false"
               @change="toggleTestScenario('sync-timing')"
             />
             <span>Sync Timing</span>
@@ -249,7 +249,7 @@
             <input
               type="checkbox"
               value="sync-failure-recovery"
-              :checked="form.policySyncConfig.testScenarios.includes('sync-failure-recovery')"
+              :checked="form.policySyncConfig?.testScenarios?.includes('sync-failure-recovery') || false"
               @change="toggleTestScenario('sync-failure-recovery')"
             />
             <span>Sync Failure Recovery</span>
@@ -261,7 +261,7 @@
         <label>Policy ID (optional)</label>
         <p class="field-help">Leave empty to test all policies, or specify a specific policy ID</p>
         <input
-          v-model="form.policySyncConfig.policyId"
+          v-model="form.policySyncConfig!.policyId"
           type="text"
           placeholder="policy-123"
           class="form-input"
@@ -322,6 +322,8 @@ if (!props.form.policySyncConfig) {
     testScenarios: ['update-propagation', 'sync-timing'],
   };
 }
+
+// Configs are initialized above, so they should always be defined when accessed in template
 
 const distributedTestTypeOptions = [
   { label: 'Multi-Region Test', value: 'multi-region' },

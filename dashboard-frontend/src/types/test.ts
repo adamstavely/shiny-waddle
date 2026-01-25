@@ -8,8 +8,11 @@ export type TestType =
   | 'dlp'
   | 'distributed-systems'
   | 'api-security'
+  | 'api-gateway'
   | 'data-pipeline'
   | 'data-contract'
+  | 'dataset-health'
+  | 'rls-cls'
   | 'salesforce-config'
   | 'salesforce-security'
   | 'salesforce-experience-cloud'
@@ -117,6 +120,35 @@ export interface Test {
   networkPolicy?: NetworkPolicyConfig;
   // Distributed Systems specific
   distributedSystems?: DistributedSystemsConfig;
+  applicationId?: string;
+  distributedTestType?: 'multi-region' | 'policy-consistency' | 'policy-synchronization';
+  multiRegionConfig?: {
+    regions: string[];
+    executionMode?: 'parallel' | 'sequential';
+    timeout?: number;
+    user?: {
+      id: string;
+      attributes?: Record<string, any>;
+    };
+    resource?: {
+      id: string;
+      type?: string;
+      attributes?: Record<string, any>;
+    };
+    action?: string;
+    expectedResult?: boolean;
+  };
+  policyConsistencyConfig?: {
+    regions: string[];
+    policyIds?: string[];
+    checkTypes?: ('version' | 'configuration' | 'evaluation')[];
+  };
+  policySyncConfig?: {
+    regions: string[];
+    policyId?: string;
+    testScenarios?: ('update-propagation' | 'sync-timing' | 'sync-failure-recovery')[];
+  };
+  changeReason?: string;
   // Data Pipeline specific
   dataPipeline?: DataPipelineConfig;
   // Platform Config specific

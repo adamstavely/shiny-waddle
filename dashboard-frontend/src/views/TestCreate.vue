@@ -100,7 +100,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Save, ArrowLeft, AlertTriangle } from 'lucide-vue-next';
-import axios, { type AxiosError } from 'axios';
+import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import BaseForm from '../components/BaseForm.vue';
 import BaseButton from '../components/BaseButton.vue';
@@ -112,7 +112,7 @@ import NetworkPolicyTestForm from './tests/forms/NetworkPolicyTestForm.vue';
 import APISecurityTestForm from './tests/forms/APISecurityTestForm.vue';
 import DistributedSystemsTestForm from './tests/forms/DistributedSystemsTestForm.vue';
 import DataPipelineTestForm from './tests/forms/DataPipelineTestForm.vue';
-import type { Test } from '../types/test';
+import type { Test, TestType } from '../types/test';
 
 const route = useRoute();
 const router = useRouter();
@@ -135,7 +135,7 @@ const selectedCategory = ref<string>('');
 const form = ref<Partial<Test>>({
   name: '',
   description: '',
-  testType: '',
+  testType: undefined as TestType | undefined,
   changeReason: '',
   // Access Control
   policyId: '',
@@ -144,7 +144,7 @@ const form = ref<Partial<Test>>({
       role: '',
       attributes: {}
     },
-    resource: { id: '', type: '', sensitivity: '' },
+    resource: { id: '', type: '', sensitivity: undefined as 'public' | 'internal' | 'confidential' | 'restricted' | undefined },
     context: { ipAddress: '', timeOfDay: '', location: '' }
   },
   expected: {
@@ -153,11 +153,11 @@ const form = ref<Partial<Test>>({
   },
   // DLP
   pattern: { name: '', type: '', pattern: '' },
-  expectedDetection: '',
+  expectedDetection: undefined as boolean | undefined,
   bulkExportType: '',
   bulkExportLimit: 0,
   testRecordCount: 0,
-  expectedBlocked: '',
+  expectedBlocked: undefined as boolean | undefined,
   exportRestrictions: { restrictedFields: [], requireMasking: false, allowedFormats: [] },
   aggregationRequirements: { minK: 0, requireAggregation: false },
   fieldRestrictions: { disallowedFields: [], allowedFields: [] },
@@ -198,17 +198,11 @@ const form = ref<Partial<Test>>({
     authentication: { type: '', method: '', credentials: '' },
     rateLimiting: { enabled: false, maxRequests: 0, windowSeconds: 0 }
   },
-  graphql: { endpoint: '', schema: '', testType: '', maxDepth: 0, maxComplexity: 0, introspectionEnabled: false },
+  graphql: { endpoint: '', schema: '', testType: 'depth' as 'depth' | 'complexity' | 'introspection', maxDepth: 0, maxComplexity: 0, introspectionEnabled: false },
   apiContract: { version: '', schemaText: '', schemaFormat: '' },
   // Network Policy
   networkPolicy: { source: '', target: '', protocol: '', port: undefined, action: '' },
-  // Distributed Systems
-  distributedSystems: {
-    testType: '',
-    regions: [],
-    coordination: { type: '', endpoint: '' },
-    policySync: { consistencyLevel: '' }
-  },
+  // Distributed Systems - old format removed, using new fields instead
   // Data Pipeline
   dataPipeline: {
     pipelineType: '',
@@ -274,7 +268,7 @@ const filteredTestTypeOptions = computed(() => {
 
 const handleCategoryChange = () => {
   // Reset test type when category changes
-  form.value.testType = '';
+  form.value.testType = undefined;
   form.value.distributedTestType = undefined;
 };
 
@@ -296,7 +290,7 @@ const testTypeFormComponent = computed(() => {
   // Parse testType if it's a composite value
   const actualTestType = typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:')
     ? 'distributed-systems'
-    : form.value.testType;
+    : (form.value.testType as TestType | undefined);
     
   switch (actualTestType) {
     case 'access-control':
@@ -367,9 +361,6 @@ const getTestTypeLabel = (testType: string): string => {
   return labels[testType] || testType;
 };
 
-const handleFormUpdate = (updatedForm: Partial<Test>) => {
-  form.value = { ...form.value, ...updatedForm };
-};
 
 const validate = (): boolean => {
   validationErrors.value = [];
@@ -466,31 +457,40 @@ const loadTest = async () => {
   loading.value = true;
   try {
     const response = await axios.get(`/api/tests/${testId.value}`);
-    test.value = response.data;
+    const loadedTest = response.data;
+    if (!loadedTest) return;
     
-    form.value.name = test.value.name;
-    form.value.description = test.value.description || '';
-    form.value.testType = test.value.testType;
+    test.value = loadedTest;
+    
+    form.value.name = loadedTest.name;
+    form.value.description = loadedTest.description || '';
+    form.value.testType = loadedTest.testType;
     
     // Set category based on test type
-    selectedCategory.value = getCategoryForTestType(test.value.testType, test.value.distributedTestType);
+    selectedCategory.value = getCategoryForTestType(loadedTest.testType, loadedTest.distributedTestType);
     
     // Set test type value (may need to be composite for distributed systems)
-    if (test.value.testType === 'distributed-systems' && test.value.distributedTestType) {
-      form.value.testType = `distributed-systems:${test.value.distributedTestType}` as any;
+    if (loadedTest.testType === 'distributed-systems' && loadedTest.distributedTestType) {
+      form.value.testType = `distributed-systems:${loadedTest.distributedTestType}` as any;
     } else {
-      form.value.testType = test.value.testType;
+      form.value.testType = loadedTest.testType;
     }
     
     // Load test-type-specific data
-    if (test.value.testType === 'access-control') {
-      form.value.policyId = test.value.policyId || '';
-      form.value.inputs = test.value.inputs || {
+    if (loadedTest.testType === 'access-control') {
+      form.value.policyId = loadedTest.policyId || '';
+      form.value.inputs = loadedTest.inputs || {
         subject: { role: '', attributes: {} },
         resource: { id: '', type: '' },
         context: {}
       };
-      form.value.expected = test.value.expected || { allowed: true };
+      form.value.expected = loadedTest.expected || { allowed: true };
+    } else if (loadedTest.testType === 'distributed-systems') {
+      form.value.applicationId = loadedTest.applicationId || '';
+      form.value.distributedTestType = loadedTest.distributedTestType;
+      form.value.multiRegionConfig = loadedTest.multiRegionConfig;
+      form.value.policyConsistencyConfig = loadedTest.policyConsistencyConfig;
+      form.value.policySyncConfig = loadedTest.policySyncConfig;
     }
     // Other test types would be loaded here
   } catch (err: any) {

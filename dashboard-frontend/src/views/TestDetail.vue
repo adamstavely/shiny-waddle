@@ -360,7 +360,6 @@ import {
   History,
   Info,
   Shield,
-  List,
   Eye,
   Network,
 } from 'lucide-vue-next';
@@ -506,16 +505,8 @@ const viewPolicy = (policyId: string) => {
   router.push(`/policies/${policyId}`);
 };
 
-const viewSuite = (suiteId: string) => {
-  router.push(`/tests/suites/${suiteId}`);
-};
-
 const viewVersions = () => {
   activeTab.value = 'versions';
-};
-
-const handleTestSaved = () => {
-  loadTest();
 };
 
 const formatDate = (date: Date | string): string => {
