@@ -14,6 +14,7 @@ export class AuditLoggingMiddleware implements NestMiddleware {
     const requestId = req.headers['x-request-id'] as string || 
                      `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const auditLogService = this.auditLogService;
+    const logger = this.logger; // Capture logger for use in callback
 
     // Add request ID to headers
     req.headers['x-request-id'] = requestId;
@@ -77,7 +78,12 @@ export class AuditLoggingMiddleware implements NestMiddleware {
             }
           }
         } catch (error) {
-          this.logger.error('Failed to log audit event', error instanceof Error ? error.stack : String(error), { requestId, path: req.path });
+          logger.error(
+            'Failed to log audit event',
+            error instanceof Error ? error.stack : String(error),
+            undefined,
+            { requestId, path: req.path },
+          );
         }
       });
 
