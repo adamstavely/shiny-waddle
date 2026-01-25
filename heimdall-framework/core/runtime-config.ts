@@ -85,6 +85,16 @@ export interface RuntimeTestConfig {
   endpointPatterns?: string[];
 
   /**
+   * Platform instance connection for platform config tests
+   */
+  platformInstance?: {
+    connection: {
+      endpoint?: string;
+      credentials?: Record<string, any>; // Encrypted
+    };
+  };
+
+  /**
    * Additional custom configuration values
    */
   [key: string]: any;

@@ -6,6 +6,7 @@
 
 import { AccessControlTester } from '../services/access-control-tester';
 import { DatasetHealthTester } from '../services/dataset-health-tester';
+import { PlatformConfigTester } from '../services/platform-config-tester';
 import { ComplianceReporter } from '../services/compliance-reporter';
 import { 
   TestResult, 
@@ -14,6 +15,7 @@ import {
   Test,
   AccessControlTest,
   DatasetHealthTest,
+  PlatformConfigTest,
   ABACPolicy,
 } from './types';
 import { RuntimeTestConfig } from './runtime-config';
@@ -29,12 +31,14 @@ export interface TestLoader {
 export class TestOrchestrator {
   private accessControlTester: AccessControlTester;
   private datasetHealthTester: DatasetHealthTester;
+  private platformConfigTester: PlatformConfigTester;
   private complianceReporter: ComplianceReporter;
   private testLoader?: TestLoader;
 
   constructor(config: TestConfiguration, testLoader?: TestLoader) {
     this.accessControlTester = new AccessControlTester(config.accessControlConfig);
     this.datasetHealthTester = new DatasetHealthTester(config.datasetHealthConfig);
+    this.platformConfigTester = new PlatformConfigTester();
     this.complianceReporter = new ComplianceReporter(config.reportingConfig);
     this.testLoader = testLoader;
   }
@@ -108,6 +112,15 @@ export class TestOrchestrator {
         return this.runAccessControlTest(test as AccessControlTest, suite);
       case 'dataset-health':
         return this.runDatasetHealthTest(test as DatasetHealthTest, suite);
+      case 'salesforce-config':
+      case 'salesforce-security':
+      case 'elastic-config':
+      case 'elastic-security':
+      case 'k8s-security':
+      case 'k8s-workload':
+      case 'idp-compliance':
+      case 'servicenow-config':
+        return this.runPlatformConfigTest(test as PlatformConfigTest, suite);
       default:
         throw new Error(`Test type ${test.testType} execution not yet implemented`);
     }
@@ -205,6 +218,23 @@ export class TestOrchestrator {
       testVersion: test.version,
       policyId: test.policyId, // Optional - may be undefined
     };
+  }
+
+  /**
+   * Run a single platform config test
+   */
+  async runPlatformConfigTest(test: PlatformConfigTest, suite: TestSuite): Promise<TestResult> {
+    // Try to get application with infrastructure if available
+    let application: any = undefined;
+    if (this.testLoader && suite.application) {
+      try {
+        application = await this.testLoader.loadApplication(suite.application);
+      } catch (error) {
+        // Application not found, continue without it
+      }
+    }
+
+    return await this.platformConfigTester.execute(test, suite, application);
   }
 
   /**
