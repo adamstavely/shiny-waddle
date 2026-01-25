@@ -114,7 +114,7 @@ import axios from 'axios';
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
-  { label: 'Policies', to: '/policies' },
+  { label: 'Access Control', to: '/policies' },
   { label: 'Exceptions' }
 ]);
 

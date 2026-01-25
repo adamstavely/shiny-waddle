@@ -442,7 +442,7 @@ const router = useRouter();
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
-  { label: 'Policies', to: '/policies' },
+  { label: 'Access Control', to: '/policies' },
   { label: 'Access Control' }
 ];
 

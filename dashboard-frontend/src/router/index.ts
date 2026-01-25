@@ -224,13 +224,16 @@ const router = createRouter({
     },
     {
       path: '/policies/standards-mapping',
+      redirect: '/admin/standards-mapping',
+    },
+    {
+      path: '/admin/standards-mapping',
       name: 'StandardsMappingPolicies',
       component: () => import('../views/policies/StandardsMappingPolicies.vue'),
     },
     {
       path: '/policies/data-contracts',
-      name: 'DataContractsPolicies',
-      component: () => import('../views/policies/DataContractsPolicies.vue'),
+      redirect: '/policies?tab=access-control',
     },
     {
       path: '/policies/:id',

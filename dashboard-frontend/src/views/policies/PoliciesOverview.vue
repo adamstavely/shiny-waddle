@@ -11,12 +11,11 @@
         <div class="hero-content">
           <div class="hero-text">
             <h1 class="hero-title">
-              Policies
+              Access Control
               <span class="hero-subtitle">Comprehensive Policy Management</span>
             </h1>
             <p class="hero-description">
-              Manage access control policies, data classification, platform configurations, and compliance 
-              standards. Define RBAC and ABAC policies, manage exceptions, and ensure 
+              Manage access control policies, data classification, and exceptions. Define RBAC and ABAC policies, manage exceptions, and ensure 
               your systems meet security and compliance requirements.
             </p>
             <div class="hero-actions">
@@ -135,13 +134,7 @@
             <p class="policy-type-description">Define data classification levels and rules</p>
             <div class="policy-type-badge">{{ stats.classificationLevels || 0 }} levels</div>
           </div>
-          <div class="policy-type-card" @click="navigateTo('/policies/data-contracts')">
-            <Database class="policy-type-icon" />
-            <h4 class="policy-type-title">Data Contracts</h4>
-            <p class="policy-type-description">Configure data contract policies</p>
-            <div class="policy-type-badge">{{ stats.dataContracts || 0 }} contracts</div>
-          </div>
-          <div class="policy-type-card" @click="navigateTo('/policies/standards-mapping')">
+          <div class="policy-type-card" @click="navigateTo('/admin/standards-mapping')">
             <CheckCircle2 class="policy-type-icon" />
             <h4 class="policy-type-title">Standards Mapping</h4>
             <p class="policy-type-description">Map policies to compliance standards</p>
@@ -193,7 +186,7 @@ const router = useRouter();
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
-  { label: 'Policies' }
+  { label: 'Access Control' }
 ];
 
 const stats = ref({
@@ -201,7 +194,6 @@ const stats = ref({
   classificationLevels: 0,
   exceptions: 0,
   standards: 0,
-  dataContracts: 0,
 });
 
 const navigateTo = (path: string) => {
@@ -227,7 +219,6 @@ const loadStats = async () => {
     // For now, set defaults
     stats.value.exceptions = 0;
     stats.value.standards = 0;
-    stats.value.dataContracts = 0;
   } catch (err) {
     console.error('Error loading stats:', err);
   }

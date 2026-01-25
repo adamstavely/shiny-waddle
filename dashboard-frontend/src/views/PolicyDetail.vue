@@ -197,7 +197,7 @@ const loadingTests = ref(false);
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
-  { label: 'Policies', to: '/policies' },
+  { label: 'Access Control', to: '/policies' },
   { label: policy.value?.name || 'Policy' }
 ]);
 

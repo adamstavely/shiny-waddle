@@ -182,7 +182,7 @@ import axios from 'axios';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
-  { label: 'Policies', to: '/policies' },
+  { label: 'Admin', to: '/admin' },
   { label: 'Standards Mapping' }
 ];
 

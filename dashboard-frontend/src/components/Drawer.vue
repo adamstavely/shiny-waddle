@@ -106,61 +106,33 @@
             <span>Overview</span>
           </a>
           
-          <!-- Access Control Policies Section -->
-          <div class="category-section">
-            <div class="section-header">
-              <Shield class="section-icon" />
-              <span class="section-title">Access Control</span>
-            </div>
-            <a
-              href="/policies/access-control"
-              @click.prevent="handleNavClick('/policies/access-control')"
-              :class="['drawer-item', isActive('/policies/access-control') ? 'drawer-item-active' : '']"
-            >
-              <Shield class="item-icon" />
-              <span>Access Control</span>
-            </a>
-            <a
-              href="/resources"
-              @click.prevent="handleNavClick('/resources')"
-              :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
-            >
-              <Database class="item-icon" />
-              <span>Resources</span>
-            </a>
-          </div>
+          <!-- Access Control -->
+          <a
+            href="/policies/access-control"
+            @click.prevent="handleNavClick('/policies/access-control')"
+            :class="['drawer-item', isActive('/policies/access-control') ? 'drawer-item-active' : '']"
+          >
+            <Shield class="item-icon" />
+            <span>Access Control</span>
+          </a>
+          <a
+            href="/resources"
+            @click.prevent="handleNavClick('/resources')"
+            :class="['drawer-item', isActive('/resources') ? 'drawer-item-active' : '']"
+          >
+            <Database class="item-icon" />
+            <span>Resources</span>
+          </a>
 
-          <!-- Data Policies Section -->
-          <div class="category-section">
-            <div class="section-header">
-              <Database class="section-icon" />
-              <span class="section-title">Data Policies</span>
-            </div>
-            <a
-              href="/policies/data-classification"
-              @click.prevent="handleNavClick('/policies/data-classification')"
-              :class="['drawer-item', isActive('/policies/data-classification') ? 'drawer-item-active' : '']"
-            >
-              <FileText class="item-icon" />
-              <span>Data Classification</span>
-            </a>
-            <a
-              href="/policies/data-contracts"
-              @click.prevent="handleNavClick('/policies/data-contracts')"
-              :class="['drawer-item', isActive('/policies/data-contracts') ? 'drawer-item-active' : '']"
-            >
-              <Database class="item-icon" />
-              <span>Data Contracts</span>
-            </a>
-            <a
-              href="/policies/standards-mapping"
-              @click.prevent="handleNavClick('/policies/standards-mapping')"
-              :class="['drawer-item', isActive('/policies/standards-mapping') ? 'drawer-item-active' : '']"
-            >
-              <CheckCircle2 class="item-icon" />
-              <span>Standards Mapping</span>
-            </a>
-          </div>
+          <!-- Data Classification -->
+          <a
+            href="/policies/data-classification"
+            @click.prevent="handleNavClick('/policies/data-classification')"
+            :class="['drawer-item', isActive('/policies/data-classification') ? 'drawer-item-active' : '']"
+          >
+            <FileText class="item-icon" />
+            <span>Data Classification</span>
+          </a>
 
         </div>
       </div>
@@ -192,6 +164,14 @@
           >
             <KeyRound class="item-icon" />
             <span>IAM Integrations</span>
+          </a>
+          <a
+            href="/admin/standards-mapping"
+            @click.prevent="handleNavClick('/admin/standards-mapping')"
+            :class="['drawer-item', isActive('/admin/standards-mapping') ? 'drawer-item-active' : '']"
+          >
+            <CheckCircle2 class="item-icon" />
+            <span>Standards Mapping</span>
           </a>
           <a
             href="/compliance"
@@ -280,8 +260,6 @@ const policiesConfigPages = [
   '/policies',
   '/policies/access-control',
   '/policies/data-classification',
-  '/policies/standards-mapping',
-  '/policies/data-contracts',
   '/resources'
 ];
 
@@ -290,6 +268,7 @@ const adminPages = [
   '/admin',
   '/identity-providers',
   '/admin/integrations/iam',
+  '/admin/standards-mapping',
   '/compliance',
   '/compliance/nist-800-207'
 ];
