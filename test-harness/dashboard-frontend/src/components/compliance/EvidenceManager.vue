@@ -99,8 +99,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Plus, Trash2, X, FileText, ExternalLink, Shield, FileCheck, Settings, FileSearch, Folder } from 'lucide-vue-next';
+import { useAuth } from '../../composables/useAuth';
 
 interface ComplianceEvidence {
   id: string;
@@ -125,7 +126,8 @@ const emit = defineEmits<{
 
 const showAddModal = ref(false);
 const saving = ref(false);
-const currentUser = ref('current-user@example.com'); // TODO: Get from auth context
+const { user } = useAuth();
+const currentUser = computed(() => user.value.email);
 
 const newEvidence = ref({
   type: 'policy' as ComplianceEvidence['type'],

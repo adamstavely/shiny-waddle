@@ -255,10 +255,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { AlertTriangle, X, User, CheckCircle2, Ticket, ExternalLink, Edit, Trash2 } from 'lucide-vue-next';
 import type { ViolationEntity, ViolationComment } from '../types/violation';
 import type { Ticket as TicketType, TicketingIntegration } from '../types/ticketing';
+import { useAuth } from '../composables/useAuth';
 
 interface Props {
   show: boolean;
@@ -273,7 +274,8 @@ const emit = defineEmits<{
 }>();
 
 const newComment = ref('');
-const currentUser = ref('current-user@example.com'); // TODO: Get from auth context
+const { user } = useAuth();
+const currentUser = computed(() => user.value.email);
 const tickets = ref<TicketType[]>([]);
 const integrations = ref<TicketingIntegration[]>([]);
 const creatingTicket = ref(false);

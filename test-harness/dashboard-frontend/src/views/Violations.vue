@@ -188,6 +188,7 @@ import { useApiDataAuto } from '../composables/useApiData';
 import { useSearch } from '../composables/useFilters';
 import { useFilters } from '../composables/useFilters';
 import { useModal } from '../composables/useModal';
+import { useAuth } from '../composables/useAuth';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -253,6 +254,9 @@ const sortOrder = ref<'asc' | 'desc'>('desc');
 
 // Use composable for modal state
 const violationModal = useModal<ViolationEntity>();
+
+// Get current user from auth context
+const { user } = useAuth();
 
 const severityOptions = computed(() => [
   { label: 'All Severities', value: '' },
@@ -424,7 +428,7 @@ const resolveViolation = async (id: string) => {
       body: JSON.stringify({
         status: 'resolved',
         resolvedAt: new Date().toISOString(),
-        resolvedBy: 'current-user@example.com', // TODO: Get from auth context
+        resolvedBy: user.value.email,
       }),
     });
 
@@ -446,7 +450,7 @@ const ignoreViolation = async (id: string) => {
       body: JSON.stringify({
         status: 'ignored',
         ignoredAt: new Date().toISOString(),
-        ignoredBy: 'current-user@example.com', // TODO: Get from auth context
+        ignoredBy: user.value.email,
       }),
     });
 
