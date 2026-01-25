@@ -13,14 +13,13 @@ jest.mock('axios', () => {
   const mockAxios = {
     create: jest.fn(() => mockAxios),
     get: jest.fn(),
-    post: jest.fn().mockResolvedValue({ data: { result: { sys_id: 'test-id' } } }),
+    post: jest.fn(),
     put: jest.fn(),
     delete: jest.fn(),
   };
   return {
     __esModule: true,
     default: mockAxios,
-    ...mockAxios,
   };
 });
 
