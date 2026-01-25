@@ -90,6 +90,22 @@
             <Battery class="item-icon" />
             <span>Test Batteries</span>
           </a>
+          <a
+            href="/tests/history"
+            @click.prevent="handleNavClick('/tests/history')"
+            :class="['drawer-item', isActive('/tests/history') ? 'drawer-item-active' : '']"
+          >
+            <History class="item-icon" />
+            <span>Test History</span>
+          </a>
+          <a
+            href="/tests/findings"
+            @click.prevent="handleNavClick('/tests/findings')"
+            :class="['drawer-item', isActive('/tests/findings') ? 'drawer-item-active' : '']"
+          >
+            <FileSearch class="item-icon" />
+            <span>Findings</span>
+          </a>
         </div>
       </div>
 
