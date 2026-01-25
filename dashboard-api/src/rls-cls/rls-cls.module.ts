@@ -1,10 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { RLSCLSController } from './rls-cls.controller';
 import { RLSCLSService } from './rls-cls.service';
-import { ApplicationsModule } from '../applications/applications.module';
+import { ApplicationDataModule } from '../shared/application-data.module';
 
 @Module({
-  imports: [forwardRef(() => ApplicationsModule)],
+  imports: [ApplicationDataModule],
   controllers: [RLSCLSController],
   providers: [RLSCLSService],
   exports: [RLSCLSService],

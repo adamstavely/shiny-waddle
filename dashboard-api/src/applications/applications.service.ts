@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { CreateApplicationDto, ApplicationType, ApplicationStatus } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { Application, ApplicationInfrastructure, ValidatorOverride } from './entities/application.entity';
@@ -24,15 +25,10 @@ export class ApplicationsService {
   constructor(
     @Inject(forwardRef(() => TestResultsService))
     private readonly testResultsService: TestResultsService,
-    @Inject(forwardRef(() => SecurityAuditLogService))
-    private readonly auditLogService: SecurityAuditLogService,
     @Inject(forwardRef(() => ValidatorsService))
     private readonly validatorsService: ValidatorsService,
-    @Inject(forwardRef(() => TestHarnessesService))
-    private readonly testHarnessesService: TestHarnessesService,
-    @Inject(forwardRef(() => TestBatteriesService))
-    private readonly testBatteriesService: TestBatteriesService,
     private readonly contextDetector: ContextDetectorService,
+    private readonly moduleRef: ModuleRef,
   ) {
     // Load applications asynchronously
     this.loadApplications().then(() => {
@@ -381,25 +377,30 @@ export class ApplicationsService {
     await this.saveApplications();
 
     // Audit log
-    if (this.auditLogService) {
-      await this.auditLogService.log({
-        type: SecurityAuditEventType.CONFIG_CHANGED,
-        action: enabled ? 'enable-validator' : 'disable-validator',
-        description: `${enabled ? 'Enabled' : 'Disabled'} validator "${validatorId}" for application "${appId}"${reason ? `: ${reason}` : ''}`,
-        userId,
-        username,
-        resourceType: 'application',
-        resourceId: appId,
-        resourceName: application.name,
-        application: appId,
-        team: application.team,
-        success: true,
-        metadata: {
-          validatorId,
-          enabled,
-          reason,
-        },
-      });
+    try {
+      const auditLogService = this.moduleRef.get(SecurityAuditLogService, { strict: false });
+      if (auditLogService) {
+        await auditLogService.log({
+          type: SecurityAuditEventType.CONFIG_CHANGED,
+          action: enabled ? 'enable-validator' : 'disable-validator',
+          description: `${enabled ? 'Enabled' : 'Disabled'} validator "${validatorId}" for application "${appId}"${reason ? `: ${reason}` : ''}`,
+          userId,
+          username,
+          resourceType: 'application',
+          resourceId: appId,
+          resourceName: application.name,
+          application: appId,
+          team: application.team,
+          success: true,
+          metadata: {
+            validatorId,
+            enabled,
+            reason,
+          },
+        });
+      }
+    } catch (err) {
+      this.logger.warn('Failed to log audit event:', err);
     }
 
     return application;
@@ -431,23 +432,28 @@ export class ApplicationsService {
     await this.saveApplications();
 
     // Audit log
-    if (this.auditLogService) {
-      await this.auditLogService.log({
-        type: SecurityAuditEventType.CONFIG_CHANGED,
-        action: 'remove-validator-override',
-        description: `Removed override for validator "${validatorId}" on application "${appId}"`,
-        userId,
-        username,
-        resourceType: 'application',
-        resourceId: appId,
-        resourceName: application.name,
-        application: appId,
-        team: application.team,
-        success: true,
-        metadata: {
-          validatorId,
-        },
-      });
+    try {
+      const auditLogService = this.moduleRef.get(SecurityAuditLogService, { strict: false });
+      if (auditLogService) {
+        await auditLogService.log({
+          type: SecurityAuditEventType.CONFIG_CHANGED,
+          action: 'remove-validator-override',
+          description: `Removed override for validator "${validatorId}" on application "${appId}"`,
+          userId,
+          username,
+          resourceType: 'application',
+          resourceId: appId,
+          resourceName: application.name,
+          application: appId,
+          team: application.team,
+          success: true,
+          metadata: {
+            validatorId,
+          },
+        });
+      }
+    } catch (err) {
+      this.logger.warn('Failed to log audit event:', err);
     }
 
     return application;
@@ -540,7 +546,11 @@ export class ApplicationsService {
     await this.loadApplications();
     // Verify application exists
     await this.findOne(applicationId);
-    return this.testHarnessesService.findByApplication(applicationId);
+    const testHarnessesService = this.moduleRef.get(TestHarnessesService, { strict: false });
+    if (!testHarnessesService) {
+      throw new Error('TestHarnessesService not available');
+    }
+    return testHarnessesService.findByApplication(applicationId);
   }
 
   /**
@@ -557,7 +567,11 @@ export class ApplicationsService {
       return [];
     }
 
-    const allBatteries = await this.testBatteriesService.findAll();
+    const testBatteriesService = this.moduleRef.get(TestBatteriesService, { strict: false });
+    if (!testBatteriesService) {
+      throw new Error('TestBatteriesService not available');
+    }
+    const allBatteries = await testBatteriesService.findAll();
     return allBatteries.filter(battery => 
       battery.harnessIds && battery.harnessIds.some(harnessId => assignedHarnessIds.includes(harnessId))
     );

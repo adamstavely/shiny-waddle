@@ -1,7 +1,7 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { DistributedSystemsInfrastructure, RegionConfig } from '../applications/entities/application.entity';
 
 export type { RegionConfig };
@@ -24,8 +24,7 @@ export class DistributedSystemsService {
   private testResults: any[] = [];
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.loadConfig();
   }
@@ -101,7 +100,7 @@ export class DistributedSystemsService {
     let regionsToUse = this.regions;
     if (request.applicationId) {
       try {
-        const application = await this.applicationsService.findOne(request.applicationId);
+        const application = await this.applicationDataService.findOne(request.applicationId);
         if (application.infrastructure?.distributedSystems) {
           const distSysInfra = application.infrastructure.distributedSystems;
           regionsToUse = distSysInfra.regions || [];

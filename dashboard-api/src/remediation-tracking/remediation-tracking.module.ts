@@ -1,14 +1,12 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { RemediationTrackingController } from './remediation-tracking.controller';
 import { RemediationTrackingService } from './remediation-tracking.service';
 import { RemediationAutomationService } from './services/remediation-automation.service';
 import { ViolationsModule } from '../violations/violations.module';
-import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    forwardRef(() => ViolationsModule),
-    forwardRef(() => NotificationsModule),
+    ViolationsModule,
   ],
   controllers: [RemediationTrackingController],
   providers: [RemediationTrackingService, RemediationAutomationService],

@@ -22,12 +22,7 @@ export class FindingApprovalsService {
   private approvals: FindingApprovalRequest[] = [];
 
   constructor(
-    @Inject(forwardRef(() => UnifiedFindingsService))
-    private readonly findingsService: UnifiedFindingsService,
-    @Inject(forwardRef(() => NotificationsService))
-    private readonly notificationsService: NotificationsService,
-    @Inject(forwardRef(() => UsersService))
-    private readonly usersService: UsersService
+    private readonly moduleRef: ModuleRef,
   ) {
     this.loadData().catch(err => {
       this.logger.error('Error loading approval data on startup:', err);
@@ -99,7 +94,11 @@ export class FindingApprovalsService {
    */
   async createRequest(dto: CreateApprovalRequestDto): Promise<FindingApprovalRequest> {
     // Check if finding exists
-    const finding = await this.findingsService.getFindingById(dto.findingId);
+    const findingsService = this.moduleRef.get(UnifiedFindingsService, { strict: false });
+    if (!findingsService) {
+      throw new Error('UnifiedFindingsService not available');
+    }
+    const finding = await findingsService.getFindingById(dto.findingId);
     if (!finding) {
       throw new NotFoundException('Finding not found');
     }
@@ -174,8 +173,16 @@ export class FindingApprovalsService {
 
     // Notify approvers
     try {
+      const usersService = this.moduleRef.get(UsersService, { strict: false });
+      const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+      
+      if (!usersService || !notificationsService) {
+        this.logger.warn('UsersService or NotificationsService not available for notifications');
+        return;
+      }
+      
       // Get all users with approver roles that match required approvers
-      const approverUsers = await this.usersService.getUsersByRoles(request.requiredApprovers);
+      const approverUsers = await usersService.getUsersByRoles(request.requiredApprovers);
       
       if (approverUsers.length === 0) {
         this.logger.warn(
@@ -186,10 +193,10 @@ export class FindingApprovalsService {
         for (const approver of approverUsers) {
           try {
             // Check user's notification preferences
-            const preferences = this.notificationsService.getUserPreferences(approver.id);
+            const preferences = notificationsService.getUserPreferences(approver.id);
             
             if (preferences.enabled && preferences.notifyOnApprovalRequest) {
-              await this.notificationsService.notifyApprovalRequest(
+              await notificationsService.notifyApprovalRequest(
                 approver.id,
                 request.id,
                 request.findingId,
@@ -489,24 +496,28 @@ export class FindingApprovalsService {
     // Update finding status
     const newStatus = request.type === 'risk-acceptance' ? 'risk-accepted' : 'false-positive';
     try {
-      await this.findingsService.updateFinding(request.findingId, { status: newStatus });
+      const findingsService = this.moduleRef.get(UnifiedFindingsService, { strict: false });
+      if (findingsService) {
+        await findingsService.updateFinding(request.findingId, { status: newStatus });
+      }
     } catch (err) {
       this.logger.error('Failed to update finding status after approval:', err);
     }
 
     // Notify requester
-    if (this.notificationsService) {
-      try {
-        await this.notificationsService.notifyApprovalStatusChanged(
+    try {
+      const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+      if (notificationsService) {
+        await notificationsService.notifyApprovalStatusChanged(
           request.requestedBy,
           request.id,
           request.findingId,
           request.metadata?.findingTitle || 'Finding',
           'approved'
         );
-      } catch (err) {
-        this.logger.error('Failed to send approval notification:', err);
       }
+    } catch (err) {
+      this.logger.error('Failed to send approval notification:', err);
     }
   }
 
@@ -574,18 +585,19 @@ export class FindingApprovalsService {
     }
 
     // Notify requester
-    if (this.notificationsService) {
-      try {
-        await this.notificationsService.notifyApprovalStatusChanged(
+    try {
+      const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+      if (notificationsService) {
+        await notificationsService.notifyApprovalStatusChanged(
           request.requestedBy,
           request.id,
           request.findingId,
           request.metadata?.findingTitle || 'Finding',
           'rejected'
         );
-      } catch (err) {
-        this.logger.error('Failed to send rejection notification:', err);
       }
+    } catch (err) {
+      this.logger.error('Failed to send rejection notification:', err);
     }
 
     await this.saveApprovals();

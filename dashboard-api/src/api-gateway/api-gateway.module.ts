@@ -1,10 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APIGatewayController } from './api-gateway.controller';
 import { APIGatewayService } from './api-gateway.service';
-import { ApplicationsModule } from '../applications/applications.module';
+import { ApplicationDataModule } from '../shared/application-data.module';
 
 @Module({
-  imports: [forwardRef(() => ApplicationsModule)],
+  imports: [ApplicationDataModule],
   controllers: [APIGatewayController],
   providers: [APIGatewayService],
   exports: [APIGatewayService],

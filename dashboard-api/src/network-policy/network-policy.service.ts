@@ -1,9 +1,9 @@
-import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { NetworkMicrosegmentationTester } from '../../../heimdall-framework/services/network-microsegmentation-tester';
 import { ServiceMeshConfig } from '../../../heimdall-framework/services/service-mesh-integration';
 import { FirewallRule, NetworkSegment, TestResult } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { NetworkSegmentInfrastructure } from '../applications/entities/application.entity';
 import { validateNetworkPolicyConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
@@ -13,8 +13,7 @@ export class NetworkPolicyService {
   private tester: NetworkMicrosegmentationTester;
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.tester = new NetworkMicrosegmentationTester();
   }
@@ -25,7 +24,7 @@ export class NetworkPolicyService {
       let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
           throw new ValidationException('Application has no network segment infrastructure configured');
@@ -140,7 +139,7 @@ export class NetworkPolicyService {
       let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
           throw new ValidationException('Application has no network segment infrastructure configured');
@@ -226,7 +225,7 @@ export class NetworkPolicyService {
       let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
           throw new ValidationException('Application has no network segment infrastructure configured');
@@ -331,7 +330,7 @@ export class NetworkPolicyService {
       let segmentInfra: NetworkSegmentInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.networkSegments || application.infrastructure.networkSegments.length === 0) {
           throw new ValidationException('Application has no network segment infrastructure configured');

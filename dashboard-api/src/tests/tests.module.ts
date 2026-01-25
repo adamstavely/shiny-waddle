@@ -1,12 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TestsController } from './tests.controller';
 import { TestsAliasController } from './tests-alias.controller';
 import { TestsService } from './tests.service';
 import { TestDiscoveryService } from './test-discovery.service';
-import { PoliciesModule } from '../policies/policies.module';
 
 @Module({
-  imports: [forwardRef(() => PoliciesModule)],
   controllers: [TestsController, TestsAliasController],
   providers: [TestsService, TestDiscoveryService],
   exports: [TestsService],

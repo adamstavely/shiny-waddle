@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,8 +15,7 @@ export class TestBatteriesService {
   private batteries: TestBatteryEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => TestHarnessesService))
-    private readonly testHarnessesService: TestHarnessesService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.loadBatteries().catch(err => {
       this.logger.error('Error loading test batteries on startup:', err);
@@ -78,7 +78,11 @@ export class TestBatteriesService {
 
     // Validate that all harnesses have different domains
     if (dto.harnessIds && dto.harnessIds.length > 0) {
-      const harnesses = await this.testHarnessesService.findAll();
+      const testHarnessesService = this.moduleRef.get(TestHarnessesService, { strict: false });
+      if (!testHarnessesService) {
+        throw new BadRequestException('TestHarnessesService not available');
+      }
+      const harnesses = await testHarnessesService.findAll();
       const harnessDomains = new Set<string>();
       
       for (const harnessId of dto.harnessIds) {
@@ -156,7 +160,11 @@ export class TestBatteriesService {
 
     // Validate that all harnesses have different types
     if (harnessIdsToCheck.length > 0) {
-      const harnesses = await this.testHarnessesService.findAll();
+      const testHarnessesService = this.moduleRef.get(TestHarnessesService, { strict: false });
+      if (!testHarnessesService) {
+        throw new BadRequestException('TestHarnessesService not available');
+      }
+      const harnesses = await testHarnessesService.findAll();
       const harnessTypes = new Set<string>();
       
       for (const harnessId of harnessIdsToCheck) {
@@ -217,7 +225,11 @@ export class TestBatteriesService {
     
     if (!battery.harnessIds.includes(harnessId)) {
       // Validate that the new harness has a different type than existing ones
-      const harnesses = await this.testHarnessesService.findAll();
+      const testHarnessesService = this.moduleRef.get(TestHarnessesService, { strict: false });
+      if (!testHarnessesService) {
+        throw new BadRequestException('TestHarnessesService not available');
+      }
+      const harnesses = await testHarnessesService.findAll();
       const newHarness = harnesses.find(h => h.id === harnessId);
       if (!newHarness) {
         throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);

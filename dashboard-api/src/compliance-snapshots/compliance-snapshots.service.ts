@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { ApplicationsService } from '../applications/applications.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -26,8 +28,8 @@ export class ComplianceSnapshotsService {
   private snapshots: ComplianceSnapshot[] = [];
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.loadSnapshots().catch(err => {
       this.logger.error('Error loading compliance snapshots on startup:', err);
@@ -104,7 +106,7 @@ export class ComplianceSnapshotsService {
     await this.loadSnapshots();
 
     // Get all applications or filter by provided IDs
-    const allApplications = await this.applicationsService.findAll();
+    const allApplications = await this.applicationDataService.findAll();
     const targetApplications = dto.applicationIds
       ? allApplications.filter(app => dto.applicationIds!.includes(app.id))
       : allApplications;
@@ -113,7 +115,11 @@ export class ComplianceSnapshotsService {
     const applications = await Promise.all(
       targetApplications.map(async (app) => {
         try {
-          const scoreResponse = await this.applicationsService.getComplianceScore(app.id);
+          const applicationsService = this.moduleRef.get(ApplicationsService, { strict: false });
+          if (!applicationsService) {
+            throw new Error('ApplicationsService not available');
+          }
+          const scoreResponse = await applicationsService.getComplianceScore(app.id);
           return {
             id: app.id,
             name: app.name,

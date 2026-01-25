@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateAPISecurityConfigDto,
   CreateAPIEndpointDto,
@@ -13,7 +13,7 @@ import {
   APITestType,
 } from './entities/api-security.entity';
 import { APISecurityTester, APISecurityTestConfig } from '../../../heimdall-framework/services/api-security-tester';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { APISecurityInfrastructure } from '../applications/entities/application.entity';
 import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
@@ -32,8 +32,7 @@ export class ApiSecurityService {
   private results: APISecurityTestResultEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService?: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.loadData().catch(err => {
       this.logger.error('Error loading API security data on startup', err instanceof Error ? err.stack : String(err));
@@ -312,9 +311,9 @@ export class ApiSecurityService {
     let actualConfigId: string | undefined = context?.applicationId ? configIdOrApplicationId : undefined;
     
     // Try to get from application infrastructure
-    if (this.applicationsService && applicationId) {
+    if (applicationId) {
       try {
-        const application = await this.applicationsService.findOne(applicationId);
+        const application = await this.applicationDataService.findOne(applicationId);
         if (application.infrastructure?.apiSecurity) {
           const apiSecurityInfra = application.infrastructure.apiSecurity;
           

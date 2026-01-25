@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,8 +15,7 @@ export class TestHarnessesService {
   private harnesses: TestHarnessEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => TestSuitesService))
-    private readonly testSuitesService: TestSuitesService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.loadHarnesses().catch(err => {
       this.logger.error('Error loading test harnesses on startup:', err);
@@ -79,7 +79,11 @@ export class TestHarnessesService {
 
     // Validate that all suites match the harness domain
     if (dto.testSuiteIds && dto.testSuiteIds.length > 0) {
-      const suites = await this.testSuitesService.findAll();
+      const testSuitesService = this.moduleRef.get(TestSuitesService, { strict: false });
+      if (!testSuitesService) {
+        throw new BadRequestException('TestSuitesService not available');
+      }
+      const suites = await testSuitesService.findAll();
       for (const suiteId of dto.testSuiteIds) {
         const suite = suites.find(s => s.id === suiteId);
         if (!suite) {
@@ -170,7 +174,11 @@ export class TestHarnessesService {
     const suiteIdsToCheck = dto.testSuiteIds !== undefined ? dto.testSuiteIds : existing.testSuiteIds;
     if (suiteIdsToCheck.length > 0) {
       const harnessDomain = dto.domain || existing.domain;
-      const suites = await this.testSuitesService.findAll();
+      const testSuitesService = this.moduleRef.get(TestSuitesService, { strict: false });
+      if (!testSuitesService) {
+        throw new BadRequestException('TestSuitesService not available');
+      }
+      const suites = await testSuitesService.findAll();
       for (const suiteId of suiteIdsToCheck) {
         const suite = suites.find(s => s.id === suiteId);
         if (!suite) {

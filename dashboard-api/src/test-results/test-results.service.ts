@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Optional } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { TestResultEntity, QueryFilters, DateRange, ComplianceMetrics, TestResultStatus } from './entities/test-result.entity';
 import { DashboardSSEGateway } from '../dashboard/dashboard-sse.gateway';
 import * as fs from 'fs/promises';
@@ -12,9 +13,7 @@ export class TestResultsService {
   private results: TestResultEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => DashboardSSEGateway))
-    @Optional()
-    private readonly sseGateway?: DashboardSSEGateway,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.loadResults().catch(err => {
       this.logger.error('Error loading test results on startup:', err);
@@ -102,20 +101,25 @@ export class TestResultsService {
 
     this.logger.log(`Saved test result: ${entity.id} for application ${entity.applicationId}`);
     
-    // Broadcast real-time update
-    if (this.sseGateway) {
-      this.sseGateway.broadcast({
-        type: 'test-result',
-        data: {
-          id: entity.id,
-          applicationId: entity.applicationId,
-          applicationName: entity.applicationName,
-          status: entity.status,
-          passed: entity.passed,
-          timestamp: entity.timestamp,
-        },
-        timestamp: new Date(),
-      });
+    // Broadcast real-time update (lazy load to avoid circular dependency)
+    try {
+      const sseGateway = this.moduleRef.get(DashboardSSEGateway, { strict: false });
+      if (sseGateway) {
+        sseGateway.broadcast({
+          type: 'test-result',
+          data: {
+            id: entity.id,
+            applicationId: entity.applicationId,
+            applicationName: entity.applicationName,
+            status: entity.status,
+            passed: entity.passed,
+            timestamp: entity.timestamp,
+          },
+          timestamp: new Date(),
+        });
+      }
+    } catch (error) {
+      // DashboardSSEGateway may not be available, ignore
     }
     
     return entity;

@@ -1,8 +1,8 @@
-import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { APIGatewayTester } from '../../../heimdall-framework/services/api-gateway-tester';
 import { APIGatewayPolicy, APIRequest } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { APIGatewayInfrastructure } from '../applications/entities/application.entity';
 import { validateAPIGatewayConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
@@ -12,8 +12,7 @@ export class APIGatewayService {
   private tester: APIGatewayTester;
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.tester = new APIGatewayTester();
   }
@@ -24,7 +23,7 @@ export class APIGatewayService {
       let gatewayInfra: APIGatewayInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.apiGateway) {
           throw new ValidationException('Application has no API Gateway infrastructure configured');
@@ -128,7 +127,7 @@ export class APIGatewayService {
       let gatewayInfra: APIGatewayInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.apiGateway) {
           throw new ValidationException('Application has no API Gateway infrastructure configured');
@@ -199,7 +198,7 @@ export class APIGatewayService {
       let gatewayInfra: APIGatewayInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.apiGateway) {
           throw new ValidationException('Application has no API Gateway infrastructure configured');
@@ -256,7 +255,7 @@ export class APIGatewayService {
       let gatewayInfra: APIGatewayInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.apiGateway) {
           throw new ValidationException('Application has no API Gateway infrastructure configured');

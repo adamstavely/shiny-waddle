@@ -1,10 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { NetworkPolicyController } from './network-policy.controller';
 import { NetworkPolicyService } from './network-policy.service';
-import { ApplicationsModule } from '../applications/applications.module';
+import { ApplicationDataModule } from '../shared/application-data.module';
 
 @Module({
-  imports: [forwardRef(() => ApplicationsModule)],
+  imports: [ApplicationDataModule],
   controllers: [NetworkPolicyController],
   providers: [NetworkPolicyService],
   exports: [NetworkPolicyService],

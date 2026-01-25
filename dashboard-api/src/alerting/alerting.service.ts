@@ -1,4 +1,5 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,8 +27,7 @@ export class AlertingService {
   private alerts: AlertEntity[] = [];
 
   constructor(
-    @Inject(forwardRef(() => NotificationsService))
-    private readonly notificationsService: NotificationsService,
+    private readonly moduleRef: ModuleRef,
   ) {
     this.alertingEngine = new AlertingEngine();
     this.setupEventListeners();
@@ -460,17 +460,20 @@ export class AlertingService {
 
     // Use notifications service to send email
     // For now, create a notification - in production, integrate with email service
-    await this.notificationsService.createNotification({
-      userId: email, // Use email as userId for now
-      type: 'CRITICAL_FINDING' as any,
-      title: alert.title,
-      message: alert.message,
-      metadata: {
-        findingId: alert.findings[0]?.id,
-        alertId: alert.id,
-        severity: alert.severity,
-      },
-    });
+    const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+    if (notificationsService) {
+      await notificationsService.createNotification({
+        userId: email, // Use email as userId for now
+        type: 'CRITICAL_FINDING' as any,
+        title: alert.title,
+        message: alert.message,
+        metadata: {
+          findingId: alert.findings[0]?.id,
+          alertId: alert.id,
+          severity: alert.severity,
+        },
+      });
+    }
   }
 
   /**

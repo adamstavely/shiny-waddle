@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ScheduledReport } from './entities/scheduled-report.entity';
@@ -15,8 +16,7 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     private readonly schedulerService: SchedulerService,
-    @Inject(forwardRef(() => ReportsService))
-    private readonly reportsService: ReportsService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async onModuleInit() {
@@ -116,7 +116,11 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
       };
 
       // Generate report using ReportsService
-      const generatedReport = await this.reportsService.generateReport(generateRequest);
+      const reportsService = this.moduleRef.get(ReportsService, { strict: false });
+      if (!reportsService) {
+        throw new Error('ReportsService not available');
+      }
+      const generatedReport = await reportsService.generateReport(generateRequest);
 
       // Update schedule with last run and calculate next run
       report.lastRun = new Date();

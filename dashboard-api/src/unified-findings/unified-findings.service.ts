@@ -1,4 +1,5 @@
-import { Injectable, Inject, forwardRef, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { UnifiedFinding } from '../../../heimdall-framework/core/unified-finding-schema';
@@ -22,7 +23,7 @@ import {
   EnhancedRiskScore,
   RiskAggregation,
 } from '../../../heimdall-framework/services/enhanced-risk-scorer';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import {
   FindingCorrelationEngine,
   CorrelationResult,
@@ -48,16 +49,9 @@ export class UnifiedFindingsService {
   private findings: UnifiedFinding[] = [];
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
-    @Inject(forwardRef(() => UsersService))
+    private readonly applicationDataService: ApplicationDataService,
     private readonly usersService: UsersService,
-    @Inject(forwardRef(() => AlertingService))
-    @Optional()
-    private readonly alertingService?: AlertingService,
-    @Inject(forwardRef(() => NotificationsService))
-    @Optional()
-    private readonly notificationsService?: NotificationsService
+    private readonly moduleRef: ModuleRef,
   ) {
     this.normalizationEngine = new NormalizationEngine({
       deduplication: {
@@ -170,12 +164,15 @@ export class UnifiedFindingsService {
           const userIds = await this.getUsersToNotify(
             finding.asset.applicationId ? [finding.asset.applicationId] : undefined
           );
-          for (const userId of userIds) {
-            await this.notificationsService.notifyCriticalFinding(
-              userId,
-              finding.id,
-              finding.title
-            );
+          const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+          if (notificationsService) {
+            for (const userId of userIds) {
+              await notificationsService.notifyCriticalFinding(
+                userId,
+                finding.id,
+                finding.title
+              );
+            }
           }
         } catch (err) {
           this.logger.error('Failed to notify about critical finding:', err);
@@ -184,9 +181,12 @@ export class UnifiedFindingsService {
       }
 
       // Evaluate alert rules for new findings
-      if (isNew && this.alertingService) {
+      if (isNew) {
         try {
-          await this.alertingService.evaluateFinding(finding);
+          const alertingService = this.moduleRef.get(AlertingService, { strict: false });
+          if (alertingService) {
+            await alertingService.evaluateFinding(finding);
+          }
         } catch (err) {
           this.logger.error('Failed to evaluate alert rules for finding:', err);
           // Don't throw - alert evaluation failures shouldn't break ingestion
@@ -232,9 +232,12 @@ export class UnifiedFindingsService {
     await this.saveFindings();
 
     // Evaluate alert rules if severity or status changed
-    if (this.alertingService && (updates.severity || updates.status)) {
+    if (updates.severity || updates.status) {
       try {
-        await this.alertingService.evaluateFinding(updatedFinding);
+        const alertingService = this.moduleRef.get(AlertingService, { strict: false });
+        if (alertingService) {
+          await alertingService.evaluateFinding(updatedFinding);
+        }
       } catch (err) {
         this.logger.error('Failed to evaluate alert rules for updated finding:', err);
         // Don't throw - alert evaluation failures shouldn't break updates
@@ -268,23 +271,26 @@ export class UnifiedFindingsService {
         // Get users to notify (all users, since this is overall score)
         const userIds = await this.getUsersToNotify();
         
-        for (const userId of userIds) {
-          try {
-            // Check each user's preferences individually
-            const preferences = this.notificationsService.getUserPreferences(userId);
-            
-            // Only notify if drop exceeds this user's threshold
-            if (Math.abs(scoreChange) >= preferences.scoreDropThreshold) {
-              await this.notificationsService.notifyScoreDrop(
-                userId,
-                scoreChange,
-                previousScore,
-                overallScore
-              );
+        const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+        if (notificationsService) {
+          for (const userId of userIds) {
+            try {
+              // Check each user's preferences individually
+              const preferences = notificationsService.getUserPreferences(userId);
+              
+              // Only notify if drop exceeds this user's threshold
+              if (Math.abs(scoreChange) >= preferences.scoreDropThreshold) {
+                await notificationsService.notifyScoreDrop(
+                  userId,
+                  scoreChange,
+                  previousScore,
+                  overallScore
+                );
+              }
+            } catch (err) {
+              this.logger.error(`Failed to notify user ${userId} about score drop:`, err);
+              // Don't throw - notification failures shouldn't break finding updates
             }
-          } catch (err) {
-            this.logger.error(`Failed to notify user ${userId} about score drop:`, err);
-            // Don't throw - notification failures shouldn't break finding updates
           }
         }
       }
@@ -317,21 +323,23 @@ export class UnifiedFindingsService {
           const userIds = await this.getUsersToNotify([appId]);
           
           for (const userId of userIds) {
-            try {
-              // Check each user's preferences individually
-              const preferences = this.notificationsService.getUserPreferences(userId);
-              
-              // Only notify if drop exceeds this user's threshold
-              if (Math.abs(appScoreChange) >= preferences.scoreDropThreshold) {
-                await this.notificationsService.notifyScoreDrop(
-                  userId,
-                  appScoreChange,
-                  appPreviousScore,
-                  appScore,
-                  appId
-                );
-              }
-            } catch (err) {
+            const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+            if (notificationsService) {
+              try {
+                // Check each user's preferences individually
+                const preferences = notificationsService.getUserPreferences(userId);
+                
+                // Only notify if drop exceeds this user's threshold
+                if (Math.abs(appScoreChange) >= preferences.scoreDropThreshold) {
+                  await notificationsService.notifyScoreDrop(
+                    userId,
+                    appScoreChange,
+                    appPreviousScore,
+                    appScore,
+                    appId
+                  );
+                }
+              } catch (err) {
               this.logger.error(`Failed to notify user ${userId} about app score drop:`, err);
               // Don't throw - notification failures shouldn't break finding updates
             }
@@ -519,7 +527,7 @@ export class UnifiedFindingsService {
       findings,
       teamName,
       async (team: string) => {
-        const apps = await this.applicationsService.findByTeam(team);
+        const apps = await this.applicationDataService.findByTeam(team);
         return apps.map(app => ({ id: app.id }));
       }
     );
@@ -724,7 +732,7 @@ export class UnifiedFindingsService {
     if (teamNames && teamNames.length > 0) {
       // Get applications for these teams
       const teamApplications = await Promise.all(
-        teamNames.map(team => this.applicationsService.findByTeam(team))
+        teamNames.map(team => this.applicationDataService.findByTeam(team))
       );
       const teamAppIds = new Set(
         teamApplications.flat().map(app => app.id)

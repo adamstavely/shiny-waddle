@@ -1,8 +1,8 @@
-import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RLSCLSTester } from '../../../heimdall-framework/services/rls-cls-tester';
 import { DatabaseConfig, User, Resource, TestQuery, DynamicMaskingRule } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { DatabaseInfrastructure } from '../applications/entities/application.entity';
 import { validateRLSCLSConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
@@ -12,8 +12,7 @@ export class RLSCLSService {
   private tester: RLSCLSTester;
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.tester = new RLSCLSTester();
   }
@@ -24,7 +23,7 @@ export class RLSCLSService {
       let dbInfra: DatabaseInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
           throw new ValidationException('Application has no database infrastructure configured');
@@ -146,7 +145,7 @@ export class RLSCLSService {
       let dbInfra: DatabaseInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
           throw new ValidationException('Application has no database infrastructure configured');
@@ -264,7 +263,7 @@ export class RLSCLSService {
       let dbInfra: DatabaseInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
           throw new ValidationException('Application has no database infrastructure configured');
@@ -356,7 +355,7 @@ export class RLSCLSService {
       let dbInfra: DatabaseInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
           throw new ValidationException('Application has no database infrastructure configured');
@@ -447,7 +446,7 @@ export class RLSCLSService {
       let resourceType: string;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.databases || application.infrastructure.databases.length === 0) {
           throw new ValidationException('Application has no database infrastructure configured');

@@ -1,4 +1,5 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { UnifiedFindingsService } from '../unified-findings/unified-findings.service';
 import { TestResultsService } from '../test-results/test-results.service';
 import { getDomainFromTestType, getDomainDisplayName } from '../../../heimdall-framework/core/domain-mapping';
@@ -9,10 +10,7 @@ export class ComplianceScoresService {
   private readonly logger = new Logger(ComplianceScoresService.name);
 
   constructor(
-    @Inject(forwardRef(() => UnifiedFindingsService))
-    private readonly unifiedFindingsService: UnifiedFindingsService,
-    @Inject(forwardRef(() => TestResultsService))
-    private readonly testResultsService: TestResultsService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async getHistory(filters: {
@@ -27,7 +25,11 @@ export class ComplianceScoresService {
       const days = filters.days || 30;
       const applicationIds = filters.applicationId ? [filters.applicationId] : undefined;
       
-      const trends = await this.unifiedFindingsService.getComplianceTrends(
+      const unifiedFindingsService = this.moduleRef.get(UnifiedFindingsService, { strict: false });
+      if (!unifiedFindingsService) {
+        throw new Error('UnifiedFindingsService not available');
+      }
+      const trends = await unifiedFindingsService.getComplianceTrends(
         days,
         applicationIds,
         undefined,
@@ -71,7 +73,11 @@ export class ComplianceScoresService {
       const startDate = filters.startDate || new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
       // Get test results in the date range
-      const results = await this.testResultsService.query({
+      const testResultsService = this.moduleRef.get(TestResultsService, { strict: false });
+      if (!testResultsService) {
+        throw new Error('TestResultsService not available');
+      }
+      const results = await testResultsService.query({
         applicationId: filters.applicationId,
         startDate,
         endDate,

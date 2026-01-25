@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { RemediationTrackingService } from '../remediation-tracking.service';
 import { RemediationTracking } from '../entities/remediation-tracking.entity';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -31,7 +32,7 @@ export class RemediationAutomationService {
 
   constructor(
     private readonly remediationService: RemediationTrackingService,
-    private readonly notificationsService: NotificationsService,
+    private readonly moduleRef: ModuleRef,
   ) {
     // Start automated reminder checking
     this.startReminderService();
@@ -114,9 +115,13 @@ export class RemediationAutomationService {
     }
 
     try {
-      const preferences = this.notificationsService.getUserPreferences(tracking.assignedTo);
+      const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+      if (!notificationsService) {
+        return;
+      }
+      const preferences = notificationsService.getUserPreferences(tracking.assignedTo);
       if (preferences.enabled && preferences.notifyOnRemediationDeadline) {
-        await this.notificationsService.createNotification({
+        await notificationsService.createNotification({
           userId: tracking.assignedTo,
           type: NotificationType.REMEDIATION_DEADLINE,
           title: `Remediation Deadline Approaching`,
@@ -150,9 +155,13 @@ export class RemediationAutomationService {
     // Send escalation notification
     if (tracking.assignedTo) {
       try {
-        const preferences = this.notificationsService.getUserPreferences(tracking.assignedTo);
+        const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+        if (!notificationsService) {
+          return;
+        }
+        const preferences = notificationsService.getUserPreferences(tracking.assignedTo);
         if (preferences.enabled) {
-          await this.notificationsService.createNotification({
+          await notificationsService.createNotification({
             userId: tracking.assignedTo,
             type: NotificationType.REMEDIATION_OVERDUE,
             title: `Remediation Overdue`,
@@ -219,9 +228,13 @@ export class RemediationAutomationService {
   ): Promise<void> {
     if (tracking.assignedTo) {
       try {
-        const preferences = this.notificationsService.getUserPreferences(tracking.assignedTo);
+        const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+        if (!notificationsService) {
+          return;
+        }
+        const preferences = notificationsService.getUserPreferences(tracking.assignedTo);
         if (preferences.enabled) {
-          await this.notificationsService.createNotification({
+          await notificationsService.createNotification({
             userId: tracking.assignedTo,
             type: NotificationType.MILESTONE_OVERDUE,
             title: `Milestone Overdue`,

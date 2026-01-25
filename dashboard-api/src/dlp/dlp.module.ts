@@ -1,10 +1,10 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DLPController } from './dlp.controller';
 import { DLPService } from './dlp.service';
-import { ApplicationsModule } from '../applications/applications.module';
+import { ApplicationDataModule } from '../shared/application-data.module';
 
 @Module({
-  imports: [forwardRef(() => ApplicationsModule)],
+  imports: [ApplicationDataModule],
   controllers: [DLPController],
   providers: [DLPService],
   exports: [DLPService],

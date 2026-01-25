@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DataPipelineTester, PipelineTestConfig, PipelineTest } from '../../../heimdall-framework/services/data-pipeline-tester';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { DataPipelineInfrastructure } from '../applications/entities/application.entity';
 
 @Injectable()
@@ -8,8 +8,7 @@ export class DataPipelineService {
   private readonly logger = new Logger(DataPipelineService.name);
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {}
 
   /**
@@ -24,7 +23,7 @@ export class DataPipelineService {
       branch?: string;
     }
   ): Promise<any> {
-    const application = await this.applicationsService.findOne(applicationId);
+    const application = await this.applicationDataService.findOne(applicationId);
     
     if (!application.infrastructure?.dataPipeline) {
       throw new NotFoundException(`Application "${applicationId}" has no data pipeline infrastructure configured`);

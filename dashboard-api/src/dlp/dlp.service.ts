@@ -1,8 +1,8 @@
-import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DLPTester } from '../../../heimdall-framework/services/dlp-tester';
 import { User, DataOperation, TestQuery, DLPPattern } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
-import { ApplicationsService } from '../applications/applications.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { DLPInfrastructure } from '../applications/entities/application.entity';
 import { validateDLPConfig, formatValidationErrors } from '../test-configurations/utils/configuration-validator';
 
@@ -12,8 +12,7 @@ export class DLPService {
   private tester: DLPTester;
 
   constructor(
-    @Inject(forwardRef(() => ApplicationsService))
-    private readonly applicationsService: ApplicationsService,
+    private readonly applicationDataService: ApplicationDataService,
   ) {
     this.tester = new DLPTester();
   }
@@ -25,7 +24,7 @@ export class DLPService {
       let dlpInfra: DLPInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.dlp) {
           throw new ValidationException('Application has no DLP infrastructure configured');
@@ -143,7 +142,7 @@ export class DLPService {
       let dlpInfra: DLPInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.dlp) {
           throw new ValidationException('Application has no DLP infrastructure configured');
@@ -219,7 +218,7 @@ export class DLPService {
       let dlpInfra: DLPInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.dlp) {
           throw new ValidationException('Application has no DLP infrastructure configured');
@@ -304,7 +303,7 @@ export class DLPService {
       let dlpInfra: DLPInfrastructure | null = null;
 
       if (dto.applicationId) {
-        const application = await this.applicationsService.findOne(dto.applicationId);
+        const application = await this.applicationDataService.findOne(dto.applicationId);
         
         if (!application.infrastructure?.dlp) {
           throw new ValidationException('Application has no DLP infrastructure configured');
