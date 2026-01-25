@@ -46,7 +46,6 @@ import { RiskScoringModule } from './risk-scoring/risk-scoring.module';
 import { DataClassificationModule } from './data-classification/data-classification.module';
 import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
-import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { AlertingModule } from './alerting/alerting.module';
 import { AppController } from './app.controller';
 
@@ -100,7 +99,6 @@ import { AppController } from './app.controller';
     DataClassificationModule,
     ExceptionsModule,
     StandardsMappingModule,
-    SalesforceExperienceCloudModule,
     AlertingModule,
   ],
   controllers: [AppController],

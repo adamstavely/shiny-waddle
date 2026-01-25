@@ -49,7 +49,6 @@ import PendingApprovals from '../views/PendingApprovals.vue';
 import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
 import EnvironmentConfigTesting from '../views/EnvironmentConfigTesting.vue';
-import SalesforceExperienceCloud from '../views/SalesforceExperienceCloud.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -361,8 +360,7 @@ const router = createRouter({
     },
     {
       path: '/salesforce-experience-cloud',
-      name: 'SalesforceExperienceCloud',
-      component: SalesforceExperienceCloud,
+      redirect: '/tests/suites',
     },
     {
       path: '/:pathMatch(.*)*',

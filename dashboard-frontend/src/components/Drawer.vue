@@ -184,14 +184,6 @@
               <Settings class="item-icon" />
               <span>Environment Config Testing</span>
             </a>
-            <a
-              href="/salesforce-experience-cloud"
-              @click.prevent="handleNavClick('/salesforce-experience-cloud')"
-              :class="['drawer-item', isActive('/salesforce-experience-cloud') ? 'drawer-item-active' : '']"
-            >
-              <Cloud class="item-icon" />
-              <span>Salesforce Experience Cloud</span>
-            </a>
           </div>
         </div>
       </div>
@@ -315,8 +307,7 @@ const policiesConfigPages = [
   '/policies/standards-mapping',
   '/policies/data-contracts',
   '/resources',
-  '/environment-config-testing',
-  '/salesforce-experience-cloud'
+  '/environment-config-testing'
 ];
 
 // Admin pages
