@@ -8,20 +8,19 @@
           <p class="page-description">Create or edit individual reusable tests that can be assigned to test suites</p>
         </div>
         <div class="header-actions">
-          <button @click="save" class="action-btn save-btn" :disabled="saving">
-            <Save class="action-icon" />
-            {{ saving ? 'Saving...' : (isEditMode ? 'Update Test' : 'Create Test') }}
-          </button>
-          <button @click="goBack" class="action-btn cancel-btn">
-            <ArrowLeft class="action-icon" />
-            Cancel
-          </button>
+          <BaseButton
+            :label="saving ? 'Saving...' : (isEditMode ? 'Update Test' : 'Create Test')"
+            :icon="Save"
+            @click="save"
+            :disabled="saving"
+          />
+          <BaseButton label="Cancel" :icon="ArrowLeft" variant="ghost" @click="goBack" />
         </div>
       </div>
     </div>
 
     <div class="form-container">
-      <form @submit.prevent="save" class="test-form">
+      <BaseForm @submit="save" @cancel="goBack">
         <!-- Basic Information -->
         <div class="form-section form-section-full">
           <h3 class="section-title">Basic Information</h3>
@@ -44,7 +43,7 @@
             </div>
             <div v-if="isEditMode && test" class="form-group">
               <label>Current Version</label>
-              <span class="version-display">v{{ test.version }}</span>
+              <StatusBadge :status="`v${test.version}`" />
             </div>
           </div>
           <div class="form-group">
@@ -57,1120 +56,122 @@
           </div>
         </div>
 
-        <!-- Access Control Configuration -->
-        <div v-if="form.testType === 'access-control'" class="form-section form-section-full">
-          <h3 class="section-title">Access Control Configuration</h3>
-          
-          <!-- Policy Selection -->
-          <div class="form-group">
-            <label>Policies to Test *</label>
-            <p class="form-help">Select one or more policies to test against</p>
-            <div class="policy-selector">
-              <div class="policy-filters">
-                <Dropdown
-                  v-model="policyFilter"
-                  :options="[
-                    { label: 'All Policies', value: '' },
-                    { label: 'RBAC Only', value: 'rbac' },
-                    { label: 'ABAC Only', value: 'abac' }
-                  ]"
-                  placeholder="Filter policies..."
-                  class="form-input"
-                />
-              </div>
-              <div v-if="loading" class="loading">Loading policies...</div>
-              <div v-else class="policies-list">
-                <div
-                  v-for="policy in filteredPolicies"
-                  :key="policy.id"
-                  class="policy-option"
-                  :class="{ selected: form.policyIds.includes(policy.id) }"
-                  @click="togglePolicy(policy.id)"
-                >
-                  <input
-                    type="checkbox"
-                    :checked="form.policyIds.includes(policy.id)"
-                    @change="togglePolicy(policy.id)"
-                  />
-                  <div class="policy-info">
-                    <div class="policy-name-row">
-                      <span class="policy-name">{{ policy.name }}</span>
-                      <span class="policy-type-badge" :class="policy.type">
-                        {{ policy.type.toUpperCase() }}
-                      </span>
-                    </div>
-                    <p v-if="policy.description" class="policy-description">{{ policy.description }}</p>
-                  </div>
-                </div>
-              </div>
-              <div v-if="!loading && filteredPolicies.length === 0" class="empty-policies">
-                <p>No policies found. <router-link to="/policies">Create a policy first</router-link></p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Role -->
-          <div class="form-group">
-            <label>Role *</label>
-            <Dropdown
-              v-model="form.role"
-              :options="roleOptions"
-              placeholder="Select a role..."
-              required
-              class="form-input"
-            />
-          </div>
-
-          <!-- Resource -->
-          <div class="form-group">
-            <label>Resource *</label>
-            <div class="resource-config">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Resource ID</label>
-                  <input v-model="form.resource.id" type="text" required class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Resource Type</label>
-                  <input v-model="form.resource.type" type="text" required class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Sensitivity</label>
-                  <Dropdown
-                    v-model="form.resource.sensitivity"
-                    :options="sensitivityOptions"
-                    placeholder="Select sensitivity..."
-                    class="form-input"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Context -->
-          <div class="form-group">
-            <label>Context (optional)</label>
-            <div class="context-config">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>IP Address</label>
-                  <input v-model="form.context.ipAddress" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Time of Day</label>
-                  <input v-model="form.context.timeOfDay" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Location</label>
-                  <input v-model="form.context.location" type="text" class="form-input" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Expected Decision -->
-          <div class="form-group">
-            <label>Expected Decision *</label>
-            <Dropdown
-              v-model="form.expectedDecision"
-              :options="expectedDecisionOptions"
-              placeholder="Select expected decision..."
-              required
-              class="form-input"
-            />
-          </div>
-        </div>
-
-        <!-- DLP Configuration -->
-        <div v-if="form.testType === 'dlp'" class="form-section form-section-full">
-          <h3 class="section-title">DLP Configuration</h3>
-          <div class="form-group">
-            <label>Test Type</label>
-            <Dropdown
-              v-model="dlpTestType"
-              :options="dlpTestTypeOptions"
-              placeholder="Select DLP test type..."
-              class="form-input"
-            />
-          </div>
-
-          <!-- Pattern Test -->
-          <div v-if="dlpTestType === 'pattern'" class="form-group">
-            <label>Pattern *</label>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Pattern Name</label>
-                <input v-model="form.pattern.name" type="text" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Pattern Type</label>
-                <Dropdown
-                  v-model="form.pattern.type"
-                  :options="patternTypeOptions"
-                  placeholder="Select pattern type..."
-                  class="form-input"
-                />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Pattern (Regex)</label>
-              <input v-model="form.pattern.pattern" type="text" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label>Expected Detection</label>
-              <Dropdown
-                v-model="form.expectedDetection"
-                :options="expectedDetectionOptions"
-                placeholder="Select expected detection..."
-                class="form-input"
-              />
-            </div>
-          </div>
-
-          <!-- Bulk Export Test -->
-          <div v-if="dlpTestType === 'bulk-export'" class="form-group">
-            <label>Bulk Export Configuration *</label>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Export Type</label>
-                <Dropdown
-                  v-model="form.bulkExportType"
-                  :options="exportTypeOptions"
-                  placeholder="Select export type..."
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label>Limit</label>
-                <input v-model.number="form.bulkExportLimit" type="number" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Test Record Count</label>
-                <input v-model.number="form.testRecordCount" type="number" class="form-input" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Expected Blocked</label>
-              <Dropdown
-                v-model="form.expectedBlocked"
-                :options="expectedBlockedOptions"
-                placeholder="Select expected result..."
-                class="form-input"
-              />
-            </div>
-          </div>
-
-          <!-- Export Restrictions Test -->
-          <div v-if="dlpTestType === 'export-restrictions'" class="form-group">
-            <label>Export Restrictions Configuration *</label>
-            <div class="form-group">
-              <label>Restricted Fields (comma-separated)</label>
-              <input 
-                v-model="exportRestrictionsFieldsInput" 
-                type="text" 
-                placeholder="email, ssn, phone"
-                class="form-input"
-                @blur="updateExportRestrictionsFields"
-              />
-              <p class="field-help">Fields that cannot be exported</p>
-            </div>
-            <div class="form-group">
-              <label>
-                <input v-model="form.exportRestrictions.requireMasking" type="checkbox" />
-                Require Masking for Restricted Fields
-              </label>
-            </div>
-            <div class="form-group">
-              <label>Allowed Export Formats (comma-separated)</label>
-              <input 
-                v-model="allowedFormatsInput" 
-                type="text" 
-                placeholder="csv, json"
-                class="form-input"
-                @blur="updateAllowedFormats"
-              />
-              <p class="field-help">Leave empty to allow all formats</p>
-            </div>
-          </div>
-
-          <!-- Aggregation Requirements Test -->
-          <div v-if="dlpTestType === 'aggregation-requirements'" class="form-group">
-            <label>Aggregation Requirements Configuration *</label>
-            <div class="form-group">
-              <label>
-                <input v-model="form.aggregationRequirements.requireAggregation" type="checkbox" />
-                Require Aggregation
-              </label>
-            </div>
-            <div class="form-group">
-              <label>Minimum k (Records per Group)</label>
-              <input 
-                v-model.number="form.aggregationRequirements.minK" 
-                type="number" 
-                min="1"
-                placeholder="10"
-                class="form-input"
-              />
-              <p class="field-help">Minimum number of records required per aggregation group</p>
-            </div>
-          </div>
-
-          <!-- Field Restrictions Test -->
-          <div v-if="dlpTestType === 'field-restrictions'" class="form-group">
-            <label>Field Restrictions Configuration *</label>
-            <div class="form-group">
-              <label>Disallowed Fields (comma-separated)</label>
-              <input 
-                v-model="disallowedFieldsInput" 
-                type="text" 
-                placeholder="ssn, credit_card"
-                class="form-input"
-                @blur="updateDisallowedFields"
-              />
-              <p class="field-help">Fields that cannot be accessed in queries</p>
-            </div>
-            <div class="form-group">
-              <label>Allowed Fields (comma-separated)</label>
-              <input 
-                v-model="allowedFieldsInput" 
-                type="text" 
-                placeholder="id, name, status"
-                class="form-input"
-                @blur="updateAllowedFields"
-              />
-              <p class="field-help">Whitelist of allowed fields (leave empty to allow all except disallowed)</p>
-            </div>
-          </div>
-
-          <!-- Join Restrictions Test -->
-          <div v-if="dlpTestType === 'join-restrictions'" class="form-group">
-            <label>Join Restrictions Configuration *</label>
-            <div class="form-group">
-              <label>Disallowed Joins (comma-separated table names)</label>
-              <input 
-                v-model="disallowedJoinsInput" 
-                type="text" 
-                placeholder="users, user_profiles"
-                class="form-input"
-                @blur="updateDisallowedJoins"
-              />
-              <p class="field-help">Tables that cannot be joined in queries</p>
-            </div>
-          </div>
-
-          <!-- RLS/CLS Test -->
-          <div v-if="dlpTestType === 'rls-cls'" class="form-group">
-            <label>RLS/CLS Configuration *</label>
-            
-            <!-- Database Configuration -->
-            <div class="form-section">
-              <h4 class="form-section-title">Database Configuration</h4>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Database Type *</label>
-                  <Dropdown
-                    v-model="form.rlsCls.database.type"
-                    :options="databaseTypeOptions"
-                    placeholder="Select database type..."
-                    required
-                    class="form-input"
-                  />
-                </div>
-                <div class="form-group">
-                  <label>Host</label>
-                  <input v-model="form.rlsCls.database.host" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Port</label>
-                  <input v-model.number="form.rlsCls.database.port" type="number" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Database Name</label>
-                  <input v-model="form.rlsCls.database.database" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Username</label>
-                  <input v-model="form.rlsCls.database.username" type="text" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Password</label>
-                  <input v-model="form.rlsCls.database.password" type="password" class="form-input" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Connection String</label>
-                <input v-model="form.rlsCls.database.connectionString" type="text" class="form-input" />
-                <p class="field-help">Alternative to individual connection fields</p>
-              </div>
-            </div>
-
-            <!-- Test Queries -->
-            <div class="form-section">
-              <h4 class="form-section-title">Test Queries</h4>
-              <div v-for="(query, index) in form.rlsCls.testQueries" :key="index" class="endpoint-item">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Query Name *</label>
-                    <input v-model="query.name" type="text" required class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>SQL</label>
-                    <textarea v-model="query.sql" rows="3" class="form-input"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label>API Endpoint</label>
-                    <input v-model="query.apiEndpoint" type="text" class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>Method</label>
-                    <Dropdown
-                      v-model="query.method"
-                      :options="httpMethodOptions"
-                      placeholder="Select method..."
-                      class="form-input"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <button @click="removeQuery(index)" type="button" class="icon-btn-small">
-                      <X class="icon" />
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button @click="addQuery" type="button" class="btn-add-small">
-                <Plus class="btn-icon" />
-                Add Query
-              </button>
-            </div>
-
-            <!-- Validation Rules -->
-            <div class="form-section">
-              <h4 class="form-section-title">Validation Rules</h4>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Minimum RLS Coverage (%)</label>
-                  <input v-model.number="form.rlsCls.validationRules.minRLSCoverage" type="number" min="0" max="100" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Minimum CLS Coverage (%)</label>
-                  <input v-model.number="form.rlsCls.validationRules.minCLSCoverage" type="number" min="0" max="100" class="form-input" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Required Policies (comma-separated)</label>
-                <input v-model="requiredPoliciesInput" type="text" placeholder="policy1, policy2" class="form-input" @blur="updateRequiredPolicies" />
-                <p class="field-help">Policies that must be present for the test to pass</p>
-              </div>
-            </div>
-
-            <!-- Masking Rules -->
-            <div class="form-section">
-              <h4 class="form-section-title">Masking Rules</h4>
-              <div v-for="(rule, index) in form.rlsCls.maskingRules" :key="index" class="endpoint-item">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Table *</label>
-                    <input v-model="rule.table" type="text" required class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>Column *</label>
-                    <input v-model="rule.column" type="text" required class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>Masking Type *</label>
-                    <Dropdown
-                      v-model="rule.maskingType"
-                      :options="maskingTypeOptions"
-                      placeholder="Select masking type..."
-                      required
-                      class="form-input"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label>Condition</label>
-                    <input v-model="rule.condition" type="text" class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <button @click="removeMaskingRule(index)" type="button" class="icon-btn-small">
-                      <X class="icon" />
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button @click="addMaskingRule" type="button" class="btn-add-small">
-                <Plus class="btn-icon" />
-                Add Masking Rule
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- API Security Configuration -->
-        <div v-if="form.testType === 'api-security'" class="form-section form-section-full">
-          <h3 class="section-title">API Security Configuration</h3>
-          <div class="form-group">
-            <label>Test Sub-Type *</label>
-            <Dropdown
-              v-model="apiSecuritySubType"
-              :options="apiSecuritySubTypeOptions"
-              placeholder="Select API Security sub-type..."
-              required
-              class="form-input"
-            />
-          </div>
-
-          <!-- API Versioning Fields -->
-          <div v-if="apiSecuritySubType === 'apiVersion'" class="api-security-config">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Version *</label>
-                <input v-model="form.apiVersion.version" type="text" required class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Endpoint *</label>
-                <input v-model="form.apiVersion.endpoint" type="text" required placeholder="https://api.example.com/v1" class="form-input" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>
-                <input v-model="form.apiVersion.deprecated" type="checkbox" />
-                Deprecated
-              </label>
-            </div>
-            <div v-if="form.apiVersion.deprecated" class="form-grid">
-              <div class="form-group">
-                <label>Deprecation Date</label>
-                <input v-model="form.apiVersion.deprecationDate" type="date" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Sunset Date</label>
-                <input v-model="form.apiVersion.sunsetDate" type="date" class="form-input" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Gateway Policy Fields -->
-          <div v-if="apiSecuritySubType === 'gatewayPolicy'" class="api-security-config">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Gateway Type *</label>
-                <Dropdown
-                  v-model="form.gatewayPolicy.gatewayType"
-                  :options="gatewayTypeOptions"
-                  placeholder="Select gateway type..."
-                  required
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label>Endpoint *</label>
-                <input v-model="form.gatewayPolicy.endpoint" type="text" required placeholder="https://api.example.com" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Method *</label>
-                <Dropdown
-                  v-model="form.gatewayPolicy.method"
-                  :options="httpMethodOptions"
-                  placeholder="Select method..."
-                  required
-                  class="form-input"
-                />
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Policy ID *</label>
-                <input v-model="form.gatewayPolicy.policyId" type="text" required class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Policy Type *</label>
-                <Dropdown
-                  v-model="form.gatewayPolicy.policyType"
-                  :options="policyTypeOptions"
-                  placeholder="Select policy type..."
-                  required
-                  class="form-input"
-                />
-              </div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Route Path (optional)</label>
-                <input v-model="form.gatewayPolicy.route.path" type="text" placeholder="/api/v1/users" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Route HTTP Method (optional)</label>
-                <Dropdown
-                  v-model="form.gatewayPolicy.route.method"
-                  :options="httpMethodOptions"
-                  placeholder="Select route method..."
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label>Route Target (optional)</label>
-                <input v-model="form.gatewayPolicy.route.target" type="text" placeholder="http://backend:8080" class="form-input" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Webhook Fields -->
-          <div v-if="apiSecuritySubType === 'webhook'" class="api-security-config">
-            <div class="form-group">
-              <label>Endpoint *</label>
-              <input v-model="form.webhook.endpoint" type="text" required placeholder="https://webhook.example.com/callback" class="form-input" />
-            </div>
-            <div class="form-grid">
-                    <div class="form-group">
-                      <label>Authentication Type *</label>
-                      <Dropdown
-                        v-model="form.webhook.authentication.type"
-                        :options="webhookAuthTypeOptions"
-                        placeholder="Select authentication type..."
-                        required
-                        class="form-input"
-                      />
-                    </div>
-              <div class="form-group">
-                <label>Authentication Method *</label>
-                <input v-model="form.webhook.authentication.method" type="text" required placeholder="HMAC-SHA256" class="form-input" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>
-                <input v-model="form.webhook.encryption.enabled" type="checkbox" />
-                Encryption Enabled
-              </label>
-            </div>
-            <div v-if="form.webhook.encryption.enabled" class="form-group">
-              <label>Encryption Method</label>
-              <input v-model="form.webhook.encryption.method" type="text" placeholder="TLS 1.3" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label>
-                <input v-model="form.webhook.rateLimiting.enabled" type="checkbox" />
-                Rate Limiting Enabled
-              </label>
-            </div>
-            <div v-if="form.webhook.rateLimiting.enabled" class="form-grid">
-              <div class="form-group">
-                <label>Max Requests *</label>
-                <input v-model.number="form.webhook.rateLimiting.maxRequests" type="number" required class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Window Seconds *</label>
-                <input v-model.number="form.webhook.rateLimiting.windowSeconds" type="number" required class="form-input" />
-              </div>
-            </div>
-          </div>
-
-          <!-- GraphQL Fields -->
-          <div v-if="apiSecuritySubType === 'graphql'" class="api-security-config">
-            <div class="form-group">
-              <label>Endpoint *</label>
-              <input v-model="form.graphql.endpoint" type="text" required placeholder="https://api.example.com/graphql" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label>Schema *</label>
-              <textarea v-model="form.graphql.schema" rows="8" required class="form-input code-input" placeholder="type Query { ... }"></textarea>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Test Type *</label>
-                <Dropdown
-                  v-model="form.graphql.testType"
-                  :options="graphqlTestTypeOptions"
-                  placeholder="Select test type..."
-                  required
-                  class="form-input"
-                />
-              </div>
-              <div v-if="form.graphql.testType === 'depth'" class="form-group">
-                <label>Max Depth</label>
-                <input v-model.number="form.graphql.maxDepth" type="number" class="form-input" />
-              </div>
-              <div v-if="form.graphql.testType === 'complexity'" class="form-group">
-                <label>Max Complexity</label>
-                <input v-model.number="form.graphql.maxComplexity" type="number" class="form-input" />
-              </div>
-            </div>
-            <div v-if="form.graphql.testType === 'introspection'" class="form-group">
-              <label>
-                <input v-model="form.graphql.introspectionEnabled" type="checkbox" />
-                Introspection Enabled
-              </label>
-            </div>
-          </div>
-
-          <!-- API Contract Fields -->
-          <div v-if="apiSecuritySubType === 'apiContract'" class="api-security-config">
-            <div class="form-group">
-              <label>Contract Version *</label>
-              <input v-model="form.apiContract.version" type="text" required placeholder="1.0.0" class="form-input" />
-            </div>
-            <div class="form-group">
-              <label>Schema (JSON) *</label>
-              <textarea v-model="form.apiContract.schemaText" rows="10" required class="form-input code-input" placeholder='{"openapi": "3.0.0", ...}'></textarea>
-              <p class="field-help">Enter OpenAPI/Swagger schema as JSON</p>
-            </div>
-            <div class="form-group">
-              <label>Endpoints (optional)</label>
-              <p class="form-help">Add endpoints to test against the contract</p>
-              <div v-for="(endpoint, index) in form.apiContract.endpoints" :key="index" class="endpoint-item">
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label>Path</label>
-                    <input v-model="endpoint.path" type="text" placeholder="/api/v1/users" class="form-input" />
-                  </div>
-                  <div class="form-group">
-                    <label>Method</label>
-                    <Dropdown
-                      v-model="endpoint.method"
-                      :options="httpMethodOptions"
-                      placeholder="Select method..."
-                      class="form-input"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <button @click="removeEndpoint(index)" type="button" class="icon-btn-small">
-                      <X class="icon" />
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button @click="addEndpoint" type="button" class="btn-add-small">
-                <Plus class="btn-icon" />
-                Add Endpoint
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Network Policy Configuration -->
-        <div v-if="form.testType === 'network-policy'" class="form-section form-section-full">
-          <h3 class="section-title">Network Policy Configuration</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Source *</label>
-              <input v-model="form.networkPolicy.source" type="text" required placeholder="10.0.1.0/24 or service-name" class="form-input" />
-              <p class="field-help">IP/CIDR block or service name</p>
-            </div>
-            <div class="form-group">
-              <label>Target *</label>
-              <input v-model="form.networkPolicy.target" type="text" required placeholder="10.0.2.0/24 or service-name" class="form-input" />
-              <p class="field-help">IP/CIDR block or service name</p>
-            </div>
-            <div class="form-group">
-              <label>Protocol *</label>
-              <Dropdown
-                v-model="form.networkPolicy.protocol"
-                :options="protocolOptions"
-                placeholder="Select protocol..."
-                required
-                class="form-input"
-              />
-            </div>
-            <div class="form-group">
-              <label>Port</label>
-              <input v-model.number="form.networkPolicy.port" type="number" class="form-input" />
-              <p class="field-help">Required for TCP/UDP, optional for others</p>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Expected Allowed *</label>
-            <Dropdown
-              v-model="form.networkPolicy.expectedAllowed"
-              :options="expectedDecisionOptions"
-              placeholder="Select expected result..."
-              required
-              class="form-input"
-            />
-          </div>
-        </div>
-
-        <!-- Distributed Systems Configuration -->
-        <div v-if="form.testType === 'distributed-systems'" class="form-section form-section-full">
-          <h3 class="section-title">Distributed Systems Configuration</h3>
-          
-          <!-- Sub-Test Type -->
-          <div class="form-group">
-            <label>Test Type *</label>
-            <Dropdown
-              v-model="form.distributedSystems.testType"
-              :options="distributedSystemsSubTypeOptions"
-              placeholder="Select test type..."
-              required
-              class="form-input"
-            />
-            <p class="field-help">Select the type of distributed systems test to run</p>
-          </div>
-          
-          <!-- Regions - Required for all test types -->
-          <div class="form-section">
-            <h4 class="form-section-title">Regions</h4>
-            <div v-for="(region, index) in form.distributedSystems.regions" :key="index" class="endpoint-item">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Region ID *</label>
-                  <input v-model="region.id" type="text" required placeholder="us-east-1" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Region Name *</label>
-                  <input v-model="region.name" type="text" required placeholder="US East" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>Endpoint *</label>
-                  <input v-model="region.endpoint" type="text" required placeholder="https://api-us-east.example.com" class="form-input" />
-                </div>
-                <div class="form-group">
-                  <label>PDP Endpoint</label>
-                  <input v-model="region.pdpEndpoint" type="text" placeholder="https://pdp-us-east.example.com" class="form-input" />
-                  <p class="field-help">Policy Decision Point endpoint (optional)</p>
-                </div>
-                <div class="form-group">
-                  <button @click="removeRegion(index)" type="button" class="icon-btn-small">
-                    <X class="icon" />
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </div>
-            <button @click="addRegion" type="button" class="btn-add-small">
-              <Plus class="btn-icon" />
-              Add Region
-            </button>
-          </div>
-
-          <!-- Policy Sync - For policy-consistency and eventual-consistency -->
-          <div v-if="form.distributedSystems.testType === 'policy-consistency' || form.distributedSystems.testType === 'eventual-consistency'" class="form-section">
-            <h4 class="form-section-title">Policy Sync Configuration</h4>
-            <div class="form-group">
-              <label>
-                <input v-model="form.distributedSystems.policySync.enabled" type="checkbox" />
-                Enable Policy Sync
-              </label>
-            </div>
-            <div v-if="form.distributedSystems.policySync.enabled" class="form-grid">
-              <div class="form-group">
-                <label>Sync Interval (seconds)</label>
-                <input v-model.number="form.distributedSystems.policySync.syncInterval" type="number" min="1" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>Consistency Level</label>
-                <Dropdown
-                  v-model="form.distributedSystems.policySync.consistencyLevel"
-                  :options="consistencyLevelOptions"
-                  placeholder="Select consistency level..."
-                  class="form-input"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Coordination - For synchronization and transaction -->
-          <div v-if="form.distributedSystems.testType === 'synchronization' || form.distributedSystems.testType === 'transaction'" class="form-section">
-            <h4 class="form-section-title">Coordination</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Coordination Type *</label>
-                <Dropdown
-                  v-model="form.distributedSystems.coordination.type"
-                  :options="coordinationTypeOptions"
-                  placeholder="Select coordination type..."
-                  required
-                  class="form-input"
-                />
-              </div>
-              <div v-if="form.distributedSystems.coordination.type" class="form-group">
-                <label>Coordination Endpoint *</label>
-                <input v-model="form.distributedSystems.coordination.endpoint" type="text" required placeholder="https://consul.example.com:8500" class="form-input" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Synchronization Settings - For synchronization test type -->
-          <div v-if="form.distributedSystems.testType === 'synchronization'" class="form-section">
-            <h4 class="form-section-title">Synchronization Settings</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Sync Interval (seconds)</label>
-                <input v-model.number="form.distributedSystems.policySync.syncInterval" type="number" min="1" class="form-input" />
-                <p class="field-help">How often to check for synchronization</p>
-              </div>
-              <div class="form-group">
-                <label>Timeout (seconds)</label>
-                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
-                <p class="field-help">Maximum time to wait for synchronization</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Transaction Settings - For transaction test type -->
-          <div v-if="form.distributedSystems.testType === 'transaction'" class="form-section">
-            <h4 class="form-section-title">Transaction Settings</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Transaction Timeout (seconds)</label>
-                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
-                <p class="field-help">Maximum time for transaction to complete</p>
-              </div>
-              <div class="form-group">
-                <label>Expected Result</label>
-                <Dropdown
-                  v-model="form.distributedSystems.expectedResult"
-                  :options="expectedDecisionOptions"
-                  placeholder="Select expected result..."
-                  class="form-input"
-                />
-                <p class="field-help">Whether the transaction should succeed or fail</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Consistency Level - For eventual-consistency test type -->
-          <div v-if="form.distributedSystems.testType === 'eventual-consistency'" class="form-section">
-            <h4 class="form-section-title">Consistency Settings</h4>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Consistency Level *</label>
-                <Dropdown
-                  v-model="form.distributedSystems.policySync.consistencyLevel"
-                  :options="consistencyLevelOptions"
-                  placeholder="Select consistency level..."
-                  required
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label>Convergence Timeout (seconds)</label>
-                <input v-model.number="form.distributedSystems.timeout" type="number" min="1" class="form-input" />
-                <p class="field-help">Maximum time to wait for eventual consistency</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Data Pipeline Configuration -->
-        <div v-if="form.testType === 'data-pipeline'" class="form-section form-section-full">
-          <h3 class="section-title">Data Pipeline Security Testing Configuration</h3>
-          <p class="form-help">Configure security testing for data pipelines. Infrastructure details (sources, destinations, connections) are provided at runtime.</p>
-          
-          <!-- Pipeline Type -->
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Pipeline Type *</label>
-              <Dropdown
-                v-model="form.dataPipeline.pipelineType"
-                :options="pipelineTypeOptions"
-                placeholder="Select pipeline type..."
-                required
-                class="form-input"
-              />
-              <p class="field-help">Determines which tester method is used</p>
-            </div>
-          </div>
-
-          <!-- Pipeline Stage and Action -->
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Pipeline Stage *</label>
-              <Dropdown
-                v-model="form.dataPipeline.stage"
-                :options="pipelineStageOptions"
-                placeholder="Select stage to test..."
-                required
-                class="form-input"
-              />
-              <p class="field-help">Which pipeline stage(s) to test</p>
-            </div>
-            <div class="form-group">
-              <label>Action *</label>
-              <Dropdown
-                v-model="form.dataPipeline.action"
-                :options="pipelineActionOptions"
-                placeholder="Select action to test..."
-                required
-                class="form-input"
-              />
-              <p class="field-help">What action to test (read, write, execute)</p>
-            </div>
-            <div class="form-group">
-              <label>Expected Access *</label>
-              <Dropdown
-                v-model="form.dataPipeline.expectedAccess"
-                :options="expectedDecisionOptions"
-                placeholder="Select expected result..."
-                required
-                class="form-input"
-              />
-              <p class="field-help">Whether access should be granted or denied</p>
-            </div>
-          </div>
-
-          <!-- Security Controls to Validate -->
-          <div class="form-section">
-            <h4 class="form-section-title">Security Controls to Validate *</h4>
-            <p class="field-help field-help-spaced">Select which security controls to validate during testing</p>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.encryptionInTransit" type="checkbox" />
-                  Encryption in Transit
-                </label>
-                <p class="field-help">Validate data is encrypted during transmission</p>
-              </div>
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.encryptionAtRest" type="checkbox" />
-                  Encryption at Rest
-                </label>
-                <p class="field-help">Validate data is encrypted when stored</p>
-              </div>
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.accessLogging" type="checkbox" />
-                  Access Logging
-                </label>
-                <p class="field-help">Validate access attempts are logged</p>
-              </div>
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.dataMasking" type="checkbox" />
-                  Data Masking
-                </label>
-                <p class="field-help">Validate PII is masked in pipeline</p>
-              </div>
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.networkIsolation" type="checkbox" />
-                  Network Isolation
-                </label>
-                <p class="field-help">Validate pipeline runs in isolated network</p>
-              </div>
-              <div class="form-group">
-                <label>
-                  <input v-model="form.dataPipeline.securityControls.authenticationRequired" type="checkbox" />
-                  Authentication Required
-                </label>
-                <p class="field-help">Validate authentication is required for access</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Test Type Specific Configuration -->
+        <component
+          :is="testTypeFormComponent"
+          v-if="form.testType && testTypeFormComponent"
+          :form="form"
+          :is-edit-mode="isEditMode"
+        />
 
         <!-- Validation Errors -->
         <div v-if="validationErrors.length > 0" class="validation-errors">
           <AlertTriangle class="error-icon" />
-          <ul>
-            <li v-for="error in validationErrors" :key="error">{{ error }}</li>
-          </ul>
+          <div>
+            <strong>Please fix the following errors:</strong>
+            <ul>
+              <li v-for="(error, index) in validationErrors" :key="index">{{ error }}</li>
+            </ul>
+          </div>
         </div>
-      </form>
+      </BaseForm>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import {
-  TestTube,
-  X,
-  AlertTriangle,
-  Plus,
-  Save,
-  ArrowLeft,
-} from 'lucide-vue-next';
-import axios from 'axios';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { Save, ArrowLeft, AlertTriangle } from 'lucide-vue-next';
+import axios, { type AxiosError } from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import BaseForm from '../components/BaseForm.vue';
+import BaseButton from '../components/BaseButton.vue';
+import StatusBadge from '../components/StatusBadge.vue';
 import Dropdown from '../components/Dropdown.vue';
+import AccessControlTestForm from './tests/forms/AccessControlTestForm.vue';
+import DLPTestForm from './tests/forms/DLPTestForm.vue';
+import NetworkPolicyTestForm from './tests/forms/NetworkPolicyTestForm.vue';
+import APISecurityTestForm from './tests/forms/APISecurityTestForm.vue';
+import DistributedSystemsTestForm from './tests/forms/DistributedSystemsTestForm.vue';
+import DataPipelineTestForm from './tests/forms/DataPipelineTestForm.vue';
+import type { Test, TestType } from '../types/test';
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 
-const testId = computed(() => route.params.id as string | undefined);
+const testId = computed(() => route.params.id as string);
 const isEditMode = computed(() => !!testId.value);
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
-  { label: 'Tests', to: '/tests/individual' },
+  { label: 'Tests', to: '/tests' },
   { label: isEditMode.value ? 'Edit Test' : 'Create Test' },
 ]);
 
-const test = ref<any>(null);
-const policies = ref<any[]>([]);
+const test = ref<Test | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const validationErrors = ref<string[]>([]);
-const policyFilter = ref('');
-const dlpTestType = ref('pattern');
 
-// Input fields for comma-separated values (contract rules)
-const exportRestrictionsFieldsInput = ref('');
-const allowedFormatsInput = ref('');
-const disallowedFieldsInput = ref('');
-const allowedFieldsInput = ref('');
-const disallowedJoinsInput = ref('');
-const requiredPoliciesInput = ref('');
+const form = ref<Partial<Test>>({
+  name: '',
+  description: '',
+  testType: '',
+  changeReason: '',
+  // Access Control
+  policyIds: [],
+  role: '',
+  resource: { id: '', type: '', sensitivity: '' },
+  context: { ipAddress: '', timeOfDay: '', location: '' },
+  expectedDecision: '',
+  // DLP
+  pattern: { name: '', type: '', pattern: '' },
+  expectedDetection: '',
+  bulkExportType: '',
+  bulkExportLimit: 0,
+  testRecordCount: 0,
+  expectedBlocked: '',
+  exportRestrictions: { restrictedFields: [], requireMasking: false, allowedFormats: [] },
+  aggregationRequirements: { minK: 0, requireAggregation: false },
+  fieldRestrictions: { disallowedFields: [], allowedFields: [] },
+  joinRestrictions: { disallowedJoins: [] },
+  rlsCls: {
+    database: { type: '', host: '', port: undefined, database: '', username: '', password: '', connectionString: '' },
+    testQueries: [],
+    maskingRules: [],
+    validationRules: { minRLSCoverage: 0, minCLSCoverage: 0, requiredPolicies: [] }
+  },
+  // API Security
+  apiVersion: { version: '', endpoint: '', deprecated: false, deprecationDate: '', sunsetDate: '' },
+  gatewayPolicy: { gatewayType: '', endpoint: '', method: '', policyId: '', policyType: '' },
+  webhook: {
+    endpoint: '',
+    authentication: { type: '', method: '', credentials: '' },
+    rateLimiting: { enabled: false, maxRequests: 0, windowSeconds: 0 }
+  },
+  graphql: { endpoint: '', schema: '', testType: '', maxDepth: 0, maxComplexity: 0, introspectionEnabled: false },
+  apiContract: { version: '', schemaText: '', schemaFormat: '' },
+  // Network Policy
+  networkPolicy: { source: '', target: '', protocol: '', port: undefined, action: '' },
+  // Distributed Systems
+  distributedSystems: {
+    testType: '',
+    regions: [],
+    coordination: { type: '', endpoint: '' },
+    policySync: { consistencyLevel: '' }
+  },
+  // Data Pipeline
+  dataPipeline: {
+    pipelineType: '',
+    stage: '',
+    action: '',
+    expectedAccess: undefined,
+    securityControls: { encryption: false, accessControl: false, auditLogging: false }
+  }
+});
 
-const updateExportRestrictionsFields = () => {
-  form.value.exportRestrictions.restrictedFields = exportRestrictionsFieldsInput.value
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f.length > 0);
-};
-
-const updateAllowedFormats = () => {
-  form.value.exportRestrictions.allowedFormats = allowedFormatsInput.value
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f.length > 0);
-};
-
-const updateDisallowedFields = () => {
-  form.value.fieldRestrictions.disallowedFields = disallowedFieldsInput.value
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f.length > 0);
-};
-
-const updateAllowedFields = () => {
-  form.value.fieldRestrictions.allowedFields = allowedFieldsInput.value
-    .split(',')
-    .map(f => f.trim())
-    .filter(f => f.length > 0);
-};
-
-const updateDisallowedJoins = () => {
-  form.value.joinRestrictions.disallowedJoins = disallowedJoinsInput.value
-    .split(',')
-    .map(j => j.trim())
-    .filter(j => j.length > 0);
-};
-
-const updateRequiredPolicies = () => {
-  form.value.rlsCls.validationRules.requiredPolicies = requiredPoliciesInput.value
-    .split(',')
-    .map(p => p.trim())
-    .filter(p => p.length > 0);
-};
-
-const apiSecuritySubType = ref('apiVersion');
-const distributedSystemsSubType = ref('policy-consistency');
-
-// Options for dropdowns
 const testTypeOptions = [
-  { label: 'Data Contract', value: 'data-contract' },
-  { label: 'Salesforce Config', value: 'salesforce-config' },
-  { label: 'Salesforce Security', value: 'salesforce-security' },
-  { label: 'Elastic Config', value: 'elastic-config' },
-  { label: 'Elastic Security', value: 'elastic-security' },
-  { label: 'K8s Security', value: 'k8s-security' },
-  { label: 'K8s Workload', value: 'k8s-workload' },
-  { label: 'IDP Compliance', value: 'idp-compliance' },
   { label: 'Access Control', value: 'access-control' },
   { label: 'Network Policy', value: 'network-policy' },
   { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
@@ -1179,601 +180,27 @@ const testTypeOptions = [
   { label: 'Data Pipeline', value: 'data-pipeline' },
 ];
 
-const dlpTestTypeOptions = [
-  { label: 'Pattern Detection', value: 'pattern' },
-  { label: 'Bulk Export Limit', value: 'bulk-export' },
-  { label: 'Export Restrictions', value: 'export-restrictions' },
-  { label: 'Aggregation Requirements', value: 'aggregation-requirements' },
-  { label: 'Field Restrictions', value: 'field-restrictions' },
-  { label: 'Join Restrictions', value: 'join-restrictions' },
-  { label: 'RLS/CLS', value: 'rls-cls' },
-];
-
-const apiSecuritySubTypeOptions = [
-  { label: 'API Versioning', value: 'apiVersion' },
-  { label: 'Gateway Policy', value: 'gatewayPolicy' },
-  { label: 'Webhook Security', value: 'webhook' },
-  { label: 'GraphQL Security', value: 'graphql' },
-  { label: 'API Contract', value: 'apiContract' },
-];
-
-const distributedSystemsSubTypeOptions = [
-  { label: 'Policy Consistency', value: 'policy-consistency' },
-  { label: 'Multi-Region', value: 'multi-region' },
-  { label: 'Synchronization', value: 'synchronization' },
-  { label: 'Transaction', value: 'transaction' },
-  { label: 'Eventual Consistency', value: 'eventual-consistency' },
-];
-
-const roleOptions = [
-  { label: 'Admin', value: 'admin' },
-  { label: 'Researcher', value: 'researcher' },
-  { label: 'Analyst', value: 'analyst' },
-  { label: 'Viewer', value: 'viewer' },
-];
-
-const sensitivityOptions = [
-  { label: 'Public', value: 'public' },
-  { label: 'Internal', value: 'internal' },
-  { label: 'Confidential', value: 'confidential' },
-  { label: 'Restricted', value: 'restricted' },
-];
-
-const databaseTypeOptions = [
-  { label: 'PostgreSQL', value: 'postgresql' },
-  { label: 'MySQL', value: 'mysql' },
-  { label: 'SQL Server', value: 'mssql' },
-  { label: 'Oracle', value: 'oracle' },
-  { label: 'SQLite', value: 'sqlite' },
-];
-
-const maskingTypeOptions = [
-  { label: 'Partial', value: 'partial' },
-  { label: 'Full', value: 'full' },
-  { label: 'Hash', value: 'hash' },
-  { label: 'Redact', value: 'redact' },
-];
-
-const protocolOptions = [
-  { label: 'TCP', value: 'tcp' },
-  { label: 'UDP', value: 'udp' },
-  { label: 'ICMP', value: 'icmp' },
-  { label: 'All', value: 'all' },
-];
-
-const consistencyLevelOptions = [
-  { label: 'Strong', value: 'strong' },
-  { label: 'Eventual', value: 'eventual' },
-  { label: 'Weak', value: 'weak' },
-];
-
-const coordinationTypeOptions = [
-  { label: 'None', value: '' },
-  { label: 'Consul', value: 'consul' },
-  { label: 'etcd', value: 'etcd' },
-  { label: 'Zookeeper', value: 'zookeeper' },
-  { label: 'Custom', value: 'custom' },
-];
-
-const pipelineTypeOptions = [
-  { label: 'ETL', value: 'etl' },
-  { label: 'Streaming', value: 'streaming' },
-  { label: 'Batch', value: 'batch' },
-  { label: 'Real-time', value: 'real-time' },
-];
-
-const pipelineStageOptions = [
-  { label: 'Extract', value: 'extract' },
-  { label: 'Transform', value: 'transform' },
-  { label: 'Load', value: 'load' },
-  { label: 'All', value: 'all' },
-];
-
-const pipelineActionOptions = [
-  { label: 'Read', value: 'read' },
-  { label: 'Write', value: 'write' },
-  { label: 'Execute', value: 'execute' },
-];
-
-const dataSourceTypeOptions = [
-  { label: 'Database', value: 'database' },
-  { label: 'API', value: 'api' },
-  { label: 'File', value: 'file' },
-  { label: 'Stream', value: 'stream' },
-];
-
-const dataDestinationTypeOptions = [
-  { label: 'Database', value: 'database' },
-  { label: 'Data Warehouse', value: 'data-warehouse' },
-  { label: 'Data Lake', value: 'data-lake' },
-  { label: 'API', value: 'api' },
-];
-
-const connectionTypeOptions = [
-  { label: 'Kafka', value: 'kafka' },
-  { label: 'Spark', value: 'spark' },
-  { label: 'Airflow', value: 'airflow' },
-  { label: 'dbt', value: 'dbt' },
-  { label: 'Custom', value: 'custom' },
-];
-
-const gatewayTypeOptions = [
-  { label: 'AWS API Gateway', value: 'aws-api-gateway' },
-  { label: 'Azure API Management', value: 'azure-api-management' },
-  { label: 'Kong', value: 'kong' },
-  { label: 'Istio', value: 'istio' },
-  { label: 'Envoy', value: 'envoy' },
-];
-
-const policyTypeOptions = [
-  { label: 'Authentication', value: 'authentication' },
-  { label: 'Authorization', value: 'authorization' },
-  { label: 'Rate Limit', value: 'rate-limit' },
-  { label: 'Transformation', value: 'transformation' },
-  { label: 'Caching', value: 'caching' },
-];
-
-const httpMethodOptions = [
-  { label: 'GET', value: 'GET' },
-  { label: 'POST', value: 'POST' },
-  { label: 'PUT', value: 'PUT' },
-  { label: 'DELETE', value: 'DELETE' },
-  { label: 'PATCH', value: 'PATCH' },
-];
-
-const patternTypeOptions = [
-  { label: 'SSN', value: 'ssn' },
-  { label: 'Credit Card', value: 'credit-card' },
-  { label: 'Email', value: 'email' },
-  { label: 'Phone', value: 'phone' },
-  { label: 'Custom', value: 'custom' },
-];
-
-const exportTypeOptions = [
-  { label: 'CSV', value: 'csv' },
-  { label: 'JSON', value: 'json' },
-  { label: 'Excel', value: 'excel' },
-  { label: 'API', value: 'api' },
-];
-
-const webhookAuthTypeOptions = [
-  { label: 'Signature', value: 'signature' },
-  { label: 'Token', value: 'token' },
-  { label: 'OAuth2', value: 'oauth2' },
-];
-
-const graphqlTestTypeOptions = [
-  { label: 'Depth', value: 'depth' },
-  { label: 'Complexity', value: 'complexity' },
-  { label: 'Introspection', value: 'introspection' },
-  { label: 'Full', value: 'full' },
-];
-
-const expectedDecisionOptions = [
-  { label: 'Allow', value: true },
-  { label: 'Deny', value: false },
-];
-
-const expectedDetectionOptions = [
-  { label: 'Should Detect', value: true },
-  { label: 'Should Not Detect', value: false },
-];
-
-const expectedBlockedOptions = [
-  { label: 'Should Block', value: true },
-  { label: 'Should Allow', value: false },
-];
-
-const form = ref({
-  name: '',
-  description: '',
-  testType: '',
-  policyIds: [] as string[],
-  role: '',
-  resource: {
-    id: '',
-    type: '',
-    sensitivity: 'public' as 'public' | 'internal' | 'confidential' | 'restricted',
-  },
-  context: {
-    ipAddress: '',
-    timeOfDay: '',
-    location: '',
-  },
-  expectedDecision: true,
-  testQuery: {
-    name: '',
-    sql: '',
-  },
-  pattern: {
-    name: '',
-    type: 'ssn' as 'ssn' | 'credit-card' | 'email' | 'phone' | 'custom',
-    pattern: '',
-  },
-  bulkExportType: 'csv' as 'csv' | 'json' | 'excel' | 'api',
-  bulkExportLimit: 10000,
-  testRecordCount: 10001,
-  expectedBlocked: true,
-  expectedDetection: true,
-  exportRestrictions: {
-    restrictedFields: [] as string[],
-    requireMasking: false,
-    allowedFormats: [] as string[],
-  },
-  aggregationRequirements: {
-    minK: undefined as number | undefined,
-    requireAggregation: false,
-  },
-  fieldRestrictions: {
-    disallowedFields: [] as string[],
-    allowedFields: [] as string[],
-  },
-  joinRestrictions: {
-    disallowedJoins: [] as string[],
-  },
-  changeReason: '',
-  // API Security fields
-  apiVersion: {
-    version: '',
-    endpoint: '',
-    deprecated: false,
-    deprecationDate: '',
-    sunsetDate: '',
-  },
-  gatewayPolicy: {
-    gatewayType: 'aws-api-gateway' as 'aws-api-gateway' | 'azure-api-management' | 'kong' | 'istio' | 'envoy',
-    endpoint: '',
-    method: 'GET' as 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
-    policyId: '',
-    policyType: 'authentication' as 'authentication' | 'authorization' | 'rate-limit' | 'transformation' | 'caching',
-    route: {
-      path: '',
-      method: '',
-      target: '',
-    },
-  },
-  webhook: {
-    endpoint: '',
-    authentication: {
-      type: 'signature' as 'signature' | 'token' | 'oauth2',
-      method: '',
-    },
-    encryption: {
-      enabled: false,
-      method: '',
-    },
-    rateLimiting: {
-      enabled: false,
-      maxRequests: 100,
-      windowSeconds: 60,
-    },
-  },
-  graphql: {
-    endpoint: '',
-    schema: '',
-    testType: 'depth' as 'depth' | 'complexity' | 'introspection' | 'full',
-    maxDepth: 10,
-    maxComplexity: 100,
-    introspectionEnabled: false,
-  },
-  apiContract: {
-    version: '',
-    schemaText: '',
-    endpoints: [] as Array<{ path: string; method: string }>,
-  },
-  // RLS/CLS fields
-  rlsCls: {
-    database: {
-      type: '',
-      host: '',
-      port: undefined as number | undefined,
-      database: '',
-      username: '',
-      password: '',
-      connectionString: '',
-    },
-    testQueries: [] as Array<{ name: string; sql: string; apiEndpoint: string; method: string }>,
-    maskingRules: [] as Array<{ table: string; column: string; maskingType: 'partial' | 'full' | 'hash' | 'redact'; condition: string }>,
-    validationRules: {
-      minRLSCoverage: undefined as number | undefined,
-      minCLSCoverage: undefined as number | undefined,
-      requiredPolicies: [] as string[],
-    },
-  },
-  // Network Policy fields
-  networkPolicy: {
-    source: '',
-    target: '',
-    protocol: 'tcp' as 'tcp' | 'udp' | 'icmp' | 'all',
-    port: undefined as number | undefined,
-    expectedAllowed: true,
-  },
-  // Distributed Systems fields
-  distributedSystems: {
-    testType: 'policy-consistency' as 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency',
-    regions: [] as Array<{ id: string; name: string; endpoint: string; pdpEndpoint: string }>,
-    policySync: {
-      enabled: false,
-      syncInterval: undefined as number | undefined,
-      consistencyLevel: 'eventual' as 'strong' | 'eventual' | 'weak',
-    },
-    coordination: {
-      type: '' as '' | 'consul' | 'etcd' | 'zookeeper' | 'custom',
-      endpoint: '',
-    },
-    timeout: undefined as number | undefined,
-    expectedResult: undefined as boolean | undefined,
-  },
-  // Data Pipeline fields
-  dataPipeline: {
-    pipelineType: '' as '' | 'etl' | 'streaming' | 'batch' | 'real-time',
-    stage: 'all' as 'extract' | 'transform' | 'load' | 'all',
-    action: 'read' as 'read' | 'write' | 'execute',
-    expectedAccess: true,
-    securityControls: {
-      encryptionInTransit: false,
-      encryptionAtRest: false,
-      accessLogging: false,
-      dataMasking: false,
-      networkIsolation: false,
-      authenticationRequired: false,
-    },
-  },
+const testTypeFormComponent = computed(() => {
+  switch (form.value.testType) {
+    case 'access-control':
+      return AccessControlTestForm;
+    case 'dlp':
+      return DLPTestForm;
+    case 'network-policy':
+      return NetworkPolicyTestForm;
+    case 'api-security':
+      return APISecurityTestForm;
+    case 'distributed-systems':
+      return DistributedSystemsTestForm;
+    case 'data-pipeline':
+      return DataPipelineTestForm;
+    default:
+      return null;
+  }
 });
 
-const filteredPolicies = computed(() => {
-  let filtered = policies.value;
-  if (policyFilter.value) {
-    filtered = filtered.filter(p => p.type === policyFilter.value);
-  }
-  return filtered;
-});
-
-// Helper functions for RLS/CLS
-const addQuery = () => {
-  form.value.rlsCls.testQueries.push({ name: '', sql: '', apiEndpoint: '', method: 'GET' });
-};
-
-const removeQuery = (index: number) => {
-  form.value.rlsCls.testQueries.splice(index, 1);
-};
-
-const addMaskingRule = () => {
-  form.value.rlsCls.maskingRules.push({ table: '', column: '', maskingType: 'partial', condition: '' });
-};
-
-const removeMaskingRule = (index: number) => {
-  form.value.rlsCls.maskingRules.splice(index, 1);
-};
-
-// Helper functions for Distributed Systems
-const addRegion = () => {
-  form.value.distributedSystems.regions.push({ id: '', name: '', endpoint: '', pdpEndpoint: '' });
-};
-
-const removeRegion = (index: number) => {
-  form.value.distributedSystems.regions.splice(index, 1);
-};
-
-const loadTest = async () => {
-  if (!testId.value) return;
-  
-  loading.value = true;
-  try {
-    const response = await axios.get(`/api/tests/${testId.value}`);
-    test.value = response.data;
-    
-    // Populate form
-    form.value.name = test.value.name;
-    form.value.description = test.value.description || '';
-    form.value.testType = test.value.testType;
-    
-    if (test.value.testType === 'access-control') {
-      form.value.policyIds = test.value.policyIds || [];
-      form.value.role = test.value.role;
-      form.value.resource = test.value.resource;
-      form.value.context = test.value.context || {};
-      form.value.expectedDecision = test.value.expectedDecision;
-    } else if (test.value.testType === 'dlp') {
-      if (test.value.pattern) {
-        dlpTestType.value = 'pattern';
-        form.value.pattern = test.value.pattern;
-        form.value.expectedDetection = test.value.expectedDetection;
-      } else if (test.value.bulkExportType) {
-        dlpTestType.value = 'bulk-export';
-        form.value.bulkExportType = test.value.bulkExportType;
-        form.value.bulkExportLimit = test.value.bulkExportLimit;
-        form.value.testRecordCount = test.value.testRecordCount;
-        form.value.expectedBlocked = test.value.expectedBlocked;
-      } else if (test.value.exportRestrictions) {
-        dlpTestType.value = 'export-restrictions';
-        form.value.exportRestrictions = {
-          restrictedFields: test.value.exportRestrictions.restrictedFields || [],
-          requireMasking: test.value.exportRestrictions.requireMasking || false,
-          allowedFormats: test.value.exportRestrictions.allowedFormats || [],
-        };
-        exportRestrictionsFieldsInput.value = form.value.exportRestrictions.restrictedFields.join(', ');
-        allowedFormatsInput.value = form.value.exportRestrictions.allowedFormats.join(', ');
-      } else if (test.value.aggregationRequirements) {
-        dlpTestType.value = 'aggregation-requirements';
-        form.value.aggregationRequirements = {
-          minK: test.value.aggregationRequirements.minK,
-          requireAggregation: test.value.aggregationRequirements.requireAggregation || false,
-        };
-      } else if (test.value.fieldRestrictions) {
-        dlpTestType.value = 'field-restrictions';
-        form.value.fieldRestrictions = {
-          disallowedFields: test.value.fieldRestrictions.disallowedFields || [],
-          allowedFields: test.value.fieldRestrictions.allowedFields || [],
-        };
-        disallowedFieldsInput.value = form.value.fieldRestrictions.disallowedFields.join(', ');
-        allowedFieldsInput.value = form.value.fieldRestrictions.allowedFields.join(', ');
-      } else if (test.value.joinRestrictions) {
-        dlpTestType.value = 'join-restrictions';
-        form.value.joinRestrictions = {
-          disallowedJoins: test.value.joinRestrictions.disallowedJoins || [],
-        };
-        disallowedJoinsInput.value = form.value.joinRestrictions.disallowedJoins.join(', ');
-      } else if (test.value.database || test.value.testQueries) {
-        dlpTestType.value = 'rls-cls';
-        form.value.rlsCls = {
-          database: test.value.database || {
-            type: '',
-            host: '',
-            port: undefined,
-            database: '',
-            username: '',
-            password: '',
-            connectionString: '',
-          },
-          testQueries: test.value.testQueries || [],
-          maskingRules: test.value.maskingRules || [],
-          validationRules: {
-            minRLSCoverage: test.value.validationRules?.minRLSCoverage,
-            minCLSCoverage: test.value.validationRules?.minCLSCoverage,
-            requiredPolicies: test.value.validationRules?.requiredPolicies || [],
-          },
-        };
-        requiredPoliciesInput.value = form.value.rlsCls.validationRules.requiredPolicies.join(', ');
-      }
-    } else if (test.value.testType === 'api-security') {
-      if (test.value.apiVersion) {
-        apiSecuritySubType.value = 'apiVersion';
-        form.value.apiVersion = {
-          version: test.value.apiVersion.version || '',
-          endpoint: test.value.apiVersion.endpoint || '',
-          deprecated: test.value.apiVersion.deprecated || false,
-          deprecationDate: test.value.apiVersion.deprecationDate ? new Date(test.value.apiVersion.deprecationDate).toISOString().split('T')[0] : '',
-          sunsetDate: test.value.apiVersion.sunsetDate ? new Date(test.value.apiVersion.sunsetDate).toISOString().split('T')[0] : '',
-        };
-      } else if (test.value.gatewayPolicy || test.value.apiGateway) {
-        apiSecuritySubType.value = 'gatewayPolicy';
-        // Handle backward compatibility: map apiGateway to gatewayPolicy format
-        if (test.value.apiGateway) {
-          form.value.gatewayPolicy = {
-            gatewayType: test.value.apiGateway.gatewayType || 'aws-api-gateway',
-            endpoint: test.value.apiGateway.endpoint || '',
-            method: test.value.apiGateway.method || 'GET',
-            policyId: test.value.apiGateway.policyId || '',
-            policyType: test.value.apiGateway.policyType || 'authentication',
-            route: { path: '', method: '', target: '' },
-          };
-        } else {
-          form.value.gatewayPolicy = {
-            gatewayType: test.value.gatewayPolicy.gatewayType || 'aws-api-gateway',
-            endpoint: test.value.gatewayPolicy.endpoint || '',
-            method: test.value.gatewayPolicy.method || 'GET',
-            policyId: test.value.gatewayPolicy.policyId || '',
-            policyType: test.value.gatewayPolicy.policyType || 'authentication',
-            route: test.value.gatewayPolicy.route || { path: '', method: '', target: '' },
-          };
-        }
-      } else if (test.value.webhook) {
-        apiSecuritySubType.value = 'webhook';
-        form.value.webhook = {
-          endpoint: test.value.webhook.endpoint || '',
-          authentication: test.value.webhook.authentication || { type: 'signature', method: '' },
-          encryption: test.value.webhook.encryption || { enabled: false, method: '' },
-          rateLimiting: test.value.webhook.rateLimiting
-            ? {
-                enabled: true,
-                maxRequests: test.value.webhook.rateLimiting.maxRequests || 100,
-                windowSeconds: test.value.webhook.rateLimiting.windowSeconds || 60,
-              }
-            : { enabled: false, maxRequests: 100, windowSeconds: 60 },
-        };
-      } else if (test.value.graphql) {
-        apiSecuritySubType.value = 'graphql';
-        form.value.graphql = {
-          endpoint: test.value.graphql.endpoint || '',
-          schema: test.value.graphql.schema || '',
-          testType: test.value.graphql.testType || 'depth',
-          maxDepth: test.value.graphql.maxDepth || 10,
-          maxComplexity: test.value.graphql.maxComplexity || 100,
-          introspectionEnabled: test.value.graphql.introspectionEnabled || false,
-        };
-      } else if (test.value.apiContract) {
-        apiSecuritySubType.value = 'apiContract';
-        form.value.apiContract = {
-          version: test.value.apiContract.version || '',
-          schemaText: JSON.stringify(test.value.apiContract.schema || {}, null, 2),
-          endpoints: test.value.apiContract.endpoints || [],
-        };
-      }
-    } else if (test.value.testType === 'network-policy') {
-      form.value.networkPolicy = {
-        source: test.value.source || '',
-        target: test.value.target || '',
-        protocol: test.value.protocol || 'tcp',
-        port: test.value.port,
-        expectedAllowed: test.value.expectedAllowed !== undefined ? test.value.expectedAllowed : true,
-      };
-    } else if (test.value.testType === 'distributed-systems') {
-      const subTestType = (test.value as any).distributedTestType || 'policy-consistency';
-      form.value.distributedSystems = {
-        testType: subTestType,
-        regions: test.value.regions || (test.value.region ? [test.value.region] : []),
-        policySync: test.value.policySync || {
-          enabled: false,
-          syncInterval: undefined,
-          consistencyLevel: 'eventual',
-        },
-        coordination: test.value.coordination || {
-          type: '',
-          endpoint: '',
-        },
-        timeout: (test.value as any).timeout,
-        expectedResult: (test.value as any).expectedResult,
-      };
-      distributedSystemsSubType.value = subTestType;
-    } else if (test.value.testType === 'data-pipeline') {
-      form.value.dataPipeline = {
-        pipelineType: test.value.pipelineType || '',
-        stage: (test.value as any).stage || 'all',
-        action: (test.value as any).action || 'read',
-        expectedAccess: (test.value as any).expectedAccess !== undefined ? (test.value as any).expectedAccess : true,
-        securityControls: {
-          encryptionInTransit: (test.value as any).securityControls?.encryptionInTransit || false,
-          encryptionAtRest: (test.value as any).securityControls?.encryptionAtRest || false,
-          accessLogging: (test.value as any).securityControls?.accessLogging || false,
-          dataMasking: (test.value as any).securityControls?.dataMasking || false,
-          networkIsolation: (test.value as any).securityControls?.networkIsolation || false,
-          authenticationRequired: (test.value as any).securityControls?.authenticationRequired || false,
-        },
-      };
-    }
-  } catch (err: any) {
-    console.error('Error loading test:', err);
-    validationErrors.value = [err.response?.data?.message || 'Failed to load test'];
-  } finally {
-    loading.value = false;
-  }
-};
-
-const loadPolicies = async () => {
-  try {
-    const response = await axios.get('/api/policies');
-    policies.value = response.data;
-  } catch (err) {
-    console.error('Error loading policies:', err);
-  }
-};
-
-const togglePolicy = (policyId: string) => {
-  const index = form.value.policyIds.indexOf(policyId);
-  if (index > -1) {
-    form.value.policyIds.splice(index, 1);
-  } else {
-    form.value.policyIds.push(policyId);
-  }
-};
-
-const addEndpoint = () => {
-  form.value.apiContract.endpoints.push({ path: '', method: 'GET' });
-};
-
-const removeEndpoint = (index: number) => {
-  form.value.apiContract.endpoints.splice(index, 1);
+const handleFormUpdate = (updatedForm: Partial<Test>) => {
+  form.value = { ...form.value, ...updatedForm };
 };
 
 const validate = (): boolean => {
@@ -1787,110 +214,50 @@ const validate = (): boolean => {
     validationErrors.value.push('Test type is required');
   }
   
+  // Type-specific validation would be handled by the form components
+  // For now, basic validation for access-control
   if (form.value.testType === 'access-control') {
-    if (form.value.policyIds.length === 0) {
+    if (!form.value.policyIds || form.value.policyIds.length === 0) {
       validationErrors.value.push('At least one policy must be selected');
     }
     if (!form.value.role) {
       validationErrors.value.push('Role is required');
     }
-    if (!form.value.resource.id || !form.value.resource.type) {
+    if (!form.value.resource?.id || !form.value.resource?.type) {
       validationErrors.value.push('Resource ID and type are required');
     }
   }
   
-  if (form.value.testType === 'api-security') {
-    if (apiSecuritySubType.value === 'apiVersion') {
-      if (!form.value.apiVersion.version || !form.value.apiVersion.endpoint) {
-        validationErrors.value.push('Version and Endpoint are required for API Versioning test');
-      }
-    } else if (apiSecuritySubType.value === 'gatewayPolicy') {
-      if (!form.value.gatewayPolicy.gatewayType || !form.value.gatewayPolicy.endpoint || !form.value.gatewayPolicy.method || !form.value.gatewayPolicy.policyId || !form.value.gatewayPolicy.policyType) {
-        validationErrors.value.push('Gateway Type, Endpoint, Method, Policy ID, and Policy Type are required for Gateway Policy test');
-      }
-    } else if (apiSecuritySubType.value === 'webhook') {
-      if (!form.value.webhook.endpoint || !form.value.webhook.authentication.type || !form.value.webhook.authentication.method) {
-        validationErrors.value.push('Endpoint, Authentication Type, and Authentication Method are required for Webhook test');
-      }
-      if (form.value.webhook.rateLimiting.enabled && (!form.value.webhook.rateLimiting.maxRequests || !form.value.webhook.rateLimiting.windowSeconds)) {
-        validationErrors.value.push('Max Requests and Window Seconds are required when Rate Limiting is enabled');
-      }
-    } else if (apiSecuritySubType.value === 'graphql') {
-      if (!form.value.graphql.endpoint || !form.value.graphql.schema || !form.value.graphql.testType) {
-        validationErrors.value.push('Endpoint, Schema, and Test Type are required for GraphQL test');
-      }
-    } else if (apiSecuritySubType.value === 'apiContract') {
-      if (!form.value.apiContract.version || !form.value.apiContract.schemaText) {
-        validationErrors.value.push('Contract Version and Schema are required for API Contract test');
-      }
-    }
-  }
-  
-  if (form.value.testType === 'dlp') {
-    if (dlpTestType.value === 'rls-cls') {
-      if (!form.value.rlsCls.database.type) {
-        validationErrors.value.push('Database type is required for RLS/CLS test');
-      }
-      if (form.value.rlsCls.testQueries.length === 0) {
-        validationErrors.value.push('At least one test query is required for RLS/CLS test');
-      }
-    }
-  }
-  
-  if (form.value.testType === 'network-policy') {
-    if (!form.value.networkPolicy.source || !form.value.networkPolicy.target) {
-      validationErrors.value.push('Source and Target are required for Network Policy test');
-    }
-    if (!form.value.networkPolicy.protocol) {
-      validationErrors.value.push('Protocol is required for Network Policy test');
-    }
-  }
-  
-  if (form.value.testType === 'distributed-systems') {
-    if (form.value.distributedSystems.regions.length === 0) {
-      validationErrors.value.push('At least one region is required for Distributed Systems test');
-    }
-    for (const region of form.value.distributedSystems.regions) {
-      if (!region.id || !region.name || !region.endpoint) {
-        validationErrors.value.push('All regions must have ID, Name, and Endpoint');
-        break;
-      }
-    }
-    if (form.value.distributedSystems.testType === 'synchronization' || form.value.distributedSystems.testType === 'transaction') {
-      if (!form.value.distributedSystems.coordination.type) {
-        validationErrors.value.push('Coordination type is required for ' + form.value.distributedSystems.testType + ' test');
-      }
-      if (form.value.distributedSystems.coordination.type && !form.value.distributedSystems.coordination.endpoint) {
-        validationErrors.value.push('Coordination endpoint is required when coordination type is selected');
-      }
-    }
-    if (form.value.distributedSystems.testType === 'eventual-consistency') {
-      if (!form.value.distributedSystems.policySync.consistencyLevel) {
-        validationErrors.value.push('Consistency level is required for eventual-consistency test');
-      }
-    }
-  }
-  
-  if (form.value.testType === 'data-pipeline') {
-    if (!form.value.dataPipeline.pipelineType) {
-      validationErrors.value.push('Pipeline type is required for Data Pipeline test');
-    }
-    if (!form.value.dataPipeline.stage) {
-      validationErrors.value.push('Pipeline stage is required for Data Pipeline test');
-    }
-    if (!form.value.dataPipeline.action) {
-      validationErrors.value.push('Action is required for Data Pipeline test');
-    }
-    if (form.value.dataPipeline.expectedAccess === undefined) {
-      validationErrors.value.push('Expected access is required for Data Pipeline test');
-    }
-    const hasSecurityControl = Object.values(form.value.dataPipeline.securityControls).some(enabled => enabled === true);
-    if (!hasSecurityControl) {
-      validationErrors.value.push('At least one security control must be selected for Data Pipeline test');
-    }
-  }
-  
   return validationErrors.value.length === 0;
+};
+
+const loadTest = async () => {
+  if (!testId.value) return;
+  
+  loading.value = true;
+  try {
+    const response = await axios.get(`/api/tests/${testId.value}`);
+    test.value = response.data;
+    
+    form.value.name = test.value.name;
+    form.value.description = test.value.description || '';
+    form.value.testType = test.value.testType;
+    
+    // Load test-type-specific data
+    if (test.value.testType === 'access-control') {
+      form.value.policyIds = test.value.policyIds || [];
+      form.value.role = test.value.role;
+      form.value.resource = test.value.resource;
+      form.value.context = test.value.context || {};
+      form.value.expectedDecision = test.value.expectedDecision;
+    }
+    // Other test types would be loaded here
+  } catch (err: any) {
+    console.error('Error loading test:', err);
+    validationErrors.value.push(err.response?.data?.message || 'Failed to load test');
+  } finally {
+    loading.value = false;
+  }
 };
 
 const save = async () => {
@@ -1900,194 +267,31 @@ const save = async () => {
   
   saving.value = true;
   try {
-    const payload: any = {
+    const payload: Partial<Test> = {
       name: form.value.name,
       description: form.value.description,
       testType: form.value.testType,
     };
     
+    // Add test-type-specific payload
     if (form.value.testType === 'access-control') {
       payload.policyIds = form.value.policyIds;
       payload.role = form.value.role;
       payload.resource = form.value.resource;
       payload.context = form.value.context;
       payload.expectedDecision = form.value.expectedDecision;
-    } else if (form.value.testType === 'dlp') {
-      if (dlpTestType.value === 'pattern') {
-        payload.pattern = form.value.pattern;
-        payload.expectedDetection = form.value.expectedDetection;
-      } else if (dlpTestType.value === 'bulk-export') {
-        payload.bulkExportType = form.value.bulkExportType;
-        payload.bulkExportLimit = form.value.bulkExportLimit;
-        payload.testRecordCount = form.value.testRecordCount;
-        payload.expectedBlocked = form.value.expectedBlocked;
-      } else if (dlpTestType.value === 'export-restrictions') {
-        updateExportRestrictionsFields();
-        updateAllowedFormats();
-        payload.exportRestrictions = {
-          restrictedFields: form.value.exportRestrictions.restrictedFields,
-          requireMasking: form.value.exportRestrictions.requireMasking,
-          allowedFormats: form.value.exportRestrictions.allowedFormats.length > 0 
-            ? form.value.exportRestrictions.allowedFormats 
-            : undefined,
-        };
-      } else if (dlpTestType.value === 'aggregation-requirements') {
-        payload.aggregationRequirements = {
-          minK: form.value.aggregationRequirements.minK,
-          requireAggregation: form.value.aggregationRequirements.requireAggregation,
-        };
-      } else if (dlpTestType.value === 'field-restrictions') {
-        updateDisallowedFields();
-        updateAllowedFields();
-        payload.fieldRestrictions = {
-          disallowedFields: form.value.fieldRestrictions.disallowedFields.length > 0
-            ? form.value.fieldRestrictions.disallowedFields
-            : undefined,
-          allowedFields: form.value.fieldRestrictions.allowedFields.length > 0
-            ? form.value.fieldRestrictions.allowedFields
-            : undefined,
-        };
-      } else if (dlpTestType.value === 'join-restrictions') {
-        updateDisallowedJoins();
-        payload.joinRestrictions = {
-          disallowedJoins: form.value.joinRestrictions.disallowedJoins,
-        };
-      } else if (dlpTestType.value === 'rls-cls') {
-        updateRequiredPolicies();
-        payload.database = form.value.rlsCls.database;
-        payload.testQueries = form.value.rlsCls.testQueries;
-        payload.maskingRules = form.value.rlsCls.maskingRules.length > 0 ? form.value.rlsCls.maskingRules : undefined;
-        payload.validationRules = {
-          minRLSCoverage: form.value.rlsCls.validationRules.minRLSCoverage,
-          minCLSCoverage: form.value.rlsCls.validationRules.minCLSCoverage,
-          requiredPolicies: form.value.rlsCls.validationRules.requiredPolicies.length > 0 ? form.value.rlsCls.validationRules.requiredPolicies : undefined,
-        };
-      }
-    } else if (form.value.testType === 'api-security') {
-      if (apiSecuritySubType.value === 'apiVersion') {
-        payload.apiVersion = {
-          version: form.value.apiVersion.version,
-          endpoint: form.value.apiVersion.endpoint,
-          deprecated: form.value.apiVersion.deprecated,
-          deprecationDate: form.value.apiVersion.deprecationDate ? new Date(form.value.apiVersion.deprecationDate) : undefined,
-          sunsetDate: form.value.apiVersion.sunsetDate ? new Date(form.value.apiVersion.sunsetDate) : undefined,
-        };
-      } else if (apiSecuritySubType.value === 'gatewayPolicy') {
-        payload.gatewayPolicy = {
-          gatewayType: form.value.gatewayPolicy.gatewayType,
-          endpoint: form.value.gatewayPolicy.endpoint,
-          method: form.value.gatewayPolicy.method,
-          policyId: form.value.gatewayPolicy.policyId,
-          policyType: form.value.gatewayPolicy.policyType,
-          route: form.value.gatewayPolicy.route.path || form.value.gatewayPolicy.route.method || form.value.gatewayPolicy.route.target
-            ? {
-                path: form.value.gatewayPolicy.route.path,
-                method: form.value.gatewayPolicy.route.method,
-                target: form.value.gatewayPolicy.route.target,
-              }
-            : undefined,
-        };
-      } else if (apiSecuritySubType.value === 'webhook') {
-        payload.webhook = {
-          endpoint: form.value.webhook.endpoint,
-          authentication: {
-            type: form.value.webhook.authentication.type,
-            method: form.value.webhook.authentication.method,
-          },
-          encryption: {
-            enabled: form.value.webhook.encryption.enabled,
-            method: form.value.webhook.encryption.enabled ? form.value.webhook.encryption.method : undefined,
-          },
-          rateLimiting: form.value.webhook.rateLimiting.enabled
-            ? {
-                maxRequests: form.value.webhook.rateLimiting.maxRequests,
-                windowSeconds: form.value.webhook.rateLimiting.windowSeconds,
-              }
-            : undefined,
-        };
-      } else if (apiSecuritySubType.value === 'graphql') {
-        payload.graphql = {
-          endpoint: form.value.graphql.endpoint,
-          schema: form.value.graphql.schema,
-          testType: form.value.graphql.testType,
-          maxDepth: form.value.graphql.testType === 'depth' ? form.value.graphql.maxDepth : undefined,
-          maxComplexity: form.value.graphql.testType === 'complexity' ? form.value.graphql.maxComplexity : undefined,
-          introspectionEnabled: form.value.graphql.testType === 'introspection' ? form.value.graphql.introspectionEnabled : undefined,
-        };
-      } else if (apiSecuritySubType.value === 'apiContract') {
-        try {
-          const schema = JSON.parse(form.value.apiContract.schemaText);
-          payload.apiContract = {
-            version: form.value.apiContract.version,
-            schema: schema,
-            endpoints: form.value.apiContract.endpoints.length > 0 ? form.value.apiContract.endpoints : undefined,
-          };
-        } catch (e) {
-          validationErrors.value = ['Schema must be valid JSON'];
-          saving.value = false;
-          return;
-        }
-      }
-    } else if (form.value.testType === 'network-policy') {
-      payload.source = form.value.networkPolicy.source;
-      payload.target = form.value.networkPolicy.target;
-      payload.protocol = form.value.networkPolicy.protocol;
-      payload.port = form.value.networkPolicy.port;
-      payload.expectedAllowed = form.value.networkPolicy.expectedAllowed;
-    } else if (form.value.testType === 'distributed-systems') {
-      payload.distributedTestType = form.value.distributedSystems.testType;
-      payload.regions = form.value.distributedSystems.regions;
-      payload.policySync = form.value.distributedSystems.policySync.enabled ? {
-        enabled: true,
-        syncInterval: form.value.distributedSystems.policySync.syncInterval,
-        consistencyLevel: form.value.distributedSystems.policySync.consistencyLevel,
-      } : undefined;
-      payload.coordination = form.value.distributedSystems.coordination.type ? {
-        type: form.value.distributedSystems.coordination.type,
-        endpoint: form.value.distributedSystems.coordination.endpoint || undefined,
-      } : undefined;
-      payload.timeout = form.value.distributedSystems.timeout;
-      payload.expectedResult = form.value.distributedSystems.expectedResult;
-    } else if (form.value.testType === 'data-pipeline') {
-      payload.pipelineType = form.value.dataPipeline.pipelineType;
-      payload.stage = form.value.dataPipeline.stage;
-      payload.action = form.value.dataPipeline.action;
-      payload.expectedAccess = form.value.dataPipeline.expectedAccess;
-      // Only include enabled security controls
-      const enabledControls: Record<string, boolean> = {};
-      if (form.value.dataPipeline.securityControls.encryptionInTransit) {
-        enabledControls.encryptionInTransit = true;
-      }
-      if (form.value.dataPipeline.securityControls.encryptionAtRest) {
-        enabledControls.encryptionAtRest = true;
-      }
-      if (form.value.dataPipeline.securityControls.accessLogging) {
-        enabledControls.accessLogging = true;
-      }
-      if (form.value.dataPipeline.securityControls.dataMasking) {
-        enabledControls.dataMasking = true;
-      }
-      if (form.value.dataPipeline.securityControls.networkIsolation) {
-        enabledControls.networkIsolation = true;
-      }
-      if (form.value.dataPipeline.securityControls.authenticationRequired) {
-        enabledControls.authenticationRequired = true;
-      }
-      payload.securityControls = Object.keys(enabledControls).length > 0 ? enabledControls : undefined;
     }
+    // Other test types would be added here
     
-    if (testId.value) {
-      if (form.value.changeReason) {
-        payload.changeReason = form.value.changeReason;
-      }
-      await axios.put(`/api/tests/${testId.value}`, payload);
+    if (isEditMode.value) {
+      await axios.patch(`/api/tests/${testId.value}`, payload);
     } else {
-      await axios.post('/api/v1/tests', payload);
+      await axios.post('/api/tests', payload);
     }
     
     router.push('/tests/individual');
   } catch (err: any) {
-    validationErrors.value = [err.response?.data?.message || 'Failed to save test'];
+    validationErrors.value.push(err.response?.data?.message || 'Failed to save test');
     console.error('Error saving test:', err);
   } finally {
     saving.value = false;
@@ -2098,35 +302,8 @@ const goBack = () => {
   router.push('/tests/individual');
 };
 
-// Watch for test type changes to reset sub-type selections
-watch(() => form.value.testType, (newType) => {
-  if (newType === 'dlp') {
-    dlpTestType.value = 'pattern';
-  } else if (newType === 'api-security') {
-    apiSecuritySubType.value = 'apiVersion';
-  } else if (newType === 'distributed-systems') {
-    distributedSystemsSubType.value = 'policy-consistency';
-    form.value.distributedSystems.testType = 'policy-consistency';
-    // Initialize with one region if empty
-    if (form.value.distributedSystems.regions.length === 0) {
-      addRegion();
-    }
-  }
-});
-
-// Watch for DLP test type changes
-watch(() => dlpTestType.value, (newType) => {
-  if (newType === 'rls-cls') {
-    // Initialize with one query if empty
-    if (form.value.rlsCls.testQueries.length === 0) {
-      addQuery();
-    }
-  }
-});
-
 onMounted(() => {
-  loadPolicies();
-  if (testId.value) {
+  if (isEditMode.value) {
     loadTest();
   }
 });
@@ -2134,21 +311,20 @@ onMounted(() => {
 
 <style scoped>
 .test-create-page {
-  padding: 2rem;
-  max-width: 1800px;
+  padding: var(--spacing-lg);
+  max-width: 1400px;
   margin: 0 auto;
-  width: 100%;
 }
 
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-xl);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1.5rem;
+  gap: var(--spacing-lg);
 }
 
 .header-left {
@@ -2156,273 +332,95 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 0.5rem 0;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .page-description {
-  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .header-actions {
   display: flex;
-  gap: 0.75rem;
-}
-
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.save-btn {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #ffffff;
-}
-
-.save-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
-}
-
-.save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.cancel-btn {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-}
-
-.cancel-btn:hover {
-  background: rgba(79, 172, 254, 0.2);
-}
-
-.action-icon {
-  width: 16px;
-  height: 16px;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .form-container {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 2rem;
-}
-
-.test-form {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  margin-top: var(--spacing-lg);
 }
 
 .form-section {
-  padding: 2rem;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-section-full {
   width: 100%;
 }
 
+.section-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-@media (max-width: 1600px) {
-  .form-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 1200px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.section-title {
-  margin: 0 0 1.5rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
+  gap: var(--spacing-xs);
 }
 
 .form-group label {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
 }
 
 .form-input {
-  width: 100%;
-  padding: 0.75rem;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-  color: #ffffff;
-  font-size: 0.9rem;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: rgba(79, 172, 254, 0.5);
-}
-
-.form-select {
-  cursor: pointer;
-}
-
-.form-select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  padding: var(--spacing-sm);
+  background: var(--color-bg-overlay);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
 }
 
 .field-help {
-  color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
   margin: var(--spacing-xs) 0 0 0;
 }
 
-.form-help {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
-  margin: 0.25rem 0 0.5rem 0;
-}
-
-.policy-selector {
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  padding: 1rem;
-  background: rgba(15, 20, 25, 0.6);
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.policies-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.policy-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(15, 20, 25, 0.4);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.policy-option:hover {
-  border-color: rgba(79, 172, 254, 0.4);
-  background: rgba(15, 20, 25, 0.6);
-}
-
-.policy-option.selected {
-  border-color: #4facfe;
-  background: rgba(79, 172, 254, 0.1);
-}
-
-.policy-info {
-  flex: 1;
-}
-
-.policy-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.policy-name {
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.policy-type-badge {
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.policy-type-badge.rbac {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-}
-
-.policy-type-badge.abac {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
-}
-
-.policy-description {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.empty-policies {
-  text-align: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.version-display {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
 .validation-errors {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 6px;
-  padding: 1rem;
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
   display: flex;
-  gap: 0.75rem;
-  color: #ef4444;
+  gap: var(--spacing-sm);
+  color: var(--color-error);
+  margin-top: var(--spacing-lg);
 }
 
 .validation-errors ul {
-  margin: 0;
-  padding-left: 1.5rem;
+  margin: var(--spacing-xs) 0 0 0;
+  padding-left: var(--spacing-lg);
 }
 
 .error-icon {
@@ -2430,79 +428,4 @@ onMounted(() => {
   height: 20px;
   flex-shrink: 0;
 }
-
-.code-input {
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
-}
-
-.api-security-config {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(79, 172, 254, 0.2);
-}
-
-.endpoint-item {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: rgba(15, 20, 25, 0.4);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-}
-
-.btn-add-small {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 6px;
-  color: #4facfe;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn-add-small:hover {
-  background: rgba(79, 172, 254, 0.2);
-  border-color: rgba(79, 172, 254, 0.4);
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.icon-btn-small {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 4px;
-  color: #ef4444;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.icon-btn-small:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-.icon-btn-small .icon {
-  width: 16px;
-  height: 16px;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.6);
-}
 </style>
-

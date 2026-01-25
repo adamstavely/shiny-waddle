@@ -132,6 +132,7 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import AssignmentManager from '../components/AssignmentManager.vue';
 import { useApiDataAuto } from '../composables/useApiData';
 import { useModal } from '../composables/useModal';
+import type { Application } from '../types/test';
 
 const router = useRouter();
 
@@ -180,7 +181,7 @@ const { data: applications, loading, error, reload } = useApiDataAuto(
             ...app,
             testHarnesses: harnesses,
             testBatteries: batteries,
-            testSuiteCount: harnesses.reduce((sum: number, h: any) => sum + (h.testSuiteIds?.length || 0), 0),
+            testSuiteCount: harnesses.reduce((sum: number, h) => sum + (h.testSuiteIds?.length || 0), 0),
             lastBatteryRun,
           };
         } catch (err) {
@@ -222,7 +223,7 @@ const getStatus = (application: any): string => {
   return 'Fail';
 };
 
-const getStatusClass = (application: any): string => {
+const getStatusClass = (application: Application): string => {
   const status = getStatus(application);
   if (status === 'Pass') return 'status-pass';
   if (status === 'Degraded') return 'status-degraded';

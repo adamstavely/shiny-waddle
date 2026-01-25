@@ -191,6 +191,9 @@ import EmptyState from '../components/EmptyState.vue';
 import TestSuiteOverviewTab from './test-suites/TestSuiteOverviewTab.vue';
 import TestSuiteConfigurationTab from './test-suites/TestSuiteConfigurationTab.vue';
 import TestSuiteTestsTab from './test-suites/TestSuiteTestsTab.vue';
+import type { TestSuite, Test, Policy } from '../types/test';
+import type { AxiosError } from 'axios';
+import type { TestSuite, Test, Policy } from '../types/test';
 
 const route = useRoute();
 const router = useRouter();
@@ -207,12 +210,12 @@ const isCreating = computed(() => suiteId.value === 'new');
 const loading = ref(true);
 const error = ref<string | null>(null);
 const saving = ref(false);
-const suite = ref<any>(null);
+const suite = ref<TestSuite | null>(null);
 const activeTab = ref('overview');
 const showAddTestModal = ref(false);
-const assignedTests = ref<any[]>([]);
-const availableTests = ref<any[]>([]);
-const policies = ref<any[]>([]);
+const assignedTests = ref<Test[]>([]);
+const availableTests = ref<Test[]>([]);
+const policies = ref<Policy[]>([]);
 const loadingTests = ref(false);
 
 const tabs = computed<Tab[]>(() => [
@@ -295,8 +298,9 @@ const loadSuite = async () => {
 
     await loadAssignedTests();
     await loadPolicies();
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load test suite';
+  } catch (err) {
+    const axiosError = err as { response?: { data?: { message?: string } } };
+    error.value = axiosError.response?.data?.message || 'Failed to load test suite';
     console.error('Error loading test suite:', err);
   } finally {
     loading.value = false;
@@ -317,7 +321,7 @@ const loadAssignedTests = async () => {
     const responses = await Promise.all(testPromises);
     assignedTests.value = responses
       .filter(r => r !== null)
-      .map(r => r.data)
+      .map(r => r.data as Test)
       .filter(t => t.testType === form.value.testType);
   } catch (err) {
     console.error('Error loading assigned tests:', err);
@@ -335,7 +339,7 @@ const loadAvailableTests = async () => {
 
   try {
     const response = await axios.get(`/api/v1/tests?testType=${form.value.testType}`);
-    availableTests.value = response.data.filter((test: any) => 
+    availableTests.value = (response.data as Test[]).filter((test) => 
       !form.value.testIds.includes(test.id)
     );
   } catch (err) {
@@ -410,9 +414,10 @@ const saveSuite = async () => {
 
     await axios.put(`/api/v1/test-suites/${suiteId.value}`, payload);
     await loadSuite();
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to save test suite';
-    console.error('Error saving test suite:', err);
+  } catch (err) {
+    const axiosError = err as AxiosError;
+    error.value = (axiosError.response?.data as { message?: string })?.message || 'Failed to save test suite';
+    console.error('Error saving test suite:', axiosError);
     alert(error.value);
   } finally {
     saving.value = false;

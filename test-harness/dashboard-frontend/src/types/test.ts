@@ -1,0 +1,323 @@
+/**
+ * Test-related type definitions
+ */
+
+export type TestType = 
+  | 'access-control'
+  | 'network-policy'
+  | 'dlp'
+  | 'distributed-systems'
+  | 'api-security'
+  | 'data-pipeline'
+  | 'data-contract'
+  | 'salesforce-config'
+  | 'salesforce-security'
+  | 'elastic-config'
+  | 'elastic-security'
+  | 'k8s-security'
+  | 'k8s-workload'
+  | 'idp-compliance';
+
+export interface Policy {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'rbac' | 'abac';
+  version: string;
+  status: 'draft' | 'active' | 'deprecated';
+  createdAt: Date | string;
+  lastUpdated: Date | string;
+  effect?: string;
+  priority?: number;
+  ruleCount?: number;
+  testCoverage?: string;
+  violationsDetected?: number;
+  rules?: PolicyRule[];
+  conditions?: PolicyCondition[];
+  versions?: PolicyVersion[];
+}
+
+export interface PolicyRule {
+  id: string;
+  effect: 'allow' | 'deny';
+  description?: string;
+  conditions: Record<string, unknown>;
+}
+
+export interface PolicyCondition {
+  attribute: string;
+  operator: string;
+  value: unknown;
+  logicalOperator?: string;
+}
+
+export interface PolicyVersion {
+  version: string;
+  status: 'draft' | 'active' | 'deprecated';
+  date: Date | string;
+  author?: string;
+  changes?: VersionChange[];
+  notes?: string;
+  createdAt?: Date | string;
+}
+
+export interface VersionChange {
+  type: 'added' | 'changed' | 'fixed' | 'removed' | 'deprecated';
+  description: string;
+}
+
+export interface Test {
+  id: string;
+  name: string;
+  description?: string;
+  testType: TestType;
+  version: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  // Access Control specific
+  policyIds?: string[];
+  role?: string;
+  resource?: TestResource;
+  context?: TestContext;
+  expectedDecision?: 'allow' | 'deny';
+  // DLP specific
+  pattern?: PatternConfig;
+  expectedDetection?: boolean;
+  bulkExportType?: string;
+  bulkExportLimit?: number;
+  testRecordCount?: number;
+  expectedBlocked?: boolean;
+  exportRestrictions?: ExportRestrictions;
+  aggregationRequirements?: AggregationRequirements;
+  fieldRestrictions?: FieldRestrictions;
+  joinRestrictions?: JoinRestrictions;
+  rlsCls?: RLSCLSConfig;
+  // API Security specific
+  apiVersion?: APIVersionConfig;
+  gatewayPolicy?: GatewayPolicyConfig;
+  webhook?: WebhookConfig;
+  graphql?: GraphQLConfig;
+  apiContract?: APIContractConfig;
+  // Network Policy specific
+  networkPolicy?: NetworkPolicyConfig;
+  // Distributed Systems specific
+  distributedSystems?: DistributedSystemsConfig;
+  // Data Pipeline specific
+  dataPipeline?: DataPipelineConfig;
+}
+
+export interface TestResource {
+  id: string;
+  type: string;
+  sensitivity?: 'public' | 'internal' | 'confidential' | 'restricted';
+}
+
+export interface TestContext {
+  ipAddress?: string;
+  timeOfDay?: string;
+  location?: string;
+}
+
+export interface PatternConfig {
+  name: string;
+  type: string;
+  pattern: string;
+}
+
+export interface ExportRestrictions {
+  restrictedFields: string[];
+  requireMasking: boolean;
+  allowedFormats: string[];
+}
+
+export interface AggregationRequirements {
+  minK: number;
+  requireAggregation: boolean;
+}
+
+export interface FieldRestrictions {
+  disallowedFields: string[];
+  allowedFields: string[];
+}
+
+export interface JoinRestrictions {
+  disallowedJoins: string[];
+}
+
+export interface RLSCLSConfig {
+  database: DatabaseConfig;
+  testQueries: TestQuery[];
+  maskingRules: MaskingRule[];
+  validationRules: ValidationRules;
+}
+
+export interface DatabaseConfig {
+  type: string;
+  host: string;
+  port?: number;
+  database: string;
+  username: string;
+  password: string;
+  connectionString: string;
+}
+
+export interface TestQuery {
+  name: string;
+  sql: string;
+  apiEndpoint?: string;
+  httpMethod?: string;
+}
+
+export interface MaskingRule {
+  field: string;
+  method: string;
+}
+
+export interface ValidationRules {
+  minRLSCoverage?: number;
+  minCLSCoverage?: number;
+  requiredPolicies: string[];
+}
+
+export interface APIVersionConfig {
+  version: string;
+  endpoint: string;
+  deprecated: boolean;
+  deprecationDate?: string;
+  sunsetDate?: string;
+}
+
+export interface GatewayPolicyConfig {
+  gatewayType: string;
+  endpoint: string;
+  method: string;
+  policyId: string;
+  policyType: string;
+}
+
+export interface WebhookConfig {
+  endpoint: string;
+  authentication: {
+    type: string;
+    method: string;
+    credentials?: string;
+  };
+  rateLimiting: {
+    enabled: boolean;
+    maxRequests: number;
+    windowSeconds: number;
+  };
+}
+
+export interface GraphQLConfig {
+  endpoint: string;
+  schema: string;
+  testType: 'depth' | 'complexity' | 'introspection';
+  maxDepth?: number;
+  maxComplexity?: number;
+  introspectionEnabled?: boolean;
+}
+
+export interface APIContractConfig {
+  version: string;
+  schemaText: string;
+  schemaFormat: string;
+}
+
+export interface NetworkPolicyConfig {
+  source: string;
+  target: string;
+  protocol: string;
+  port?: number;
+  action: string;
+}
+
+export interface DistributedSystemsConfig {
+  testType: string;
+  regions: Region[];
+  coordination: {
+    type: string;
+    endpoint: string;
+  };
+  policySync: {
+    consistencyLevel: string;
+  };
+}
+
+export interface Region {
+  id: string;
+  name: string;
+  endpoint: string;
+  pdpEndpoint?: string;
+}
+
+export interface DataPipelineConfig {
+  pipelineType: string;
+  stage: string;
+  action: string;
+  expectedAccess?: boolean;
+  securityControls: {
+    encryption: boolean;
+    accessControl: boolean;
+    auditLogging: boolean;
+  };
+}
+
+export interface TestSuite {
+  id: string;
+  name: string;
+  description?: string;
+  application: string;
+  applicationId?: string;
+  team: string;
+  testType: TestType;
+  testIds: string[];
+  enabled: boolean;
+  status?: string;
+  sourceType?: 'json' | 'typescript';
+  sourcePath?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  lastRun?: Date | string;
+  testCount?: number;
+  score?: number;
+  testTypes?: string[];
+}
+
+export interface Application {
+  id: string;
+  name: string;
+  description?: string;
+  owner?: string;
+  team?: string;
+  status?: string;
+  complianceScore?: number;
+  lastBatteryRun?: Date | string;
+  testHarnesses?: TestHarness[];
+  testBatteries?: TestBattery[];
+  testSuiteCount?: number;
+}
+
+export interface TestHarness {
+  id: string;
+  name: string;
+  testSuiteIds?: string[];
+}
+
+export interface TestBattery {
+  id: string;
+  name: string;
+}
+
+export interface Validator {
+  id: string;
+  name: string;
+  description?: string;
+  testType: string;
+  version: string;
+  enabled: boolean;
+  config?: {
+    policyId?: string;
+    policies?: string[];
+  };
+}

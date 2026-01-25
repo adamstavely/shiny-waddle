@@ -18,7 +18,7 @@ import { FileCode, Copy } from 'lucide-vue-next';
 import BaseButton from '../../../components/BaseButton.vue';
 
 interface Props {
-  policyJSON: any;
+  policyJSON: Record<string, unknown>;
 }
 
 const props = defineProps<Props>();
