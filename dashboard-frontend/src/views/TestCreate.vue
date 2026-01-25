@@ -30,12 +30,24 @@
               <input v-model="form.name" type="text" required class="form-input" />
             </div>
             <div class="form-group">
+              <label>Test Category *</label>
+              <Dropdown
+                v-model="selectedCategory"
+                :options="categoryOptions"
+                placeholder="Select a category..."
+                :disabled="isEditMode"
+                required
+                class="form-input"
+                @change="handleCategoryChange"
+              />
+            </div>
+            <div class="form-group">
               <label>Test Type *</label>
               <Dropdown
                 v-model="form.testType"
-                :options="testTypeOptions"
+                :options="filteredTestTypeOptions"
                 placeholder="Select a test type..."
-                :disabled="isEditMode"
+                :disabled="isEditMode || !selectedCategory"
                 required
                 class="form-input"
               />
@@ -63,6 +75,12 @@
           :form="form"
           :is-edit-mode="isEditMode"
         />
+        <div v-else-if="form.testType && !testTypeFormComponent" class="form-section form-section-full">
+          <div class="info-message">
+            <p><strong>Test type "{{ getTestTypeLabel(form.testType) }}" selected</strong></p>
+            <p>Form configuration for this test type is coming soon. You can still create the test, but type-specific configuration will need to be added via API or JSON.</p>
+          </div>
+        </div>
 
         <!-- Validation Errors -->
         <div v-if="validationErrors.length > 0" class="validation-errors">
@@ -113,6 +131,7 @@ const test = ref<Test | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const validationErrors = ref<string[]>([]);
+const selectedCategory = ref<string>('');
 
 const form = ref<Partial<Test>>({
   name: '',
@@ -179,14 +198,58 @@ const form = ref<Partial<Test>>({
   }
 });
 
-const testTypeOptions = [
-  { label: 'Access Control', value: 'access-control' },
-  { label: 'Network Policy', value: 'network-policy' },
-  { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
-  { label: 'Distributed Systems', value: 'distributed-systems' },
-  { label: 'API Security', value: 'api-security' },
-  { label: 'Data Pipeline', value: 'data-pipeline' },
+const testTypeOptions = {
+  'Access & Security': [
+    { label: 'Access Control', value: 'access-control' },
+    { label: 'Network Policy', value: 'network-policy' },
+    { label: 'Data Loss Prevention (DLP)', value: 'dlp' },
+    { label: 'API Security', value: 'api-security' },
+    { label: 'API Gateway', value: 'api-gateway' },
+    { label: 'RLS/CLS', value: 'rls-cls' },
+  ],
+  'Platform Configuration': [
+    { label: 'Salesforce Config', value: 'salesforce-config' },
+    { label: 'Salesforce Security', value: 'salesforce-security' },
+    { label: 'Salesforce Experience Cloud', value: 'salesforce-experience-cloud' },
+    { label: 'Elastic Config', value: 'elastic-config' },
+    { label: 'Elastic Security', value: 'elastic-security' },
+    { label: 'Kubernetes Security', value: 'k8s-security' },
+    { label: 'Kubernetes Workload', value: 'k8s-workload' },
+    { label: 'IDP Compliance', value: 'idp-compliance' },
+    { label: 'ServiceNow Config', value: 'servicenow-config' },
+  ],
+  'Data & Systems': [
+    { label: 'Distributed Systems', value: 'distributed-systems' },
+    { label: 'Data Pipeline', value: 'data-pipeline' },
+    { label: 'Data Contract', value: 'data-contract' },
+    { label: 'Dataset Health', value: 'dataset-health' },
+  ],
+  'Environment Configuration': [
+    { label: 'Environment Config', value: 'environment-config' },
+    { label: 'Secrets Management', value: 'secrets-management' },
+    { label: 'Configuration Drift', value: 'config-drift' },
+    { label: 'Environment Policies', value: 'environment-policies' },
+  ],
+};
+
+const categoryOptions = [
+  { label: 'Access & Security', value: 'Access & Security' },
+  { label: 'Platform Configuration', value: 'Platform Configuration' },
+  { label: 'Data & Systems', value: 'Data & Systems' },
+  { label: 'Environment Configuration', value: 'Environment Configuration' },
 ];
+
+const filteredTestTypeOptions = computed(() => {
+  if (!selectedCategory.value) {
+    return [];
+  }
+  return testTypeOptions[selectedCategory.value as keyof typeof testTypeOptions] || [];
+});
+
+const handleCategoryChange = () => {
+  // Reset test type when category changes
+  form.value.testType = '';
+};
 
 const testTypeFormComponent = computed(() => {
   switch (form.value.testType) {
@@ -202,10 +265,61 @@ const testTypeFormComponent = computed(() => {
       return DistributedSystemsTestForm;
     case 'data-pipeline':
       return DataPipelineTestForm;
+    // Platform Configuration types - form components to be implemented
+    case 'salesforce-config':
+    case 'salesforce-security':
+    case 'salesforce-experience-cloud':
+    case 'elastic-config':
+    case 'elastic-security':
+    case 'k8s-security':
+    case 'k8s-workload':
+    case 'idp-compliance':
+    case 'servicenow-config':
+    // Data & Systems types - form components to be implemented
+    case 'data-contract':
+    case 'dataset-health':
+    case 'rls-cls':
+    case 'api-gateway':
+    // Environment Configuration types - form components to be implemented
+    case 'environment-config':
+    case 'secrets-management':
+    case 'config-drift':
+    case 'environment-policies':
+      // Return null for now - form components will be added later
+      return null;
     default:
       return null;
   }
 });
+
+const getTestTypeLabel = (testType: string): string => {
+  const labels: Record<string, string> = {
+    'access-control': 'Access Control',
+    'network-policy': 'Network Policy',
+    'dlp': 'Data Loss Prevention (DLP)',
+    'api-security': 'API Security',
+    'api-gateway': 'API Gateway',
+    'rls-cls': 'RLS/CLS',
+    'distributed-systems': 'Distributed Systems',
+    'data-pipeline': 'Data Pipeline',
+    'data-contract': 'Data Contract',
+    'dataset-health': 'Dataset Health',
+    'salesforce-config': 'Salesforce Config',
+    'salesforce-security': 'Salesforce Security',
+    'salesforce-experience-cloud': 'Salesforce Experience Cloud',
+    'elastic-config': 'Elastic Config',
+    'elastic-security': 'Elastic Security',
+    'k8s-security': 'Kubernetes Security',
+    'k8s-workload': 'Kubernetes Workload',
+    'idp-compliance': 'IDP Compliance',
+    'servicenow-config': 'ServiceNow Config',
+    'environment-config': 'Environment Config',
+    'secrets-management': 'Secrets Management',
+    'config-drift': 'Configuration Drift',
+    'environment-policies': 'Environment Policies',
+  };
+  return labels[testType] || testType;
+};
 
 const handleFormUpdate = (updatedForm: Partial<Test>) => {
   form.value = { ...form.value, ...updatedForm };
@@ -216,6 +330,10 @@ const validate = (): boolean => {
   
   if (!form.value.name) {
     validationErrors.value.push('Test name is required');
+  }
+  
+  if (!selectedCategory.value) {
+    validationErrors.value.push('Test category is required');
   }
   
   if (!form.value.testType) {
@@ -242,6 +360,15 @@ const validate = (): boolean => {
   return validationErrors.value.length === 0;
 };
 
+const getCategoryForTestType = (testType: string): string => {
+  for (const [category, types] of Object.entries(testTypeOptions)) {
+    if (types.some(t => t.value === testType)) {
+      return category;
+    }
+  }
+  return '';
+};
+
 const loadTest = async () => {
   if (!testId.value) return;
   
@@ -253,6 +380,9 @@ const loadTest = async () => {
     form.value.name = test.value.name;
     form.value.description = test.value.description || '';
     form.value.testType = test.value.testType;
+    
+    // Set category based on test type
+    selectedCategory.value = getCategoryForTestType(test.value.testType);
     
     // Load test-type-specific data
     if (test.value.testType === 'access-control') {
@@ -438,5 +568,21 @@ onMounted(() => {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+.info-message {
+  background: var(--color-info-bg);
+  border: var(--border-width-thin) solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+.info-message p {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.info-message p:last-child {
+  margin-bottom: 0;
 }
 </style>
