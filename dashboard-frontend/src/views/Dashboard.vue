@@ -730,24 +730,24 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .realtime-status.connected {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .realtime-status .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #6b7280;
+  background: var(--color-text-muted);
   animation: pulse 2s infinite;
 }
 
 .realtime-status.connected .status-dot {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 @keyframes pulse {
