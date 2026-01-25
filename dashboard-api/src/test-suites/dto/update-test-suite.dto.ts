@@ -66,5 +66,8 @@ export class UpdateTestSuiteDto {
   @IsBoolean()
   enabled?: boolean;
 
+  @IsOptional()
+  @IsString()
+  domain?: string;
 }
 

@@ -227,12 +227,12 @@ export class SecurityAuditLogService {
 
     // Save asynchronously (don't block)
     this.saveAuditLogs().catch(err => {
-      this.logger.error('Failed to save audit log', err instanceof Error ? err.stack : String(err), { logId: log.id });
+      this.logger.error('Failed to save audit log', err instanceof Error ? err.stack : String(err), undefined, { logId: log.id });
     });
 
     // Alert on critical events
     if (log.severity === SecurityAuditSeverity.CRITICAL) {
-      this.logger.error(`🚨 CRITICAL SECURITY EVENT: ${log.type} - ${log.description}`, undefined, { 
+      this.logger.error(`🚨 CRITICAL SECURITY EVENT: ${log.type} - ${log.description}`, undefined, undefined, { 
         type: log.type, 
         severity: log.severity,
         userId: log.userId 

@@ -103,7 +103,7 @@ export class DLPTester {
     dataOperation: DataOperation
   ): Promise<TestResult> {
     const result: TestResult = {
-      testType: 'data-behavior',
+      testType: 'dlp',
       testName: 'Data Exfiltration Test',
       passed: false,
       details: {},
@@ -145,7 +145,7 @@ export class DLPTester {
     piiFields: string[]
   ): Promise<TestResult> {
     const result: TestResult = {
-      testType: 'data-behavior',
+      testType: 'dlp',
       testName: 'API Response Validation',
       passed: false,
       details: {},
@@ -209,7 +209,7 @@ export class DLPTester {
     
     if (fieldViolations.length > 0 || joinViolations.length > 0) {
       return {
-        testType: 'data-behavior',
+        testType: 'dlp',
         testName: 'Query Result Validation',
         passed: false,
         details: {
@@ -219,7 +219,7 @@ export class DLPTester {
       };
     }
     const result: TestResult = {
-      testType: 'data-behavior',
+      testType: 'dlp',
       testName: 'Query Result Validation',
       passed: false,
       details: {},
@@ -258,7 +258,7 @@ export class DLPTester {
     exportRequest: { type: 'csv' | 'json' | 'excel' | 'api'; recordCount: number; fields?: string[] }
   ): Promise<TestResult> {
     const result: TestResult = {
-      testType: 'data-behavior',
+      testType: 'dlp',
       testName: 'Bulk Export Controls Test',
       passed: false,
       details: {},
@@ -333,7 +333,7 @@ export class DLPTester {
 
     for (const pattern of detectedPatterns) {
       const result: TestResult = {
-        testType: 'data-behavior',
+        testType: 'dlp',
         testName: `Sensitive Data Detection: ${pattern.name}`,
         passed: false, // Failed because sensitive data was detected
         details: {

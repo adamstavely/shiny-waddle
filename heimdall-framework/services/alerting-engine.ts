@@ -245,7 +245,7 @@ export class AlertingEngine extends EventEmitter {
       id: `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ruleId: rule.id,
       ruleName: rule.name,
-      severity: rule.severity || finding.severity,
+      severity: this.mapSeverityForAlert(rule.severity || finding.severity),
       title: `${rule.name}: ${finding.title}`,
       message: this.generateAlertMessage(rule, finding),
       findings: [finding],
@@ -333,7 +333,7 @@ export class AlertingEngine extends EventEmitter {
       id: `agg-alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ruleId: rule.id,
       ruleName: rule.name,
-      severity: rule.severity || findings[0]?.severity || 'medium',
+      severity: this.mapSeverityForAlert(rule.severity || findings[0]?.severity || 'medium'),
       title: `${rule.name} - ${findings.length} findings`,
       message: `Aggregated alert: ${findings.length} findings matched rule "${rule.name}"`,
       findingCount: findings.length,
@@ -573,6 +573,13 @@ export class AlertingEngine extends EventEmitter {
       aggregatedAlertCount: this.aggregatedAlerts.size,
       historySize: this.alertHistory.length,
     };
+  }
+
+  /**
+   * Map severity for alerts (maps 'info' to 'low' since alerts don't support 'info')
+   */
+  private mapSeverityForAlert(severity: 'critical' | 'high' | 'medium' | 'low' | 'info'): 'critical' | 'high' | 'medium' | 'low' {
+    return severity === 'info' ? 'low' : severity;
   }
 }
 

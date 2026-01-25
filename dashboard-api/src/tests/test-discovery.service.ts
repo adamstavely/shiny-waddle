@@ -34,22 +34,22 @@ export class TestDiscoveryService {
   /**
    * Map of test suite classes to their test types
    */
-  private readonly testSuiteMap: Map<typeof BaseTestSuite, { testType: TestType; domain: TestDomain }> = new Map([
-    [AuthenticationTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [AuthorizationTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [InjectionTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [CryptographyTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [RateLimitingTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [SecurityHeadersTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [LoggingTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [GraphQLTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [APIDesignTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [ThirdPartyIntegrationTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [SensitiveDataTestSuite, { testType: 'api-security', domain: 'api_security' }],
-    [RLSPolicyTestSuite, { testType: 'rls-cls', domain: 'data_governance' }],
-    [CLSPolicyTestSuite, { testType: 'rls-cls', domain: 'data_governance' }],
-    [EnvironmentConfigTestSuite, { testType: 'environment-config', domain: 'platform_config' }],
-    [BusinessLogicTestSuite, { testType: 'api-security', domain: 'api_security' }],
+  private readonly testSuiteMap = new Map<typeof BaseTestSuite, { testType: TestType; domain: TestDomain }>([
+    [AuthenticationTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [AuthorizationTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [InjectionTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [CryptographyTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [RateLimitingTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [SecurityHeadersTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [LoggingTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [GraphQLTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [APIDesignTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [ThirdPartyIntegrationTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [SensitiveDataTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
+    [RLSPolicyTestSuite, { testType: 'rls-cls' as TestType, domain: 'identity' as TestDomain }],
+    [CLSPolicyTestSuite, { testType: 'rls-cls' as TestType, domain: 'identity' as TestDomain }],
+    [EnvironmentConfigTestSuite, { testType: 'environment-config' as TestType, domain: 'platform_config' as TestDomain }],
+    [BusinessLogicTestSuite, { testType: 'api-security' as TestType, domain: 'api_security' as TestDomain }],
     // Temporarily disabled: [ABACCorrectnessTestSuite, { testType: 'access-control', domain: 'access_control' }],
   ]);
 

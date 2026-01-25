@@ -144,7 +144,7 @@ export class TicketingService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Connection test failed for ${integration.provider}`, error instanceof Error ? error.stack : String(error), { provider: integration.provider });
+      this.logger.error(`Connection test failed for ${integration.provider}: ${error instanceof Error ? error.stack : String(error)}`);
       throw new BadRequestException(`Connection test failed: ${errorMessage}`);
     }
   }

@@ -106,7 +106,7 @@ export class TestHarnessesService {
       name: dto.name,
       description: dto.description,
       domain: dto.domain,
-      testType: dto.testType, // Keep for backward compatibility
+      // testType removed - TestHarnessEntity doesn't have this property
       testSuiteIds: dto.testSuiteIds || [],
       applicationIds: dto.applicationIds || [],
       team: dto.team,
@@ -143,7 +143,7 @@ export class TestHarnessesService {
     }
 
     const existing = this.harnesses[index];
-    const testType = dto.testType || existing.testType;
+    // testType removed - TestHarnessEntity doesn't have this property
 
     // Validate testType if provided
     if (dto.testType) {
@@ -166,19 +166,20 @@ export class TestHarnessesService {
       }
     }
 
-    // Validate that all suites match the harness type
+    // Validate that all suites match the harness domain
     const suiteIdsToCheck = dto.testSuiteIds !== undefined ? dto.testSuiteIds : existing.testSuiteIds;
     if (suiteIdsToCheck.length > 0) {
+      const harnessDomain = dto.domain || existing.domain;
       const suites = await this.testSuitesService.findAll();
       for (const suiteId of suiteIdsToCheck) {
         const suite = suites.find(s => s.id === suiteId);
         if (!suite) {
           throw new BadRequestException(`Test suite with ID "${suiteId}" not found`);
         }
-        if (suite.testType !== testType) {
+        if (suite.domain !== harnessDomain) {
           throw new BadRequestException(
-            `Test suite "${suite.name}" (${suite.testType}) does not match harness type "${testType}". ` +
-            `All suites in a harness must have the same type.`
+            `Test suite "${suite.name}" (domain: ${suite.domain}) does not match harness domain "${harnessDomain}". ` +
+            `All suites in a harness must have the same domain.`
           );
         }
       }
@@ -195,7 +196,7 @@ export class TestHarnessesService {
     const updated: TestHarnessEntity = {
       ...existing,
       ...dto,
-      testType: testType,
+      // testType removed - TestHarnessEntity doesn't have this property
       updatedAt: new Date(),
     };
 

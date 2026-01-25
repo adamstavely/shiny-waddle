@@ -11,7 +11,7 @@ import { BatteryExecutionConfig } from '../../../../heimdall-framework/core/type
 
 class BatteryExecutionConfigDto implements BatteryExecutionConfig {
   @IsOptional()
-  executionMode?: 'parallel' | 'sequential';
+  executionMode: 'parallel' | 'sequential' = 'parallel'; // Required by interface, default to parallel
 
   @IsOptional()
   timeout?: number;

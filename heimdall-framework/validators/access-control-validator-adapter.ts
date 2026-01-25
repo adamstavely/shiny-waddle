@@ -35,8 +35,14 @@ export class AccessControlValidatorAdapter extends BaseValidator {
   protected async runTestsInternal(suite: TestSuite): Promise<TestResult[]> {
     const results: TestResult[] = [];
     
+    // Check if suite has access-control specific config
+    const accessControlSuite = suite as any as { userRoles?: string[]; resources?: any[]; contexts?: any[] };
+    if (!accessControlSuite.userRoles || !accessControlSuite.resources || !accessControlSuite.contexts) {
+      throw new Error('AccessControlTestSuite requires userRoles, resources, and contexts');
+    }
+    
     // Generate test users from roles
-    const testUsers = suite.userRoles.map(role => ({
+    const testUsers = accessControlSuite.userRoles.map(role => ({
       id: `test-user-${role}`,
       email: `${role}@test.example.com`,
       role: role as any,
@@ -44,8 +50,8 @@ export class AccessControlValidatorAdapter extends BaseValidator {
     }));
 
     for (const user of testUsers) {
-      for (const resource of suite.resources) {
-        for (const context of suite.contexts) {
+      for (const resource of accessControlSuite.resources) {
+        for (const context of accessControlSuite.contexts) {
           const result = await this.accessControlTester.testPDPDecision({
             user,
             resource,

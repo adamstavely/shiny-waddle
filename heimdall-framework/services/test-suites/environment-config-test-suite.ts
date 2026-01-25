@@ -53,7 +53,7 @@ export class EnvironmentConfigTestSuite {
       try {
         const envValidation = await this.envValidator.validateEnvironmentVariables(envConfig);
         results.push({
-          testType: 'data-behavior',
+          testType: 'environment-config',
           testName: `Environment Variables Validation - ${environment}`,
           passed: envValidation.passed,
           details: envValidation,
@@ -61,7 +61,7 @@ export class EnvironmentConfigTestSuite {
         });
       } catch (error: any) {
         results.push({
-          testType: 'data-behavior',
+          testType: 'environment-config',
           testName: `Environment Variables Validation - ${environment}`,
           passed: false,
           details: { error: error.message },
@@ -75,7 +75,7 @@ export class EnvironmentConfigTestSuite {
         try {
           const secretsValidation = await this.secretsValidator.validateSecretsStorage(config.secretsManager);
           results.push({
-            testType: 'data-behavior',
+            testType: 'environment-config',
             testName: `Secrets Management Validation - ${environment}`,
             passed: secretsValidation.passed,
             details: secretsValidation,
@@ -83,7 +83,7 @@ export class EnvironmentConfigTestSuite {
           });
         } catch (error: any) {
           results.push({
-            testType: 'data-behavior',
+            testType: 'environment-config',
             testName: `Secrets Management Validation - ${environment}`,
             passed: false,
             details: { error: error.message },
@@ -99,7 +99,7 @@ export class EnvironmentConfigTestSuite {
           const baseline = await this.driftDetector.createBaseline(config.baselineEnvironment, envConfig);
           const drift = await this.driftDetector.detectDrift(baseline, envConfig);
           results.push({
-            testType: 'data-behavior',
+            testType: 'environment-config',
             testName: `Configuration Drift Detection - ${environment}`,
             passed: !drift.hasDrift || drift.driftScore < 50,
             details: drift,
@@ -107,7 +107,7 @@ export class EnvironmentConfigTestSuite {
           });
         } catch (error: any) {
           results.push({
-            testType: 'data-behavior',
+            testType: 'environment-config',
             testName: `Configuration Drift Detection - ${environment}`,
             passed: false,
             details: { error: error.message },

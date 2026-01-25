@@ -128,13 +128,13 @@ export class APISecurityTester {
       result.rateLimitInfo = this.extractRateLimitHeaders(response);
 
       // Test authentication
-      result.authenticationResult = await this.testAuthentication(
+      result.authenticationResult = await this.testAuthenticationFromResponse(
         response,
         test
       );
 
       // Test authorization
-      result.authorizationResult = await this.testAuthorization(
+      result.authorizationResult = await this.testAuthorizationFromResponse(
         response,
         test
       );
@@ -214,16 +214,20 @@ export class APISecurityTester {
       result.securityIssues = this.detectGraphQLSecurityIssues(body, query);
 
       // Test authentication and authorization
-      result.authenticationResult = await this.testAuthentication(
-        response,
-        test || {}
-      );
-      result.authorizationResult = await this.testAuthorization(
-        response,
-        test || {}
-      );
-
-      result.passed = this.evaluateTestResult(result, test || {});
+      if (test && 'endpoint' in test && 'method' in test) {
+        result.authenticationResult = await this.testAuthenticationFromResponse(
+          response,
+          test
+        );
+        result.authorizationResult = await this.testAuthorizationFromResponse(
+          response,
+          test
+        );
+        result.passed = this.evaluateTestResult(result, test);
+      } else {
+        // If no test provided, determine pass/fail based on response status
+        result.passed = response.status >= 200 && response.status < 300;
+      }
 
       return result;
     } catch (error: any) {
@@ -599,7 +603,7 @@ export class APISecurityTester {
   /**
    * Test authentication from response
    */
-  private async testAuthentication(
+  private async testAuthenticationFromResponse(
     response: Response,
     test: APISecurityTest
   ): Promise<{
@@ -617,7 +621,7 @@ export class APISecurityTester {
   /**
    * Test authorization from response
    */
-  private async testAuthorization(
+  private async testAuthorizationFromResponse(
     response: Response,
     test: APISecurityTest
   ): Promise<{

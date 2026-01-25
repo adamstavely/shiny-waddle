@@ -356,7 +356,7 @@ export interface DataPipelineTest extends BaseTest {
 // Platform Config Test - validates platform configuration against baseline
 export interface PlatformConfigTest extends BaseTest {
   testType: 'salesforce-config' | 'salesforce-security' | 'elastic-config' | 'elastic-security' | 'k8s-security' | 'k8s-workload' | 'idp-compliance' | 'servicenow-config';
-  domain: 'platform_config' | 'platform-security';
+  domain: 'platform_config' | 'salesforce' | 'elastic' | 'idp_platform';
   
   // Platform-specific test fields
   platform: 'salesforce' | 'elastic' | 'idp-kubernetes' | 'servicenow';
@@ -383,7 +383,7 @@ export interface PlatformConfigTest extends BaseTest {
 // Salesforce Experience Cloud Test - for Salesforce Experience Cloud security testing
 export interface SalesforceExperienceCloudTest extends BaseTest {
   testType: 'salesforce-experience-cloud';
-  domain: 'salesforce' | 'security';
+  domain: 'salesforce' | 'api_security';
   
   // Test subtype (guest-access, authenticated-access, graphql, etc.)
   testSubtype: 'guest-access' | 'authenticated-access' | 'graphql' | 'self-registration' | 'record-lists' | 'home-urls' | 'object-access' | 'full-audit';
@@ -553,6 +553,14 @@ export interface RLSCoverage {
     policyDefinition: string;
     enabled: boolean;
   }>;
+  details?: Record<string, any>; // For custom validation results
+  validationResults?: {
+    minRLSCoverageMet?: boolean;
+    minRLSCoverage?: number;
+    actualCoverage?: number;
+    requiredPoliciesMet?: boolean;
+    missingPolicies?: string[];
+  };
 }
 
 export interface CLSCoverage {
@@ -568,6 +576,12 @@ export interface CLSCoverage {
     policyDefinition: string;
     enabled: boolean;
   }>;
+  details?: Record<string, any>; // For custom validation results
+  validationResults?: {
+    minCLSCoverageMet?: boolean;
+    minCLSCoverage?: number;
+    actualCoverage?: number;
+  };
 }
 
 export interface DynamicMaskingRule {
@@ -584,6 +598,7 @@ export interface CrossTenantIsolationTest {
   testQueries: TestQuery[];
   isolationVerified: boolean;
   violations: string[];
+  details?: Record<string, any>; // For custom validation results
 }
 
 // Network Micro-Segmentation Types
@@ -607,7 +622,7 @@ export interface FirewallRule {
   enabled: boolean;
 }
 
-export interface NetworkPolicyTest {
+export interface NetworkPolicyTestResult {
   source: string;
   target: string;
   protocol: string;
@@ -980,4 +995,18 @@ export interface AccessControlTestSuiteConfig {
   runtimeConfig?: RuntimeTestConfig;
   abacCorrectnessConfig?: ABACCorrectnessConfig;
 }
+
+// Data Behavior Config - for query analysis and data behavior testing
+export interface DataBehaviorConfig {
+  queryInterceptor?: boolean;
+  enableQueryLogging?: boolean;
+  piiDetectionRules?: Array<{
+    field: string;
+    pattern: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+  }>;
+}
+
+// Re-export ServiceMeshConfig from service-mesh-integration for convenience
+export { ServiceMeshConfig } from '../services/service-mesh-integration';
 

@@ -12,7 +12,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { migrateBaselinesToTestSuites, PlatformBaseline } from './baseline-to-test-suite.migration';
-import { migrateInstancesToApplications, PlatformInstance } from './instance-to-application.migration';
+import { migrateInstancesToApplications } from './instance-to-application.migration';
+import { PlatformInstance } from './baseline-to-test-suite.migration';
 import { TestSuite, PlatformConfigTest } from '../../../heimdall-framework/core/types';
 import { Application } from '../applications/entities/application.entity';
 

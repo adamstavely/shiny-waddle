@@ -117,8 +117,14 @@ export class ConfigDriftDetector {
     const variableDrifts = this.compareVariables(baseline.variables, current.variables);
     drifts.push(...variableDrifts);
 
-    // Compare config files
-    const fileDrifts = await this.compareConfigFiles(baseline.configFiles, current.configFiles);
+    // Compare config files - convert string[] to Record<string, string> if needed
+    const baselineFiles = Array.isArray(baseline.configFiles) 
+      ? baseline.configFiles.reduce((acc, file) => ({ ...acc, [file]: '' }), {} as Record<string, string>)
+      : baseline.configFiles;
+    const currentFiles = Array.isArray(current.configFiles)
+      ? current.configFiles.reduce((acc, file) => ({ ...acc, [file]: '' }), {} as Record<string, string>)
+      : current.configFiles;
+    const fileDrifts = await this.compareConfigFiles(baselineFiles, currentFiles);
     drifts.push(...fileDrifts);
 
     // Compare policies

@@ -31,11 +31,11 @@ export class SalesforceValidator extends BaseValidator {
   readonly id = 'salesforce-config';
   readonly name = 'Salesforce Configuration Validator';
   readonly description = 'Validates Salesforce org configuration compliance';
-  readonly testType = 'configuration-validation';
+  readonly testType = 'salesforce-config';
   readonly version = '1.0.0';
 
   readonly metadata: ValidatorMetadata = {
-    supportedTestTypes: ['configuration-validation'],
+    supportedTestTypes: ['salesforce-config'],
     requiredConfig: ['connection', 'rules'],
     tags: ['salesforce', 'configuration', 'compliance'],
     exampleConfig: {

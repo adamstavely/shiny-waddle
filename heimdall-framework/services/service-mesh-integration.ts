@@ -14,6 +14,12 @@ export interface ServiceMeshConfig {
     token?: string;
     certificate?: string;
   };
+  options?: {
+    envoyAdminPort?: number;
+    k8sApiEndpoint?: string;
+    prometheusEndpoint?: string;
+    [key: string]: any;
+  };
 }
 
 export interface ServiceMeshPolicy {

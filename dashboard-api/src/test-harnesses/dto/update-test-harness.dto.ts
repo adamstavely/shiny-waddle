@@ -45,5 +45,9 @@ export class UpdateTestHarnessDto {
   @IsOptional()
   @IsString()
   team?: string;
+
+  @IsOptional()
+  @IsString()
+  domain?: string;
 }
 

@@ -165,7 +165,7 @@ export class RLSCLSTester {
     maskingRules: DynamicMaskingRule[]
   ): Promise<TestResult> {
     const result: TestResult = {
-      testType: 'data-behavior',
+      testType: 'rls-cls',
       testName: 'Dynamic Data Masking Test',
       passed: false,
       details: {},

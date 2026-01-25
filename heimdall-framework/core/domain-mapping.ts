@@ -31,6 +31,7 @@ export function getDomainFromTestType(testType: TestType): TestDomain {
     // Salesforce domain
     'salesforce-config': 'salesforce',
     'salesforce-security': 'salesforce',
+    'salesforce-experience-cloud': 'salesforce',
     
     // Elastic domain
     'elastic-config': 'elastic',
@@ -40,6 +41,13 @@ export function getDomainFromTestType(testType: TestType): TestDomain {
     'k8s-security': 'idp_platform',
     'k8s-workload': 'idp_platform',
     'idp-compliance': 'idp_platform',
+    
+    // Platform Config domain (additional test types)
+    'servicenow-config': 'platform_config',
+    'environment-config': 'platform_config',
+    'secrets-management': 'platform_config',
+    'config-drift': 'platform_config',
+    'environment-policies': 'platform_config',
   };
   
   return domainMap[testType] || 'platform_config'; // Default fallback

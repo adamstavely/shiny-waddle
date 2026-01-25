@@ -5,7 +5,8 @@
 
 import { BaseTestSuite } from './base-test-suite';
 import { APISecurityTest, APISecurityTestResult } from '../api-security-tester';
-import { detectPII, detectCredentials } from '../utils/pii-detector';
+import { detectPII } from '../utils/pii-detector';
+import { detectCredentials } from '../utils/credential-detector';
 
 export class LoggingTestSuite extends BaseTestSuite {
   /**

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RemediationTrackingService } from '../remediation-tracking.service';
 import { RemediationTracking } from '../entities/remediation-tracking.entity';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { NotificationType } from '../../notifications/entities/notification.entity';
 
 export interface RemediationMetrics {
   totalRemediations: number;
@@ -117,7 +118,7 @@ export class RemediationAutomationService {
       if (preferences.enabled && preferences.notifyOnRemediationDeadline) {
         await this.notificationsService.createNotification({
           userId: tracking.assignedTo,
-          type: 'remediation-deadline',
+          type: NotificationType.REMEDIATION_DEADLINE,
           title: `Remediation Deadline Approaching`,
           message: `Remediation for violation ${tracking.violationId} is due in ${Math.round(daysRemaining)} day(s)`,
           metadata: {
@@ -153,10 +154,9 @@ export class RemediationAutomationService {
         if (preferences.enabled) {
           await this.notificationsService.createNotification({
             userId: tracking.assignedTo,
-            type: 'remediation-overdue',
+            type: NotificationType.REMEDIATION_OVERDUE,
             title: `Remediation Overdue`,
             message: `Remediation for violation ${tracking.violationId} is ${Math.round(daysOverdue)} day(s) overdue`,
-            severity: 'high',
             metadata: {
               trackingId: tracking.id,
               violationId: tracking.violationId,
@@ -194,7 +194,7 @@ export class RemediationAutomationService {
       if (preferences.enabled) {
         await this.notificationsService.createNotification({
           userId: tracking.assignedTo,
-          type: 'milestone-deadline',
+          type: NotificationType.MILESTONE_DEADLINE,
           title: `Milestone Deadline Approaching`,
           message: `Milestone "${milestone.name}" is due in ${Math.round(daysRemaining)} day(s)`,
           metadata: {
@@ -223,10 +223,9 @@ export class RemediationAutomationService {
         if (preferences.enabled) {
           await this.notificationsService.createNotification({
             userId: tracking.assignedTo,
-            type: 'milestone-overdue',
+            type: NotificationType.MILESTONE_OVERDUE,
             title: `Milestone Overdue`,
             message: `Milestone "${milestone.name}" is ${Math.round(daysOverdue)} day(s) overdue`,
-            severity: 'medium',
             metadata: {
               trackingId: tracking.id,
               milestoneId: milestone.id,

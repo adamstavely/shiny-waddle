@@ -87,8 +87,8 @@ export class TestBatteriesService {
           throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
         }
         
-        // Use domain if available, fallback to testType for backward compatibility
-        const domain = harness.domain || harness.testType;
+        // Use domain from harness
+        const domain = harness.domain;
         if (!domain) {
           throw new BadRequestException(
             `Test harness "${harness.name}" does not have a domain or testType.`
@@ -165,13 +165,15 @@ export class TestBatteriesService {
           throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
         }
         
-        if (harnessTypes.has(harness.testType)) {
+        // Use domain instead of testType since TestHarnessEntity doesn't have testType
+        const harnessDomain = harness.domain;
+        if (harnessTypes.has(harnessDomain)) {
           throw new BadRequestException(
-            `Battery contains multiple harnesses with the same type "${harness.testType}". ` +
-            `All harnesses in a battery must have different types.`
+            `Battery contains multiple harnesses with the same domain "${harnessDomain}". ` +
+            `All harnesses in a battery must have different domains.`
           );
         }
-        harnessTypes.add(harness.testType);
+        harnessTypes.add(harnessDomain);
       }
     }
 
@@ -221,14 +223,15 @@ export class TestBatteriesService {
         throw new BadRequestException(`Test harness with ID "${harnessId}" not found`);
       }
 
-      // Check existing harnesses in battery
+      // Check existing harnesses in battery - compare by domain instead of testType
+      // since TestHarnessEntity doesn't have testType property
       for (const existingHarnessId of battery.harnessIds) {
         const existingHarness = harnesses.find(h => h.id === existingHarnessId);
-        if (existingHarness && existingHarness.testType === newHarness.testType) {
+        if (existingHarness && existingHarness.domain === newHarness.domain) {
           throw new BadRequestException(
-            `Cannot add harness "${newHarness.name}" (${newHarness.testType}) to battery. ` +
-            `Battery already contains a harness with type "${newHarness.testType}". ` +
-            `All harnesses in a battery must have different types.`
+            `Cannot add harness "${newHarness.name}" (domain: ${newHarness.domain}) to battery. ` +
+            `Battery already contains a harness with domain "${existingHarness.domain}". ` +
+            `All harnesses in a battery must have different domains.`
           );
         }
       }

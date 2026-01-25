@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { NetworkMicrosegmentationTester } from '../../../heimdall-framework/services/network-microsegmentation-tester';
 import { ServiceMeshConfig } from '../../../heimdall-framework/services/service-mesh-integration';
-import { FirewallRule, NetworkSegment } from '../../../heimdall-framework/core/types';
+import { FirewallRule, NetworkSegment, TestResult } from '../../../heimdall-framework/core/types';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 import { ApplicationsService } from '../applications/applications.service';
 import { NetworkSegmentInfrastructure } from '../applications/entities/application.entity';
@@ -90,29 +90,37 @@ export class NetworkPolicyService {
         throw new ValidationException('At least one firewall rule is required');
       }
 
-      const result = await this.tester.testFirewallRules(rules);
+      const results = await this.tester.testFirewallRules(rules);
 
       // Apply testLogic if config provided
       if (segmentInfra?.testLogic) {
-        // Apply validateConnectivity flag
-        if (segmentInfra.testLogic.validateConnectivity !== false) {
-          result.connectivityValidated = result.passed || false;
-        }
+        // Apply validateConnectivity flag and custom rules to each result
+        for (const result of results) {
+          if (segmentInfra.testLogic.validateConnectivity !== false) {
+            result.details = {
+              ...result.details,
+              connectivityValidated: result.passed || false,
+            };
+          }
 
-        // Run custom rules if present
-        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
-          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
-            source: rule.source,
-            target: rule.target,
-            expected: rule.expected,
-            actual: this.checkConnectivity(rule.source, rule.target, result),
-            passed: this.checkConnectivity(rule.source, rule.target, result) === rule.expected,
-            description: rule.description,
-          }));
+          // Run custom rules if present
+          if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+            result.details = {
+              ...result.details,
+              customRuleResults: segmentInfra.testLogic.customRules.map(rule => ({
+                source: rule.source,
+                target: rule.target,
+                expected: rule.expected,
+                actual: this.checkConnectivity(rule.source, rule.target, result),
+                passed: this.checkConnectivity(rule.source, rule.target, result) === rule.expected,
+                description: rule.description,
+              })),
+            };
+          }
         }
       }
 
-      return result;
+      return results;
     } catch (error: any) {
       this.logger.error(`Error testing firewall rules: ${error.message}`, error.stack);
       if (error instanceof ValidationException || error instanceof NotFoundException) {
@@ -177,19 +185,25 @@ export class NetworkPolicyService {
       if (segmentInfra?.testLogic) {
         // Apply validateConnectivity flag
         if (segmentInfra.testLogic.validateConnectivity !== false) {
-          result.connectivityValidated = result.passed || false;
+          result.details = {
+            ...result.details,
+            connectivityValidated: result.passed || false,
+          };
         }
 
         // Run custom rules if present
         if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
-          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
-            source: rule.source,
-            target: rule.target,
-            expected: rule.expected,
-            actual: result.passed || false,
-            passed: (result.passed || false) === rule.expected,
-            description: rule.description,
-          }));
+          result.details = {
+            ...result.details,
+            customRuleResults: segmentInfra.testLogic.customRules.map(rule => ({
+              source: rule.source,
+              target: rule.target,
+              expected: rule.expected,
+              actual: result.passed || false,
+              passed: (result.passed || false) === rule.expected,
+              description: rule.description,
+            })),
+          };
         }
       }
 
@@ -268,29 +282,37 @@ export class NetworkPolicyService {
         throw new ValidationException('At least one network segment is required');
       }
 
-      const result = await this.tester.validateNetworkSegmentation(segments);
+      const results = await this.tester.validateNetworkSegmentation(segments);
 
       // Apply testLogic if config provided
       if (segmentInfra?.testLogic) {
-        // Apply checkSegmentation flag
-        if (segmentInfra.testLogic.checkSegmentation !== false) {
-          result.segmentationChecked = result.passed || false;
-        }
+        // Apply checkSegmentation flag and custom rules to each result
+        for (const result of results) {
+          if (segmentInfra.testLogic.checkSegmentation !== false) {
+            result.details = {
+              ...result.details,
+              segmentationChecked: result.passed || false,
+            };
+          }
 
-        // Run custom rules if present
-        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
-          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
-            source: rule.source,
-            target: rule.target,
-            expected: rule.expected,
-            actual: this.checkSegmentation(rule.source, rule.target, segments, result),
-            passed: this.checkSegmentation(rule.source, rule.target, segments, result) === rule.expected,
-            description: rule.description,
-          }));
+          // Run custom rules if present
+          if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+            result.details = {
+              ...result.details,
+              customRuleResults: segmentInfra.testLogic.customRules.map(rule => ({
+                source: rule.source,
+                target: rule.target,
+                expected: rule.expected,
+                actual: this.checkSegmentation(rule.source, rule.target, segments, results),
+                passed: this.checkSegmentation(rule.source, rule.target, segments, results) === rule.expected,
+                description: rule.description,
+              })),
+            };
+          }
         }
       }
 
-      return result;
+      return results;
     } catch (error: any) {
       this.logger.error(`Error validating network segmentation: ${error.message}`, error.stack);
       if (error instanceof ValidationException || error instanceof NotFoundException) {
@@ -351,24 +373,29 @@ export class NetworkPolicyService {
         throw new ValidationException('Service mesh control plane endpoint is required');
       }
 
-      const result = await this.tester.testServiceMeshPolicies(meshConfig);
+      const results = await this.tester.testServiceMeshPolicies(meshConfig);
 
       // Apply testLogic if config provided
       if (segmentInfra?.testLogic) {
-        // Run custom rules if present
-        if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
-          result.customRuleResults = segmentInfra.testLogic.customRules.map(rule => ({
-            source: rule.source,
-            target: rule.target,
-            expected: rule.expected,
-            actual: result.passed || false,
-            passed: (result.passed || false) === rule.expected,
-            description: rule.description,
-          }));
+        // Run custom rules if present - apply to each result
+        for (const result of results) {
+          if (segmentInfra.testLogic.customRules && segmentInfra.testLogic.customRules.length > 0) {
+            result.details = {
+              ...result.details,
+              customRuleResults: segmentInfra.testLogic.customRules.map(rule => ({
+                source: rule.source,
+                target: rule.target,
+                expected: rule.expected,
+                actual: result.passed || false,
+                passed: (result.passed || false) === rule.expected,
+                description: rule.description,
+              })),
+            };
+          }
         }
       }
 
-      return result;
+      return results;
     } catch (error: any) {
       this.logger.error(`Error testing service mesh policies: ${error.message}`, error.stack);
       if (error instanceof ValidationException || error instanceof NotFoundException) {
@@ -387,7 +414,7 @@ export class NetworkPolicyService {
     return result.passed || false;
   }
 
-  private checkSegmentation(source: string, target: string, segments: NetworkSegment[], result: any): boolean {
+  private checkSegmentation(source: string, target: string, segments: NetworkSegment[], results: TestResult[]): boolean {
     // Check if source and target are in different segments and segmentation is enforced
     const sourceSegment = segments.find(s => s.services.includes(source));
     const targetSegment = segments.find(s => s.services.includes(target));
@@ -397,7 +424,8 @@ export class NetworkPolicyService {
       return sourceSegment.deniedConnections?.includes(targetSegment.id || '') || false;
     }
     
-    return result.passed || false;
+    // Check results to see if any test passed (segmentation validated)
+    return results.some(r => r.passed) || false;
   }
 }
 

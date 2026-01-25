@@ -5,8 +5,12 @@
  * that can be tested using Test Suites (migrated from Baselines).
  */
 
-import { Application, ApplicationInfrastructure, ApplicationType, ApplicationStatus, PlatformInstanceInfrastructure } from '../applications/entities/application.entity';
+import { Application, ApplicationInfrastructure, ApplicationType, PlatformInstanceInfrastructure } from '../applications/entities/application.entity';
+import { ApplicationStatus } from '../applications/dto/create-application.dto';
 import { PlatformInstance } from './baseline-to-test-suite.migration';
+
+// Re-export PlatformInstance for convenience
+export type { PlatformInstance };
 
 /**
  * Convert Platform Instance to Application

@@ -193,6 +193,10 @@ export class CreateTestDto {
   @IsString()
   createdBy?: string;
 
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
+
   // AccessControlTest fields
   @IsOptional()
   @IsString()
@@ -312,10 +316,6 @@ export class CreateTestDto {
   @IsOptional()
   @IsString()
   method?: string;
-
-  @IsOptional()
-  @IsString()
-  policyId?: string;
 
   @IsOptional()
   @IsString()

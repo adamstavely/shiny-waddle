@@ -239,7 +239,7 @@ export class PolicyAsCode {
       effect: policy.effect || 'allow',
       priority: policy.priority || 0,
       conditions: policy.conditions || [],
-      metadata: policy.metadata,
+      // metadata removed - ABACPolicy doesn't have this property
     };
   }
 

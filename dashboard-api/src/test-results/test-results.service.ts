@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
-import { TestResultEntity, QueryFilters, DateRange, ComplianceMetrics } from './entities/test-result.entity';
+import { TestResultEntity, QueryFilters, DateRange, ComplianceMetrics, TestResultStatus } from './entities/test-result.entity';
 import { DashboardSSEGateway } from '../dashboard/dashboard-sse.gateway';
 import * as fs from 'fs/promises';
 import * as path from 'path';

@@ -97,11 +97,14 @@ export class RLSCLSService {
 
       // Run custom validations if present (tester handles skipDisabledPolicies)
       if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
-        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
-          name: validation.name,
-          passed: this.evaluateCustomValidation(validation.condition, result),
-          description: validation.description,
-        }));
+        result.details = {
+          ...result.details,
+          customValidationResults: dbInfra.testLogic.customValidations.map(validation => ({
+            name: validation.name,
+            passed: this.evaluateCustomValidation(validation.condition, result),
+            description: validation.description,
+          })),
+        };
       }
 
       // Apply validationRules if config provided
@@ -215,11 +218,14 @@ export class RLSCLSService {
 
       // Run custom validations if present (tester handles skipDisabledPolicies)
       if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
-        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
-          name: validation.name,
-          passed: this.evaluateCustomValidation(validation.condition, result),
-          description: validation.description,
-        }));
+        result.details = {
+          ...result.details,
+          customValidationResults: dbInfra.testLogic.customValidations.map(validation => ({
+            name: validation.name,
+            passed: this.evaluateCustomValidation(validation.condition, result),
+            description: validation.description,
+          })),
+        };
       }
 
       // Apply validationRules if config provided
@@ -286,7 +292,8 @@ export class RLSCLSService {
             table: rule.table,
             column: rule.column,
             maskingType: rule.maskingType,
-            condition: rule.condition,
+            pattern: rule.condition, // Map condition to pattern
+            applicableRoles: [], // Default to empty array if not specified
           })) as DynamicMaskingRule[];
         } else {
           maskingRules = [];
@@ -311,11 +318,14 @@ export class RLSCLSService {
       if (dbInfra?.testLogic) {
         // Run custom validations if present
         if (dbInfra.testLogic.customValidations && dbInfra.testLogic.customValidations.length > 0) {
-          result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
-            name: validation.name,
-            passed: this.evaluateCustomValidation(validation.condition, result),
-            description: validation.description,
-          }));
+          result.details = {
+            ...result.details,
+            customValidationResults: dbInfra.testLogic.customValidations.map(validation => ({
+              name: validation.name,
+              passed: this.evaluateCustomValidation(validation.condition, result),
+              description: validation.description,
+            })),
+          };
         }
       }
 
@@ -400,11 +410,14 @@ export class RLSCLSService {
 
       // Run custom validations if present
       if (dbInfra?.testLogic?.customValidations && dbInfra.testLogic.customValidations.length > 0) {
-        result.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
-          name: validation.name,
-          passed: this.evaluateCustomValidation(validation.condition, result),
-          description: validation.description,
-        }));
+        result.details = {
+          ...result.details,
+          customValidationResults: dbInfra.testLogic.customValidations.map(validation => ({
+            name: validation.name,
+            passed: this.evaluateCustomValidation(validation.condition, result),
+            description: validation.description,
+          })),
+        };
       }
 
       return result;
@@ -497,11 +510,14 @@ export class RLSCLSService {
         if (dbInfra.testLogic.customValidations && dbInfra.testLogic.customValidations.length > 0) {
           result.forEach((testResult, index) => {
             if (dbInfra?.testLogic?.customValidations) {
-              testResult.customValidationResults = dbInfra.testLogic.customValidations.map(validation => ({
-                name: validation.name,
-                passed: this.evaluateCustomValidation(validation.condition, testResult),
-                description: validation.description,
-              }));
+              testResult.details = {
+                ...testResult.details,
+                customValidationResults: dbInfra.testLogic.customValidations.map(validation => ({
+                  name: validation.name,
+                  passed: this.evaluateCustomValidation(validation.condition, testResult),
+                  description: validation.description,
+                })),
+              };
             }
           });
         }
@@ -510,7 +526,10 @@ export class RLSCLSService {
       // Apply validationRules if config provided
       if (dbInfra?.validationRules) {
         result.forEach(testResult => {
-          testResult.validationApplied = true;
+          testResult.details = {
+            ...testResult.details,
+            validationApplied: true,
+          };
         });
       }
 

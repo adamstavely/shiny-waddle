@@ -4,7 +4,7 @@
  * Testing for network segmentation policies, firewall rules, and service-to-service traffic
  */
 
-import { TestResult, NetworkSegment, FirewallRule, NetworkPolicyTest } from '../core/types';
+import { TestResult, NetworkSegment, FirewallRule, NetworkPolicyTestResult } from '../core/types';
 import { ServiceMeshIntegration, ServiceMeshConfig } from './service-mesh-integration';
 
 /**
@@ -69,9 +69,9 @@ export class NetworkMicrosegmentationTester {
 
   constructor(config?: NetworkMicrosegmentationTesterConfig | ServiceMeshConfig) {
     // Support both old ServiceMeshConfig and new config object for backward compatibility
-    if (config && 'name' in config) {
-      // Old format: ServiceMeshConfig
-      this.config = { serviceMeshConfig: config };
+    if (config && 'type' in config && 'controlPlaneEndpoint' in config) {
+      // Old format: ServiceMeshConfig (has type and controlPlaneEndpoint)
+      this.config = { serviceMeshConfig: config as ServiceMeshConfig };
     } else {
       this.config = (config as NetworkMicrosegmentationTesterConfig) || {};
     }

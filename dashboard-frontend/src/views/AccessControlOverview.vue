@@ -27,63 +27,189 @@
           </div>
           <div class="hero-visual">
             <div class="svg-container">
-              <svg viewBox="0 0 250 200" class="access-control-svg" preserveAspectRatio="xMidYMid meet">
+              <svg viewBox="0 0 300 240" class="access-control-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="accessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
                     <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
-                  <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
-                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
+                  <linearGradient id="lockGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.4 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.4 }" />
                   </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
                 
-                <!-- Shield - Main Access Control -->
-                <path d="M 125 20 L 200 50 L 200 120 L 125 180 L 50 120 L 50 50 Z" 
-                      fill="url(#shieldGradient)" 
-                      opacity="0.3" 
-                      stroke="url(#accessGradient)" 
-                      stroke-width="2"/>
-                <path d="M 125 30 L 190 55 L 190 115 L 125 170 L 60 115 L 60 55 Z" 
-                      fill="url(#shieldGradient)" 
-                      opacity="0.4" 
-                      stroke="url(#accessGradient)" 
-                      stroke-width="1.5"/>
+                <!-- Central Lock Icon -->
+                <g transform="translate(150, 120)">
+                  <!-- Lock body -->
+                  <rect x="-25" y="20" width="50" height="50" rx="6" 
+                        fill="url(#lockGradient)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="3"
+                        opacity="0.5"/>
+                  
+                  <!-- Lock shackle -->
+                  <path d="M -15 20 Q -15 0, 0 0 Q 15 0, 15 20" 
+                        fill="none" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="3.5"
+                        stroke-linecap="round"
+                        opacity="0.7"/>
+                  
+                  <!-- Keyhole -->
+                  <circle cx="0" cy="35" r="8" 
+                          fill="var(--color-bg-primary)" 
+                          stroke="url(#accessGradient)" 
+                          stroke-width="2"/>
+                  <rect x="-2" y="35" width="4" height="12" rx="1" 
+                        fill="var(--color-bg-primary)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"/>
+                  
+                  <!-- Keyhole glow -->
+                  <circle cx="0" cy="35" r="8" 
+                          fill="url(#accessGradient)" 
+                          opacity="0.2"
+                          filter="url(#glow)"/>
+                </g>
                 
-                <!-- Policy Document -->
-                <rect x="30" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
-                <line x1="40" y1="75" x2="70" y2="75" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
-                <line x1="40" y1="85" x2="65" y2="85" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
-                <line x1="40" y1="95" x2="70" y2="95" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.8 }"/>
+                <!-- Shield around lock -->
+                <g transform="translate(150, 120)">
+                  <path d="M 0 -60 L 50 -30 L 50 30 L 0 80 L -50 30 L -50 -30 Z" 
+                        fill="url(#lockGradient)" 
+                        opacity="0.2" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2.5"
+                        stroke-dasharray="5,5"/>
+                  
+                  <!-- Inner shield -->
+                  <path d="M 0 -50 L 40 -25 L 40 25 L 0 70 L -40 25 L -40 -25 Z" 
+                        fill="url(#lockGradient)" 
+                        opacity="0.15" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"/>
+                </g>
                 
-                <!-- Resource Folder -->
-                <rect x="170" y="60" width="50" height="60" rx="4" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
-                <path d="M 170 60 L 180 60 L 185 70 L 220 70 L 220 120 L 170 120 Z" 
-                      fill="url(#accessGradient)" 
-                      opacity="0.3" 
-                      stroke="url(#accessGradient)" 
-                      stroke-width="1.5"/>
+                <!-- Policy documents around the lock -->
+                <g transform="translate(150, 120)">
+                  <!-- Top policy document -->
+                  <rect x="-20" y="-80" width="40" height="50" rx="3" 
+                        fill="url(#lockGradient)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"
+                        opacity="0.4"/>
+                  <line x1="-15" y1="-65" x2="15" y2="-65" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-15" y1="-55" x2="10" y2="-55" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-15" y1="-45" x2="15" y2="-45" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Left policy document -->
+                  <rect x="-100" y="-10" width="40" height="50" rx="3" 
+                        fill="url(#lockGradient)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"
+                        opacity="0.4"/>
+                  <line x1="-95" y1="5" x2="-65" y2="5" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-95" y1="15" x2="-70" y2="15" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-95" y1="25" x2="-65" y2="25" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Right policy document -->
+                  <rect x="60" y="-10" width="40" height="50" rx="3" 
+                        fill="url(#lockGradient)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"
+                        opacity="0.4"/>
+                  <line x1="65" y1="5" x2="95" y2="5" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="65" y1="15" x2="90" y2="15" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="65" y1="25" x2="95" y2="25" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Bottom policy document -->
+                  <rect x="-20" y="60" width="40" height="50" rx="3" 
+                        fill="url(#lockGradient)" 
+                        stroke="url(#accessGradient)" 
+                        stroke-width="2"
+                        opacity="0.4"/>
+                  <line x1="-15" y1="75" x2="15" y2="75" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-15" y1="85" x2="10" y2="85" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-15" y1="95" x2="15" y2="95" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                </g>
                 
-                <!-- User Icon -->
-                <circle cx="125" cy="140" r="20" fill="url(#accessGradient)" opacity="0.4" stroke="url(#accessGradient)" stroke-width="2"/>
-                <circle cx="125" cy="130" r="8" :style="{ fill: 'var(--color-secondary)', opacity: 0.9 }"/>
-                <path d="M 105 160 Q 105 150, 125 150 Q 145 150, 145 160" 
-                      :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', opacity: 0.9 }"/>
+                <!-- Checkmarks on policy documents -->
+                <g transform="translate(150, 120)">
+                  <!-- Top checkmark -->
+                  <circle cx="0" cy="-80" r="12" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M -5 -80 L -2 -77 L 5 -85" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Left checkmark -->
+                  <circle cx="-80" cy="15" r="12" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M -85 15 L -82 18 L -75 10" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Right checkmark -->
+                  <circle cx="80" cy="15" r="12" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M 75 15 L 78 18 L 85 10" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Bottom checkmark -->
+                  <circle cx="0" cy="110" r="12" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M -5 110 L -2 113 L 5 105" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                </g>
                 
-                <!-- Connection lines -->
-                <line x1="80" y1="90" x2="110" y2="100" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
-                <line x1="170" y1="90" x2="140" y2="100" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
-                <line x1="125" y1="120" x2="125" y2="140" stroke="url(#accessGradient)" stroke-width="2" opacity="0.5"/>
+                <!-- Connection lines from policies to lock -->
+                <g transform="translate(150, 120)">
+                  <line x1="0" y1="-30" x2="0" y2="-10" stroke="url(#accessGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="-60" y1="15" x2="-25" y2="15" stroke="url(#accessGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="60" y1="15" x2="25" y2="15" stroke="url(#accessGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="0" y1="50" x2="0" y2="30" stroke="url(#accessGradient)" stroke-width="2" opacity="0.4"/>
+                </g>
                 
-                <!-- Checkmark symbols -->
-                <path d="M 45 80 L 52 87 L 62 72" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                <path d="M 185 80 L 192 87 L 202 72" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                
-                <!-- Accent dots -->
-                <circle cx="125" cy="50" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.8 }"/>
-                <circle cx="60" cy="90" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
-                <circle cx="190" cy="90" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
+                <!-- Decorative particles -->
+                <circle cx="50" cy="40" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="250" cy="60" r="2.5" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="80" cy="200" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="220" cy="180" r="2" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="30" cy="120" r="1.5" fill="var(--color-primary)" opacity="0.7"/>
+                <circle cx="270" cy="140" r="1.5" fill="var(--color-secondary)" opacity="0.6"/>
               </svg>
             </div>
           </div>

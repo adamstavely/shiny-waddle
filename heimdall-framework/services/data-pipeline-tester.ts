@@ -57,7 +57,6 @@ export interface PipelineTestResult extends TestResult {
     networkIsolation?: { isolated: boolean; network?: string };
     authenticationRequired?: { required: boolean };
   };
-  details?: Record<string, any>;
 }
 
 export class DataPipelineTester {

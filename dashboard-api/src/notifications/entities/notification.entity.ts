@@ -3,6 +3,10 @@ export enum NotificationType {
   CRITICAL_FINDING = 'critical-finding',
   APPROVAL_REQUEST = 'approval-request',
   APPROVAL_STATUS_CHANGED = 'approval-status-changed',
+  REMEDIATION_DEADLINE = 'remediation-deadline',
+  REMEDIATION_OVERDUE = 'remediation-overdue',
+  MILESTONE_DEADLINE = 'milestone-deadline',
+  MILESTONE_OVERDUE = 'milestone-overdue',
 }
 
 export interface Notification {
@@ -21,6 +25,10 @@ export interface Notification {
     currentScore?: number;
     applicationId?: string;
     teamName?: string;
+    trackingId?: string;
+    violationId?: string;
+    daysRemaining?: number;
+    [key: string]: any; // Allow additional metadata fields
   };
 }
 
@@ -31,5 +39,9 @@ export interface NotificationPreferences {
   notifyOnCriticalFinding: boolean;
   notifyOnApprovalRequest: boolean;
   notifyOnApprovalStatusChanged: boolean;
+  notifyOnRemediationDeadline?: boolean;
+  notifyOnRemediationOverdue?: boolean;
+  notifyOnMilestoneDeadline?: boolean;
+  notifyOnMilestoneOverdue?: boolean;
 }
 

@@ -93,7 +93,7 @@ export class TestSuitesService {
           enabled: s.enabled !== undefined ? s.enabled : true,
           testCount: s.testCount || 0,
           score: s.score || 0,
-          testTypes: s.testTypes || [],
+          // testTypes removed - using testType only
         }));
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
@@ -183,7 +183,7 @@ export class TestSuitesService {
       score: dto.score || 0,
       testType: dto.testType,
       domain,
-      testTypes: dto.testTypes || [dto.testType], // Set testTypes to match testType for backward compatibility
+      // testTypes removed - using testType only
       enabled: dto.enabled !== undefined ? dto.enabled : true,
       createdAt: now,
       updatedAt: now,
@@ -272,6 +272,12 @@ export class TestSuitesService {
         const relativePath = path.relative(this.projectRoot, filePath);
         const id = `fs-${Buffer.from(relativePath).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)}`;
         
+        // Derive testType and domain from parsed testTypes
+        const testType = parsed.testTypes && parsed.testTypes.length > 0 
+          ? parsed.testTypes[0] as TestType 
+          : 'api-security' as TestType;
+        const domain = getDomainFromTestType(testType);
+        
         const suite: TestSuiteEntity = {
           id,
           name: parsed.name,
@@ -282,7 +288,8 @@ export class TestSuitesService {
           status: 'pending',
           testCount: 0,
           score: 0,
-          testTypes: parsed.testTypes,
+          testType,
+          domain,
           enabled: true,
           createdAt: new Date(), // Use file mtime if available
           updatedAt: new Date(),
@@ -457,7 +464,7 @@ export class TestSuitesService {
       id: existing.id, // Don't allow ID changes
       testType: dto.testType || existing.testType, // Keep existing if not provided
       domain,
-      testTypes: dto.testTypes || (dto.testType ? [dto.testType] : existing.testTypes), // Update testTypes if testType changed
+      // testTypes removed - using testType only
       updatedAt: new Date(),
     };
 

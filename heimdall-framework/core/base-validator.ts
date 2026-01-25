@@ -6,7 +6,7 @@
  */
 
 import { Validator, ValidatorMetadata } from './validator-registry';
-import { TestResult, TestSuite } from './types';
+import { TestResult, TestSuite, TestType } from './types';
 
 /**
  * Abstract base class for validators
@@ -17,7 +17,7 @@ export abstract class BaseValidator implements Validator {
   abstract readonly id: string;
   abstract readonly name: string;
   abstract readonly description: string;
-  abstract readonly testType: string;
+  abstract readonly testType: TestType;
   abstract readonly version: string;
   abstract readonly metadata?: ValidatorMetadata;
 

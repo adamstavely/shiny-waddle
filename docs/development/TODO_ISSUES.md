@@ -96,6 +96,34 @@ This document lists remaining TODO comments in the codebase that should be conve
 - Infrastructure edit modal is a UX improvement that would enhance the user experience
 - Normalization engine enhancements are lower priority but would improve the system's capabilities
 
+## 🧪 Test Coverage Expansion
+
+### Test Coverage Expansion Plan
+**Status**: Plan created, ready for implementation  
+**Documentation**: See [TEST_COVERAGE_EXPANSION_PLAN.md](./TEST_COVERAGE_EXPANSION_PLAN.md) and [TEST_COVERAGE_QUICK_REFERENCE.md](./TEST_COVERAGE_QUICK_REFERENCE.md)
+
+**Current State:**
+- Unit Tests: 8/58 services (14% coverage)
+- E2E Tests: 9 controller files
+- Integration Tests: Limited
+- Frontend Tests: None
+
+**Target State:**
+- Unit Tests: 80%+ coverage (46/58 services)
+- E2E Tests: 20+ files covering all endpoints
+- Integration Tests: 5+ major workflows
+- Frontend Tests: 70%+ component coverage, 10+ E2E flows
+
+**Timeline**: 22 weeks (5.5 months)
+
+**Priority Actions:**
+1. Set up test infrastructure and frontend testing tools (Weeks 1-2)
+2. Expand unit tests for priority services (Weeks 3-4)
+3. Add integration tests for critical workflows (Weeks 9-12)
+4. Expand E2E tests for all endpoints (Weeks 13-16)
+5. Add frontend component and E2E tests (Weeks 17-20)
+6. Integrate tests into CI/CD with quality gates (Weeks 21-22)
+
 ## Summary
 
 - **Total TODOs Found**: 12
@@ -104,3 +132,4 @@ This document lists remaining TODO comments in the codebase that should be conve
   - High Priority: 5 (Settings API + Platform Config Stats)
   - Medium Priority: 1 (Infrastructure Modal)
   - Low Priority: 2 (Normalization Engine enhancements)
+- **Test Coverage**: Plan created - see TEST_COVERAGE_EXPANSION_PLAN.md

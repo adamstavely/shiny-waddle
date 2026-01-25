@@ -18,17 +18,23 @@ export class ContainerSecurityScanner {
     // - Docker Scout
 
     // Mock scan results
-    const vulnerabilities = [
+    const vulnerabilities: Array<{
+      id: string;
+      severity: 'critical' | 'high' | 'medium' | 'low';
+      package: string;
+      version: string;
+      description: string;
+    }> = [
       {
         id: 'CVE-2023-12345',
-        severity: 'high' as const,
+        severity: 'high',
         package: 'openssl',
         version: '1.1.1',
         description: 'OpenSSL vulnerability',
       },
       {
         id: 'CVE-2023-67890',
-        severity: 'medium' as const,
+        severity: 'medium',
         package: 'curl',
         version: '7.68.0',
         description: 'Curl vulnerability',

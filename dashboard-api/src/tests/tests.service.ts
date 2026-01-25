@@ -146,11 +146,27 @@ export class TestsService implements OnModuleInit {
 
   private detectChanges(oldTest: TestEntity, newTest: Partial<TestEntity>): string[] {
     const changes: string[] = [];
-    const fieldsToCheck = ['name', 'description', 'policyId', 'inputs', 'expected'];
     
-    for (const field of fieldsToCheck) {
-      if (field in newTest && JSON.stringify(oldTest[field]) !== JSON.stringify(newTest[field])) {
-        changes.push(field);
+    // Check BaseTest properties
+    if ('name' in newTest && newTest.name !== undefined && oldTest.name !== newTest.name) {
+      changes.push('name');
+    }
+    if ('description' in newTest && newTest.description !== undefined && oldTest.description !== newTest.description) {
+      changes.push('description');
+    }
+    
+    // Check test-specific properties with type guards
+    if (oldTest.testType === 'access-control' && 'policyId' in newTest) {
+      const oldAccessTest = oldTest as AccessControlTest;
+      const newAccessTest = newTest as Partial<AccessControlTest>;
+      if (newAccessTest.policyId !== undefined && oldAccessTest.policyId !== newAccessTest.policyId) {
+        changes.push('policyId');
+      }
+      if ('inputs' in newTest && JSON.stringify(oldAccessTest.inputs) !== JSON.stringify(newAccessTest.inputs)) {
+        changes.push('inputs');
+      }
+      if ('expected' in newTest && JSON.stringify(oldAccessTest.expected) !== JSON.stringify(newAccessTest.expected)) {
+        changes.push('expected');
       }
     }
     

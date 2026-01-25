@@ -25,36 +25,179 @@
           </div>
           <div class="hero-visual">
             <div class="svg-container">
-              <svg viewBox="0 0 250 200" class="policy-svg" preserveAspectRatio="xMidYMid meet">
+              <svg viewBox="0 0 300 240" class="policy-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="policyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
                     <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
-                  <linearGradient id="policyGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
-                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
+                  <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.4 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.4 }" />
                   </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
                 
-                <!-- Shield representing policies -->
-                <path d="M 125 20 L 180 50 L 180 100 Q 180 140 125 170 Q 70 140 70 100 L 70 50 Z" 
-                      fill="url(#policyGradient)" opacity="0.3" stroke="url(#policyGradient)" stroke-width="2"/>
-                <path d="M 125 40 L 160 60 L 160 95 Q 160 125 125 145 Q 90 125 90 95 L 90 60 Z" 
-                      fill="url(#policyGradient)" opacity="0.4" stroke="url(#policyGradient)" stroke-width="1.5"/>
+                <!-- Central Shield -->
+                <g transform="translate(150, 120)">
+                  <!-- Outer shield -->
+                  <path d="M 0 -70 L 60 -35 L 60 35 L 0 90 L -60 35 L -60 -35 Z" 
+                        fill="url(#shieldGradient)" 
+                        opacity="0.3" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="3"/>
+                  
+                  <!-- Middle shield -->
+                  <path d="M 0 -60 L 50 -30 L 50 30 L 0 80 L -50 30 L -50 -30 Z" 
+                        fill="url(#shieldGradient)" 
+                        opacity="0.4" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2.5"/>
+                  
+                  <!-- Inner shield -->
+                  <path d="M 0 -50 L 40 -25 L 40 25 L 0 70 L -40 25 L -40 -25 Z" 
+                        fill="url(#shieldGradient)" 
+                        opacity="0.5" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2"/>
+                  
+                  <!-- Central checkmark -->
+                  <path d="M -15 0 L -5 10 L 15 -10" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="4" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                </g>
                 
-                <!-- Policy layers -->
-                <rect x="30" y="60" width="60" height="40" rx="4" fill="url(#policyGradient)" opacity="0.2" stroke="url(#policyGradient)" stroke-width="1.5"/>
-                <rect x="160" y="60" width="60" height="40" rx="4" fill="url(#policyGradient)" opacity="0.2" stroke="url(#policyGradient)" stroke-width="1.5"/>
-                <rect x="95" y="120" width="60" height="40" rx="4" fill="url(#policyGradient)" opacity="0.2" stroke="url(#policyGradient)" stroke-width="1.5"/>
+                <!-- Policy documents around shield -->
+                <g transform="translate(150, 120)">
+                  <!-- Top-left policy -->
+                  <rect x="-90" y="-70" width="50" height="65" rx="4" 
+                        fill="url(#shieldGradient)" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2.5"
+                        opacity="0.4"/>
+                  <line x1="-85" y1="-55" x2="-50" y2="-55" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="-45" x2="-55" y2="-45" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="-35" x2="-50" y2="-35" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="-25" x2="-55" y2="-25" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Top-right policy -->
+                  <rect x="40" y="-70" width="50" height="65" rx="4" 
+                        fill="url(#shieldGradient)" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2.5"
+                        opacity="0.4"/>
+                  <line x1="45" y1="-55" x2="80" y2="-55" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="-45" x2="75" y2="-45" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="-35" x2="80" y2="-35" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="-25" x2="75" y2="-25" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Bottom-left policy -->
+                  <rect x="-90" y="50" width="50" height="65" rx="4" 
+                        fill="url(#shieldGradient)" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2.5"
+                        opacity="0.4"/>
+                  <line x1="-85" y1="65" x2="-50" y2="65" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="75" x2="-55" y2="75" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="85" x2="-50" y2="85" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="-85" y1="95" x2="-55" y2="95" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  
+                  <!-- Bottom-right policy -->
+                  <rect x="40" y="50" width="50" height="65" rx="4" 
+                        fill="url(#shieldGradient)" 
+                        stroke="url(#policyGradient)" 
+                        stroke-width="2.5"
+                        opacity="0.4"/>
+                  <line x1="45" y1="65" x2="80" y2="65" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="75" x2="75" y2="75" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="85" x2="80" y2="85" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                  <line x1="45" y1="95" x2="75" y2="95" 
+                        :style="{ stroke: 'var(--color-secondary)', strokeWidth: '2', opacity: 0.7 }"/>
+                </g>
                 
-                <!-- Checkmark in center -->
-                <path d="M 110 95 L 125 110 L 145 85" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '4', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
+                <!-- Checkmarks on policy documents -->
+                <g transform="translate(150, 120)">
+                  <!-- Top-left checkmark -->
+                  <circle cx="-65" cy="-70" r="10" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M -70 -70 L -67 -67 L -60 -75" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="2.5" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Top-right checkmark -->
+                  <circle cx="65" cy="-70" r="10" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M 60 -70 L 63 -67 L 70 -75" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="2.5" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Bottom-left checkmark -->
+                  <circle cx="-65" cy="82" r="10" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M -70 82 L -67 85 L -60 77" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="2.5" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Bottom-right checkmark -->
+                  <circle cx="65" cy="82" r="10" fill="var(--color-secondary)" opacity="0.2"/>
+                  <path d="M 60 82 L 63 85 L 70 77" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="2.5" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                </g>
                 
-                <!-- Accent dots -->
-                <circle cx="60" cy="80" r="3" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
-                <circle cx="190" cy="80" r="3" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
-                <circle cx="125" cy="140" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.6 }"/>
+                <!-- Connection lines from policies to shield -->
+                <g transform="translate(150, 120)">
+                  <line x1="-40" y1="-37" x2="-40" y2="-25" stroke="url(#policyGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="40" y1="-37" x2="40" y2="-25" stroke="url(#policyGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="-40" y1="50" x2="-40" y2="25" stroke="url(#policyGradient)" stroke-width="2" opacity="0.4"/>
+                  <line x1="40" y1="50" x2="40" y2="25" stroke="url(#policyGradient)" stroke-width="2" opacity="0.4"/>
+                </g>
+                
+                <!-- Decorative particles -->
+                <circle cx="50" cy="40" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="250" cy="60" r="2.5" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="80" cy="200" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="220" cy="180" r="2" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="30" cy="120" r="1.5" fill="var(--color-primary)" opacity="0.7"/>
+                <circle cx="270" cy="140" r="1.5" fill="var(--color-secondary)" opacity="0.6"/>
               </svg>
             </div>
           </div>

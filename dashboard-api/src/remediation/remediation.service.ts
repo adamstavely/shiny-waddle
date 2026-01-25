@@ -26,6 +26,7 @@ export interface RemediationRule {
 @Injectable()
 export class RemediationService {
   private remediationRules: RemediationRule[] = [];
+  private readonly logger = new AppLogger(RemediationService.name);
 
   constructor(
     private readonly ticketingService: TicketingService,
@@ -109,7 +110,7 @@ export class RemediationService {
         labels: action.metadata?.labels || [],
       });
     } catch (error) {
-      this.logger.error('Failed to create ticket', error instanceof Error ? error.stack : String(error), { violationId: violation.id });
+      this.logger.error(`Failed to create ticket for violation ${violation.id}: ${error instanceof Error ? error.stack : String(error)}`);
     }
   }
 

@@ -118,7 +118,7 @@ describe('RLSCLSService', () => {
   describe('testDynamicMasking', () => {
     it('should successfully test dynamic masking', async () => {
       const mockResult = {
-        testType: 'data-behavior' as const,
+        testType: 'rls-cls' as const,
         testName: 'Dynamic Data Masking Test',
         passed: true,
         details: {},
