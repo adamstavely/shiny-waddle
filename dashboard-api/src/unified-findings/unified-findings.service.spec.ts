@@ -135,22 +135,24 @@ describe('UnifiedFindingsService', () => {
     notificationsService = module.get(NotificationsService) as jest.Mocked<NotificationsService>;
     alertingService = module.get(AlertingService) as jest.Mocked<AlertingService>;
 
-    // Wait for loadFindings to complete (it's called in constructor)
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    // Mock loadFindings to prevent it from resetting our test data
+    // Wait for loadFindings to complete (it's called in constructor without await)
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Mock loadFindings to prevent it from resetting our test data in future calls
     jest.spyOn(service as any, 'loadFindings').mockResolvedValue(undefined);
     
-    // Clear findings after loadFindings completes
-    (service as any).findings = [];
+    // Ensure findings array is initialized and empty
+    if (!(service as any).findings) {
+      (service as any).findings = [];
+    } else {
+      (service as any).findings = [];
+    }
   });
 
   describe('getAllFindings', () => {
-    beforeEach(async () => {
-      // Ensure findings array is set after loadFindings completes
+    beforeEach(() => {
+      // Set findings array for tests
       (service as any).findings = [mockFinding];
-      // Wait a bit to ensure any async operations complete
-      await new Promise(resolve => setTimeout(resolve, 10));
     });
 
     it('should return all findings when no filters provided', async () => {
