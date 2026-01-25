@@ -1,5 +1,31 @@
 [
   {
+    "id": "56473ccd-86c7-4348-9e52-f91572fde2b3",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/v1/applications/test/validators/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "timestamp": "2026-01-25T21:54:34.889Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1769378074889-w34diy3ex"
+  },
+  {
+    "id": "2cb2d66c-0bfe-4ee7-87bd-4d25a13dee69",
+    "type": "access-denied",
+    "severity": "medium",
+    "action": "access-denied",
+    "description": "Unauthenticated access attempt to /api/v1/applications/test/validators/status",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "timestamp": "2026-01-25T21:54:33.283Z",
+    "success": false,
+    "errorMessage": "User not authenticated",
+    "requestId": "req-1769378073282-r7gvfhr36"
+  },
+  {
     "id": "a8802a94-9fa4-4ea6-9e92-92e4da34dfa9",
     "type": "data-write",
     "severity": "medium",
