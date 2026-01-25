@@ -29,7 +29,10 @@ export function useAuth() {
       // For now, use mock user
       currentUser.value = mockUser;
     } catch (error: any) {
-      console.error('Failed to load user:', error);
+      // Only log in development - fallback to mock user
+      if (import.meta.env.DEV) {
+        console.error('Failed to load user:', error);
+      }
       // Fallback to mock user - don't break app if user context fails
       currentUser.value = mockUser;
     } finally {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -110,6 +111,7 @@ export class SecurityAuditLogService {
   private auditLogs: SecurityAuditLog[] = [];
   private readonly auditLogFile: string;
   private readonly maxLogsInMemory: number = 10000;
+  private readonly logger = new AppLogger(SecurityAuditLogService.name);
 
   constructor() {
     const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
@@ -138,9 +140,9 @@ export class SecurityAuditLogService {
       }
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        console.log('No existing audit log file found, starting fresh');
+        this.logger.debug('No existing audit log file found, starting fresh');
       } else {
-        console.error('Error loading audit logs:', error.message);
+        this.logger.error('Error loading audit logs', error.stack || error.message);
       }
     }
   }
@@ -171,7 +173,7 @@ export class SecurityAuditLogService {
     } catch (error: any) {
       // Suppress errors in test mode to avoid async teardown issues
       if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
-        console.error('Error saving audit logs:', error.message);
+        this.logger.error('Error saving audit logs', error.stack || error.message);
       }
     }
   }
@@ -224,13 +226,17 @@ export class SecurityAuditLogService {
     this.auditLogs.push(log);
 
     // Save asynchronously (don't block)
-    this.saveAuditLogs().catch(err => 
-      console.error('Failed to save audit log:', err)
-    );
+    this.saveAuditLogs().catch(err => {
+      this.logger.error('Failed to save audit log', err instanceof Error ? err.stack : String(err), { logId: log.id });
+    });
 
     // Alert on critical events
     if (log.severity === SecurityAuditSeverity.CRITICAL) {
-      console.error(`🚨 CRITICAL SECURITY EVENT: ${log.type} - ${log.description}`);
+      this.logger.error(`🚨 CRITICAL SECURITY EVENT: ${log.type} - ${log.description}`, undefined, { 
+        type: log.type, 
+        severity: log.severity,
+        userId: log.userId 
+      });
     }
 
     return log;

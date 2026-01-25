@@ -104,7 +104,9 @@ export class NormalizationEngine {
     // CSPM adapters
     this.adapters.set('aws-security-hub', new AWSSecurityHubAdapter({}));
     
-    // TODO: Add more adapters as needed (Veracode, Checkmarx, Burp Suite, etc.)
+    // TODO: Add more scanner adapters as needed
+    // Potential additions: Veracode, Checkmarx, Burp Suite, Nessus, Qualys, etc.
+    // These can be added by implementing BaseScannerAdapter and registering via registerAdapter()
   }
 
   /**
@@ -203,13 +205,15 @@ export class NormalizationEngine {
     for (const finding of findings) {
       // Enrich CVE data if available
       if (this.config.enrichment.enrichCVE && finding.vulnerability?.cve?.id) {
-        // TODO: Fetch CVE details from external API
+        // TODO: Fetch CVE details from external API (e.g., NVD API, CVE.org)
+        // This would enrich findings with CVSS scores, descriptions, and remediation guidance
         // For now, we'll use what's already in the finding
       }
 
       // Enrich CWE data if available
       if (this.config.enrichment.enrichCWE && finding.vulnerability?.classification) {
-        // TODO: Fetch CWE details from external API
+        // TODO: Fetch CWE details from external API (e.g., MITRE CWE database)
+        // This would enrich findings with weakness descriptions and related CWEs
       }
 
       // Enrich compliance mapping

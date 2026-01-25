@@ -27,7 +27,10 @@ export function useNotifications() {
         notifications.value = [];
       } else {
         error.value = err.response?.data?.message || 'Failed to load notifications';
-        console.error('Failed to load notifications:', err);
+        // Error already handled via error.value - only log in development
+        if (import.meta.env.DEV) {
+          console.error('Failed to load notifications:', err);
+        }
       }
     } finally {
       loading.value = false;
@@ -41,7 +44,10 @@ export function useNotifications() {
     } catch (err: any) {
       // Silently fail - don't break UI if notification count fails
       if (err.code !== 'ERR_NETWORK' && err.response?.status !== 401 && err.response?.status !== 403) {
-        console.error('Failed to get unread count:', err);
+        // Only log in development
+        if (import.meta.env.DEV) {
+          console.error('Failed to get unread count:', err);
+        }
       }
       unreadCount.value = 0;
     }
@@ -57,7 +63,10 @@ export function useNotifications() {
       }
       await getUnreadCount();
     } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+      // Only log in development - error is handled silently
+      if (import.meta.env.DEV) {
+        console.error('Failed to mark notification as read:', err);
+      }
     }
   };
 
@@ -70,7 +79,10 @@ export function useNotifications() {
       });
       unreadCount.value = 0;
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      // Only log in development - error is handled silently
+      if (import.meta.env.DEV) {
+        console.error('Failed to mark all as read:', err);
+      }
     }
   };
 
@@ -80,7 +92,10 @@ export function useNotifications() {
       notifications.value = notifications.value.filter(n => n.id !== notificationId);
       await getUnreadCount();
     } catch (err) {
-      console.error('Failed to delete notification:', err);
+      // Only log in development - error is handled silently
+      if (import.meta.env.DEV) {
+        console.error('Failed to delete notification:', err);
+      }
     }
   };
 

@@ -1,9 +1,12 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { SecurityAuditLogService, SecurityAuditEventType } from '../audit-log.service';
+import { AppLogger } from '../../common/services/logger.service';
 
 @Injectable()
 export class AuditLoggingMiddleware implements NestMiddleware {
+  private readonly logger = new AppLogger(AuditLoggingMiddleware.name);
+
   constructor(private readonly auditLogService: SecurityAuditLogService) {}
 
   use(req: Request, res: Response, next: NextFunction) {
@@ -74,7 +77,7 @@ export class AuditLoggingMiddleware implements NestMiddleware {
             }
           }
         } catch (error) {
-          console.error('Failed to log audit event:', error);
+          this.logger.error('Failed to log audit event', error instanceof Error ? error.stack : String(error), { requestId, path: req.path });
         }
       });
 

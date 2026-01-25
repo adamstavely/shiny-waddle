@@ -3,6 +3,7 @@ import { CreateValidationTargetDto, ValidationTargetStatus } from './dto/create-
 import { UpdateValidationTargetDto } from './dto/update-validation-target.dto';
 import { CreateValidationRuleDto } from './dto/create-validation-rule.dto';
 import { ValidationTargetEntity, ValidationRuleEntity, ValidationResultEntity } from './entities/validation-target.entity';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -14,10 +15,11 @@ export class ValidationTargetsService {
   private targets: ValidationTargetEntity[] = [];
   private rules: ValidationRuleEntity[] = [];
   private results: ValidationResultEntity[] = [];
+  private readonly logger = new AppLogger(ValidationTargetsService.name);
 
   constructor() {
     this.loadData().catch(err => {
-      console.error('Error loading validation data on startup:', err);
+      this.logger.error('Error loading validation data on startup', err instanceof Error ? err.stack : String(err));
     });
   }
 
@@ -51,7 +53,7 @@ export class ValidationTargetsService {
         }
       }
     } catch (error) {
-      console.error('Error loading targets:', error);
+      this.logger.error('Error loading targets', error instanceof Error ? error.stack : String(error));
       this.targets = [];
     }
   }
@@ -76,7 +78,7 @@ export class ValidationTargetsService {
         }
       }
     } catch (error) {
-      console.error('Error loading rules:', error);
+      this.logger.error('Error loading rules', error instanceof Error ? error.stack : String(error));
       this.rules = [];
     }
   }
@@ -100,7 +102,7 @@ export class ValidationTargetsService {
         }
       }
     } catch (error) {
-      console.error('Error loading results:', error);
+      this.logger.error('Error loading results', error instanceof Error ? error.stack : String(error));
       this.results = [];
     }
   }
@@ -110,7 +112,7 @@ export class ValidationTargetsService {
       await fs.mkdir(path.dirname(this.targetsFile), { recursive: true });
       await fs.writeFile(this.targetsFile, JSON.stringify(this.targets, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving targets:', error);
+      this.logger.error('Error saving targets', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -120,7 +122,7 @@ export class ValidationTargetsService {
       await fs.mkdir(path.dirname(this.rulesFile), { recursive: true });
       await fs.writeFile(this.rulesFile, JSON.stringify(this.rules, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving rules:', error);
+      this.logger.error('Error saving rules', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -130,7 +132,7 @@ export class ValidationTargetsService {
       await fs.mkdir(path.dirname(this.resultsFile), { recursive: true });
       await fs.writeFile(this.resultsFile, JSON.stringify(this.results, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving results:', error);
+      this.logger.error('Error saving results', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }

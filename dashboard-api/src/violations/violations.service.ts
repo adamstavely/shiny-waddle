@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/commo
 import { CreateViolationDto, ViolationStatus } from './dto/create-violation.dto';
 import { UpdateViolationDto } from './dto/update-violation.dto';
 import { ViolationEntity, ViolationComment, RemediationEvent } from './entities/violation.entity';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,10 +11,11 @@ import { v4 as uuidv4 } from 'uuid';
 export class ViolationsService {
   private readonly violationsFile = path.join(process.cwd(), '..', 'data', 'violations.json');
   private violations: ViolationEntity[] = [];
+  private readonly logger = new AppLogger(ViolationsService.name);
 
   constructor() {
     this.loadViolations().catch(err => {
-      console.error('Error loading violations on startup:', err);
+      this.logger.error('Error loading violations on startup', err.stack);
     });
   }
 
@@ -49,7 +51,7 @@ export class ViolationsService {
         }
       }
     } catch (error) {
-      console.error('Error loading violations:', error);
+      this.logger.error('Error loading violations', error instanceof Error ? error.stack : String(error));
       this.violations = [];
     }
   }
@@ -63,7 +65,7 @@ export class ViolationsService {
         'utf-8',
       );
     } catch (error) {
-      console.error('Error saving violations:', error);
+      this.logger.error('Error saving violations', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }

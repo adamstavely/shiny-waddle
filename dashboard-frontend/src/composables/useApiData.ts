@@ -57,7 +57,10 @@ export function useApiData<T>(
       if (onError) {
         onError(axiosError);
       } else {
-        console.error('Error loading data:', axiosError);
+        // Only log in development - error is already set in error.value
+        if (import.meta.env.DEV) {
+          console.error('Error loading data:', axiosError);
+        }
       }
       
       throw err;

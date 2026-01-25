@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import {
   CreateAPISecurityConfigDto,
   CreateAPIEndpointDto,
@@ -14,13 +14,14 @@ import {
 import { APISecurityTester, APISecurityTestConfig } from '../../heimdall-framework/services/api-security-tester';
 import { ApplicationsService } from '../applications/applications.service';
 import { APISecurityInfrastructure } from '../applications/entities/application.entity';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ApiSecurityService {
-  private readonly logger = new Logger(ApiSecurityService.name);
+  private readonly logger = new AppLogger(ApiSecurityService.name);
   private readonly configsFile = path.join(process.cwd(), '..', 'data', 'api-security-configs.json');
   private readonly endpointsFile = path.join(process.cwd(), '..', 'data', 'api-security-endpoints.json');
   private readonly resultsFile = path.join(process.cwd(), '..', 'data', 'api-security-results.json');
@@ -34,7 +35,7 @@ export class ApiSecurityService {
     private readonly applicationsService?: ApplicationsService,
   ) {
     this.loadData().catch(err => {
-      console.error('Error loading API security data on startup:', err);
+      this.logger.error('Error loading API security data on startup', err instanceof Error ? err.stack : String(err));
     });
   }
 
@@ -66,7 +67,7 @@ export class ApiSecurityService {
         }
       }
     } catch (error) {
-      console.error('Error loading API security configs:', error);
+      this.logger.error('Error loading API security configs', error instanceof Error ? error.stack : String(error));
       this.configs = [];
     }
   }
@@ -91,7 +92,7 @@ export class ApiSecurityService {
         }
       }
     } catch (error) {
-      console.error('Error loading API endpoints:', error);
+      this.logger.error('Error loading API endpoints', error instanceof Error ? error.stack : String(error));
       this.endpoints = [];
     }
   }
@@ -120,7 +121,7 @@ export class ApiSecurityService {
         }
       }
     } catch (error) {
-      console.error('Error loading API security results:', error);
+      this.logger.error('Error loading API security results', error instanceof Error ? error.stack : String(error));
       this.results = [];
     }
   }
@@ -130,7 +131,7 @@ export class ApiSecurityService {
       await fs.mkdir(path.dirname(this.configsFile), { recursive: true });
       await fs.writeFile(this.configsFile, JSON.stringify(this.configs, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving API security configs:', error);
+      this.logger.error('Error saving API security configs', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -140,7 +141,7 @@ export class ApiSecurityService {
       await fs.mkdir(path.dirname(this.endpointsFile), { recursive: true });
       await fs.writeFile(this.endpointsFile, JSON.stringify(this.endpoints, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving API endpoints:', error);
+      this.logger.error('Error saving API endpoints', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -150,7 +151,7 @@ export class ApiSecurityService {
       await fs.mkdir(path.dirname(this.resultsFile), { recursive: true });
       await fs.writeFile(this.resultsFile, JSON.stringify(this.results, null, 2), 'utf-8');
     } catch (error) {
-      console.error('Error saving API security results:', error);
+      this.logger.error('Error saving API security results', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }

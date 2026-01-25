@@ -88,7 +88,7 @@ export function useRealtimeUpdates(options: RealtimeUpdateOptions = {}) {
           
           // Handle connection confirmation
           if (update.type === 'connected') {
-            console.log('Connected to real-time updates:', update.clientId);
+            // Connection confirmed - no logging needed in production
             return;
           }
 
@@ -122,7 +122,7 @@ export function useRealtimeUpdates(options: RealtimeUpdateOptions = {}) {
           if (autoReconnect && reconnectAttempts.value < maxReconnectAttempts) {
             reconnectAttempts.value++;
             const delay = reconnectDelay * reconnectAttempts.value;
-            console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts.value}/${maxReconnectAttempts})...`);
+            // Reconnection attempt - no logging needed in production
             
             setTimeout(() => {
               connect();

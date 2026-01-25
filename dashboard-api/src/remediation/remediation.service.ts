@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ViolationEntity } from '../violations/entities/violation.entity';
 import { ViolationSeverity } from '../violations/dto/create-violation.dto';
 import { TicketingService } from '../ticketing/ticketing.service';
+import { AppLogger } from '../common/services/logger.service';
 
 export interface RemediationAction {
   type: 'create-ticket' | 'assign' | 'escalate' | 'auto-fix' | 'notify';
@@ -91,7 +92,7 @@ export class RemediationService {
     const enabledIntegration = integrations.find(i => i.enabled);
 
     if (!enabledIntegration) {
-      console.warn('No enabled ticketing integration found for violation:', violation.id);
+      this.logger.warn(`No enabled ticketing integration found for violation: ${violation.id}`);
       return;
     }
 
@@ -108,25 +109,24 @@ export class RemediationService {
         labels: action.metadata?.labels || [],
       });
     } catch (error) {
-      console.error('Failed to create ticket:', error);
+      this.logger.error('Failed to create ticket', error instanceof Error ? error.stack : String(error), { violationId: violation.id });
     }
   }
 
   private async assignViolation(violation: ViolationEntity, assignee?: string): Promise<void> {
     // This would update the violation assignment
-    // For now, just log
-    console.log(`Assigning violation ${violation.id} to ${assignee}`);
+    this.logger.debug(`Assigning violation ${violation.id} to ${assignee}`);
   }
 
   private async escalateViolation(violation: ViolationEntity, target?: string): Promise<void> {
     // This would escalate the violation
-    console.log(`Escalating violation ${violation.id} to ${target}`);
+    this.logger.debug(`Escalating violation ${violation.id} to ${target}`);
   }
 
   private async attemptAutoFix(violation: ViolationEntity, action: RemediationAction): Promise<void> {
     // Attempt automated remediation based on violation type
     // This is a placeholder - real implementation would have specific fix logic
-    console.log(`Attempting auto-fix for violation ${violation.id}`);
+    this.logger.debug(`Attempting auto-fix for violation ${violation.id}`);
     
     // Example: If violation has remediation suggestions, try to apply them
     if (violation.remediationSuggestions && violation.remediationSuggestions.length > 0) {
@@ -140,7 +140,7 @@ export class RemediationService {
 
   private async notify(violation: ViolationEntity, action: RemediationAction): Promise<void> {
     // Send notifications via configured channels
-    console.log(`Notifying about violation ${violation.id} via ${action.metadata?.channels}`);
+    this.logger.debug(`Notifying about violation ${violation.id} via ${action.metadata?.channels}`);
   }
 
   private mapSeverityToPriority(severity: ViolationSeverity): string {

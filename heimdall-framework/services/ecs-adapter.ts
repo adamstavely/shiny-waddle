@@ -34,19 +34,6 @@ export class ECSAdapter {
       'heimdall.business_impact': finding.businessImpact,
       'heimdall.remediation.automated': finding.remediation.automated,
       
-      // Legacy: Keep sentinel.* for backward compatibility
-      'sentinel.finding.id': finding.id,
-      'sentinel.scanner.source': finding.source,
-      'sentinel.scanner.id': finding.scannerId,
-      'sentinel.scanner.finding_id': finding.scannerFindingId,
-      'sentinel.asset.type': finding.asset.type,
-      'sentinel.asset.application_id': finding.asset.applicationId,
-      'sentinel.asset.component': finding.asset.component,
-      'sentinel.status': finding.status,
-      'sentinel.risk_score': finding.riskScore,
-      'sentinel.business_impact': finding.businessImpact,
-      'sentinel.remediation.automated': finding.remediation.automated,
-      
       // Message
       'message': finding.title,
       'tags': this.generateTags(finding),
@@ -154,10 +141,6 @@ export class ECSAdapter {
       doc['heimdall.compliance.frameworks'] = finding.compliance.frameworks;
       doc['heimdall.compliance.controls'] = finding.compliance.controls;
       
-      // Legacy: Keep sentinel.* for backward compatibility
-      doc['sentinel.compliance.frameworks'] = finding.compliance.frameworks;
-      doc['sentinel.compliance.controls'] = finding.compliance.controls;
-      
       if (finding.compliance.rule) {
         if (finding.compliance.rule.id) doc['rule.id'] = finding.compliance.rule.id;
         if (finding.compliance.rule.name) doc['rule.name'] = finding.compliance.rule.name;
@@ -211,9 +194,8 @@ export class ECSAdapter {
    * Convert ECS document back to UnifiedFinding
    */
   fromECS(doc: ECSDocument): UnifiedFinding {
-    // Support both heimdall.* and sentinel.* fields for backward compatibility
     const finding: UnifiedFinding = {
-      id: doc['heimdall.finding.id'] || doc['sentinel.finding.id'] || doc['vulnerability.id'] || `ecs-${Date.now()}`,
+      id: doc['heimdall.finding.id'] || doc['vulnerability.id'] || `ecs-${Date.now()}`,
       event: {
         kind: 'event',
         category: (doc['event.category']?.[0] as any) || 'security',
@@ -222,17 +204,17 @@ export class ECSAdapter {
         severity: doc['event.severity'] || 0,
         original: doc['event.original'],
       },
-      source: (doc['heimdall.scanner.source'] || doc['sentinel.scanner.source'] as any) || 'compliance',
-      scannerId: (doc['heimdall.scanner.id'] || doc['sentinel.scanner.id'] as any) || 'heimdall-compliance',
-      scannerFindingId: doc['heimdall.scanner.finding_id'] || doc['sentinel.scanner.finding_id'] || doc['vulnerability.id'] || '',
+      source: (doc['heimdall.scanner.source'] as any) || 'compliance',
+      scannerId: (doc['heimdall.scanner.id'] as any) || 'heimdall-compliance',
+      scannerFindingId: doc['heimdall.scanner.finding_id'] || doc['vulnerability.id'] || '',
       title: doc['message'] || 'Security Finding',
       description: doc['vulnerability.cve.description'] || '',
       severity: this.mapECSSeverity(doc['vulnerability.severity'] || doc['event.severity']),
       confidence: 'firm',
       asset: {
-        type: (doc['heimdall.asset.type'] || doc['sentinel.asset.type'] as any) || 'application',
-        applicationId: doc['heimdall.asset.application_id'] || doc['sentinel.asset.application_id'],
-        component: doc['heimdall.asset.component'] || doc['sentinel.asset.component'],
+        type: (doc['heimdall.asset.type'] as any) || 'application',
+        applicationId: doc['heimdall.asset.application_id'],
+        component: doc['heimdall.asset.component'],
         location: {
           file: doc['file.name'] ? {
             name: doc['file.name'],
@@ -256,13 +238,13 @@ export class ECSAdapter {
         description: '',
         steps: [],
         references: [],
-        automated: doc['heimdall.remediation.automated'] || doc['sentinel.remediation.automated'],
+        automated: doc['heimdall.remediation.automated'],
       },
-      status: (doc['heimdall.status'] || doc['sentinel.status'] as any) || 'open',
+      status: (doc['heimdall.status'] as any) || 'open',
       createdAt: new Date(doc['@timestamp']),
       updatedAt: new Date(doc['@timestamp']),
-      riskScore: doc['heimdall.risk_score'] || doc['sentinel.risk_score'] || 0,
-      businessImpact: doc['heimdall.business_impact'] || doc['sentinel.business_impact'],
+      riskScore: doc['heimdall.risk_score'] || 0,
+      businessImpact: doc['heimdall.business_impact'],
     };
 
     if (doc['vulnerability.id'] || doc['vulnerability.cve.id']) {
@@ -308,10 +290,10 @@ export class ECSAdapter {
       };
     }
 
-    if (doc['compliance.frameworks'] || doc['heimdall.compliance.frameworks'] || doc['sentinel.compliance.frameworks']) {
+    if (doc['compliance.frameworks'] || doc['heimdall.compliance.frameworks']) {
       finding.compliance = {
-        frameworks: doc['heimdall.compliance.frameworks'] || doc['sentinel.compliance.frameworks'] || [],
-        controls: doc['heimdall.compliance.controls'] || doc['sentinel.compliance.controls'] || [],
+        frameworks: doc['heimdall.compliance.frameworks'] || [],
+        controls: doc['heimdall.compliance.controls'] || [],
         requirements: [],
         rule: doc['rule.id'] ? {
           id: doc['rule.id'],

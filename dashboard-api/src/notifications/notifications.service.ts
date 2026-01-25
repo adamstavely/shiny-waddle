@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { Notification, NotificationType, NotificationPreferences } from './entities/notification.entity';
+import { AppLogger } from '../common/services/logger.service';
 
 @Injectable()
 export class NotificationsService {
@@ -10,10 +11,11 @@ export class NotificationsService {
   private readonly preferencesFile = path.join(process.cwd(), '..', 'data', 'notification-preferences.json');
   private notifications: Notification[] = [];
   private preferences: Map<string, NotificationPreferences> = new Map();
+  private readonly logger = new AppLogger(NotificationsService.name);
 
   constructor() {
     this.loadData().catch(err => {
-      console.error('Error loading notifications data on startup:', err);
+      this.logger.error('Error loading notifications data on startup', err instanceof Error ? err.stack : String(err));
     });
   }
 
@@ -47,7 +49,7 @@ export class NotificationsService {
         // Use defaults
       }
     } catch (error) {
-      console.error('Error loading notifications data:', error);
+      this.logger.error('Error loading notifications data', error instanceof Error ? error.stack : String(error));
     }
   }
 
@@ -60,7 +62,7 @@ export class NotificationsService {
         'utf-8'
       );
     } catch (error) {
-      console.error('Error saving notifications:', error);
+      this.logger.error('Error saving notifications', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -75,7 +77,7 @@ export class NotificationsService {
         'utf-8'
       );
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      this.logger.error('Error saving preferences', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }

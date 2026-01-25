@@ -7,6 +7,7 @@ import {
   TicketStatus,
   CreateTicketDto,
 } from './entities/ticketing.entity';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,10 +19,11 @@ export class TicketingService {
   private readonly ticketsFile = path.join(process.cwd(), '..', 'data', 'tickets.json');
   private integrations: TicketingIntegration[] = [];
   private tickets: Ticket[] = [];
+  private readonly logger = new AppLogger(TicketingService.name);
 
   constructor() {
     this.loadData().catch(err => {
-      console.error('Error loading ticketing data on startup:', err);
+      this.logger.error('Error loading ticketing data on startup', err instanceof Error ? err.stack : String(err));
     });
   }
 
@@ -43,7 +45,7 @@ export class TicketingService {
         this.tickets = [];
       }
     } catch (error) {
-      console.error('Error loading ticketing data:', error);
+      this.logger.error('Error loading ticketing data', error instanceof Error ? error.stack : String(error));
     }
   }
 
@@ -53,7 +55,7 @@ export class TicketingService {
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(this.integrationsFile, JSON.stringify(this.integrations, null, 2));
     } catch (error) {
-      console.error('Error saving integrations:', error);
+      this.logger.error('Error saving integrations', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -64,7 +66,7 @@ export class TicketingService {
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(this.ticketsFile, JSON.stringify(this.tickets, null, 2));
     } catch (error) {
-      console.error('Error saving tickets:', error);
+      this.logger.error('Error saving tickets', error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
@@ -141,8 +143,9 @@ export class TicketingService {
           throw new BadRequestException(`Unsupported provider: ${integration.provider}`);
       }
     } catch (error) {
-      console.error(`Connection test failed for ${integration.provider}:`, error);
-      throw new BadRequestException(`Connection test failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Connection test failed for ${integration.provider}`, error instanceof Error ? error.stack : String(error), { provider: integration.provider });
+      throw new BadRequestException(`Connection test failed: ${errorMessage}`);
     }
   }
 

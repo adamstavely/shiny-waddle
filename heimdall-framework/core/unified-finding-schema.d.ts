@@ -189,13 +189,6 @@ export interface UnifiedFinding {
         policyName?: string;
         violationId?: string;
     };
-    sentinel?: {
-        testSuiteId?: string;
-        testResultId?: string;
-        policyId?: string;
-        policyName?: string;
-        violationId?: string;
-    };
     raw?: Record<string, any>;
 }
 export interface ECSDocument {
@@ -264,19 +257,6 @@ export interface ECSDocument {
     'heimdall.remediation.automated'?: boolean;
     'heimdall.compliance.frameworks'?: string[];
     'heimdall.compliance.controls'?: string[];
-    'sentinel.finding.id'?: string;
-    'sentinel.scanner.source'?: string;
-    'sentinel.scanner.id'?: string;
-    'sentinel.scanner.finding_id'?: string;
-    'sentinel.asset.type'?: string;
-    'sentinel.asset.application_id'?: string;
-    'sentinel.asset.component'?: string;
-    'sentinel.status'?: string;
-    'sentinel.risk_score'?: number;
-    'sentinel.business_impact'?: number;
-    'sentinel.remediation.automated'?: boolean;
-    'sentinel.compliance.frameworks'?: string[];
-    'sentinel.compliance.controls'?: string[];
     'message'?: string;
     'tags'?: string[];
     'labels'?: Record<string, string>;

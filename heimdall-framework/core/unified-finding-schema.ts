@@ -280,15 +280,6 @@ export interface UnifiedFinding {
     violationId?: string;
   };
   
-  // Legacy: Keep sentinel for backward compatibility
-  sentinel?: {
-    testSuiteId?: string;
-    testResultId?: string;
-    policyId?: string;
-    policyName?: string;
-    violationId?: string;
-  };
-  
   // Raw scanner data (for debugging/audit)
   raw?: Record<string, any>;
 }
@@ -375,21 +366,6 @@ export interface ECSDocument {
   'heimdall.remediation.automated'?: boolean;
   'heimdall.compliance.frameworks'?: string[];
   'heimdall.compliance.controls'?: string[];
-  
-  // Legacy: Keep sentinel.* for backward compatibility
-  'sentinel.finding.id'?: string;
-  'sentinel.scanner.source'?: string;
-  'sentinel.scanner.id'?: string;
-  'sentinel.scanner.finding_id'?: string;
-  'sentinel.asset.type'?: string;
-  'sentinel.asset.application_id'?: string;
-  'sentinel.asset.component'?: string;
-  'sentinel.status'?: string;
-  'sentinel.risk_score'?: number;
-  'sentinel.business_impact'?: number;
-  'sentinel.remediation.automated'?: boolean;
-  'sentinel.compliance.frameworks'?: string[];
-  'sentinel.compliance.controls'?: string[];
   
   // Additional metadata
   'message'?: string; // Human-readable message

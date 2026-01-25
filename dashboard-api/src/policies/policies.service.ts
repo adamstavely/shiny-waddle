@@ -4,6 +4,7 @@ import { CreatePolicyDto, PolicyType, PolicyStatus, PolicyEffect } from './dto/c
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { Policy, PolicyVersion, PolicyAuditLog } from './entities/policy.entity';
 import { PolicyVersioningService, VersionComparison, ImpactAnalysis } from './services/policy-versioning.service';
+import { AppLogger } from '../common/services/logger.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,19 +17,20 @@ export class PoliciesService {
   private policies: Policy[] = [];
   private auditLogs: PolicyAuditLog[] = [];
   private domainConfigs: Record<string, any> = {};
+  private readonly logger = new AppLogger(PoliciesService.name);
 
   constructor(
     private readonly moduleRef: ModuleRef,
     private readonly versioningService: PolicyVersioningService,
   ) {
     this.loadPolicies().catch(err => {
-      console.error('Error loading policies on startup:', err);
+      this.logger.error('Error loading policies on startup', err instanceof Error ? err.stack : String(err));
     });
     this.loadAuditLogs().catch(err => {
-      console.error('Error loading audit logs on startup:', err);
+      this.logger.error('Error loading audit logs on startup', err instanceof Error ? err.stack : String(err));
     });
     this.loadDomainConfigs().catch(err => {
-      console.error('Error loading domain configs on startup:', err);
+      this.logger.error('Error loading domain configs on startup', err instanceof Error ? err.stack : String(err));
     });
   }
 

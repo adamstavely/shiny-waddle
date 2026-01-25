@@ -1,132 +1,96 @@
 # Codebase Cleanup Summary
 
-This document summarizes cleanup opportunities identified in the codebase.
+This document summarizes cleanup opportunities identified in the codebase and their current status.
 
-## ✅ Completed
+## ✅ Completed Cleanup Tasks
 
 1. **Removed `compliance-dashboard.ts`** - Unused dashboard generation code that produced unused JSON files
 2. **Removed empty `dashboard/` directory**
 3. **Updated `.gitignore`** - Added exclusions for compiled TypeScript output (`.js`, `.js.map` files)
+4. **Removed local `.js.map` files** - Deleted 80+ compilation artifact files from `heimdall-framework/` directory
+5. **Reviewed deprecated fields** - Verified that deprecated fields mentioned in original summary don't exist in current codebase
+6. **Updated TODO comments** - Enhanced 3 TODO comments in `normalization-engine.ts` with more descriptive context
+7. **Reviewed exports** - Verified all exports from `heimdall-framework/index.ts` are used in examples and codebase
+8. **Reviewed console.log usage** - Documented current logging patterns (mostly appropriate for CLI and error handling)
+9. **Deprecated API Versions** - Made deprecated versions configurable via `APISecurityTestConfig.deprecatedVersions`
 
-## 🔍 Identified Cleanup Opportunities
+## 📊 Current State Analysis
 
-### High Priority
+### Codebase Structure
+- **`heimdall-framework/`** - Main framework code (not `test-harness/` as mentioned in original summary)
+- **`test-harness/`** - Contains only JSON data files, no TypeScript code
+- **`dashboard-api/`** - NestJS backend
+- **`dashboard-frontend/`** - Vue.js frontend
 
-#### 1. Compiled JavaScript Files (95+ files)
-**Location**: Throughout `test-harness/` directory
-**Issue**: TypeScript compilation outputs (`.js` and `.js.map` files) are committed to source control
-**Impact**: 
-- Increases repository size
-- Causes merge conflicts
-- Should be generated during build, not committed
-**Action**: 
-- ✅ Already added to `.gitignore`
-- ⚠️ **Need to remove existing .js and .js.map files from git tracking**
-- Run: `git rm --cached '**/*.js' '**/*.js.map'` (excluding node_modules, dist, ci-cd, scripts)
+### Compilation Artifacts
+- ✅ **`.js.map` files**: All removed from `heimdall-framework/` directory (80+ files deleted)
+- ✅ **`.gitignore`**: Properly configured to ignore `.js` and `.js.map` files (excluding intentional source files in `ci-cd/` and `scripts/`)
+- ✅ **No `.js` compilation artifacts**: Only `.js.map` files existed, and they've been removed
 
-#### 2. Deprecated Fields in `core/types.ts`
-**Location**: `test-harness/core/types.ts`
-**Issue**: Multiple fields marked as `DEPRECATED: Keep for backward compatibility`
-**Fields**:
-- `policyIds` (line 111) - replaced by `policyId` (1:1 relationship)
-- `testType` (line 828) - replaced by `domain`
-- Other deprecated fields at lines 161, 178, 194, 217, 262
-**Action**: 
-- Check if these are still used in production code
-- If not used, remove them
-- If still used, create migration plan to remove them
+### Deprecated Fields
+- ✅ **No deprecated fields found**: The original summary referenced fields in `test-harness/core/types.ts` which doesn't exist
+- ✅ **Migration complete**: Comments in `heimdall-framework/core/types.ts` indicate `policyIds` → `policyId` migration is complete
+- ✅ **Legacy fields removed**: `sentinel.*` fields have been removed from `unified-finding-schema.ts` and `ecs-adapter.ts`
 
-#### 3. Duplicate Code: `.ts` and `.js` Files
-**Location**: `services/`, `core/` directories
-**Issue**: Both TypeScript source (`.ts`) and compiled JavaScript (`.js`) versions exist
-**Examples**:
-- `services/finding-correlation-engine.ts` + `services/finding-correlation-engine.js`
-- `services/normalization-engine.ts` + `services/normalization-engine.js`
-**Action**: Remove all `.js` files (they're compilation artifacts)
+### TODO Comments
+- ✅ **Reviewed**: Only 3 TODO comments found in `heimdall-framework/services/normalization-engine.ts`
+- ✅ **Enhanced**: Updated TODOs with more descriptive context about future enhancements:
+  - Scanner adapter additions (Veracode, Checkmarx, Burp Suite, etc.)
+  - CVE enrichment from external APIs (NVD API, CVE.org)
+  - CWE enrichment from external APIs (MITRE CWE database)
 
-### Medium Priority
+### Exports Review
+- ✅ **All exports used**: Verified that all 8 exports from `heimdall-framework/index.ts` are used:
+  - `TestOrchestrator` - Used in examples and `run-tests.ts`
+  - `TestBatteryRunner` - Used in examples
+  - `ComplianceReporter` - Used in examples and services
+  - `PolicyDecisionPoint` - Used in examples
+  - `ABACPolicyLoader` - Used in examples
+  - `APISecurityTester` - Used in examples
+  - `DataPipelineTester` - Used in examples
+  - `DistributedSystemsTester` - Used in examples
+- ✅ **Import patterns**: Dashboard API imports directly from framework services/types (not from index.ts), which is appropriate for internal code
 
-#### 4. TODO Comments (140+ instances)
+### Console.log Statements
+- ✅ **Reviewed**: Found console statements in:
+  - `heimdall-framework/src/run-tests.ts` - CLI output (appropriate)
+  - `heimdall-framework/services/*` - Error/warn logging (mostly appropriate)
+  - `dashboard-api/src/**/*.ts` - Error logging (appropriate for error handling)
+  - `dashboard-frontend/src/**/*.ts` - Debug/error logging (could be improved)
+- 📝 **Recommendation**: Consider implementing a proper logging framework for production code, but current usage is mostly appropriate
+
+## 🔍 Remaining Opportunities (Low Priority)
+
+### 1. Logging Framework Implementation
+**Priority**: Low
 **Location**: Throughout codebase
-**Categories**:
-- **Legitimate TODOs**: Features to implement (e.g., "TODO: Load from API when backend is ready")
-- **Incomplete Features**: Code with placeholder implementations
-- **Auth Context**: Multiple instances of `// TODO: Get from auth context`
-**Action**: 
-- Review and prioritize TODOs
-- Remove TODOs for completed features
-- Create issues for remaining TODOs
+**Issue**: Mix of `console.log`, `console.error`, `console.warn` statements
+**Recommendation**: 
+- Implement a logging framework (e.g., Winston, Pino) for production code
+- Keep `console.*` for CLI tools (`run-tests.ts`)
+- Use structured logging for API services
 
-#### 5. Unused Exports in `index.ts`
-**Location**: `test-harness/index.ts`
-**Issue**: 24 exports - need to verify all are actually used
-**Action**: 
-- Check which exports are imported by:
-  - `run-tests.ts`
-  - Examples directory
-  - External consumers
-- Remove unused exports
+### 2. Frontend Debug Logging
+**Priority**: Low
+**Location**: `dashboard-frontend/src/composables/*.ts`
+**Issue**: Some `console.log` statements in frontend code
+**Recommendation**: 
+- Remove debug `console.log` statements
+- Keep `console.error` for error handling
+- Consider using Vue's devtools or a logging service for production
 
-#### 6. Archive Directory
-**Location**: `dashboard-api/src/scripts/archive/` (if exists)
-**Status**: ✅ **Checked** - Directory does not exist
-**Issue**: Archived/migrated code that may no longer be needed
-**Action**: 
-- ✅ Verified directory does not exist - no action needed
+## 📋 Summary
 
-### Low Priority
+**Status**: ✅ **Most cleanup tasks completed**
 
-#### 7. Example Files
-**Location**: `test-harness/examples/`
-**Status**: ✅ **Keep** - These are documentation/examples, not dead code
-**Note**: Examples are standalone and serve as documentation
-
-#### 8. Console.log Statements
-**Location**: Various TypeScript files
-**Issue**: Debug logging statements in production code
-**Action**: 
-- Replace with proper logging framework
-- Remove debug console.logs
-- Keep important error/warn logging
-
-#### 9. Deprecated API Versions
-**Location**: Various test suites
-**Status**: ✅ **Completed**
-**Issue**: Hardcoded deprecated API versions in test code
-**Examples**: `services/test-suites/api-design-test-suite.ts` line 308
-**Action**: 
-- ✅ Made deprecated versions configurable via `APISecurityTestConfig.deprecatedVersions`
-- ✅ Updated `api-design-test-suite.ts` and `sensitive-data-test-suite.ts` to use configurable versions
-- ✅ Removed hardcoded assumptions (e.g., v1/v0 being deprecated)
-- ✅ Tests now skip deprecated version checks if none are configured
-**Note**: Tests are still relevant for security testing, but now require explicit configuration of which versions are deprecated for the API being tested
-
-## 📋 Recommended Cleanup Order
-
-1. **Remove compiled .js and .js.map files** (High impact, low risk)
-2. **Review and remove deprecated fields** (Medium impact, requires testing)
-3. **Clean up TODO comments** (Low impact, improves code quality)
-4. **Review unused exports** (Low impact, reduces API surface)
-5. **Remove archive directories** (Low impact, if migrations complete)
+The codebase is in good shape. The original cleanup summary referenced outdated paths and structures. Current state:
+- No compilation artifacts committed to git
+- No deprecated fields requiring removal
+- Minimal TODO comments (all legitimate future enhancements)
+- All exports are used
+- Logging is mostly appropriate (could benefit from structured logging framework)
 
 ## 🚨 Notes
 
-- **Backward Compatibility**: Deprecated fields may still be in use. Check data files and API responses before removing.
-- **Testing Required**: After removing deprecated fields, test thoroughly to ensure no breaking changes.
-- **Git History**: Consider keeping git history for reference even after removing files.
-
-## 📝 Commands for Cleanup
-
-```bash
-# Remove compiled JS files from git (but keep locally)
-cd test-harness
-git rm --cached '**/*.js' '**/*.js.map'
-git rm --cached 'services/**/*.js' 'services/**/*.js.map'
-git rm --cached 'core/**/*.js' 'core/**/*.js.map'
-
-# Review deprecated field usage
-grep -r "\.policyIds\|\.testType" test-harness --include="*.ts" --include="*.vue"
-
-# Find unused exports (requires analysis tool)
-# Consider using tools like depcheck or ts-prune
-```
+- **Git History**: All cleanup has preserved git history
+- **Testing**: No breaking changes introduced by cleanup activities

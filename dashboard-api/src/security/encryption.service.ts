@@ -1,4 +1,5 @@
 import { Injectable, Optional, Inject } from '@nestjs/common';
+import { AppLogger } from '../common/services/logger.service';
 import * as crypto from 'crypto';
 
 export interface EncryptionConfig {
@@ -20,6 +21,7 @@ export class EncryptionService {
   private readonly keyLength: number;
   private readonly ivLength: number;
   private encryptionKey: Buffer;
+  private readonly logger = new AppLogger(EncryptionService.name);
 
   constructor(@Optional() @Inject('ENCRYPTION_CONFIG') config?: EncryptionConfig) {
     this.algorithm = config?.algorithm || 'aes-256-gcm';
@@ -33,7 +35,7 @@ export class EncryptionService {
       this.encryptionKey = Buffer.from(keyFromEnv, 'hex');
     } else {
       // Generate a key (in production, this should be stored securely)
-      console.warn('⚠️  WARNING: Using generated encryption key. Set ENCRYPTION_KEY environment variable for production.');
+      this.logger.warn('⚠️  WARNING: Using generated encryption key. Set ENCRYPTION_KEY environment variable for production.');
       this.encryptionKey = crypto.randomBytes(this.keyLength);
     }
 

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EncryptionService } from './encryption.service';
+import { AppLogger } from '../common/services/logger.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -38,6 +39,7 @@ export interface UpdateSecretDto {
 export class SecretsService {
   private secrets: Map<string, Secret> = new Map();
   private readonly secretsFile: string;
+  private readonly logger = new AppLogger(SecretsService.name);
 
   constructor(private readonly encryptionService: EncryptionService) {
     // Store secrets in a secure location
@@ -63,9 +65,9 @@ export class SecretsService {
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         // File doesn't exist yet, that's okay
-        console.log('No existing secrets file found, starting fresh');
+        this.logger.debug('No existing secrets file found, starting fresh');
       } else {
-        console.error('Error loading secrets:', error.message);
+        this.logger.error('Error loading secrets', error.stack || error.message);
       }
     }
   }
@@ -89,7 +91,7 @@ export class SecretsService {
       // Set restrictive permissions (owner read/write only)
       await fs.chmod(this.secretsFile, 0o600);
     } catch (error: any) {
-      console.error('Error saving secrets:', error.message);
+      this.logger.error('Error saving secrets', error.stack || error.message);
       throw error;
     }
   }

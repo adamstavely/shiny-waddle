@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
@@ -7,6 +7,8 @@ import { UserContextInterceptor } from './common/interceptors/user-context.inter
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import * as https from 'https';
 import * as fs from 'fs';
+
+const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
   let app;
@@ -35,22 +37,22 @@ async function bootstrap() {
       app = await NestFactory.create(AppModule, {
         httpsOptions,
       });
-      console.log('🔒 HTTPS enabled for encryption in transit (TLS 1.2+)');
+      logger.log('🔒 HTTPS enabled for encryption in transit (TLS 1.2+)');
     } catch (error: any) {
-      console.error('❌ Error setting up HTTPS:', error.message);
+      logger.error(`❌ Error setting up HTTPS: ${error.message}`, error.stack);
       if (isProduction) {
         throw new Error(`HTTPS setup failed in production: ${error.message}`);
       }
       app = await NestFactory.create(AppModule);
-      console.warn('⚠️  Falling back to HTTP due to HTTPS setup error');
+      logger.warn('⚠️  Falling back to HTTP due to HTTPS setup error');
     }
   } else {
     app = await NestFactory.create(AppModule);
     if (isProduction) {
-      console.error('❌ ERROR: HTTPS is not enabled in production. This is a security risk!');
-      console.error('   Set HTTPS_ENABLED=true, HTTPS_KEY_PATH, and HTTPS_CERT_PATH environment variables.');
+      logger.error('❌ ERROR: HTTPS is not enabled in production. This is a security risk!');
+      logger.error('   Set HTTPS_ENABLED=true, HTTPS_KEY_PATH, and HTTPS_CERT_PATH environment variables.');
     } else {
-      console.warn('⚠️  HTTPS is not enabled. Enable HTTPS in production for encryption in transit.');
+      logger.warn('⚠️  HTTPS is not enabled. Enable HTTPS in production for encryption in transit.');
     }
   }
 
@@ -98,7 +100,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   const protocol = httpsEnabled ? 'https' : 'http';
   await app.listen(port);
-  console.log(`🚀 Heimdall Dashboard API running on ${protocol}://localhost:${port}`);
+  logger.log(`🚀 Heimdall Dashboard API running on ${protocol}://localhost:${port}`);
 }
 
 bootstrap();
