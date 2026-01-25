@@ -6,6 +6,7 @@ import {
   ValidateNested,
   IsOptional,
   IsIn,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ABACPolicy } from '../../../../heimdall-framework/core/types';
@@ -145,6 +146,10 @@ export class PromotionRuleDto {
   @IsNotEmpty()
   @IsString()
   toEnvironment: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  requiredApprovals: number;
 
   @IsNotEmpty()
   @IsArray()

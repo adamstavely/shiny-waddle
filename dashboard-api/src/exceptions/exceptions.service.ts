@@ -105,7 +105,14 @@ export class ExceptionsService {
     await this.loadData();
     const exception: Exception = {
       id: uuidv4(),
-      ...dto,
+      name: dto.name,
+      description: dto.description || '',
+      policyId: dto.policyId,
+      ruleId: dto.ruleId,
+      reason: dto.reason,
+      requestedBy: dto.requestedBy,
+      notes: dto.notes,
+      expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : undefined,
       status: 'pending',
       requestedAt: new Date(),
       createdAt: new Date(),
@@ -124,7 +131,14 @@ export class ExceptionsService {
     }
     this.exceptions[index] = {
       ...this.exceptions[index],
-      ...dto,
+      ...(dto.name && { name: dto.name }),
+      ...(dto.description !== undefined && { description: dto.description || '' }),
+      ...(dto.policyId !== undefined && { policyId: dto.policyId }),
+      ...(dto.ruleId !== undefined && { ruleId: dto.ruleId }),
+      ...(dto.reason && { reason: dto.reason }),
+      ...(dto.requestedBy && { requestedBy: dto.requestedBy }),
+      ...(dto.notes !== undefined && { notes: dto.notes }),
+      ...(dto.expirationDate && { expirationDate: typeof dto.expirationDate === 'string' ? new Date(dto.expirationDate) : dto.expirationDate }),
       updatedAt: new Date(),
     };
     await this.saveExceptions();

@@ -8,6 +8,7 @@ import {
 import {
   APISecurityTestConfigEntity,
   APIEndpointEntity,
+  AuthenticationType,
   APISecurityTestResultEntity,
   APITestType,
 } from './entities/api-security.entity';
@@ -322,7 +323,10 @@ export class ApiSecurityService {
             id: application.id,
             name: `${application.name} - API Security`,
             baseUrl: apiSecurityInfra.baseUrl,
-            authentication: apiSecurityInfra.authentication,
+            authentication: apiSecurityInfra.authentication ? {
+              type: apiSecurityInfra.authentication.type as AuthenticationType,
+              credentials: apiSecurityInfra.authentication.credentials,
+            } : undefined,
             rateLimitConfig: apiSecurityInfra.rateLimitConfig,
             headers: apiSecurityInfra.headers,
             timeout: apiSecurityInfra.timeout,
@@ -359,14 +363,14 @@ export class ApiSecurityService {
     }
     
     // Fallback to standalone storage if not found in infrastructure
+    const configIdToUse = actualConfigId || configIdOrApplicationId;
     if (!config) {
-      const configIdToUse = actualConfigId || configIdOrApplicationId;
       config = await this.findOneConfig(configIdToUse);
       endpoints = await this.findAllEndpoints(configIdToUse);
     }
 
     if (endpoints.length === 0) {
-      throw new NotFoundException(`No endpoints found for API security config "${configId}"`);
+      throw new NotFoundException(`No endpoints found for API security config "${configIdToUse}"`);
     }
 
     // Run tests for all endpoints or just the first one

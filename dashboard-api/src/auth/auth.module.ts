@@ -13,7 +13,7 @@ import { SecurityModule } from '../security/security.module';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '3600s', // 1 hour
+        expiresIn: process.env.JWT_EXPIRES_IN ? parseInt(process.env.JWT_EXPIRES_IN.replace('s', ''), 10) : 3600, // 1 hour
       },
     }),
     UsersModule,

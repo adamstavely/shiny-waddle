@@ -78,7 +78,11 @@ export class DLPService {
           this.tester = new DLPTester(testerConfig);
         }
         user = dto.user || { id: 'test-user', email: 'test@example.com', role: 'viewer', attributes: {} };
-        dataOperation = dto.dataOperation || { type: 'export', data: {} };
+        dataOperation = dto.dataOperation || { 
+          type: 'export', 
+          resource: { id: 'default-resource', type: 'data', attributes: {} },
+          data: {} 
+        };
       } else {
         user = dto.user!;
         dataOperation = dto.dataOperation!;
@@ -103,11 +107,14 @@ export class DLPService {
       if (dlpInfra?.testLogic) {
         // Apply custom checks if present
         if (dlpInfra.testLogic.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
-          result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
-            name: check.name,
-            passed: this.evaluateCustomCheck(check.condition, result),
-            description: check.description,
-          }));
+          result.details = {
+            ...result.details,
+            customCheckResults: dlpInfra.testLogic.customChecks.map(check => ({
+              name: check.name,
+              passed: this.evaluateCustomCheck(check.condition, result),
+              description: check.description,
+            })),
+          };
         }
       }
 
@@ -183,11 +190,14 @@ export class DLPService {
 
       // Apply testLogic custom checks if present
       if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
-          name: check.name,
-          passed: this.evaluateCustomCheck(check.condition, result),
-          description: check.description,
-        }));
+        result.details = {
+          ...result.details,
+          customCheckResults: dlpInfra.testLogic.customChecks.map(check => ({
+            name: check.name,
+            passed: this.evaluateCustomCheck(check.condition, result),
+            description: check.description,
+          })),
+        };
       }
 
       return result;
@@ -260,11 +270,14 @@ export class DLPService {
 
       // Apply testLogic custom checks if present
       if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
-          name: check.name,
-          passed: this.evaluateCustomCheck(check.condition, result),
-          description: check.description,
-        }));
+        result.details = {
+          ...result.details,
+          customCheckResults: dlpInfra.testLogic.customChecks.map(check => ({
+            name: check.name,
+            passed: this.evaluateCustomCheck(check.condition, result),
+            description: check.description,
+          })),
+        };
       }
 
       return result;
@@ -360,11 +373,14 @@ export class DLPService {
 
       // Apply testLogic custom checks if present
       if (dlpInfra?.testLogic?.customChecks && dlpInfra.testLogic.customChecks.length > 0) {
-        result.customCheckResults = dlpInfra.testLogic.customChecks.map(check => ({
-          name: check.name,
-          passed: this.evaluateCustomCheck(check.condition, result),
-          description: check.description,
-        }));
+        result.details = {
+          ...result.details,
+          customCheckResults: dlpInfra.testLogic.customChecks.map(check => ({
+            name: check.name,
+            passed: this.evaluateCustomCheck(check.condition, result),
+            description: check.description,
+          })),
+        };
       }
 
       return result;

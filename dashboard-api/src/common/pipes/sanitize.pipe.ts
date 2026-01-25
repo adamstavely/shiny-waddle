@@ -46,7 +46,7 @@ export class SanitizePipe implements PipeTransform {
 
     // Remove SQL injection patterns
     let sanitized = str
-      .replace(/('|(\\')|(;)|(\\)|(\/\*)|(\*\/)|(\-\-)|(\+)|(\%)|(\=)|(\>)|(\<)|(\!)|(\@)|(\#)|(\$)|(\^)|(\&)|(\*)|(\()|(\))|(\[)|(\])|(\{)|(\})|(\|)|(\\)|(\~)|(\`)|(\?)|(\:)|(\;)|(\")|(\')/gi, '');
+      .replace(/[;\\\/\*\+\%\=\>\<\!\@\#\$\^\&\*\(\)\[\]\{\}\~\`\?\:\"\'\-]/gi, '');
 
     // Remove XSS patterns
     sanitized = sanitizeHtml(sanitized, {

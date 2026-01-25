@@ -39,7 +39,7 @@ describe('DLPService', () => {
   describe('testExfiltration', () => {
     it('should successfully test data exfiltration', async () => {
       const mockResult = {
-        testType: 'data-behavior' as const,
+        testType: 'dlp' as const,
         testName: 'Data Exfiltration Test',
         passed: true,
         details: {},
@@ -111,7 +111,7 @@ describe('DLPService', () => {
   describe('validateAPIResponse', () => {
     it('should successfully validate API response', async () => {
       const mockResult = {
-        testType: 'data-behavior' as const,
+        testType: 'dlp' as const,
         testName: 'API Response Validation',
         passed: true,
         details: {},
@@ -163,7 +163,7 @@ describe('DLPService', () => {
   describe('testQueryValidation', () => {
     it('should successfully test query validation', async () => {
       const mockResult = {
-        testType: 'data-behavior' as const,
+        testType: 'dlp' as const,
         testName: 'Query Result Validation',
         passed: true,
         details: {},
@@ -195,7 +195,7 @@ describe('DLPService', () => {
   describe('testBulkExport', () => {
     it('should successfully test bulk export controls', async () => {
       const mockResult = {
-        testType: 'data-behavior' as const,
+        testType: 'dlp' as const,
         testName: 'Bulk Export Controls Test',
         passed: true,
         details: {},

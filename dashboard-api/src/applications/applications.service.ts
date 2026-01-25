@@ -348,21 +348,6 @@ export class ApplicationsService {
       failed: 0,
       results: [],
     };
-
-    // Update last test time
-    application.lastTestAt = new Date();
-    application.updatedAt = new Date();
-    await this.saveApplications();
-
-    const status = failed === 0 ? 'passed' : (passed === 0 ? 'failed' : 'partial');
-
-    return {
-      status,
-      totalTests: results.length,
-      passed,
-      failed,
-      results,
-    };
   }
 
 

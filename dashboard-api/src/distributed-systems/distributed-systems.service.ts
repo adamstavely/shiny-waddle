@@ -4,6 +4,8 @@ import * as path from 'path';
 import { ApplicationsService } from '../applications/applications.service';
 import { DistributedSystemsInfrastructure, RegionConfig } from '../applications/entities/application.entity';
 
+export type { RegionConfig };
+
 export interface DistributedTestRequest {
   name: string;
   testType: 'policy-consistency' | 'multi-region' | 'synchronization' | 'transaction' | 'eventual-consistency';

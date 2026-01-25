@@ -97,11 +97,14 @@ export class APIGatewayService {
       if (gatewayInfra?.testLogic) {
         // Run custom validations if present
         if (gatewayInfra.testLogic.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
-          result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
-            name: validation.name,
-            passed: this.evaluateCustomValidation(validation.condition, result),
-            description: validation.description,
-          }));
+          result.details = {
+            ...result.details,
+            customValidationResults: gatewayInfra.testLogic.customValidations.map(validation => ({
+              name: validation.name,
+              passed: this.evaluateCustomValidation(validation.condition, result),
+              description: validation.description,
+            })),
+          };
         }
       }
 
@@ -170,7 +173,8 @@ export class APIGatewayService {
 
       // Apply testLogic custom validations if present
       if (gatewayInfra?.testLogic?.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
-        result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
+        // RateLimitTest doesn't have details, so use type assertion
+        (result as any).customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,
@@ -221,11 +225,14 @@ export class APIGatewayService {
       if (gatewayInfra?.testLogic) {
         // Run custom validations if present
         if (gatewayInfra.testLogic.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
-          result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
-            name: validation.name,
-            passed: this.evaluateCustomValidation(validation.condition, result),
-            description: validation.description,
-          }));
+          result.details = {
+            ...result.details,
+            customValidationResults: gatewayInfra.testLogic.customValidations.map(validation => ({
+              name: validation.name,
+              passed: this.evaluateCustomValidation(validation.condition, result),
+              description: validation.description,
+            })),
+          };
         }
       }
 
@@ -293,8 +300,11 @@ export class APIGatewayService {
       const result = await this.tester.testServiceToServiceAuth(source, target);
 
       // Apply testLogic custom validations if present
+      // Note: ServiceAuthTest doesn't have details, so we'll return it as-is
+      // Custom validations would need to be handled at a higher level if needed
       if (gatewayInfra?.testLogic?.customValidations && gatewayInfra.testLogic.customValidations.length > 0) {
-        result.customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
+        // Store custom validations in a separate object since ServiceAuthTest doesn't support it
+        (result as any).customValidationResults = gatewayInfra.testLogic.customValidations.map(validation => ({
           name: validation.name,
           passed: this.evaluateCustomValidation(validation.condition, result),
           description: validation.description,

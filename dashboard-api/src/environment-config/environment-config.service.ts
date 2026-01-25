@@ -62,14 +62,14 @@ export class EnvironmentConfigService {
   async detectDrift(dto: DetectDriftDto) {
     try {
       const baseline = await this.driftDetector.createBaseline(dto.baselineEnvironment, {
-        environment: dto.currentEnvironment,
+        environment: dto.currentEnvironment as 'dev' | 'staging' | 'prod',
         variables: dto.variables || {},
         configFiles: dto.configFiles || [],
         secrets: [],
       });
 
       const current: EnvironmentConfig = {
-        environment: dto.currentEnvironment,
+        environment: dto.currentEnvironment as 'dev' | 'staging' | 'prod',
         variables: dto.currentVariables || {},
         configFiles: dto.currentConfigFiles || [],
         secrets: [],
@@ -88,7 +88,10 @@ export class EnvironmentConfigService {
         environment: dto.environment,
         policies: dto.policies || [],
         isolationRules: dto.isolationRules || [],
-        promotionRules: dto.promotionRules || [],
+        promotionRules: (dto.promotionRules || []).map(rule => ({
+          ...rule,
+          requiredApprovals: rule.requiredApprovals || 1, // Default to 1 if not provided
+        })),
       };
 
       return await this.policyValidator.validateEnvironmentPolicies(policy);

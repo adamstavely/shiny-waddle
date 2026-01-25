@@ -27,7 +27,7 @@ describe('TestBatteriesService', () => {
     description: 'Test battery description',
     harnessIds: ['harness-1', 'harness-2'],
     executionConfig: {
-      parallel: true,
+      executionMode: 'parallel',
       stopOnFailure: false,
       timeout: 30000,
     },
@@ -85,7 +85,7 @@ describe('TestBatteriesService', () => {
       description: 'New battery description',
       harnessIds: ['harness-1', 'harness-2'],
       executionConfig: {
-        parallel: true,
+        executionMode: 'parallel',
         stopOnFailure: false,
         timeout: 30000,
       },

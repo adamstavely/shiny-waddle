@@ -36,7 +36,7 @@ export class AccessControlValidatorAdapter extends BaseValidator {
     const results: TestResult[] = [];
     
     // Check if suite has access-control specific config
-    const accessControlSuite = suite as any as { userRoles?: string[]; resources?: any[]; contexts?: any[] };
+    const accessControlSuite = suite as any as { userRoles?: string[]; resources?: any[]; contexts?: any[]; expectedDecisions?: Record<string, boolean> };
     if (!accessControlSuite.userRoles || !accessControlSuite.resources || !accessControlSuite.contexts) {
       throw new Error('AccessControlTestSuite requires userRoles, resources, and contexts');
     }
@@ -56,7 +56,7 @@ export class AccessControlValidatorAdapter extends BaseValidator {
             user,
             resource,
             context,
-            expectedDecision: suite.expectedDecisions?.[`${user.role}-${resource.type}`],
+            expectedDecision: accessControlSuite.expectedDecisions?.[`${user.role}-${resource.type}`],
           });
 
           results.push(
