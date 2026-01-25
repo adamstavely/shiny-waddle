@@ -26,11 +26,7 @@ describe('Error Scenarios (e2e)', () => {
 
   afterAll(async () => {
     if (app) {
-  afterAll(async () => {
-    if (app) {
       await app.close();
-    }
-  });
     }
   });
 

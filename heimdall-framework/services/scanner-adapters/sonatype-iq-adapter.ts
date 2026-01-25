@@ -112,18 +112,20 @@ export class SonatypeIQAdapter extends BaseScannerAdapter {
     // Support both individual findings and full reports
     if ('components' in iqFinding) {
       // Full report - validate structure
+      const report = iqFinding as SonatypeIQReport;
       return !!(
-        iqFinding.application?.id ||
-        iqFinding.components ||
-        iqFinding.summary
+        report.application?.id ||
+        report.components ||
+        report.summary
       );
     } else {
       // Individual finding
+      const finding = iqFinding as SonatypeIQFinding;
       return !!(
-        iqFinding.component &&
-        (iqFinding.vulnerabilities?.length > 0 ||
-         iqFinding.policyViolations?.length > 0 ||
-         iqFinding.licenses?.length > 0)
+        finding.component &&
+        (finding.vulnerabilities?.length > 0 ||
+         finding.policyViolations?.length > 0 ||
+         finding.licenses?.length > 0)
       );
     }
   }
@@ -324,8 +326,8 @@ export class SonatypeIQAdapter extends BaseScannerAdapter {
       id: this.generateFindingId(`${component.component?.hash || componentName}-license-${license.licenseId}`),
       event: {
         kind: 'event',
-        category: 'security',
-        type: 'license-violation',
+        category: 'compliance',
+        type: 'compliance-violation',
         action: 'detected',
         severity: this.mapSeverityToECS(severity),
       },
@@ -386,7 +388,7 @@ export class SonatypeIQAdapter extends BaseScannerAdapter {
       event: {
         kind: 'event',
         category: 'security',
-        type: 'component-detected',
+        type: 'finding',
         action: 'detected',
         severity: 100,
       },

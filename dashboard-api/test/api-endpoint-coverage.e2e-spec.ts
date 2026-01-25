@@ -26,11 +26,7 @@ describe('API Endpoint Coverage (e2e)', () => {
 
   afterAll(async () => {
     if (app) {
-  afterAll(async () => {
-    if (app) {
       await app.close();
-    }
-  });
     }
   });
 

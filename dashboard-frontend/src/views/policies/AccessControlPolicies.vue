@@ -156,6 +156,14 @@
                   </button>
                   <button
                     type="button"
+                    @click="editorTab = 'visual'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'visual' }"
+                  >
+                    Visual Builder
+                  </button>
+                  <button
+                    type="button"
                     @click="editorTab = 'preview'"
                     class="editor-tab"
                     :class="{ active: editorTab === 'preview' }"
@@ -377,11 +385,24 @@
                   </div>
                 </div>
 
+                <!-- Visual Builder Tab -->
+                <div v-if="editorTab === 'visual'" class="editor-content visual-builder-content">
+                  <PolicyVisualBuilder
+                    :policy-type="policyForm.type"
+                    :model-value="getVisualBuilderRules()"
+                    @update:model-value="handleVisualBuilderUpdate"
+                  />
+                </div>
+
                 <!-- Preview Tab -->
                 <div v-if="editorTab === 'preview'" class="editor-content">
                   <div class="preview-section">
                     <h3>Policy Preview</h3>
                     <pre class="policy-preview">{{ JSON.stringify(getPolicyJSON(), null, 2) }}</pre>
+                  </div>
+                  <div class="preview-section">
+                    <h3>Visualization</h3>
+                    <PolicyVisualization :policy="getPolicyForVisualization()" />
                   </div>
                   <div class="preview-section">
                     <h3>Validation</h3>
@@ -436,6 +457,8 @@ import {
 } from 'lucide-vue-next';
 import Dropdown from '../../components/Dropdown.vue';
 import Breadcrumb from '../../components/Breadcrumb.vue';
+import PolicyVisualBuilder from '../../components/policies/PolicyVisualBuilder.vue';
+import PolicyVisualization from '../../components/policies/PolicyVisualization.vue';
 import axios from 'axios';
 
 const router = useRouter();
@@ -451,7 +474,7 @@ const filterType = ref('');
 const filterStatus = ref('');
 const showCreateModal = ref(false);
 const editingPolicy = ref<string | null>(null);
-const editorTab = ref<'basic' | 'rules' | 'preview'>('basic');
+const editorTab = ref<'basic' | 'rules' | 'visual' | 'preview'>('basic');
 const loading = ref(false);
 const error = ref<string | null>(null);
 
@@ -648,6 +671,48 @@ const deletePolicy = async (id: string) => {
   }
 };
 
+const getVisualBuilderRules = () => {
+  if (policyForm.value.type === 'rbac') {
+    // Convert policy form rules to visual builder format
+    return policyForm.value.rules.map((rule: any) => ({
+      id: rule.id || `rule-${Date.now()}`,
+      description: rule.description || '',
+      effect: rule.effect || 'allow',
+      conditions: Object.entries(rule.conditions || {}).map(([key, value]) => ({
+        key,
+        value: Array.isArray(value) ? JSON.stringify(value) : String(value),
+      })),
+    }));
+  } else {
+    return policyForm.value.conditions || [];
+  }
+};
+
+const handleVisualBuilderUpdate = (updatedRules: any[]) => {
+  if (policyForm.value.type === 'rbac') {
+    // Convert visual builder format to policy form format
+    policyForm.value.rules = updatedRules.map((rule: any) => ({
+      id: rule.id,
+      description: rule.description,
+      effect: rule.effect,
+      conditions: rule.conditions.reduce((acc: any, cond: any) => {
+        if (cond.key && cond.value) {
+          // Try to parse arrays/objects, otherwise use as string
+          try {
+            const parsed = JSON.parse(cond.value);
+            acc[cond.key] = parsed;
+          } catch {
+            acc[cond.key] = cond.value;
+          }
+        }
+        return acc;
+      }, {}),
+    }));
+  } else {
+    policyForm.value.conditions = updatedRules;
+  }
+};
+
 const closeModal = () => {
   showCreateModal.value = false;
   editingPolicy.value = null;
@@ -834,6 +899,17 @@ const getPolicyJSON = () => {
       conditions: policyForm.value.conditions
     };
   }
+};
+
+const getPolicyForVisualization = () => {
+  return {
+    type: policyForm.value.type,
+    name: policyForm.value.name,
+    rules: policyForm.value.rules,
+    conditions: policyForm.value.conditions,
+    effect: policyForm.value.effect,
+    priority: policyForm.value.priority,
+  };
 };
 
 const policyTypeOptions = computed(() => [
@@ -1282,6 +1358,12 @@ onMounted(() => {
   max-height: 60vh;
   overflow-y: auto;
   padding-right: var(--spacing-sm);
+}
+
+.visual-builder-content {
+  max-height: 70vh;
+  padding: 0;
+  overflow: hidden;
 }
 
 .form-group {
