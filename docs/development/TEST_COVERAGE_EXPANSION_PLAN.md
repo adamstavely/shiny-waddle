@@ -771,7 +771,6 @@ test('user can create test', async ({ page }) => {
 - **12 services** still need unit tests: `api-security`, `cicd`, `cloud-provider`, `compliance-snapshots`, `context-detector`, `iam`, `logger`, `remediation-automation`, `reports`, `scheduler`, `siem`, `test-loader`
 - **0 controllers** need unit tests - **ALL COMPLETE** ✅
 - **0 utilities & middleware** need unit tests - **ALL COMPLETE** ✅
-- **Utility & middleware** tests needed
 - **Integration tests** for multi-service workflows - **Phase 3.1 COMPLETE** ✅ (5 workflows tested)
 - **Database integration tests** - **Phase 3.2 COMPLETE** ✅ (File persistence layer tested)
 - **E2E test expansion** (11 more files needed)
