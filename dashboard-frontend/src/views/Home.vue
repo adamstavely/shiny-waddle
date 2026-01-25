@@ -39,7 +39,7 @@
                 
                 <!-- Shield base - outer layer -->
                 <path 
-                  d="M 125 20 L 165 40 L 165 80 Q 165 120 125 160 Q 85 120 85 80 L 85 40 Z" 
+                  d="M 125 20 L 180 40 L 180 80 Q 180 120 125 160 Q 70 120 70 80 L 70 40 Z" 
                   fill="url(#sentinelGradient)" 
                   opacity="0.3"
                   stroke="url(#sentinelGradient)"
@@ -48,7 +48,7 @@
                 
                 <!-- Shield middle layer -->
                 <path 
-                  d="M 125 30 L 155 45 L 155 80 Q 155 110 125 145 Q 95 110 95 80 L 95 45 Z" 
+                  d="M 125 30 L 165 45 L 165 80 Q 165 110 125 145 Q 85 110 85 80 L 85 45 Z" 
                   fill="url(#sentinelGradient)" 
                   opacity="0.4"
                   stroke="url(#sentinelGradient)"
@@ -57,14 +57,14 @@
                 
                 <!-- Shield inner layer -->
                 <path 
-                  d="M 125 40 L 145 50 L 145 80 Q 145 100 125 130 Q 105 100 105 80 L 105 50 Z" 
+                  d="M 125 40 L 152 50 L 152 80 Q 152 100 125 130 Q 98 100 98 80 L 98 50 Z" 
                   fill="url(#sentinelGradient)" 
                   opacity="0.5"
                 />
                 
                 <!-- Central checkmark/verification symbol -->
                 <path 
-                  d="M 110 100 L 120 110 L 140 85" 
+                  d="M 108 92 L 118 102 L 142 77" 
                   :style="{ stroke: 'var(--color-secondary)' }" 
                   stroke-width="4" 
                   fill="none" 

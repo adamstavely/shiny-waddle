@@ -25,50 +25,112 @@
           </div>
           <div class="hero-visual">
             <div class="svg-container">
-              <svg viewBox="0 0 250 200" class="test-svg" preserveAspectRatio="xMidYMid meet">
+              <svg viewBox="0 0 300 240" class="test-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                   <linearGradient id="testGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 1 }" />
                     <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 1 }" />
                   </linearGradient>
-                  <linearGradient id="testGradientDark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }" />
-                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.6 }" />
+                  <linearGradient id="testGradientLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" :style="{ stopColor: 'var(--color-primary)', stopOpacity: 0.3 }" />
+                    <stop offset="100%" :style="{ stopColor: 'var(--color-secondary)', stopOpacity: 0.3 }" />
                   </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
                 
-                <!-- Test Battery - outer layer -->
-                <rect x="20" y="20" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
-                <rect x="25" y="25" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                <!-- Main test tube/flask -->
+                <g transform="translate(150, 120)">
+                  <!-- Flask body -->
+                  <path d="M -40 40 Q -40 20 -20 20 L 20 20 Q 40 20 40 40 L 40 100 Q 40 120 20 120 L -20 120 Q -40 120 -40 100 Z" 
+                        fill="url(#testGradientLight)" 
+                        stroke="url(#testGradient)" 
+                        stroke-width="2.5"
+                        opacity="0.4"/>
+                  
+                  <!-- Flask neck -->
+                  <rect x="-15" y="10" width="30" height="20" rx="3" 
+                        fill="url(#testGradientLight)" 
+                        stroke="url(#testGradient)" 
+                        stroke-width="2"
+                        opacity="0.4"/>
+                  
+                  <!-- Test liquid levels -->
+                  <rect x="-35" y="80" width="70" height="35" rx="2" 
+                        fill="url(#testGradient)" 
+                        opacity="0.6"/>
+                  <rect x="-35" y="60" width="70" height="20" rx="2" 
+                        fill="url(#testGradient)" 
+                        opacity="0.4"/>
+                  
+                  <!-- Bubbles in liquid -->
+                  <circle cx="-20" cy="70" r="3" fill="var(--color-secondary)" opacity="0.8"/>
+                  <circle cx="10" cy="75" r="2.5" fill="var(--color-secondary)" opacity="0.7"/>
+                  <circle cx="20" cy="65" r="2" fill="var(--color-secondary)" opacity="0.6"/>
+                  <circle cx="-10" cy="85" r="2" fill="var(--color-secondary)" opacity="0.5"/>
+                </g>
                 
-                <!-- Test Harness - middle layer -->
-                <rect x="85" y="35" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
-                <rect x="90" y="40" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                <!-- Test checkmarks around the flask -->
+                <g transform="translate(150, 120)">
+                  <!-- Top checkmark -->
+                  <circle cx="0" cy="-50" r="18" fill="url(#testGradientLight)" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                  <path d="M -8 -50 L -3 -45 L 8 -55" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Left checkmark -->
+                  <circle cx="-60" cy="20" r="18" fill="url(#testGradientLight)" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                  <path d="M -68 20 L -63 25 L -52 15" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Right checkmark -->
+                  <circle cx="60" cy="20" r="18" fill="url(#testGradientLight)" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                  <path d="M 52 20 L 57 25 L 68 15" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                  
+                  <!-- Bottom checkmark -->
+                  <circle cx="0" cy="90" r="18" fill="url(#testGradientLight)" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
+                  <path d="M -8 90 L -3 95 L 8 85" 
+                        stroke="var(--color-secondary)" 
+                        stroke-width="3" 
+                        fill="none" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        filter="url(#glow)"/>
+                </g>
                 
-                <!-- Test Suite - inner layer -->
-                <rect x="150" y="50" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
-                <rect x="155" y="55" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
+                <!-- Decorative particles/flakes -->
+                <circle cx="50" cy="40" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="250" cy="60" r="2.5" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="80" cy="180" r="2" fill="var(--color-primary)" opacity="0.6"/>
+                <circle cx="220" cy="200" r="2" fill="var(--color-secondary)" opacity="0.5"/>
+                <circle cx="30" cy="120" r="1.5" fill="var(--color-primary)" opacity="0.7"/>
+                <circle cx="270" cy="140" r="1.5" fill="var(--color-secondary)" opacity="0.6"/>
                 
-                <!-- Test Configuration - bottom -->
-                <rect x="85" y="120" width="80" height="50" rx="4" fill="url(#testGradient)" opacity="0.3" stroke="url(#testGradient)" stroke-width="2"/>
-                <rect x="90" y="125" width="70" height="40" rx="3" fill="url(#testGradient)" opacity="0.4" stroke="url(#testGradient)" stroke-width="1.5"/>
-                
-                <!-- Connection lines -->
-                <line x1="100" y1="45" x2="125" y2="60" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
-                <line x1="165" y1="60" x2="125" y2="75" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
-                <line x1="125" y1="145" x2="125" y2="90" stroke="url(#testGradient)" stroke-width="2" opacity="0.5"/>
-                
-                <!-- Checkmark symbols -->
-                <path d="M 40 40 L 50 50 L 65 30" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                <path d="M 105 55 L 115 65 L 130 45" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                <path d="M 170 70 L 180 80 L 195 60" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                <path d="M 105 140 L 115 150 L 130 130" :style="{ stroke: 'var(--color-secondary)', strokeWidth: '3', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round', opacity: 0.9 }"/>
-                
-                <!-- Accent dots -->
-                <circle cx="125" cy="100" r="3" :style="{ fill: 'var(--color-secondary)', opacity: 0.8 }"/>
-                <circle cx="60" cy="45" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
-                <circle cx="190" cy="75" r="2.5" :style="{ fill: 'var(--color-primary)', opacity: 0.7 }"/>
-                <circle cx="125" cy="145" r="2.5" :style="{ fill: 'var(--color-secondary)', opacity: 0.6 }"/>
+                <!-- Connection lines between checkmarks -->
+                <line x1="150" y1="70" x2="90" y2="120" stroke="url(#testGradient)" stroke-width="1.5" opacity="0.3"/>
+                <line x1="150" y1="70" x2="210" y2="120" stroke="url(#testGradient)" stroke-width="1.5" opacity="0.3"/>
+                <line x1="150" y1="210" x2="90" y2="120" stroke="url(#testGradient)" stroke-width="1.5" opacity="0.3"/>
+                <line x1="150" y1="210" x2="210" y2="120" stroke="url(#testGradient)" stroke-width="1.5" opacity="0.3"/>
               </svg>
             </div>
           </div>
@@ -345,15 +407,9 @@ onMounted(() => {
 
 .hero-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 20% 50%, var(--border-color-muted) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, var(--border-color-muted) 0%, transparent 50%);
-  opacity: 0.6;
-  pointer-events: none;
+  inset: 0;
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 .hero-content {
