@@ -17,16 +17,24 @@
       />
     </button>
     <nav class="drawer-nav" role="navigation" v-show="!isCollapsed && activeCategory">
-      <!-- Applications Category -->
-      <div v-if="activeCategory === 'applications'" :key="`applications-${activeCategory}`" class="drawer-category" data-category="applications">
+      <!-- Targets Category -->
+      <div v-if="activeCategory === 'targets'" :key="`targets-${activeCategory}`" class="drawer-category" data-category="targets">
         <div class="category-items category-items-padded">
+          <a
+            href="/targets"
+            @click.prevent="handleNavClick('/targets')"
+            :class="['drawer-item', isActive('/targets') && !isActive('/applications') && !isActive('/applications/platform-instances') ? 'drawer-item-active' : '']"
+          >
+            <LayoutDashboard class="item-icon" />
+            <span>Overview</span>
+          </a>
           <a
             href="/applications"
             @click.prevent="handleNavClick('/applications')"
             :class="['drawer-item', isActive('/applications') && !isActive('/applications/platform-instances') ? 'drawer-item-active' : '']"
           >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
+            <Database class="item-icon" />
+            <span>Applications</span>
           </a>
           <a
             href="/applications/platform-instances"
@@ -325,8 +333,9 @@ const currentPath = ref(route.path);
 const isCollapsed = ref(true);
 const activeCategory = ref<string | null>(null);
 
-// Applications pages
-const applicationsPages = [
+// Targets pages (includes targets overview, applications, and platform instances)
+const targetsPages = [
+  '/targets',
   '/applications',
   '/applications/platform-instances'
 ];
@@ -368,10 +377,11 @@ const adminPages = [
 
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
-  // Check if it's an applications page
-  if (path === '/applications' || path.startsWith('/applications/') ||
-      applicationsPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'applications';
+  // Check if it's a targets page
+  if (path === '/targets' || path.startsWith('/targets/') ||
+      path === '/applications' || path.startsWith('/applications/') ||
+      targetsPages.some(page => path === page || path.startsWith(page + '/'))) {
+    return 'targets';
   }
   // Check if it's a test design library page
   if (path === '/tests' || path.startsWith('/tests/') ||
@@ -455,6 +465,10 @@ onBeforeUnmount(() => {
 
 const isActive = (path: string): boolean => {
   if (!currentPath.value) return false;
+  if (path === '/targets') {
+    // For /targets, only match exactly /targets, not /targets/*
+    return currentPath.value === '/targets';
+  }
   if (path === '/tests') {
     // For /tests, only match exactly /tests, not /tests/*
     return currentPath.value === '/tests';

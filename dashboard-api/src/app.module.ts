@@ -48,10 +48,6 @@ import { ExceptionsModule } from './exceptions/exceptions.module';
 import { StandardsMappingModule } from './standards-mapping/standards-mapping.module';
 import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { AlertingModule } from './alerting/alerting.module';
-import { SalesforceBaselinesModule } from './salesforce-baselines/salesforce-baselines.module';
-import { ElasticBaselinesModule } from './elastic-baselines/elastic-baselines.module';
-import { IDPKubernetesBaselinesModule } from './idp-kubernetes-baselines/idp-kubernetes-baselines.module';
-import { ServiceNowBaselinesModule } from './servicenow-baselines/servicenow-baselines.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -106,10 +102,6 @@ import { AppController } from './app.controller';
     StandardsMappingModule,
     SalesforceExperienceCloudModule,
     AlertingModule,
-    SalesforceBaselinesModule,
-    ElasticBaselinesModule,
-    IDPKubernetesBaselinesModule,
-    ServiceNowBaselinesModule,
   ],
   controllers: [AppController],
   providers: [

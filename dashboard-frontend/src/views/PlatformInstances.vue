@@ -6,7 +6,7 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Platform Instances</h1>
-          <p class="page-description">Manage and validate platform instances against baselines</p>
+          <p class="page-description">Manage and validate platform instances (migrated to Applications)</p>
         </div>
         <button @click="modals.open('addInstance')" class="btn-primary">
           <Plus class="btn-icon" />
@@ -48,8 +48,8 @@
 
         <div class="instance-info">
           <div class="info-item">
-            <span class="info-label">Baseline:</span>
-            <span class="info-value">{{ getBaselineName(instance.baselineId) || 'Not assigned' }}</span>
+            <span class="info-label">Test Suite:</span>
+            <span class="info-value">{{ getTestSuiteName(instance.baselineId) || 'Not assigned' }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Last Validated:</span>
@@ -85,7 +85,7 @@
     <div v-if="!loading && !error && (!instances || instances.length === 0)" class="empty-state">
       <Shield class="empty-icon" />
       <h3>No platform instances configured</h3>
-      <p>Add your first platform instance to start validating against baselines</p>
+      <p>Platform instances have been migrated to Applications. Use the Applications page to manage platform instances.</p>
       <button @click="modals.open('addInstance')" class="btn-primary">
         <Plus class="btn-icon" />
         Add Platform Instance
@@ -96,7 +96,7 @@
     <AddPlatformInstanceModal
       :show="modals.isOpen('addInstance')"
       :instance="editingInstance"
-      :baselines="baselines"
+      :test-suites="baselines"
       @close="modals.close('addInstance'); editingInstance = null"
       @submit="handleInstanceSubmit"
     />
@@ -123,8 +123,8 @@ import { useMultiModal } from '../composables/useModal';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
-  { label: 'Applications', to: '/applications' },
-  { label: 'Platform Instances' }
+  { label: 'Targets', to: '/targets' },
+  { label: 'Platform Instances', to: '/applications/platform-instances' }
 ];
 
 const baselines = ref<any[]>([]);
@@ -156,22 +156,12 @@ const selectedInstance = ref<any>(null);
 
 const loadBaselines = async () => {
   try {
-    // Load baselines from all platforms
-    const [salesforce, elastic, idp, servicenow] = await Promise.all([
-      axios.get('/api/v1/salesforce/baselines').catch(() => ({ data: [] })),
-      axios.get('/api/v1/elastic/baselines').catch(() => ({ data: [] })),
-      axios.get('/api/v1/idp-kubernetes/baselines').catch(() => ({ data: [] })),
-      axios.get('/api/v1/servicenow/baselines').catch(() => ({ data: [] })),
-    ]);
-    
-    baselines.value = [
-      ...salesforce.data.map((b: any) => ({ ...b, platform: 'salesforce' })),
-      ...elastic.data.map((b: any) => ({ ...b, platform: 'elastic' })),
-      ...idp.data.map((b: any) => ({ ...b, platform: 'idp-kubernetes' })),
-      ...servicenow.data.map((b: any) => ({ ...b, platform: 'servicenow' })),
-    ];
+    // Load test suites (migrated from baselines)
+    const response = await axios.get('/api/v1/test-suites?domain=platform_config');
+    baselines.value = response.data || [];
   } catch (err) {
-    console.error('Error loading baselines:', err);
+    console.error('Error loading test suites:', err);
+    baselines.value = [];
   }
 };
 
@@ -193,10 +183,10 @@ const getInstanceResults = (instanceId: string) => {
   return results.value.filter(r => r.targetId === instanceId);
 };
 
-const getBaselineName = (baselineId?: string): string => {
-  if (!baselineId) return '';
-  const baseline = baselines.value.find(b => b.id === baselineId);
-  return baseline ? baseline.name : '';
+const getTestSuiteName = (testSuiteId?: string): string => {
+  if (!testSuiteId) return '';
+  const suite = baselines.value.find((s: any) => s.id === testSuiteId);
+  return suite ? suite.name : '';
 };
 
 const getStatusLabel = (status: string): string => {

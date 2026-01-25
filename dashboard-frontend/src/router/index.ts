@@ -4,6 +4,7 @@ import Dashboard from '../views/Dashboard.vue';
 import ApplicationDashboard from '../views/ApplicationDashboard.vue';
 import ApplicationDetail from '../views/ApplicationDetail.vue';
 import Applications from '../views/Applications.vue';
+import TargetsOverview from '../views/TargetsOverview.vue';
 import TeamDashboard from '../views/TeamDashboard.vue';
 import TestsOverview from '../views/TestsOverview.vue';
 import AccessControlOverview from '../views/AccessControlOverview.vue';
@@ -49,7 +50,6 @@ import NotificationSettings from '../views/NotificationSettings.vue';
 import IAMIntegrations from '../views/IAMIntegrations.vue';
 import EnvironmentConfigTesting from '../views/EnvironmentConfigTesting.vue';
 import SalesforceExperienceCloud from '../views/SalesforceExperienceCloud.vue';
-import ServiceNowBaselinesPolicies from '../views/policies/ServiceNowBaselinesPolicies.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -63,6 +63,11 @@ const router = createRouter({
       path: '/dashboard',
       name: 'Dashboard',
       component: Dashboard,
+    },
+    {
+      path: '/targets',
+      name: 'TargetsOverview',
+      component: TargetsOverview,
     },
     {
       path: '/applications',
@@ -228,26 +233,6 @@ const router = createRouter({
       path: '/policies/data-contracts',
       name: 'DataContractsPolicies',
       component: () => import('../views/policies/DataContractsPolicies.vue'),
-    },
-    {
-      path: '/policies/salesforce',
-      name: 'SalesforceBaselinesPolicies',
-      component: () => import('../views/policies/SalesforceBaselinesPolicies.vue'),
-    },
-    {
-      path: '/policies/elastic',
-      name: 'ElasticBaselinesPolicies',
-      component: () => import('../views/policies/ElasticBaselinesPolicies.vue'),
-    },
-    {
-      path: '/policies/idp-platform',
-      name: 'IDPPlatformPolicies',
-      component: () => import('../views/policies/IDPPlatformPolicies.vue'),
-    },
-    {
-      path: '/policies/servicenow',
-      name: 'ServiceNowBaselinesPolicies',
-      component: ServiceNowBaselinesPolicies,
     },
     {
       path: '/policies/:id',

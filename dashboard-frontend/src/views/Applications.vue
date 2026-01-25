@@ -138,6 +138,7 @@ const router = useRouter();
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
+  { label: 'Targets', to: '/targets' },
   { label: 'Applications', to: '/applications' },
 ];
 

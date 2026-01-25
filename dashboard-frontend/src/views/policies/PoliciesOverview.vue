@@ -16,7 +16,7 @@
             </h1>
             <p class="hero-description">
               Manage access control policies, data classification, platform configurations, and compliance 
-              standards. Define RBAC and ABAC policies, configure baselines, manage exceptions, and ensure 
+              standards. Define RBAC and ABAC policies, manage exceptions, and ensure 
               your systems meet security and compliance requirements.
             </p>
             <div class="hero-actions">
@@ -88,13 +88,6 @@
             <div class="stat-label">Active Exceptions</div>
           </div>
         </div>
-        <div class="stat-card" @click="navigateTo('/policies/salesforce')">
-          <Cloud class="stat-icon" />
-          <div class="stat-content">
-            <div class="stat-value">{{ stats.salesforceBaselines || 0 }}</div>
-            <div class="stat-label">Salesforce Baselines</div>
-          </div>
-        </div>
       </div>
     </div>
     
@@ -157,34 +150,6 @@
         </div>
       </div>
 
-      <!-- Platform Baselines Group -->
-      <div class="policy-group">
-        <div class="policy-group-header">
-          <Settings class="group-header-icon" />
-          <h3 class="policy-group-title">Platform Baselines</h3>
-          <p class="policy-group-description">Manage configuration baselines for platforms and services</p>
-        </div>
-        <div class="policy-types-grid">
-          <div class="policy-type-card" @click="navigateTo('/policies/salesforce')">
-            <Cloud class="policy-type-icon" />
-            <h4 class="policy-type-title">Salesforce</h4>
-            <p class="policy-type-description">Manage Salesforce configuration baselines</p>
-            <div class="policy-type-badge">{{ stats.salesforceBaselines || 0 }} baselines</div>
-          </div>
-          <div class="policy-type-card" @click="navigateTo('/policies/elastic')">
-            <Server class="policy-type-icon" />
-            <h4 class="policy-type-title">Elastic</h4>
-            <p class="policy-type-description">Manage Elastic configuration baselines</p>
-            <div class="policy-type-badge">{{ stats.elasticBaselines || 0 }} baselines</div>
-          </div>
-          <div class="policy-type-card" @click="navigateTo('/policies/idp-platform')">
-            <Container class="policy-type-icon" />
-            <h4 class="policy-type-title">IDP / Kubernetes</h4>
-            <p class="policy-type-description">Manage IDP and Kubernetes baselines</p>
-            <div class="policy-type-badge">{{ stats.idpBaselines || 0 }} baselines</div>
-          </div>
-        </div>
-      </div>
     </div>
     
     <!-- Quick Actions Section -->
@@ -203,10 +168,6 @@
           <Plus class="action-icon" />
           Request Exception
         </button>
-        <button @click="navigateTo('/policies/salesforce')" class="action-card">
-          <Plus class="action-icon" />
-          Create Salesforce Baseline
-        </button>
       </div>
     </div>
   </div>
@@ -222,9 +183,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Database,
-  Cloud,
-  Server,
-  Container,
   Workflow,
   Plus
 } from 'lucide-vue-next';
@@ -244,9 +202,6 @@ const stats = ref({
   exceptions: 0,
   standards: 0,
   dataContracts: 0,
-  salesforceBaselines: 0,
-  elasticBaselines: 0,
-  idpBaselines: 0
 });
 
 const navigateTo = (path: string) => {
@@ -273,10 +228,6 @@ const loadStats = async () => {
     stats.value.exceptions = 0;
     stats.value.standards = 0;
     stats.value.dataContracts = 0;
-    stats.value.salesforceBaselines = 0;
-    stats.value.elasticBaselines = 0;
-    stats.value.idpBaselines = 0;
-    stats.value.servicenowBaselines = 0;
   } catch (err) {
     console.error('Error loading stats:', err);
   }

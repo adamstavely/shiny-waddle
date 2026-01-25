@@ -556,6 +556,7 @@ const tabs = [
 
 const breadcrumbItems = computed(() => [
   { label: 'Home', to: '/' },
+  { label: 'Targets', to: '/targets' },
   { label: 'Applications', to: '/applications' },
   { label: application.value?.name || 'Application' }
 ]);

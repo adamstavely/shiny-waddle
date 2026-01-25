@@ -8,7 +8,7 @@
       <div class="nav-items-container">
         <template v-for="(item, index) in menuItems" :key="item.path">
           <router-link
-            v-if="!['/test-design-library', '/admin', '/policies'].includes(item.path)"
+            v-if="!['/test-design-library', '/admin', '/policies', '/targets'].includes(item.path)"
             :to="item.path"
             :class="[
               'nav-item',
@@ -81,7 +81,8 @@ import {
   UserCog,
   KeyRound,
   BookOpen,
-  PlayCircle
+  PlayCircle,
+  Target
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -90,7 +91,7 @@ const currentPath = ref(route.path);
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, divider: false },
-  { path: '/applications', label: 'Applications', icon: Database, divider: false },
+  { path: '/targets', label: 'Targets', icon: Target, divider: false },
   { path: '/test-design-library', label: 'Test Design Library', icon: BookOpen, divider: false },
   { path: '/policies', label: 'Policies & Config', icon: Shield, divider: false },
 ];
@@ -123,14 +124,19 @@ const insightsReportsPages = [
   '/insights/trends',
 ];
 
+// Targets pages (includes targets overview, applications, and platform instances)
+const targetsPages = [
+  '/targets',
+  '/applications',
+  '/applications/platform-instances'
+];
+
 const isActive = (path: string): boolean => {
   if (path === '/dashboard') {
     return currentPath.value === '/dashboard' || currentPath.value === '/';
   }
-  if (path === '/applications') {
-    return currentPath.value === '/applications' || 
-           currentPath.value.startsWith('/applications/') ||
-           currentPath.value.startsWith('/applications/platform-instances');
+  if (path === '/targets') {
+    return targetsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
   if (path === '/test-design-library') {
     return testDesignLibraryPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
@@ -146,6 +152,11 @@ const isActive = (path: string): boolean => {
 
 const handleNavClick = (path: string) => {
   // For drawer items, open the drawer with that category's content
+  if (path === '/targets') {
+    // Emit event to open drawer with targets category
+    window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'targets' } }));
+    return;
+  }
   if (path === '/test-design-library') {
     // Emit event to open drawer with test-design-library category
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'test-design-library' } }));
