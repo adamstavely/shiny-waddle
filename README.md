@@ -6,41 +6,50 @@ Heimdall is an automated testing framework that validates applications are adher
 
 ### Core Testing Capabilities
 
-- **User Simulation**: Simulate users with different roles/attributes
-- **Access Control Tests**: Evaluate Policy Decision Point (PDP) decisions for representative identities, attributes, resources, and contexts
-- **Contract Tests**: Machine-readable requirements → generated tests (e.g., "No raw email export," "Min aggregation ≥ k=10")
-- **Dataset Health Tests**: Assert masked/synthetic data meets privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy) and statistical fidelity targets
-- **Ephemeral Environments**: Spin up per-PR with seeded masked/synthetic data; run full harness before merge
-- **CI/CD Integration**: Block merges on access violations with GitHub Actions
-- **Compliance Dashboard**: Show compliance score by application, team, dataset
-- **Integration Hooks**: SAST/DAST/DBT/Great Expectations integration for schema, constraint, and data-quality tests
-- **API Security Testing**: Comprehensive REST/GraphQL API security testing including authentication, authorization, rate limiting, and vulnerability detection
-- **Data Pipeline Testing**: Test ETL pipelines, streaming data, data transformations, and pipeline security controls
-- **Distributed Systems Testing**: Test access control across multiple regions, verify policy consistency, test synchronization, and distributed transactions
-- **Salesforce Experience Cloud Testing**: Test Salesforce Experience Cloud applications for security misconfigurations using Google's aura-inspector tool
+#### 1. Access Control Testing
+- **PDP Decision Testing**: Evaluate Policy Decision Point decisions for representative identities, attributes, resources, and contexts
+- **RBAC Support**: Role-Based Access Control policy testing
+- **ABAC Support**: Attribute-Based Access Control policy testing
+- **Hybrid Mode**: Support for both RBAC and ABAC simultaneously
+
+#### 2. Dataset Health Testing
+- **Privacy Metrics**: k-anonymity, l-diversity, t-closeness, differential privacy
+- **Statistical Fidelity**: Validate mean, median, stddev, distribution similarity
+- **Masked Data Validation**: Test masked/synthetic data quality
 
 ### Zero Trust Architecture (ZTA) Features
 
 #### Access Control
-- **Policy Validation**: Detect policy conflicts, analyze coverage, test performance, run regression tests, and simulate policy changes
-- **Identity Providers**: Test AD group membership, Okta/Auth0/Azure AD policy synchronization, GCP IAM bindings, and cross-system policy validation
+- **Policy Validation**: Detect policy conflicts, analyze coverage, test performance, run regression tests, simulate policy changes
+- **Identity Providers**: Test AD group membership, Okta/Auth0/Azure AD policy synchronization, GCP IAM bindings, cross-system policy validation
 
 #### Data Security
-- **RLS/CLS Testing**: Test Row-Level Security and Column-Level Security coverage, dynamic masking, cross-tenant isolation, and policy bypass attempts
-- **DLP (Data Loss Prevention)**: Test data exfiltration detection, API response validation, query validation, and bulk export controls
+- **RLS/CLS Testing**: Test Row-Level Security and Column-Level Security coverage, dynamic masking, cross-tenant isolation, policy bypass attempts
+- **DLP (Data Loss Prevention)**: Test data exfiltration detection, API response validation, query validation, bulk export controls
 
 #### Application Security
-- **API Gateway**: Test gateway policies, rate limiting, API versioning, and service-to-service authentication
-- **DLP**: Comprehensive data loss prevention testing
+- **API Gateway**: Test gateway policies, rate limiting, API versioning, service-to-service authentication
+- **API Security**: Comprehensive REST/GraphQL API security testing including authentication, authorization, rate limiting, vulnerability detection
 
 #### Platform Security
-- **Network Policies**: Test firewall rules, service-to-service connectivity, network segmentation, and service mesh policies
+- **Network Policies**: Test firewall rules, service-to-service connectivity, network segmentation, service mesh policies
+- **Distributed Systems**: Test access control across multiple regions, verify policy consistency, test synchronization, distributed transactions
 
 #### Compliance
 - **NIST 800-207**: Zero Trust Architecture compliance assessment and reporting
+- **CI/CD Security Gates**: Pre-merge policy validation, IAC scanning, container scanning, K8s RBAC validation
 
-#### CI/CD Security
-- **Security Gates**: Pre-merge policy validation, IAC scanning, container scanning, K8s RBAC validation, and configurable security gates
+### Additional Features
+
+- **Ephemeral Environments**: Spin up per-PR with seeded masked/synthetic data; run full harness before merge
+- **CI/CD Integration**: Block merges on access violations with GitHub Actions
+- **Compliance Dashboard**: Show compliance score by application, team, dataset
+- **Integration Hooks**: SAST/DAST/DBT/Great Expectations integration for schema, constraint, and data-quality tests
+- **Data Pipeline Testing**: Test ETL pipelines, streaming data, data transformations, pipeline security controls
+- **Data Contract Testing**: Machine-readable requirements → generated tests (e.g., "No raw email export," "Min aggregation ≥ k=10")
+- **Salesforce Experience Cloud Testing**: Test Salesforce Experience Cloud applications for security misconfigurations using Google's aura-inspector tool
+- **Advanced Reporting**: Generate HTML, JSON, JUnit XML reports
+- **Risk Scoring**: Calculate risk scores and prioritize issues
 
 ## Architecture
 
@@ -51,7 +60,6 @@ heimdall/
 │   │   ├── test-harness.ts      # Main orchestrator
 │   │   └── types.ts             # Type definitions
 │   ├── services/            # Test service implementations
-│   │   ├── user-simulator.ts    # User role/attribute simulation
 │   │   ├── access-control-tester.ts  # PDP decision evaluation
 │   │   ├── contract-tester.ts       # Contract requirement testing
 │   │   ├── dataset-health-tester.ts  # Privacy & statistical tests
@@ -468,26 +476,98 @@ DATA_DIR=/path/to/data/directory
 
 ## Test Types
 
-### 1. Access Control Tests
+The framework supports multiple test types, organized by domain:
 
+### Core Test Types
+
+#### 1. Access Control Tests (`access-control`)
 Tests Policy Decision Point (PDP) decisions for:
 - Different user roles (admin, researcher, analyst, viewer)
 - Various resource types and sensitivity levels
 - Different contexts (IP address, time of day, location)
+- RBAC and ABAC policy validation
 
-### 2. Contract Tests
+#### 2. Dataset Health Tests (`dataset-health`)
+Validates:
+- Privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy)
+- Statistical fidelity (mean, median, stddev, distribution similarity)
 
+### Zero Trust Architecture Test Types
+
+#### 3. RLS/CLS Tests (`rls-cls`)
+- Row-Level Security and Column-Level Security coverage
+- Dynamic masking validation
+- Cross-tenant isolation
+- Policy bypass attempts
+
+#### 4. DLP Tests (`dlp`)
+- Data exfiltration detection
+- API response validation
+- Query validation
+- Bulk export controls
+
+#### 5. API Gateway Tests (`api-gateway`)
+- Gateway policies and routing
+- Rate limiting and throttling
+- Service-to-service authentication
+- Request/response transformation security
+
+#### 6. Network Policy Tests (`network-policy`)
+- Firewall rules
+- Service-to-service connectivity
+- Network segmentation
+- Service mesh policies
+
+#### 7. Distributed Systems Tests (`distributed-systems`)
+- Multi-region access control
+- Policy consistency across regions
+- Synchronization testing
+- Distributed transaction validation
+
+### Application Security Test Types
+
+#### 8. API Security Tests (`api-security`)
+- REST/GraphQL API security testing
+- Authentication and authorization
+- Rate limiting
+- Vulnerability detection
+- API versioning security
+- Webhook security
+- GraphQL security (depth limits, complexity limits)
+
+#### 9. Data Pipeline Tests (`data-pipeline`)
+- ETL pipeline testing
+- Streaming data validation
+- Data transformation security
+- Pipeline security controls
+
+#### 10. Data Contract Tests (`data-contract`)
 Tests machine-readable requirements from data owners:
 - Field restrictions (e.g., "No raw email export")
 - Aggregation requirements (e.g., "Min aggregation ≥ k=10")
 - Join restrictions
 - Export restrictions
 
-### 4. Dataset Health Tests
+### Platform-Specific Test Types
 
-Validates:
-- Privacy thresholds (k-anonymity, l-diversity, t-closeness, differential privacy)
-- Statistical fidelity (mean, median, stddev, distribution similarity)
+#### 11. Salesforce Tests (`salesforce-config`, `salesforce-security`, `salesforce-experience-cloud`)
+- Salesforce Experience Cloud security testing
+- Configuration validation
+- Security misconfiguration detection
+
+#### 12. Kubernetes Tests (`k8s-security`, `k8s-workload`)
+- K8s RBAC validation
+- Workload security testing
+- Container security
+
+#### 13. Elastic Tests (`elastic-config`, `elastic-security`)
+- Elasticsearch configuration validation
+- Security testing
+
+#### 14. IDP Compliance Tests (`idp-compliance`)
+- Identity provider compliance validation
+- AD group membership testing
+- Policy synchronization validation
 
 ## CI/CD Integration
 

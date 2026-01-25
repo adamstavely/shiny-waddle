@@ -44,7 +44,6 @@ Heimdall is a comprehensive testing framework designed to:
 ### ✅ Core Testing Capabilities
 
 #### 1. Access Control Testing
-- **User Simulation**: Simulate users with different roles/attributes
 - **PDP Decision Testing**: Evaluate Policy Decision Point decisions for representative identities, attributes, resources, and contexts
 - **RBAC Support**: Role-Based Access Control policy testing
 - **ABAC Support**: Attribute-Based Access Control policy testing
@@ -1074,10 +1073,6 @@ const suite = await loadTestSuite('my-test-suite');
 
 // Create configuration
 const config: TestConfiguration = {
-  userSimulationConfig: {
-    roles: suite.userRoles,
-    attributes: {},
-  },
   accessControlConfig: {
     policyEngine: 'custom',
     cacheDecisions: true,
