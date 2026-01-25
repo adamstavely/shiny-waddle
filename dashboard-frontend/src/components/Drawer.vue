@@ -112,7 +112,7 @@
             @click.prevent="handleNavClick('/policies/access-control')"
             :class="['drawer-item', isActive('/policies/access-control') ? 'drawer-item-active' : '']"
           >
-            <Shield class="item-icon" />
+            <Lock class="item-icon" />
             <span>Access Control</span>
           </a>
           <a
