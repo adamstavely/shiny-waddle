@@ -25,7 +25,7 @@ import {
 import { CreateFromTemplateDto } from './dto/create-from-template.dto';
 import { ABACPolicy } from '../../../heimdall-framework/core/types';
 import { PoliciesService } from '../policies/policies.service';
-import { CreatePolicyDto, PolicyType } from '../policies/dto/create-policy.dto';
+import { CreatePolicyDto, PolicyType, PolicyEffect } from '../policies/dto/create-policy.dto';
 
 @Injectable()
 export class TemplatesService {
