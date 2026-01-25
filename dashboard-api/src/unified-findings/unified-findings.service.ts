@@ -265,7 +265,7 @@ export class UnifiedFindingsService {
       await this.storeComplianceScore(overallScore);
 
       // Check for score drop and notify
-      if (this.notificationsService && overallScore < previousScore) {
+      if (overallScore < previousScore) {
         const scoreChange = overallScore - previousScore;
         
         // Get users to notify (all users, since this is overall score)
@@ -322,9 +322,9 @@ export class UnifiedFindingsService {
           // Get users associated with this application
           const userIds = await this.getUsersToNotify([appId]);
           
-          for (const userId of userIds) {
-            const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
-            if (notificationsService) {
+          const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+          if (notificationsService) {
+            for (const userId of userIds) {
               try {
                 // Check each user's preferences individually
                 const preferences = notificationsService.getUserPreferences(userId);
@@ -340,8 +340,9 @@ export class UnifiedFindingsService {
                   );
                 }
               } catch (err) {
-              this.logger.error(`Failed to notify user ${userId} about app score drop:`, err);
-              // Don't throw - notification failures shouldn't break finding updates
+                this.logger.error(`Failed to notify user ${userId} about app score drop:`, err);
+                // Don't throw - notification failures shouldn't break finding updates
+              }
             }
           }
         }
