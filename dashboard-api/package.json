@@ -14,6 +14,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:integration": "jest --config ./test/jest-integration.json",
     "migrate": "ts-node --transpile-only -r tsconfig-paths/register src/scripts/run-migrations.ts"
   },
   "dependencies": {
@@ -56,6 +57,8 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "nock": "^13.5.0",
+    "@types/nock": "^13.5.0"
   }
 }

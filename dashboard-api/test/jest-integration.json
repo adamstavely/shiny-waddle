@@ -1,0 +1,24 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".integration.spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", {
+      "tsconfig": {
+        "paths": {
+          "../../core/*": ["../core/*"],
+          "../../services/*": ["../services/*"]
+        }
+      }
+    }]
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(uuid)/)"
+  ],
+  "moduleNameMapper": {
+    "^../../core/(.*)$": "<rootDir>/../core/$1",
+    "^../../services/(.*)$": "<rootDir>/../services/$1"
+  },
+  "testTimeout": 30000
+}
