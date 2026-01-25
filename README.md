@@ -109,7 +109,7 @@ The `/heimdall-framework/core` directory contains the foundational components th
 - **`config-loader.ts`** - Utilities for loading runtime configuration from files or environment variables
 - **`runtime-config.ts`** - Runtime configuration types and utilities
 - **`domain-mapping.ts`** - Maps test types to domains (api_security, platform_config, etc.)
-- **`unified-finding-schema.ts`** - Unified schema for security findings across different scanners
+- **`unified-finding-schema.ts`** - Unified schema for security findings across different scanners (legacy sentinel fields removed)
 - **`schema-versioning.ts`** - Schema versioning and migration utilities
 - **`schema-migrations.ts`** - Schema migration implementations
 
@@ -194,6 +194,7 @@ The `/dashboard-api` directory contains the REST API backend built with NestJS:
   - **`api-security/`** - API security testing endpoints
   - **`data-pipeline/`** - Data pipeline testing endpoints
   - **`validators/`** - Validator management endpoints
+  - **`common/services/`** - Shared services (logger, etc.)
   - And many more modules...
 
 **Import Pattern**: Dashboard API services import from the framework:
@@ -201,6 +202,8 @@ The `/dashboard-api` directory contains the REST API backend built with NestJS:
 import { Test, TestType } from '../../../heimdall-framework/core/types';
 import { APISecurityTester } from '../../../heimdall-framework/services/api-security-tester';
 ```
+
+**Logging**: The API uses a structured logging system with environment-based log level control. See [`dashboard-api/LOGGING.md`](./dashboard-api/LOGGING.md) for details.
 
 #### `/dashboard-frontend` - Vue.js Frontend
 
@@ -292,7 +295,6 @@ For new developers:
 ### Installation
 
 ```bash
-cd sentinel
 npm install
 ```
 
@@ -312,6 +314,36 @@ POLICY_MODE=abac TEST_SUITE=abac-test-suite npm run test:compliance
 npm run test:compliance:watch
 ```
 
+### Running the Dashboard
+
+```bash
+# Install dependencies for both API and frontend
+npm run dashboard:install
+
+# Start API (runs on http://localhost:3001)
+npm run dashboard:api
+
+# Start frontend (runs on http://localhost:5173)
+npm run dashboard:frontend
+
+# Or start both together
+npm run dashboard:start
+```
+
+### Logging
+
+The dashboard API uses structured logging. Configure log levels and format:
+
+```bash
+# Development - verbose logging
+LOG_LEVEL=DEBUG LOG_FORMAT=pretty npm run dashboard:api
+
+# Production - warnings and errors only, JSON format
+LOG_LEVEL=WARN LOG_FORMAT=json npm run dashboard:api
+```
+
+See [`dashboard-api/LOGGING.md`](./dashboard-api/LOGGING.md) for complete logging documentation.
+
 ## Documentation
 
 ### Core Documentation
@@ -326,6 +358,7 @@ npm run test:compliance:watch
 - **[Testing Guide](./docs/TESTING.md)**: Comprehensive guide for writing and running tests (unit, integration, E2E)
 - **[Service Implementation Guide](./docs/SERVICES.md)**: Guide for implementing and extending services
 - **[Implementation Progress](./docs/IMPLEMENTATION_PROGRESS.md)**: Current implementation status and progress tracking
+- **[Logging Guide](./dashboard-api/LOGGING.md)**: Structured logging configuration and usage guide
 
 ### Documentation Overview
 
@@ -370,6 +403,8 @@ The documentation is organized into several guides:
 
 ### Configuration
 
+#### Test Suite Configuration
+
 Create a test suite configuration file in `tests/suites/`:
 
 ```typescript
@@ -382,6 +417,53 @@ Create a test suite configuration file in `tests/suites/`:
   "resources": [...],
   "testQueries": [...]
 }
+```
+
+#### Logging Configuration
+
+The dashboard API supports structured logging with environment-based configuration:
+
+```bash
+# Set log level (VERBOSE, DEBUG, INFO, WARN, ERROR)
+# Default: WARN in production, DEBUG in development, ERROR in test
+LOG_LEVEL=DEBUG
+
+# Set log format (json for production, pretty for development)
+# Default: json in production, pretty in development
+LOG_FORMAT=json
+```
+
+For detailed logging configuration, see [`dashboard-api/LOGGING.md`](./dashboard-api/LOGGING.md).
+
+#### Environment Variables
+
+**API Configuration:**
+```bash
+# API port (default: 3001)
+PORT=3001
+
+# CORS origin (default: http://localhost:5173)
+CORS_ORIGIN=http://localhost:5173
+
+# HTTPS configuration
+HTTPS_ENABLED=true
+HTTPS_KEY_PATH=/path/to/key.pem
+HTTPS_CERT_PATH=/path/to/cert.pem
+```
+
+**Logging:**
+```bash
+LOG_LEVEL=DEBUG
+LOG_FORMAT=json
+```
+
+**Security:**
+```bash
+# Encryption key (hex-encoded 32-byte key for AES-256)
+ENCRYPTION_KEY=your-32-byte-hex-key-here
+
+# Data directory (where secrets and audit logs are stored)
+DATA_DIR=/path/to/data/directory
 ```
 
 ## Test Types
