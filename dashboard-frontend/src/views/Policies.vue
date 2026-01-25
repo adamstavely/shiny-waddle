@@ -6,7 +6,7 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Policies & Configuration</h1>
-          <p class="page-description">Manage access control policies, data policies, platform baselines, and configurations</p>
+          <p class="page-description">Manage access control policies, data policies, and configurations</p>
         </div>
       </div>
     </div>
@@ -55,26 +55,6 @@
         </div>
       </div>
 
-      <!-- Platform Baselines Group -->
-      <div class="tab-group">
-        <div class="tab-group-header">
-          <Settings class="group-icon" />
-          <span class="group-label">Platform Baselines</span>
-        </div>
-        <div class="tab-group-tabs">
-          <button
-            v-for="tab in platformBaselinesTabs"
-            :key="tab.id"
-            @click="handleTabChange(tab.id)"
-            class="tab-button"
-            :class="{ 'tab-active': activeTab === tab.id }"
-          >
-            <component :is="tab.icon" class="tab-icon" />
-            <span class="tab-label">{{ tab.label }}</span>
-            <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Tab Content -->
@@ -84,10 +64,6 @@
       <ExceptionsPolicies v-else-if="activeTab === 'exceptions'" />
       <StandardsMappingPolicies v-else-if="activeTab === 'standards-mapping'" />
       <DataContractsPolicies v-else-if="activeTab === 'data-contracts'" />
-      <SalesforceBaselinesPolicies v-else-if="activeTab === 'salesforce'" />
-      <ElasticBaselinesPolicies v-else-if="activeTab === 'elastic'" />
-      <IDPPlatformPolicies v-else-if="activeTab === 'idp-platform'" />
-      <ServiceNowBaselinesPolicies v-else-if="activeTab === 'servicenow'" />
     </div>
   </div>
 </template>
@@ -102,10 +78,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Database,
-  Cloud,
-  Server,
-  Container,
-  Workflow
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import AccessControlPolicies from './policies/AccessControlPolicies.vue';
@@ -113,10 +85,6 @@ import DataClassificationPolicies from './policies/DataClassificationPolicies.vu
 import ExceptionsPolicies from './policies/ExceptionsPolicies.vue';
 import StandardsMappingPolicies from './policies/StandardsMappingPolicies.vue';
 import DataContractsPolicies from './policies/DataContractsPolicies.vue';
-import SalesforceBaselinesPolicies from './policies/SalesforceBaselinesPolicies.vue';
-import ElasticBaselinesPolicies from './policies/ElasticBaselinesPolicies.vue';
-import IDPPlatformPolicies from './policies/IDPPlatformPolicies.vue';
-import ServiceNowBaselinesPolicies from './policies/ServiceNowBaselinesPolicies.vue';
 import axios from 'axios';
 
 const route = useRoute();
@@ -128,7 +96,7 @@ const breadcrumbItems = [
 ];
 
 // Initialize active tab from route query or default
-const activeTab = ref<'access-control' | 'data-classification' | 'exceptions' | 'standards-mapping' | 'data-contracts' | 'salesforce' | 'elastic' | 'idp-platform' | 'servicenow'>(
+const activeTab = ref<'access-control' | 'data-classification' | 'exceptions' | 'standards-mapping' | 'data-contracts'>(
   (route.query.tab as any) || 'access-control'
 );
 
@@ -138,11 +106,7 @@ const policyCounts = ref({
   dataClassification: 0,
   exceptions: 0,
   standardsMapping: 0,
-  dataContracts: 0,
-  salesforce: 0,
-  elastic: 0,
-  idpPlatform: 0,
-  servicenow: 0
+  dataContracts: 0
 });
 
 // Access Control Policies Group
@@ -183,33 +147,6 @@ const dataPoliciesTabs = computed(() => [
   }
 ]);
 
-// Platform Baselines Group
-const platformBaselinesTabs = computed(() => [
-  { 
-    id: 'salesforce', 
-    label: 'Salesforce', 
-    icon: Cloud,
-    badge: policyCounts.value.salesforce || undefined
-  },
-  { 
-    id: 'elastic', 
-    label: 'Elastic', 
-    icon: Server,
-    badge: policyCounts.value.elastic || undefined
-  },
-  { 
-    id: 'idp-platform', 
-    label: 'IDP / Kubernetes', 
-    icon: Container,
-    badge: policyCounts.value.idpPlatform || undefined
-  },
-  { 
-    id: 'servicenow', 
-    label: 'ServiceNow', 
-    icon: Workflow,
-    badge: policyCounts.value.servicenow || undefined
-  }
-]);
 
 const handleTabChange = (tabId: string) => {
   activeTab.value = tabId as any;
@@ -221,16 +158,12 @@ const handleTabChange = (tabId: string) => {
 const loadPolicyCounts = async () => {
   try {
     // Load counts from various endpoints
-    const [policies, levels, exceptions, standards, contracts, salesforceBaselines, elasticBaselines, idpBaselines, servicenowBaselines] = await Promise.allSettled([
+    const [policies, levels, exceptions, standards, contracts] = await Promise.allSettled([
       axios.get('/api/policies').then(r => r.data),
       axios.get('/api/data-classification/levels').then(r => r.data).catch(() => []),
       axios.get('/api/policies/exceptions').then(r => r.data).catch(() => []),
       axios.get('/api/standards').then(r => r.data).catch(() => []),
-      axios.get('/api/data-contracts').then(r => r.data).catch(() => []),
-      axios.get('/api/v1/salesforce/baselines').then(r => r.data).catch(() => []),
-      axios.get('/api/v1/elastic/baselines').then(r => r.data).catch(() => []),
-      axios.get('/api/v1/idp-kubernetes/baselines').then(r => r.data).catch(() => []),
-      axios.get('/api/v1/servicenow/baselines').then(r => r.data).catch(() => [])
+      axios.get('/api/data-contracts').then(r => r.data).catch(() => [])
     ]);
 
     policyCounts.value = {
@@ -238,11 +171,7 @@ const loadPolicyCounts = async () => {
       dataClassification: levels.status === 'fulfilled' ? levels.value.length : 0,
       exceptions: exceptions.status === 'fulfilled' ? exceptions.value.length : 0,
       standardsMapping: standards.status === 'fulfilled' ? standards.value.length : 0,
-      dataContracts: contracts.status === 'fulfilled' ? contracts.value.length : 0,
-      salesforce: salesforceBaselines.status === 'fulfilled' ? (salesforceBaselines.value?.length || 0) : 0,
-      elastic: elasticBaselines.status === 'fulfilled' ? (elasticBaselines.value?.length || 0) : 0,
-      idpPlatform: idpBaselines.status === 'fulfilled' ? (idpBaselines.value?.length || 0) : 0,
-      servicenow: servicenowBaselines.status === 'fulfilled' ? (servicenowBaselines.value?.length || 0) : 0
+      dataContracts: contracts.status === 'fulfilled' ? contracts.value.length : 0
     };
   } catch (error) {
     console.error('Error loading policy counts:', error);
@@ -252,10 +181,10 @@ const loadPolicyCounts = async () => {
 // Watch for route changes to update active tab
 watch(() => route.query.tab, (newTab) => {
   if (newTab && typeof newTab === 'string') {
-    // Redirect platform-config to salesforce if someone has an old URL
-    if (newTab === 'platform-config') {
-      router.replace({ query: { ...route.query, tab: 'salesforce' } });
-      activeTab.value = 'salesforce';
+    // Redirect old baseline tabs to access-control
+    if (['platform-config', 'salesforce', 'elastic', 'idp-platform', 'servicenow'].includes(newTab)) {
+      router.replace({ query: { ...route.query, tab: 'access-control' } });
+      activeTab.value = 'access-control';
     } else {
       activeTab.value = newTab as any;
     }

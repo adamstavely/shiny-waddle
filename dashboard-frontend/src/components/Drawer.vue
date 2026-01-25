@@ -162,46 +162,6 @@
             </a>
           </div>
 
-          <!-- Platform Baselines Section -->
-          <div class="category-section">
-            <div class="section-header">
-              <Settings class="section-icon" />
-              <span class="section-title">Platform Baselines</span>
-            </div>
-            <a
-              href="/policies/salesforce"
-              @click.prevent="handleNavClick('/policies/salesforce')"
-              :class="['drawer-item', isActive('/policies/salesforce') ? 'drawer-item-active' : '']"
-            >
-              <Cloud class="item-icon" />
-              <span>Salesforce</span>
-            </a>
-            <a
-              href="/policies/elastic"
-              @click.prevent="handleNavClick('/policies/elastic')"
-              :class="['drawer-item', isActive('/policies/elastic') ? 'drawer-item-active' : '']"
-            >
-              <Server class="item-icon" />
-              <span>Elastic</span>
-            </a>
-            <a
-              href="/policies/idp-platform"
-              @click.prevent="handleNavClick('/policies/idp-platform')"
-              :class="['drawer-item', isActive('/policies/idp-platform') ? 'drawer-item-active' : '']"
-            >
-              <Container class="item-icon" />
-              <span>IDP / Kubernetes</span>
-            </a>
-            <a
-              href="/policies/servicenow"
-              @click.prevent="handleNavClick('/policies/servicenow')"
-              :class="['drawer-item', isActive('/policies/servicenow') ? 'drawer-item-active' : '']"
-            >
-              <Workflow class="item-icon" />
-              <span>ServiceNow</span>
-            </a>
-          </div>
-
           <!-- Configuration & Testing Section -->
           <div class="category-section">
             <div class="section-header">
@@ -320,11 +280,8 @@ import {
   BookOpen,
   FileText,
   KeyRound,
-  Container,
-  Cloud,
   BarChart3,
-  PlayCircle,
-  Workflow
+  PlayCircle
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -356,10 +313,6 @@ const policiesConfigPages = [
   '/policies/exceptions',
   '/policies/standards-mapping',
   '/policies/data-contracts',
-  '/policies/salesforce',
-  '/policies/elastic',
-  '/policies/idp-platform',
-  '/policies/servicenow',
   '/resources',
   '/environment-config-testing',
   '/salesforce-experience-cloud'
