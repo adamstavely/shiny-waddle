@@ -76,6 +76,38 @@
           />
         </div>
       </div>
+
+      <!-- Baseline Config Card (for platform config test suites) -->
+      <div v-if="suite.baselineConfig" class="baseline-card">
+        <h3 class="card-title">
+          <Settings class="title-icon" />
+          Baseline Configuration
+        </h3>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Platform</span>
+            <span class="info-value">{{ suite.baselineConfig.platform }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Environment</span>
+            <span class="info-value">{{ suite.baselineConfig.environment }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Version</span>
+            <span class="info-value">{{ suite.baselineConfig.version }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Config Keys</span>
+            <span class="info-value">{{ Object.keys(suite.baselineConfig.config || {}).length }} configured</span>
+          </div>
+        </div>
+        <div v-if="suite.baselineConfig.config" class="config-preview">
+          <details>
+            <summary class="config-summary">View Configuration</summary>
+            <pre class="config-json">{{ JSON.stringify(suite.baselineConfig.config, null, 2) }}</pre>
+          </details>
+        </div>
+      </div>
     </div>
     
     <!-- Cross Links -->
@@ -88,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { Info, BarChart3 } from 'lucide-vue-next';
+import { Info, BarChart3, Settings } from 'lucide-vue-next';
 import StatusBadge from '../../components/StatusBadge.vue';
 import CrossLinkPanel from '../../components/CrossLinkPanel.vue';
 
@@ -222,5 +254,43 @@ const getScoreClass = (score: number | null | undefined): string => {
   margin-top: var(--spacing-md);
   padding-top: var(--spacing-md);
   border-top: var(--border-width-thin) solid var(--border-color-muted);
+}
+
+.baseline-card {
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+}
+
+.config-preview {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-thin) solid var(--border-color-muted);
+}
+
+.config-summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-sm);
+}
+
+.config-summary:hover {
+  color: var(--color-primary-hover);
+}
+
+.config-json {
+  background: rgba(0, 0, 0, 0.3);
+  border: var(--border-width-thin) solid var(--border-color-muted);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>

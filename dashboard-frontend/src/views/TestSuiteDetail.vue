@@ -423,8 +423,28 @@ const saveSuite = async () => {
   }
 };
 
-const runSuite = () => {
-  alert('Test suite execution not yet implemented');
+const runSuite = async () => {
+  if (!suite.value) return;
+  
+  try {
+    const response = await axios.post(`/api/v1/test-suites/${suiteId.value}/run`);
+    const result = response.data;
+    
+    // Show results
+    alert(
+      `Test suite executed!\n` +
+      `Status: ${result.status}\n` +
+      `Tests: ${result.passed}/${result.totalTests} passed\n` +
+      `Failed: ${result.failed}`
+    );
+    
+    // Reload suite to get updated status
+    await loadSuite();
+  } catch (err: any) {
+    const errorMessage = err.response?.data?.message || 'Failed to run test suite';
+    alert(errorMessage);
+    console.error('Error running test suite:', err);
+  }
 };
 
 const goBack = () => {

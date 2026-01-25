@@ -170,9 +170,26 @@
             >
               {{ type }}
             </span>
+            <span
+              v-if="suite.baselineConfig"
+              class="baseline-badge"
+              title="Platform Baseline Configuration"
+            >
+              Baseline: {{ suite.baselineConfig.platform }} ({{ suite.baselineConfig.environment }})
+            </span>
           </div>
 
           <div class="suite-actions">
+            <button 
+              v-if="suite.baselineConfig || ['salesforce-config', 'elastic-config', 'idp-compliance', 'servicenow-config'].includes(suite.testType)"
+              @click.stop="runTestSuite(suite.id)" 
+              class="action-btn run-btn"
+              :disabled="runningSuite === suite.id"
+              title="Run test suite"
+            >
+              <Play class="action-icon" />
+              {{ runningSuite === suite.id ? 'Running...' : 'Run' }}
+            </button>
             <button 
               @click.stop="toggleTestSuite(suite)" 
               class="action-btn"
@@ -239,7 +256,8 @@ import {
   Settings,
   Power,
   Code,
-  Trash2
+  Trash2,
+  Play
 } from 'lucide-vue-next';
 import axios from 'axios';
 import Dropdown from '../components/Dropdown.vue';
@@ -261,7 +279,11 @@ const testTypes = [
   { name: 'API Security', type: 'api-security' },
   { name: 'RLS/CLS', type: 'rls-cls' },
   { name: 'Distributed Systems', type: 'distributed-systems' },
-  { name: 'Data Pipeline', type: 'data-pipeline' }
+  { name: 'Data Pipeline', type: 'data-pipeline' },
+  { name: 'Salesforce Config', type: 'salesforce-config' },
+  { name: 'Elastic Config', type: 'elastic-config' },
+  { name: 'IDP Compliance', type: 'idp-compliance' },
+  { name: 'ServiceNow Config', type: 'servicenow-config' },
 ];
 
 const testSuites = ref<any[]>([]);
@@ -281,6 +303,7 @@ const filterDomain = ref('');
 
 const showSourceEditor = ref(false);
 const editingSourceSuiteId = ref<string | null>(null);
+const runningSuite = ref<string | null>(null);
 
 const applications = computed(() => {
   return [...new Set(testSuites.value.map(s => s.application))];
@@ -506,6 +529,24 @@ const closeSourceEditor = () => {
 const handleSourceSaved = async () => {
   await loadTestSuites();
   closeSourceEditor();
+};
+
+const runTestSuite = async (suiteId: string) => {
+  if (runningSuite.value === suiteId) return;
+  
+  runningSuite.value = suiteId;
+  try {
+    const response = await axios.post(`/api/v1/test-suites/${suiteId}/run`);
+    // Reload suites to get updated status
+    await loadTestSuites();
+    // Show success message
+    alert(`Test suite executed: ${response.data.passed}/${response.data.totalTests} tests passed`);
+  } catch (err: any) {
+    alert(err.response?.data?.message || 'Failed to run test suite');
+    console.error('Error running test suite:', err);
+  } finally {
+    runningSuite.value = null;
+  }
 };
 
 onMounted(async () => {
@@ -820,6 +861,29 @@ onMounted(async () => {
   border-radius: 12px;
   font-size: 0.75rem;
   color: #a78bfa;
+}
+
+.baseline-badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #22c55e;
+}
+
+.action-btn.run-btn {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.action-btn.run-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.action-btn.run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .suite-actions {
