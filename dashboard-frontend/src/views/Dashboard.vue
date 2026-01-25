@@ -235,7 +235,7 @@
           </router-link>
           <router-link to="/test-design-library" class="quick-action-card">
             <BookOpen class="action-icon" />
-            <span>Test Design Library</span>
+            <span>Tests</span>
           </router-link>
           <router-link to="/tests/history" class="quick-action-card">
             <PlayCircle class="action-icon" />
@@ -243,7 +243,7 @@
           </router-link>
           <router-link to="/policies" class="quick-action-card">
             <Shield class="action-icon" />
-            <span>Policies & Config</span>
+            <span>Policies</span>
           </router-link>
         </div>
       </div>

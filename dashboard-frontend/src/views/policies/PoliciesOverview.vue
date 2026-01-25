@@ -11,7 +11,7 @@
         <div class="hero-content">
           <div class="hero-text">
             <h1 class="hero-title">
-              Policies & Configuration
+              Policies
               <span class="hero-subtitle">Comprehensive Policy Management</span>
             </h1>
             <p class="hero-description">

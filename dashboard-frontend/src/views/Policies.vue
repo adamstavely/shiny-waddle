@@ -5,7 +5,7 @@
     <div class="page-header">
       <div class="header-content">
         <div>
-          <h1 class="page-title">Policies & Configuration</h1>
+          <h1 class="page-title">Policies</h1>
           <p class="page-description">Manage access control policies, data policies, and configurations</p>
         </div>
       </div>
@@ -92,7 +92,7 @@ const router = useRouter();
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
-  { label: 'Policies & Config' }
+  { label: 'Policies' }
 ];
 
 // Initialize active tab from route query or default

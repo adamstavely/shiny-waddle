@@ -92,8 +92,8 @@ const currentPath = ref(route.path);
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, divider: false },
   { path: '/targets', label: 'Targets', icon: Target, divider: false },
-  { path: '/test-design-library', label: 'Test Design Library', icon: BookOpen, divider: false },
-  { path: '/policies', label: 'Policies & Config', icon: Shield, divider: false },
+  { path: '/test-design-library', label: 'Tests', icon: BookOpen, divider: false },
+  { path: '/policies', label: 'Policies', icon: Shield, divider: false },
 ];
 
 // Test Design Library pages

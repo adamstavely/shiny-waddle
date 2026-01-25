@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <!-- Test Design Library Category -->
+      <!-- Tests Category -->
       <div v-if="activeCategory === 'test-design-library'" :key="`test-design-library-${activeCategory}`" class="drawer-category" data-category="test-design-library">
         <div class="category-items category-items-padded">
           <a
@@ -93,7 +93,7 @@
         </div>
       </div>
 
-      <!-- Policies & Config Category -->
+      <!-- Policies Category -->
       <div v-if="activeCategory === 'policies-config'" :key="`policies-config-${activeCategory}`" class="drawer-category" data-category="policies-config">
         <div class="category-items category-items-padded">
           <!-- Overview -->
