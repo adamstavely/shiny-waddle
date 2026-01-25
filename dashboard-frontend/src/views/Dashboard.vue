@@ -70,6 +70,21 @@
         </div>
       </div>
 
+      <!-- Real-Time Monitoring -->
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <Activity class="section-icon" />
+            Real-Time Access Monitoring
+          </h2>
+          <div class="realtime-status" :class="{ connected: isRealtimeConnected }">
+            <div class="status-dot"></div>
+            <span>{{ isRealtimeConnected ? 'Live' : 'Disconnected' }}</span>
+          </div>
+        </div>
+        <RealTimeMonitoring :max-events="20" />
+      </div>
+
       <!-- Test Batteries Status -->
       <div class="section">
         <div class="section-header">
@@ -263,9 +278,12 @@ import {
   BookOpen,
   FileText,
   Battery,
-  Layers
+  Layers,
+  Activity
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import RealTimeMonitoring from '../components/RealTimeMonitoring.vue';
+import { useRealtimeUpdates, DashboardUpdate } from '../composables/useRealtimeUpdates';
 
 const router = useRouter();
 
@@ -299,6 +317,33 @@ const totalHarnesses = ref(0);
 const harnessesWithApps = ref(0);
 const totalApplicationsCovered = ref(0);
 const totalTestSuites = ref(0);
+
+// Real-time updates
+const realtimeUpdatesCount = ref(0);
+const lastRealtimeUpdate = ref<Date | null>(null);
+
+// Set up real-time updates
+const { isConnected: isRealtimeConnected } = useRealtimeUpdates({
+  onUpdate: (update: DashboardUpdate) => {
+    realtimeUpdatesCount.value++;
+    lastRealtimeUpdate.value = new Date();
+    
+    // Update dashboard when new violations/findings come in
+    if (update.type === 'violation' && update.data?.finding) {
+      // Refresh issues if a critical finding comes in
+      if (update.data.finding.severity === 'critical' || update.data.finding.severity === 'high') {
+        loadData();
+      }
+    }
+    
+    // Update compliance score if needed
+    if (update.type === 'compliance-score') {
+      if (update.data?.overallScore !== undefined) {
+        overallComplianceScore.value = update.data.overallScore;
+      }
+    }
+  },
+});
 
 const loadData = async () => {
   try {
@@ -667,10 +712,47 @@ onMounted(() => {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin: 0;
+}
+
+.section-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
+}
+
+.realtime-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.realtime-status.connected {
+  color: #10b981;
+}
+
+.realtime-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6b7280;
+  animation: pulse 2s infinite;
+}
+
+.realtime-status.connected .status-dot {
+  background: #10b981;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .view-all-link {

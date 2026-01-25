@@ -5,6 +5,7 @@ import { EnhancedRiskScorer } from '../../../heimdall-framework/services/enhance
 import { DashboardSSEGateway, DashboardUpdate } from '../dashboard/dashboard-sse.gateway';
 import { UnifiedFindingsService } from '../unified-findings/unified-findings.service';
 import { UnifiedFinding } from '../../../heimdall-framework/core/unified-finding-schema';
+import { ElasticsearchService } from '../elasticsearch/elasticsearch.service';
 
 @Injectable()
 export class RealtimeService implements OnModuleInit, OnModuleDestroy {
@@ -15,6 +16,7 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly sseGateway: DashboardSSEGateway,
     private readonly unifiedFindingsService: UnifiedFindingsService,
+    private readonly elasticsearchService: ElasticsearchService,
   ) {
     // Initialize normalization engine and risk scorer
     const normalizationEngine = new NormalizationEngine({
@@ -83,22 +85,66 @@ export class RealtimeService implements OnModuleInit, OnModuleDestroy {
           this.logger.error(`Failed to store finding ${event.finding.id}:`, error);
         }
 
+        // Send to Elasticsearch for dashboarding and reporting
+        try {
+          await this.elasticsearchService.indexFinding(event.finding);
+        } catch (error) {
+          this.logger.error(`Failed to index finding ${event.finding.id} to Elasticsearch:`, error);
+          // Don't throw - Elasticsearch failures shouldn't break ingestion
+        }
+
         // Broadcast update via SSE
         this.broadcastFindingUpdate(event.finding, 'finding_normalized');
       }
     });
 
-    this.ingestionService.on('finding_scored', (event: IngestionEvent) => {
+    this.ingestionService.on('finding_scored', async (event: IngestionEvent) => {
       if (event.finding) {
         this.logger.debug(`Finding scored: ${event.finding.id}, score: ${event.finding.riskScore}`);
+        
+        // Update in Elasticsearch (re-index with updated risk score)
+        try {
+          await this.elasticsearchService.indexFinding(event.finding);
+        } catch (error) {
+          this.logger.error(`Failed to update finding ${event.finding.id} in Elasticsearch:`, error);
+          // Don't throw - Elasticsearch failures shouldn't break ingestion
+        }
+
+        // Send event to Elasticsearch
+        try {
+          await this.elasticsearchService.indexEvent('finding_scored', {
+            findingId: event.finding.id,
+            riskScore: event.finding.riskScore,
+            severity: event.finding.severity,
+          }, {
+            'heimdall.finding.id': event.finding.id,
+            'heimdall.risk_score': event.finding.riskScore,
+          });
+        } catch (error) {
+          this.logger.error(`Failed to index scoring event for ${event.finding.id}:`, error);
+        }
         
         // Broadcast update via SSE
         this.broadcastFindingUpdate(event.finding, 'finding_scored');
       }
     });
 
-    this.ingestionService.on('error', (event: IngestionEvent) => {
+    this.ingestionService.on('error', async (event: IngestionEvent) => {
       this.logger.error(`Ingestion error:`, event.error);
+      
+      // Send error event to Elasticsearch
+      try {
+        await this.elasticsearchService.indexEvent('ingestion_error', {
+          message: 'Real-time ingestion error',
+          error: event.error?.message,
+          severity: 'high',
+        }, {
+          'error.message': event.error?.message,
+          'error.type': event.error?.name,
+        });
+      } catch (error) {
+        this.logger.error('Failed to index error event to Elasticsearch:', error);
+      }
       
       // Broadcast error update
       this.sseGateway.broadcast({

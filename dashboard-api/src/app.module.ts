@@ -49,6 +49,8 @@ import { StandardsMappingModule } from './standards-mapping/standards-mapping.mo
 import { AlertingModule } from './alerting/alerting.module';
 import { SalesforceExperienceCloudModule } from './salesforce-experience-cloud/salesforce-experience-cloud.module';
 import { ApplicationDataModule } from './shared/application-data.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -104,6 +106,8 @@ import { AppController } from './app.controller';
     StandardsMappingModule,
     AlertingModule,
     SalesforceExperienceCloudModule,
+    RealtimeModule,
+    ElasticsearchModule,
   ],
   controllers: [AppController],
   providers: [

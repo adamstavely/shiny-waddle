@@ -204,6 +204,67 @@ export class UnifiedFindingsService {
     return normalized;
   }
 
+  /**
+   * Add an already-normalized finding to the store
+   * Used by real-time ingestion service
+   */
+  async createFinding(finding: UnifiedFinding): Promise<UnifiedFinding> {
+    const existingIndex = this.findings.findIndex(f => f.id === finding.id);
+    const isNew = existingIndex < 0;
+    
+    if (existingIndex >= 0) {
+      // Update existing finding
+      this.findings[existingIndex] = finding;
+    } else {
+      // Add new finding
+      this.findings.push(finding);
+    }
+
+    // Notify about new critical findings
+    if (isNew && finding.severity === 'critical') {
+      try {
+        const userIds = await this.getUsersToNotify(
+          finding.asset.applicationId ? [finding.asset.applicationId] : undefined
+        );
+        const notificationsService = this.moduleRef.get(NotificationsService, { strict: false });
+        if (notificationsService) {
+          for (const userId of userIds) {
+            await notificationsService.notifyCriticalFinding(
+              userId,
+              finding.id,
+              finding.title
+            );
+          }
+        }
+      } catch (err) {
+        this.logger.error('Failed to notify about critical finding:', err);
+        // Don't throw - notification failures shouldn't break ingestion
+      }
+    }
+
+    // Evaluate alert rules for new findings
+    if (isNew) {
+      try {
+        const alertingService = this.moduleRef.get(AlertingService, { strict: false });
+        if (alertingService) {
+          await alertingService.evaluateFinding(finding);
+        }
+      } catch (err) {
+        this.logger.error('Failed to evaluate alert rules for finding:', err);
+        // Don't throw - alert evaluation failures shouldn't break ingestion
+      }
+    }
+
+    await this.saveFindings();
+    
+    // Store compliance score after new findings
+    this.storeComplianceScoreAfterUpdate().catch(err => {
+      this.logger.error('Failed to store compliance score after ingestion:', err);
+    });
+    
+    return finding;
+  }
+
   async updateFinding(id: string, updates: Partial<UnifiedFinding>): Promise<UnifiedFinding> {
     const index = this.findings.findIndex(f => f.id === id);
     if (index === -1) {

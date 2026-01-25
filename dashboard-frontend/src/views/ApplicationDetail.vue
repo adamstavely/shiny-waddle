@@ -291,6 +291,11 @@
           </div>
         </div>
 
+        <!-- Real-Time Monitoring Tab -->
+        <div v-if="activeTab === 'realtime'" class="tab-panel">
+          <RealTimeMonitoring :application-id="applicationId" :max-events="50" />
+        </div>
+
         <!-- Config & Mappings Tab -->
         <div v-if="activeTab === 'config'" class="tab-panel">
           <h2 class="section-title">Configuration & Mappings</h2>
@@ -513,13 +518,15 @@ import {
   LayoutDashboard,
   AlertCircle,
   Settings,
-  FileText
+  FileText,
+  Activity
 } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import AttachBatteryModal from '../components/AttachBatteryModal.vue';
 import RunDetailsModal from '../components/RunDetailsModal.vue';
 import ValidatorToggle from '../components/ValidatorToggle.vue';
 import BulkTogglePanel from '../components/BulkTogglePanel.vue';
+import RealTimeMonitoring from '../components/RealTimeMonitoring.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -551,6 +558,7 @@ const tabs = [
   { id: 'batteries', label: 'Test Batteries', icon: Battery },
   { id: 'runs', label: 'Runs', icon: PlayCircle },
   { id: 'issues', label: 'Issues', icon: AlertCircle },
+  { id: 'realtime', label: 'Real-Time Monitoring', icon: Activity },
   { id: 'config', label: 'Config & Mappings', icon: Settings },
 ];
 
