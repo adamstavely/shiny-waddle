@@ -14,7 +14,7 @@
     <div class="filters-section">
       <div class="filter-group">
         <label>Application</label>
-        <select v-model="filters.applicationId" @change="loadMetrics">
+        <select v-model="filters.applicationId">
           <option value="">All Applications</option>
           <option v-for="app in applications" :key="app.id" :value="app.id">
             {{ app.name }}
@@ -23,7 +23,7 @@
       </div>
       <div class="filter-group">
         <label>Time Period</label>
-        <select v-model="filters.period" @change="loadMetrics">
+        <select v-model="filters.period">
           <option value="day">Daily</option>
           <option value="week">Weekly</option>
           <option value="month">Monthly</option>
@@ -35,13 +35,11 @@
           <input
             v-model="filters.startDate"
             type="date"
-            @change="loadMetrics"
           />
           <span>to</span>
           <input
             v-model="filters.endDate"
             type="date"
-            @change="loadMetrics"
           />
         </div>
       </div>
@@ -53,7 +51,7 @@
     </div>
     <div v-else-if="error" class="error-state">
       <div class="error">{{ error }}</div>
-      <button @click="loadMetrics" class="btn-retry">Retry</button>
+      <button @click="reload" class="btn-retry">Retry</button>
     </div>
 
     <!-- Metrics Display -->
@@ -220,7 +218,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye } from 'lucide-vue-next';
 import axios from 'axios';
@@ -231,6 +229,8 @@ import ComplianceScoreGauge from '../components/charts/ComplianceScoreGauge.vue'
 import TestExecutionVolumeChart from '../components/charts/TestExecutionVolumeChart.vue';
 import TestResultModal from '../components/TestResultModal.vue';
 import type { ComplianceMetrics } from '../types/test-results';
+import { useApiDataAuto } from '../composables/useApiData';
+import { useModal } from '../composables/useModal';
 
 const router = useRouter();
 
@@ -240,13 +240,8 @@ const breadcrumbItems = [
   { label: 'Compliance Trends' },
 ];
 
-const loading = ref(false);
-const error = ref<string | null>(null);
-const metrics = ref<ComplianceMetrics | null>(null);
 const applications = ref<any[]>([]);
 const recentExecutions = ref<any[]>([]);
-const showResultModal = ref(false);
-const selectedResult = ref<any>(null);
 
 const filters = ref({
   applicationId: '',
@@ -255,10 +250,9 @@ const filters = ref({
   endDate: '',
 });
 
-const loadMetrics = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
+// Use composable for API data fetching
+const { data: metrics, loading, error, reload } = useApiDataAuto(
+  async () => {
     const params: any = {};
     if (filters.value.applicationId) {
       params.applicationId = filters.value.applicationId;
@@ -271,7 +265,7 @@ const loadMetrics = async () => {
     }
 
     const response = await axios.get('/api/test-results/compliance/metrics', { params });
-    metrics.value = {
+    return {
       ...response.data,
       period: {
         start: new Date(response.data.period.start),
@@ -282,13 +276,20 @@ const loadMetrics = async () => {
         lastFailure: new Date(ft.lastFailure),
       })),
     };
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load compliance metrics';
-    console.error('Error loading compliance metrics:', err);
-  } finally {
-    loading.value = false;
+  },
+  {
+    initialData: null,
+    errorMessage: 'Failed to load compliance metrics',
   }
-};
+);
+
+// Use composable for modal state
+const resultModal = useModal<any>();
+
+// Watch filters and reload metrics
+watch(() => filters.value, () => {
+  reload();
+}, { deep: true });
 
 const loadApplications = async () => {
   try {
@@ -347,8 +348,7 @@ const loadRecentExecutions = async () => {
 };
 
 const viewExecutionResult = (result: any) => {
-  selectedResult.value = result;
-  showResultModal.value = true;
+  resultModal.open(result);
 };
 
 onMounted(async () => {
@@ -377,55 +377,56 @@ onMounted(async () => {
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .page-description {
-  font-size: 1.1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
 }
 
 .filters-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  gap: var(--spacing-base);
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
   min-width: 150px;
 }
 
 .filter-group label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
 }
 
 .filter-group select,
 .filter-group input {
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  color: #ffffff;
+  padding: var(--spacing-md);
+  background: var(--color-bg-overlay);
+  opacity: 0.05;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .date-range-inputs {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .date-range-inputs input {
@@ -433,35 +434,35 @@ onMounted(async () => {
 }
 
 .date-range-inputs span {
-  color: #a0aec0;
-  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .loading-state,
 .error-state {
-  padding: 3rem;
+  padding: var(--spacing-xl);
   text-align: center;
 }
 
 .loading {
-  color: #4facfe;
-  font-size: 1.1rem;
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
 }
 
 .error {
-  color: #fc8181;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+  color: var(--color-error);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-base);
 }
 
 .btn-retry {
-  padding: 0.75rem 1.5rem;
-  background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 6px;
-  color: #4facfe;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--border-color-muted);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-primary);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .metrics-section {
@@ -484,64 +485,64 @@ onMounted(async () => {
 }
 
 .metric-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .metric-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .metric-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .metric-value-large {
-  font-size: 3rem;
-  font-weight: 700;
-  margin: 0.5rem 0;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin: var(--spacing-xs) 0;
 }
 
 .pass-rate-excellent {
-  color: #48bb78;
+  color: var(--color-success);
 }
 
 .pass-rate-good {
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 .pass-rate-warning {
-  color: #ed8936;
+  color: var(--color-warning);
 }
 
 .pass-rate-poor {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .metric-trend {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .trend-improving {
-  color: #48bb78;
+  color: var(--color-success);
 }
 
 .trend-declining {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .trend-stable {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .trend-icon {
@@ -551,31 +552,31 @@ onMounted(async () => {
 
 .metric-detail {
   display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-sm);
 }
 
 .detail-passed {
-  color: #48bb78;
+  color: var(--color-success);
 }
 
 .detail-failed {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .chart-section {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 1.5rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .chart-container {
@@ -583,120 +584,122 @@ onMounted(async () => {
 }
 
 .config-metrics-section {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .config-metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
+  gap: var(--spacing-base);
 }
 
 .config-metric-card {
-  background: rgba(15, 20, 25, 0.8);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--color-bg-overlay-dark);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-base);
 }
 
 .config-name {
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 0.25rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .config-type {
-  font-size: 0.75rem;
-  color: #718096;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-xs);
 }
 
 .config-pass-rate {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0.5rem 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  margin: var(--spacing-xs) 0;
 }
 
 .config-stats {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .failing-tests-section {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(252, 129, 129, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--color-error);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .failing-tests-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing-base);
 }
 
 .failing-test-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: rgba(252, 129, 129, 0.1);
-  border: 1px solid rgba(252, 129, 129, 0.2);
-  border-radius: 8px;
+  padding: var(--spacing-base);
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error);
+  border-radius: var(--border-radius-md);
 }
 
 .failing-test-name {
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 0.25rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
 }
 
 .failing-test-details {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .empty-state {
-  padding: 4rem 2rem;
+  padding: var(--spacing-xl) var(--spacing-xl);
   text-align: center;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
   width: 4rem;
   height: 4rem;
-  margin: 0 auto 1rem;
+  margin: 0 auto var(--spacing-base);
   opacity: 0.5;
-  color: #718096;
+  color: var(--color-text-muted);
 }
 
 .empty-subtitle {
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .btn-secondary {
-  padding: 0.5rem 1rem;
-  background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 6px;
-  color: #4facfe;
+  padding: var(--spacing-xs) var(--spacing-base);
+  background: var(--border-color-muted);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-primary);
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
+  font-weight: var(--font-weight-medium);
+  transition: var(--transition-all);
 }
 
 .btn-secondary:hover {
-  background: rgba(79, 172, 254, 0.2);
+  background: var(--border-color-primary);
+  opacity: 0.2;
 }
 
 .recent-executions-section {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.2;
+  border-radius: var(--border-radius-md);
   padding: 1.5rem;
 }
 
@@ -710,63 +713,69 @@ onMounted(async () => {
 }
 
 .recent-executions-table thead {
-  background: rgba(79, 172, 254, 0.1);
+  background: var(--border-color-muted);
 }
 
 .recent-executions-table th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #ffffff;
-  font-size: 0.875rem;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.2;
 }
 
 .recent-executions-table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
-  color: #e2e8f0;
-  font-size: 0.875rem;
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .execution-row:hover {
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: capitalize;
 }
 
 .status-badge.status-passed {
-  background: rgba(72, 187, 120, 0.2);
-  color: #48bb78;
-  border: 1px solid rgba(72, 187, 120, 0.3);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: var(--border-width-thin) solid var(--color-success);
+  opacity: 0.3;
 }
 
 .status-badge.status-failed {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
-  border: 1px solid rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid var(--color-error);
+  opacity: 0.3;
 }
 
 .status-badge.status-partial {
-  background: rgba(237, 137, 54, 0.2);
-  color: #ed8936;
-  border: 1px solid rgba(237, 137, 54, 0.3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: var(--border-width-thin) solid var(--color-warning);
+  opacity: 0.3;
 }
 
 .status-badge.status-error {
-  background: rgba(245, 101, 101, 0.2);
-  color: #f56565;
-  border: 1px solid rgba(245, 101, 101, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid var(--color-error);
+  opacity: 0.3;
 }
 
 .text-muted {
-  color: #718096;
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
@@ -775,8 +784,8 @@ onMounted(async () => {
   background: transparent;
   border: none;
   cursor: pointer;
-  border-radius: 6px;
-  color: #e2e8f0;
+  border-radius: var(--border-radius-sm);
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -784,8 +793,8 @@ onMounted(async () => {
 }
 
 .btn-icon:hover {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
+  background: var(--border-color-muted);
+  color: var(--color-primary);
 }
 
 .btn-icon .icon {

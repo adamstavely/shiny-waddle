@@ -100,41 +100,36 @@
 
     <!-- Finding Detail Modal -->
     <FindingDetailModal
-      v-if="selectedFinding"
-      :isOpen="showDetailModal"
-      :finding="selectedFinding"
-      @update:isOpen="showDetailModal = false"
-      @updated="loadDashboard"
+      v-if="findingModal.data.value"
+      :isOpen="findingModal.isOpen.value"
+      :finding="findingModal.data.value"
+      @update:isOpen="findingModal.close()"
+      @updated="reload"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import axios from 'axios';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import ComplianceScoreCard from '../components/ComplianceScoreCard.vue';
 import FindingsTrendChart from '../components/FindingsTrendChart.vue';
 import FindingDetailModal from '../components/FindingDetailModal.vue';
 import { useAuth } from '../composables/useAuth';
+import { useApiDataAuto } from '../composables/useApiData';
+import { useModal } from '../composables/useModal';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
   { label: 'My Findings Dashboard', to: '/developer-findings' },
 ];
 
-const loading = ref(true);
-const error = ref<string | null>(null);
-const dashboardData = ref<any>(null);
-const selectedFinding = ref<any>(null);
-const showDetailModal = ref(false);
-
 const { user, getUserApplications, getUserTeams } = useAuth();
 
-const loadDashboard = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
+// Use composable for API data fetching
+const { data: dashboardData, loading, error, reload } = useApiDataAuto(
+  async () => {
     // Build query params from user context
     const params: any = {};
     if (getUserApplications.value.length > 0) {
@@ -145,7 +140,7 @@ const loadDashboard = async () => {
     }
 
     const response = await axios.get('/api/unified-findings/dashboard/developer', { params });
-    dashboardData.value = {
+    return {
       ...response.data,
       recentFindings: response.data.recentFindings.map((f: any) => ({
         ...f,
@@ -153,30 +148,34 @@ const loadDashboard = async () => {
         updatedAt: new Date(f.updatedAt),
       })),
     };
-  } catch (err: any) {
-    // Handle network errors gracefully
-    if (err.code === 'ERR_NETWORK') {
-      error.value = 'Network error. Please check your connection and try again.';
-    } else if (err.response?.status === 401 || err.response?.status === 403) {
-      error.value = 'You do not have permission to view this dashboard.';
-    } else {
-      error.value = err.response?.data?.message || 'Failed to load dashboard data';
-    }
-    console.error('Failed to load dashboard:', err);
-  } finally {
-    loading.value = false;
+  },
+  {
+    initialData: null,
+    errorMessage: 'Failed to load dashboard data',
+    onError: (err: any) => {
+      // Handle network errors gracefully
+      if (err.code === 'ERR_NETWORK') {
+        return 'Network error. Please check your connection and try again.';
+      } else if (err.response?.status === 401 || err.response?.status === 403) {
+        return 'You do not have permission to view this dashboard.';
+      }
+      return err.response?.data?.message || 'Failed to load dashboard data';
+    },
   }
-};
+);
+
+// Use composable for modal state management
+const findingModal = useModal<any>();
 
 const viewFinding = async (id: string) => {
   try {
     const response = await axios.get(`/api/unified-findings/${id}`);
-    selectedFinding.value = {
+    const finding = {
       ...response.data,
       createdAt: new Date(response.data.createdAt),
       updatedAt: new Date(response.data.updatedAt),
     };
-    showDetailModal.value = true;
+    findingModal.open(finding);
   } catch (err) {
     console.error('Failed to load finding:', err);
   }
@@ -187,14 +186,12 @@ const formatDate = (date: Date | string) => {
   return d.toLocaleDateString();
 };
 
-onMounted(() => {
-  loadDashboard();
-});
+// Note: useApiDataAuto automatically loads on mount, so no need for onMounted
 </script>
 
 <style scoped>
 .developer-findings-dashboard {
-  padding: 24px;
+  padding: var(--spacing-lg);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -204,87 +201,87 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 8px 0;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .page-description {
-  font-size: 1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .loading,
 .error {
-  padding: 24px;
+  padding: var(--spacing-lg);
   text-align: center;
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 .error {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .dashboard-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .summary-card {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
   text-align: center;
 }
 
 .summary-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  margin-bottom: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .summary-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .summary-value.critical {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .summary-value.high {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .summary-value.resolved {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .trends-section,
 .recent-findings-section {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .trends-section h2,
 .recent-findings-section h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 20px 0;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xl) 0;
 }
 
 .findings-table {
@@ -298,21 +295,21 @@ onMounted(() => {
 
 .findings-table th {
   text-align: left;
-  padding: 12px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
-  color: #a0aec0;
-  font-weight: 600;
-  font-size: 0.875rem;
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
 }
 
 .findings-table td {
-  padding: 12px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
-  color: #ffffff;
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
+  color: var(--color-text-primary);
 }
 
 .finding-link {
-  color: #4facfe;
+  color: var(--color-primary);
   cursor: pointer;
   text-decoration: none;
 }
@@ -323,53 +320,53 @@ onMounted(() => {
 
 .severity-badge,
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .severity-badge.severity-critical {
-  background: rgba(252, 129, 129, 0.1);
-  color: #fc8181;
-  border: 1px solid rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid var(--color-error);
 }
 
 .severity-badge.severity-high {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: var(--border-width-thin) solid var(--color-warning);
 }
 
 .severity-badge.severity-medium {
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
+  background: var(--border-color-muted);
+  color: var(--color-primary);
+  border: var(--border-width-thin) solid var(--border-color-secondary);
 }
 
 .status-badge.status-open {
-  background: rgba(252, 129, 129, 0.1);
-  color: #fc8181;
-  border: 1px solid rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid var(--color-error);
 }
 
 .status-badge.status-resolved {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: var(--border-width-thin) solid var(--color-success);
 }
 
 .btn-link {
   background: transparent;
   border: none;
-  color: #4facfe;
+  color: var(--color-primary);
   cursor: pointer;
   text-decoration: underline;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .btn-link:hover {
-  color: #00f2fe;
+  color: var(--color-secondary);
 }
 </style>
 

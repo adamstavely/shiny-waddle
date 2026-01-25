@@ -21,25 +21,32 @@ export class FrameworkLoader {
       case ComplianceFramework.NIST_800_53_REV_5:
         return NIST_800_53_REV_5_CONTROLS;
       case ComplianceFramework.SOC_2:
-        // TODO: Implement SOC 2 controls
+        // NOTE: SOC 2 controls not yet implemented
+        // To implement: Create soc2.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.PCI_DSS:
-        // TODO: Implement PCI-DSS controls
+        // NOTE: PCI-DSS controls not yet implemented
+        // To implement: Create pci-dss.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.HIPAA:
-        // TODO: Implement HIPAA controls
+        // NOTE: HIPAA controls not yet implemented
+        // To implement: Create hipaa.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.GDPR:
-        // TODO: Implement GDPR controls
+        // NOTE: GDPR controls not yet implemented
+        // To implement: Create gdpr.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.ISO_27001:
-        // TODO: Implement ISO 27001 controls
+        // NOTE: ISO 27001 controls not yet implemented
+        // To implement: Create iso-27001.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.NIST_CSF:
-        // TODO: Implement NIST CSF controls
+        // NOTE: NIST CSF controls not yet implemented
+        // To implement: Create nist-csf.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       case ComplianceFramework.OWASP_ASVS:
-        // TODO: Implement OWASP ASVS controls
+        // NOTE: OWASP ASVS controls not yet implemented
+        // To implement: Create owasp-asvs.controls.ts following the pattern of nist-800-53-rev4.controls.ts
         return [];
       default:
         return [];

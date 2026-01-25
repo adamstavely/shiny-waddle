@@ -17,7 +17,6 @@ import { DataPipelineModule } from './data-pipeline/data-pipeline.module';
 import { DistributedSystemsModule } from './distributed-systems/distributed-systems.module';
 import { CICDModule } from './cicd/cicd.module';
 import { TicketingModule } from './ticketing/ticketing.module';
-import { SLAModule } from './sla/sla.module';
 import { RemediationModule } from './remediation/remediation.module';
 import { RemediationTrackingModule } from './remediation-tracking/remediation-tracking.module';
 import { ComplianceModule } from './compliance/compliance.module';
@@ -74,7 +73,6 @@ import { AppController } from './app.controller';
     DistributedSystemsModule,
     CICDModule,
     TicketingModule,
-    SLAModule,
     RemediationModule,
     RemediationTrackingModule,
     ComplianceModule,

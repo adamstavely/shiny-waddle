@@ -503,18 +503,18 @@ onMounted(() => {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--spacing-lg);
 }
 
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .page-title {
@@ -525,27 +525,27 @@ onMounted(() => {
 }
 
 .page-description {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .btn-primary,
 .btn-secondary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 600;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   border: none;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
 }
 
 .btn-primary {
@@ -577,7 +577,7 @@ onMounted(() => {
 .loading-state,
 .error-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
   color: var(--color-text-secondary);
 }
 
@@ -594,7 +594,7 @@ onMounted(() => {
 
 .btn-retry {
   margin-top: var(--spacing-md);
-  padding: 10px 20px;
+  padding: var(--spacing-sm) var(--spacing-xl);
   background: var(--color-info-bg);
   border: var(--border-width-thin) solid var(--border-color-secondary);
   border-radius: var(--border-radius-md);
@@ -605,8 +605,8 @@ onMounted(() => {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .metric-card {
@@ -626,7 +626,7 @@ onMounted(() => {
 }
 
 .metric-value {
-  font-size: 2.5rem;
+  font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
@@ -663,7 +663,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .section-title {
@@ -710,18 +710,19 @@ onMounted(() => {
 
 .run-row {
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition-base);
 }
 
 .run-row:hover {
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
@@ -737,8 +738,8 @@ onMounted(() => {
 }
 
 .status-running {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .score {
@@ -748,7 +749,7 @@ onMounted(() => {
 .issues-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .issue-card {
@@ -768,15 +769,15 @@ onMounted(() => {
 .issue-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .priority-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) 10px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
@@ -811,7 +812,7 @@ onMounted(() => {
 .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .quick-action-card {
@@ -842,7 +843,7 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: var(--spacing-2xl);
   color: var(--color-text-secondary);
 }
 
@@ -850,8 +851,8 @@ onMounted(() => {
 .harnesses-status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .status-card {
@@ -887,8 +888,8 @@ onMounted(() => {
 }
 
 .recent-executions {
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
   border-top: var(--border-width-thin) solid var(--border-color-primary);
 }
 
@@ -902,36 +903,36 @@ onMounted(() => {
 .executions-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .execution-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
-  background: rgba(15, 20, 25, 0.4);
-  border-radius: 8px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: var(--color-bg-overlay);
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .execution-item:hover {
-  background: rgba(15, 20, 25, 0.6);
+  background: var(--color-bg-overlay-light);
   border-color: var(--border-color-primary-hover);
 }
 
 .execution-battery {
   flex: 1;
-  color: #ffffff;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
 }
 
 .execution-status {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
@@ -946,13 +947,13 @@ onMounted(() => {
 }
 
 .execution-status.status-running {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .execution-time {
-  color: #a0aec0;
-  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 </style>
 

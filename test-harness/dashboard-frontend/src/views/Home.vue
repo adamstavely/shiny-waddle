@@ -160,7 +160,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 .hero-section {
   max-width: 1400px;
   width: 100%;
-  margin: 48px auto 0;
+  margin: var(--spacing-2xl) auto 0;
   padding: 0 24px;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -168,11 +168,11 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 
 .hero-card {
   position: relative;
-  border-radius: 24px;
-  padding: 48px 64px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 50%, #1a1f2e 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-2xl) var(--spacing-2xl);
+  background: var(--gradient-card-full);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
@@ -188,7 +188,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 64px;
+  gap: var(--spacing-2xl);
 }
 
 .hero-text {
@@ -196,70 +196,70 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 }
 
 .hero-title {
-  font-size: 4rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
   line-height: 1.1;
-  letter-spacing: -1px;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .hero-subtitle {
   display: block;
-  font-size: 2rem;
-  margin-top: 12px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  font-size: var(--font-size-3xl);
+  margin-top: var(--spacing-sm);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .hero-description {
-  font-size: 1.25rem;
-  color: #a0aec0;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
   line-height: 1.6;
   max-width: 600px;
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-md);
   flex-wrap: wrap;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 14px 28px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
   text-decoration: none;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   display: inline-block;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: #0f1419;
+  background: var(--gradient-primary);
+  color: var(--color-bg-primary);
   border: none;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(79, 172, 254, 0.4);
+  box-shadow: var(--shadow-primary-hover);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #4facfe;
-  border: 2px solid rgba(79, 172, 254, 0.3);
+  color: var(--color-primary);
+  border: var(--border-width-medium) solid var(--border-color-secondary);
 }
 
 .btn-secondary:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .hero-visual {
@@ -278,7 +278,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
   width: 100%;
   height: 100%;
   display: block;
-  filter: drop-shadow(0 8px 24px rgba(79, 172, 254, 0.3));
+  filter: drop-shadow(var(--shadow-primary));
 }
 
 @media (min-width: 1024px) {
@@ -287,27 +287,27 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
   }
   
   .hero-title {
-    font-size: 5rem;
+    font-size: var(--font-size-5xl);
   }
   
   .hero-subtitle {
-    font-size: 2.5rem;
+    font-size: var(--font-size-3xl);
   }
 }
 
 .features-section {
   max-width: 1400px;
   width: 100%;
-  margin: 48px auto 48px;
+  margin: var(--spacing-2xl) auto var(--spacing-2xl);
   padding: 0 24px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
 .section-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   margin-bottom: 48px;
   text-align: left;
 }
@@ -315,7 +315,7 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 .features-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 @media (max-width: 1200px) {
@@ -331,24 +331,24 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 }
 
 .feature-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 32px;
-  transition: all 0.3s;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-xl);
+  transition: var(--transition-all);
 }
 
 .feature-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(79, 172, 254, 0.4);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .feature-icon {
   width: 64px;
   height: 64px;
-  margin-bottom: 20px;
-  color: #4facfe;
+  margin-bottom: var(--spacing-xl);
+  color: var(--color-primary);
 }
 
 .feature-icon :deep(svg) {
@@ -357,15 +357,15 @@ import { ShieldCheck, BarChart3, FileText, TestTube } from 'lucide-vue-next';
 }
 
 .feature-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 12px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .feature-description {
-  font-size: 1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   line-height: 1.6;
 }
 </style>

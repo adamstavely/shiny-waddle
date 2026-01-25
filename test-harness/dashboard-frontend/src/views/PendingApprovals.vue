@@ -12,13 +12,13 @@
 
     <div v-if="loading" class="loading">Loading pending approvals...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="pendingApprovals.length === 0" class="empty-state">
+    <div v-else-if="!pendingApprovals || pendingApprovals.length === 0" class="empty-state">
       <ShieldCheck class="empty-icon" />
       <p>No pending approvals</p>
     </div>
     <div v-else class="approvals-list">
       <div
-        v-for="approval in pendingApprovals"
+        v-for="approval in (pendingApprovals || [])"
         :key="approval.id"
         class="approval-card"
       >
@@ -92,19 +92,19 @@
     <!-- Approval Modal -->
     <ApprovalActionModal
       v-if="selectedApproval"
-      :isOpen="showApprovalModal"
+      :isOpen="modals.isOpen('approval')"
       :approval="selectedApproval"
       :action="approvalAction"
-      @update:isOpen="showApprovalModal = false"
+      @update:isOpen="modals.close('approval')"
       @submitted="loadPendingApprovals"
     />
 
     <!-- Finding Detail Modal -->
     <FindingDetailModal
-      v-if="selectedFinding"
-      :isOpen="showFindingModal"
-      :finding="selectedFinding"
-      @update:isOpen="showFindingModal = false"
+      v-if="findingModal.data.value"
+      :isOpen="findingModal.isOpen.value"
+      :finding="findingModal.data.value"
+      @update:isOpen="findingModal.close()"
     />
   </div>
 </template>
@@ -117,32 +117,22 @@ import Breadcrumb from '../components/Breadcrumb.vue';
 import ApprovalActionModal from '../components/ApprovalActionModal.vue';
 import FindingDetailModal from '../components/FindingDetailModal.vue';
 import { useAuth } from '../composables/useAuth';
+import { useApiDataAuto } from '../composables/useApiData';
+import { useModal, useMultiModal } from '../composables/useModal';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
   { label: 'Pending Approvals', to: '/pending-approvals' },
 ];
 
-const loading = ref(true);
-const error = ref<string | null>(null);
-const pendingApprovals = ref<any[]>([]);
-const selectedApproval = ref<any>(null);
-const showApprovalModal = ref(false);
-const approvalAction = ref<'approve' | 'reject'>('approve');
-const selectedFinding = ref<any>(null);
-const showFindingModal = ref(false);
-
 // Get current user from auth context
 const { user, approverRole } = useAuth();
 
-const loadPendingApprovals = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
+// Use composable for API data fetching
+const { data: pendingApprovals, loading, error, reload: loadPendingApprovals } = useApiDataAuto(
+  async () => {
     if (!approverRole.value) {
-      error.value = 'You do not have permission to view approvals. You must be a Cyber Risk Manager or Data Steward.';
-      loading.value = false;
-      return;
+      throw new Error('You do not have permission to view approvals. You must be a Cyber Risk Manager or Data Steward.');
     }
 
     const response = await axios.get('/api/finding-approvals/pending', {
@@ -150,7 +140,7 @@ const loadPendingApprovals = async () => {
         approverRole: approverRole.value,
       },
     });
-    pendingApprovals.value = response.data.map((a: any) => ({
+    return response.data.map((a: any) => ({
       ...a,
       requestedAt: new Date(a.requestedAt),
       approvals: a.approvals.map((app: any) => ({
@@ -158,35 +148,40 @@ const loadPendingApprovals = async () => {
         approvedAt: app.approvedAt ? new Date(app.approvedAt) : undefined,
       })),
     }));
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load pending approvals';
-    console.error('Failed to load pending approvals:', err);
-  } finally {
-    loading.value = false;
+  },
+  {
+    initialData: [],
+    errorMessage: 'Failed to load pending approvals',
   }
-};
+);
+
+// Use composable for modal state management
+const modals = useMultiModal(['approval', 'finding']);
+const selectedApproval = ref<any>(null);
+const approvalAction = ref<'approve' | 'reject'>('approve');
+const findingModal = useModal<any>();
 
 const approveRequest = (approval: any) => {
   selectedApproval.value = approval;
   approvalAction.value = 'approve';
-  showApprovalModal.value = true;
+  modals.open('approval');
 };
 
 const rejectApproval = (approval: any) => {
   selectedApproval.value = approval;
   approvalAction.value = 'reject';
-  showApprovalModal.value = true;
+  modals.open('approval');
 };
 
 const viewFinding = async (findingId: string) => {
   try {
     const response = await axios.get(`/api/unified-findings/${findingId}`);
-    selectedFinding.value = {
+    const finding = {
       ...response.data,
       createdAt: new Date(response.data.createdAt),
       updatedAt: new Date(response.data.updatedAt),
     };
-    showFindingModal.value = true;
+    findingModal.open(finding);
   } catch (err) {
     console.error('Failed to load finding:', err);
   }
@@ -211,7 +206,7 @@ onMounted(() => {
 
 <style scoped>
 .pending-approvals-page {
-  padding: 24px;
+  padding: var(--spacing-lg);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -221,21 +216,21 @@ onMounted(() => {
 }
 
 .page-title {
-  font-size: 2rem;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 8px 0;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
 .page-description {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   color: #a0aec0;
   margin: 0;
 }
 
 .loading,
 .error {
-  padding: 24px;
+  padding: var(--spacing-lg);
   text-align: center;
   color: #ffffff;
 }
@@ -246,7 +241,7 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 60px 24px;
+  padding: var(--spacing-2xl) var(--spacing-lg);
   color: #a0aec0;
 }
 
@@ -260,14 +255,14 @@ onMounted(() => {
 .approvals-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 .approval-card {
   background: rgba(15, 20, 25, 0.6);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 12px;
-  padding: 24px;
+  padding: var(--spacing-lg);
 }
 
 .approval-header {
@@ -279,12 +274,12 @@ onMounted(() => {
 .approval-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .approval-title-group h3 {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: #ffffff;
   margin: 0;
@@ -292,9 +287,9 @@ onMounted(() => {
 }
 
 .type-badge {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -313,13 +308,13 @@ onMounted(() => {
 .approval-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .severity-badge {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
@@ -369,7 +364,7 @@ onMounted(() => {
 }
 
 .approver-role-badge {
-  padding: 4px 12px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: rgba(79, 172, 254, 0.1);
   color: #4facfe;
   border: 1px solid rgba(79, 172, 254, 0.3);
@@ -458,8 +453,8 @@ onMounted(() => {
 }
 
 .btn-approve {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--color-success) 0%, #16a34a 100%);
+  color: var(--color-text-primary);
 }
 
 .btn-approve:hover {
@@ -469,12 +464,12 @@ onMounted(() => {
 
 .btn-reject {
   background: transparent;
-  border: 1px solid rgba(252, 129, 129, 0.3);
-  color: #fc8181;
+  border: var(--border-width-thin) solid var(--color-error);
+  color: var(--color-error);
 }
 
 .btn-reject:hover {
-  background: rgba(252, 129, 129, 0.1);
+  background: var(--color-error-bg);
 }
 </style>
 

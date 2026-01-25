@@ -16,7 +16,7 @@ import { CreatePolicyDto, PolicyType, PolicyStatus } from './dto/create-policy.d
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { Policy, PolicyVersion } from './entities/policy.entity';
 
-@Controller('api/v1/policies')
+@Controller('api/policies')
 export class PoliciesController {
   constructor(private readonly policiesService: PoliciesService) {}
 

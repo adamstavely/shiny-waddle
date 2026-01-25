@@ -1,11 +1,11 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject, forwardRef } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ScheduledReport } from './entities/scheduled-report.entity';
 import { CreateScheduledReportDto } from './dto/create-scheduled-report.dto';
 import { UpdateScheduledReportDto } from './dto/update-scheduled-report.dto';
-// import { ReportsService } from '../reports/reports.service'; // TODO: Implement ReportsService
 import { SchedulerService } from './scheduler.service';
+import { ReportsService } from '../reports/reports.service';
 
 @Injectable()
 export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
@@ -14,8 +14,9 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
   private scheduler: NodeJS.Timeout | null = null;
 
   constructor(
-    // private readonly reportsService: ReportsService, // TODO: Implement ReportsService
     private readonly schedulerService: SchedulerService,
+    @Inject(forwardRef(() => ReportsService))
+    private readonly reportsService: ReportsService,
   ) {}
 
   async onModuleInit() {
@@ -114,9 +115,8 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
         includeDetails: report.includeDetails ?? true,
       };
 
-      // TODO: Implement ReportsService
-      // const generatedReport = await this.reportsService.generateReport(generateRequest);
-      const generatedReport = { id: 'stub', content: 'Report generation not yet implemented' };
+      // Generate report using ReportsService
+      const generatedReport = await this.reportsService.generateReport(generateRequest);
 
       // Update schedule with last run and calculate next run
       report.lastRun = new Date();
@@ -143,12 +143,14 @@ export class ScheduledReportsService implements OnModuleInit, OnModuleDestroy {
   ): Promise<void> {
     switch (schedule.deliveryMethod) {
       case 'email':
-        // TODO: Implement email delivery
+        // NOTE: Email delivery not yet implemented
+        // Future implementation should use a service like SendGrid, SES, or SMTP
         console.log(`Would send report to: ${schedule.recipients?.join(', ')}`);
         break;
       case 'webhook':
         if (schedule.webhookUrl) {
-          // TODO: Implement webhook delivery
+          // NOTE: Webhook delivery not yet implemented
+          // Future implementation should POST report data to the webhook URL
           console.log(`Would POST report to: ${schedule.webhookUrl}`);
         }
         break;

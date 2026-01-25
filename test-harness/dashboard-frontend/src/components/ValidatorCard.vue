@@ -130,184 +130,185 @@ const formatDate = (date: Date | string): string => {
 
 <style scoped>
 .validator-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
-  padding: 24px;
-  transition: all 0.2s;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-lg);
+  transition: var(--transition-all);
 }
 
 .validator-card:hover {
-  border-color: rgba(79, 172, 254, 0.4);
+  border-color: var(--border-color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
 }
 
 .validator-card.disabled {
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
 }
 
 .validator-header {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.2);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .validator-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .validator-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .validator-status {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .status-enabled {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-disabled {
-  background: rgba(156, 163, 175, 0.2);
-  color: #9ca3af;
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
+  color: var(--color-text-muted);
 }
 
 .validator-id {
-  font-size: 0.875rem;
-  color: #718096;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   font-family: 'Courier New', monospace;
   margin: 0;
 }
 
 .validator-description {
-  font-size: 0.9rem;
-  color: #a0aec0;
-  margin-bottom: 16px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
   line-height: 1.5;
 }
 
 .validator-details {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding: 16px;
-  background: rgba(15, 20, 25, 0.4);
-  border-radius: 12px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg-overlay-light);
+  border-radius: var(--border-radius-lg);
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .detail-label {
-  color: #718096;
-  font-weight: 500;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
 }
 
 .detail-value {
-  color: #ffffff;
-  font-weight: 500;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
 }
 
 .rate-high {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .rate-medium {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .rate-low {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .validator-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .tag {
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: var(--spacing-xs) 10px;
+  border-radius: var(--border-radius-sm);
+  background: var(--border-color-muted);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .validator-actions {
   display: flex;
-  gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-sm);
   background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  color: #4facfe;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   flex: 1;
   justify-content: center;
 }
 
 .action-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .view-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .enable-btn:hover {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.5);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .disable-btn:hover {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.5);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
 }
 
 .test-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .delete-btn:hover {
-  background: rgba(252, 129, 129, 0.1);
-  border-color: rgba(252, 129, 129, 0.5);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .action-icon {

@@ -19,10 +19,7 @@ import TestBatteryCreate from '../views/TestBatteryCreate.vue';
 import TestHarnessDetail from '../views/TestHarnessDetail.vue';
 import TestHarnessCreate from '../views/TestHarnessCreate.vue';
 import IndividualTests from '../views/IndividualTests.vue';
-import Reports from '../views/Reports.vue';
-import Policies from '../views/Policies.vue';
 import PolicyDetail from '../views/PolicyDetail.vue';
-import Insights from '../views/insights/Insights.vue';
 import Violations from '../views/Violations.vue';
 import History from '../views/History.vue';
 import Admin from '../views/Admin.vue';
@@ -34,11 +31,9 @@ import Integrations from '../views/Integrations.vue';
 import CICDIntegration from '../views/CICDIntegration.vue';
 import Resources from '../views/Resources.vue';
 import TicketingIntegrations from '../views/TicketingIntegrations.vue';
-import SLAManagement from '../views/SLAManagement.vue';
 import Compliance from '../views/Compliance.vue';
 import UnifiedFindings from '../views/UnifiedFindings.vue';
 import HowItWorks from '../views/HowItWorks.vue';
-import Repos from '../views/Repos.vue';
 import NotFound from '../views/NotFound.vue';
 import AccessDenied from '../views/AccessDenied.vue';
 import PolicyValidation from '../views/PolicyValidation.vue';
@@ -328,11 +323,6 @@ const router = createRouter({
       component: TicketingIntegrations,
     },
     {
-      path: '/admin/sla',
-      name: 'SLAManagement',
-      component: SLAManagement,
-    },
-    {
       path: '/settings',
       name: 'Settings',
       component: Settings,
@@ -366,11 +356,6 @@ const router = createRouter({
       path: '/how-it-works',
       name: 'HowItWorks',
       component: HowItWorks,
-    },
-    {
-      path: '/repos',
-      name: 'Repos',
-      component: Repos,
     },
     {
       path: '/access-denied',

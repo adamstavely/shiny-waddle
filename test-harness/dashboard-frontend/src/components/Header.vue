@@ -16,37 +16,37 @@ import { Shield } from 'lucide-vue-next';
 
 <style scoped>
 .header {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border-radius: 12px;
-  padding: 24px 30px;
+  background: var(--gradient-card);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg) 30px;
   margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--spacing-xl);
 }
 
 .icon {
   width: 48px;
   height: 48px;
-  color: #4facfe;
+  color: var(--color-primary);
   stroke-width: 2;
 }
 
 .header-text h1 {
-  color: #ffffff;
-  font-size: 2em;
-  margin-bottom: 8px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.5px;
 }
 
 .header-text p {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   font-size: 1.1em;
   margin: 0;
 }

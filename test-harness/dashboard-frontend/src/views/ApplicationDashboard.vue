@@ -220,6 +220,7 @@ import OverallScore from '../components/OverallScore.vue';
 import CategoryScores from '../components/CategoryScores.vue';
 import TestResultsTable from '../components/TestResultsTable.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
+import { useApiDataAuto } from '../composables/useApiData';
 
 const route = useRoute();
 const router = useRouter();
@@ -241,20 +242,16 @@ const breadcrumbItems = computed(() => [
   { label: applicationName.value }
 ]);
 
-const loading = ref(true);
-const error = ref<string | null>(null);
 const isRefreshing = ref(false);
-const dashboardData = ref<any>(null);
 
-const loadDashboard = async () => {
-  try {
-    loading.value = true;
-    error.value = null;
+// Use composable for API data fetching
+const { data: dashboardData, loading, error, reload } = useApiDataAuto(
+  async () => {
     // In a real app, this would be: `/api/dashboard/app/${applicationId.value}`
     // For now, we'll use mock data
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    dashboardData.value = {
+    return {
       overallCompliance: 95,
       totalTests: 24,
       passedTests: 23,
@@ -310,16 +307,16 @@ const loadDashboard = async () => {
         }
       ]
     };
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load application dashboard';
-  } finally {
-    loading.value = false;
+  },
+  {
+    initialData: null,
+    errorMessage: 'Failed to load application dashboard',
   }
-};
+);
 
 const refreshDashboard = async () => {
   isRefreshing.value = true;
-  await loadDashboard();
+  await reload();
   setTimeout(() => {
     isRefreshing.value = false;
   }, 1000);
@@ -393,7 +390,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 
@@ -405,20 +402,20 @@ onBeforeUnmount(() => {
 }
 
 .page-description {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: transparent;
   border: var(--border-width-thin) solid var(--border-color-secondary);
   border-radius: var(--border-radius-md);
@@ -459,7 +456,7 @@ onBeforeUnmount(() => {
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  gap: var(--spacing-lg);
   margin-bottom: 32px;
 }
 
@@ -467,7 +464,7 @@ onBeforeUnmount(() => {
   background: var(--gradient-card);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-lg);
-  padding: 20px;
+  padding: var(--spacing-lg);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -511,7 +508,7 @@ onBeforeUnmount(() => {
 }
 
 .metric-value {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
 }
@@ -535,7 +532,7 @@ onBeforeUnmount(() => {
 }
 
 .section-title {
-  font-size: 1.75rem;
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-lg);
@@ -561,7 +558,7 @@ onBeforeUnmount(() => {
 .trends-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 24px;
+  gap: var(--spacing-lg);
   position: relative;
 }
 
@@ -597,48 +594,48 @@ onBeforeUnmount(() => {
 }
 
 .trend-change {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 
 .trend-change.positive {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .trend-change.negative {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .trend-value {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #4facfe;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
 }
 
 .trend-period {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .test-suites-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  gap: var(--spacing-xl);
   position: relative;
   z-index: 1;
 }
 
 .suite-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .suite-card:hover {
-  border-color: rgba(79, 172, 254, 0.4);
+  border-color: var(--border-color-primary-hover);
   transform: translateY(-2px);
 }
 
@@ -646,88 +643,88 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .suite-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
   flex: 1;
 }
 
 .suite-status {
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) 10px;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
 .status-passing {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-failing {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .suite-stats {
   display: flex;
-  gap: 16px;
-  margin-bottom: 8px;
-  font-size: 0.875rem;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
 }
 
 .suite-stats .stat {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .suite-stats .stat.score {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .score-high {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .score-medium {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .score-low {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .suite-meta {
-  font-size: 0.75rem;
-  color: #718096;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .violations-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .violation-item {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  gap: var(--spacing-md);
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
   border-left: 4px solid;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
 }
 
 .violation-item:hover {
-  border-color: rgba(79, 172, 254, 0.4);
+  border-color: var(--border-color-primary-hover);
   transform: translateX(4px);
 }
 
@@ -738,15 +735,15 @@ onBeforeUnmount(() => {
 }
 
 .icon-critical {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .icon-high {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .icon-medium {
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 .violation-content {
@@ -754,57 +751,57 @@ onBeforeUnmount(() => {
 }
 
 .violation-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 4px 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
 }
 
 .violation-meta {
-  font-size: 0.75rem;
-  color: #a0aec0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .violation-severity {
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) 10px;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
 .badge-critical {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .badge-high {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .badge-medium {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .loading {
   text-align: center;
-  padding: 50px;
-  color: #4facfe;
-  font-size: 1.2em;
+  padding: var(--spacing-2xl);
+  color: var(--color-primary);
+  font-size: var(--font-size-xl);
 }
 
 .error {
   text-align: center;
-  padding: 20px;
-  color: #fc8181;
-  font-size: 1.2em;
-  background: rgba(252, 129, 129, 0.1);
-  border: 1px solid rgba(252, 129, 129, 0.3);
-  border-radius: 8px;
-  margin: 20px auto;
+  padding: var(--spacing-xl);
+  color: var(--color-error);
+  font-size: var(--font-size-xl);
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-xl) auto;
   max-width: 600px;
 }
 
@@ -816,15 +813,15 @@ onBeforeUnmount(() => {
   
   .header-content {
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
   }
   
   .page-title {
-    font-size: 1.75rem;
+    font-size: var(--font-size-2xl);
   }
   
   .page-description {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
   
   .header-actions {
@@ -838,12 +835,12 @@ onBeforeUnmount(() => {
   
   .metrics-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
   }
   
   .metric-card {
-    padding: 16px;
+    padding: var(--spacing-md);
   }
   
   .metric-icon {
@@ -857,7 +854,7 @@ onBeforeUnmount(() => {
   }
   
   .metric-value {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl);
   }
   
   .section {
@@ -865,17 +862,17 @@ onBeforeUnmount(() => {
   }
   
   .section-title {
-    font-size: 1.5rem;
-    margin-bottom: 16px;
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-md);
   }
   
   .trends-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--spacing-md);
   }
   
   .trend-card {
-    padding: 16px;
+    padding: var(--spacing-md);
   }
   
   .trend-chart {
@@ -884,25 +881,25 @@ onBeforeUnmount(() => {
   
   .test-suites-list {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
   
   .suite-card {
-    padding: 16px;
+    padding: var(--spacing-md);
   }
   
   .violation-item {
-    padding: 12px;
+    padding: var(--spacing-sm);
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .metrics-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: var(--spacing-md);
   }
   
   .trends-grid {
@@ -914,7 +911,7 @@ onBeforeUnmount(() => {
   }
   
   .page-title {
-    font-size: 2rem;
+    font-size: var(--font-size-2xl);
   }
 }
 

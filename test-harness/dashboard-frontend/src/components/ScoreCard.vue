@@ -57,29 +57,29 @@ const handleClick = (key: string) => {
 
 <style scoped>
 .card {
-  background: linear-gradient(135deg, #1a2332 0%, #2d3748 100%);
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  background: var(--gradient-card-alt);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+  border: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .card h2 {
-  color: #ffffff;
-  margin-bottom: 20px;
-  font-size: 1.5em;
-  border-bottom: 2px solid #4facfe;
-  padding-bottom: 10px;
-  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-2xl);
+  border-bottom: var(--border-width-medium) solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-semibold);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .title-icon {
   width: 24px;
   height: 24px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -87,9 +87,9 @@ const handleClick = (key: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
-  transition: all 0.2s;
+  padding: var(--spacing-md) 0;
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
+  transition: var(--transition-all);
 }
 
 .metric:last-child {
@@ -98,22 +98,22 @@ const handleClick = (key: string) => {
 
 .metric.clickable {
   cursor: pointer;
-  padding: 15px;
-  margin: 0 -15px;
-  border-radius: 8px;
+  padding: var(--spacing-md);
+  margin: 0 calc(-1 * var(--spacing-md));
+  border-radius: var(--border-radius-md);
 }
 
 .metric.clickable:hover {
-  background: rgba(79, 172, 254, 0.1);
+  background: var(--border-color-muted);
   transform: translateX(4px);
 }
 
 .chevron-icon {
   width: 18px;
   height: 18px;
-  color: #4facfe;
+  color: var(--color-primary);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: var(--transition-base);
 }
 
 .metric.clickable:hover .chevron-icon {
@@ -121,20 +121,20 @@ const handleClick = (key: string) => {
 }
 
 .metric-label {
-  color: #a0aec0;
-  font-size: 1em;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
 }
 
 .metric-value {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #4facfe;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
 }
 
 .empty {
   text-align: center;
-  color: #718096;
-  padding: 20px;
+  color: var(--color-text-muted);
+  padding: var(--spacing-xl);
 }
 </style>
 

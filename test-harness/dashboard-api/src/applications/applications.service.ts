@@ -322,8 +322,13 @@ export class ApplicationsService {
       this.logger.log(`Detected CI/CD platform: ${detectedContext.ciPlatform} for test execution`);
     }
 
-    // TODO: Update runTests to work with Application.infrastructure and Test Suites
-    // For now, return empty results since test configurations have been removed
+    // NOTE: Test execution via Application.infrastructure and Test Suites is not yet fully implemented
+    // Current behavior: Returns empty results when infrastructure is not configured
+    // Future implementation should:
+    // 1. Find test suites for this application
+    // 2. Use infrastructure configuration to set up test environment
+    // 3. Execute tests via test harness/battery system
+    // 4. Return actual test results
     this.logger.warn(`runTests called for application ${appId} but test execution via infrastructure is not yet implemented`);
     
     if (!application.infrastructure) {
@@ -335,12 +340,6 @@ export class ApplicationsService {
         results: [],
       };
     }
-
-    // TODO: Implement test execution using application.infrastructure and test suites
-    // This should:
-    // 1. Find test suites for this application
-    // 2. Use infrastructure to configure tests
-    // 3. Execute tests via test harness/battery system
     
     return {
       status: 'passed',

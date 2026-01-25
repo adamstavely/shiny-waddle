@@ -180,7 +180,6 @@ import PolicyJSONSection from './policies/detail/PolicyJSONSection.vue';
 import PolicyChangelogSection from './policies/detail/PolicyChangelogSection.vue';
 import type { Policy, Test, Validator } from '../types/test';
 import type { AxiosError } from 'axios';
-import type { Policy, Test, Validator } from '../types/test';
 
 const route = useRoute();
 const router = useRouter();
@@ -530,7 +529,8 @@ onMounted(() => {
 
 .validator-item:hover {
   border-color: var(--border-color-primary-active);
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .validator-info {

@@ -192,10 +192,12 @@ watch(() => [props.applicationId, props.days, props.domain], fetchData);
 <style scoped>
 .domain-trend-chart {
   width: 100%;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--color-bg-overlay-dark);
+  opacity: 0.6;
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.2;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
   box-sizing: border-box;
 }
 
@@ -206,8 +208,8 @@ watch(() => [props.applicationId, props.days, props.domain], fetchData);
 }
 
 .axis-label {
-  font-size: 10px;
-  fill: #a0aec0;
+  font-size: var(--font-size-xs);
+  fill: var(--color-text-secondary);
 }
 
 .area-fill {
@@ -230,32 +232,33 @@ watch(() => [props.applicationId, props.days, props.domain], fetchData);
 
 .tooltip {
   position: fixed;
-  background: rgba(15, 20, 25, 0.95);
-  border: 1px solid rgba(79, 172, 254, 0.5);
-  border-radius: 6px;
-  padding: 8px 12px;
+  background: var(--color-bg-overlay-dark);
+  opacity: 0.95;
+  border: var(--border-width-thin) solid var(--border-color-primary-active);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm) var(--spacing-sm);
   pointer-events: none;
   z-index: 1000;
-  font-size: 12px;
-  color: #ffffff;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .tooltip-date {
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-xs);
 }
 
 .tooltip-score {
-  color: #4facfe;
-  font-weight: 600;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .chart-loading,
 .chart-error,
 .chart-empty {
   text-align: center;
-  padding: 40px;
-  color: #a0aec0;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-secondary);
 }
 </style>
 

@@ -139,7 +139,8 @@ defineEmits<{
 
 .test-item:hover {
   border-color: var(--border-color-primary-active);
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .test-info {

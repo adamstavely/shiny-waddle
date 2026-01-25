@@ -95,7 +95,7 @@ import NetworkPolicyTestForm from './tests/forms/NetworkPolicyTestForm.vue';
 import APISecurityTestForm from './tests/forms/APISecurityTestForm.vue';
 import DistributedSystemsTestForm from './tests/forms/DistributedSystemsTestForm.vue';
 import DataPipelineTestForm from './tests/forms/DataPipelineTestForm.vue';
-import type { Test, TestType } from '../types/test';
+import type { Test } from '../types/test';
 
 const route = useRoute();
 const router = useRouter();

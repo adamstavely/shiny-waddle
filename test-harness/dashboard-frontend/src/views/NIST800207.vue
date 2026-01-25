@@ -99,6 +99,7 @@ import { ref } from 'vue';
 import { Shield, CheckCircle2, XCircle, AlertTriangle } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import axios from 'axios';
+import { useApiData } from '../composables/useApiData';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -106,20 +107,18 @@ const breadcrumbItems = [
   { label: 'NIST 800-207', to: '/compliance/nist-800-207' },
 ];
 
-const loading = ref(false);
 const assessment = ref<any>(null);
 
-const runAssessment = async () => {
-  loading.value = true;
-  try {
+const { loading, load: runAssessment } = useApiData(
+  async () => {
     const response = await axios.post('/api/compliance/nist-800-207/assess', {});
     assessment.value = response.data;
-  } catch (error) {
-    console.error('Error running assessment:', error);
-  } finally {
-    loading.value = false;
+    return response.data;
+  },
+  {
+    errorMessage: 'Failed to run assessment',
   }
-};
+);
 </script>
 
 <style scoped>
@@ -127,7 +126,7 @@ const runAssessment = async () => {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--spacing-lg);
 }
 
 .page-header {
@@ -138,35 +137,35 @@ const runAssessment = async () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .page-description {
-  font-size: 1.1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
 }
 
 .btn-primary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--gradient-primary);
   border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 600;
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   white-space: nowrap;
 }
 
@@ -176,7 +175,7 @@ const runAssessment = async () => {
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
@@ -188,8 +187,8 @@ const runAssessment = async () => {
 .loading-spinner-small {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  border: var(--border-width-medium) solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--color-text-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -199,48 +198,48 @@ const runAssessment = async () => {
 }
 
 .assessment-results {
-  margin-top: 24px;
+  margin-top: var(--spacing-lg);
 }
 
 .overall-score-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 32px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
   text-align: center;
 }
 
 .score-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .score-header h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
 }
 
 .score-value {
-  font-size: 4rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-md);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .score-value.compliant {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, var(--color-success) 0%, #16a34a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .score-value.non-compliant {
-  background: linear-gradient(135deg, #fc8181 0%, #ef4444 100%);
+  background: linear-gradient(135deg, var(--color-error) 0%, #ef4444 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -249,22 +248,22 @@ const runAssessment = async () => {
 .score-status {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  font-weight: var(--font-weight-semibold);
 }
 
 .status-success {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+  color: var(--color-success);
 }
 
 .status-error {
-  background: rgba(252, 129, 129, 0.1);
-  border: 1px solid rgba(252, 129, 129, 0.3);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error);
+  color: var(--color-error);
 }
 
 .status-icon {
@@ -273,75 +272,75 @@ const runAssessment = async () => {
 }
 
 .pillars-section {
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .pillars-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 24px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .pillars-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .pillar-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
 }
 
 .pillar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .pillar-name {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
   text-transform: capitalize;
 }
 
 .pillar-score {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #4facfe;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
 }
 
 .pillar-progress {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .progress-bar {
   flex: 1;
   height: 8px;
-  background: rgba(15, 20, 25, 0.6);
-  border-radius: 4px;
+  background: var(--color-bg-overlay-light);
+  border-radius: var(--border-radius-xs);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--gradient-primary);
   transition: width 0.3s;
 }
 
 .progress-percentage {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
   min-width: 50px;
   text-align: right;
 }
@@ -349,31 +348,31 @@ const runAssessment = async () => {
 .pillar-controls {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .control-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
 }
 
 .control-compliant {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .control-partial {
-  background: rgba(251, 191, 36, 0.1);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .control-non-compliant {
-  background: rgba(252, 129, 129, 0.1);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .control-icon {
@@ -388,37 +387,37 @@ const runAssessment = async () => {
 
 .gaps-section,
 .recommendations-section {
-  margin-top: 32px;
-  padding: 24px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
 }
 
 .gaps-title,
 .recommendations-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 16px;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-md);
 }
 
 .gaps-list,
 .recommendations-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .gap-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 8px;
-  color: #fbbf24;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--color-warning-bg);
+  border: var(--border-width-thin) solid var(--color-warning);
+  border-radius: var(--border-radius-md);
+  color: var(--color-warning);
 }
 
 .gap-icon {
@@ -428,38 +427,38 @@ const runAssessment = async () => {
 }
 
 .recommendation-item {
-  padding: 12px;
+  padding: var(--spacing-sm);
   background: rgba(79, 172, 254, 0.1);
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  color: #4facfe;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
 }
 
 .empty-icon {
   width: 64px;
   height: 64px;
-  color: #4facfe;
-  margin: 0 auto 24px;
+  color: var(--color-primary);
+  margin: 0 auto var(--spacing-lg);
   opacity: 0.5;
 }
 
 .empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .empty-state p {
-  font-size: 1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
 }
 </style>

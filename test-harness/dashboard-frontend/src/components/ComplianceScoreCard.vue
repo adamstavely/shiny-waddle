@@ -52,52 +52,56 @@ const getScoreClass = (score: number): string => {
 
 <style scoped>
 .compliance-score-card {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 32px;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl);
 }
 
 .score-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .score-header h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .trend-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .trend-indicator.trend-up {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: var(--border-width-thin) solid var(--color-success);
+  opacity: 0.3;
 }
 
 .trend-indicator.trend-down {
-  background: rgba(252, 129, 129, 0.1);
-  color: #fc8181;
-  border: 1px solid rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: var(--border-width-thin) solid var(--color-error);
+  opacity: 0.3;
 }
 
 .trend-indicator.trend-stable {
-  background: rgba(160, 174, 192, 0.1);
-  color: #a0aec0;
-  border: 1px solid rgba(160, 174, 192, 0.3);
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
+  color: var(--color-text-secondary);
+  border: var(--border-width-thin) solid var(--color-text-muted);
+  opacity: 0.3;
 }
 
 .trend-icon {
@@ -111,55 +115,55 @@ const getScoreClass = (score: number): string => {
 }
 
 .current-score {
-  font-size: 4rem;
-  font-weight: 700;
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .current-score.score-excellent {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .current-score.score-good {
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 .current-score.score-fair {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .current-score.score-poor {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .score-label {
-  font-size: 1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
 }
 
 .score-change {
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .score-change.change-up {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .score-change.change-down {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .score-change.change-stable {
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .change-label {
   display: block;
-  margin-top: 4px;
-  color: #718096;
-  font-size: 0.75rem;
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
 }
 </style>
 

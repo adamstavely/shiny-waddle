@@ -193,7 +193,6 @@ import TestSuiteConfigurationTab from './test-suites/TestSuiteConfigurationTab.v
 import TestSuiteTestsTab from './test-suites/TestSuiteTestsTab.vue';
 import type { TestSuite, Test, Policy } from '../types/test';
 import type { AxiosError } from 'axios';
-import type { TestSuite, Test, Policy } from '../types/test';
 
 const route = useRoute();
 const router = useRouter();
@@ -613,12 +612,13 @@ onMounted(() => {
 
 .test-option:hover {
   border-color: var(--border-color-primary-active);
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .test-option.selected {
   border-color: var(--color-primary);
-  background: rgba(79, 172, 254, 0.1);
+  background: var(--border-color-muted);
 }
 
 .test-option input[type="checkbox"] {

@@ -337,7 +337,8 @@ const viewHarness = (id: string) => {
 }
 
 .application-row:hover {
-  background: rgba(79, 172, 254, 0.05);
+  background: var(--border-color-muted);
+  opacity: 0.5;
 }
 
 .app-name-cell {
@@ -358,7 +359,7 @@ const viewHarness = (id: string) => {
 }
 
 .status-badge {
-  padding: 6px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
@@ -382,7 +383,8 @@ const viewHarness = (id: string) => {
 }
 
 .status-never {
-  background: rgba(160, 174, 192, 0.2);
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
   color: var(--color-text-secondary);
 }
 
@@ -416,12 +418,12 @@ const viewHarness = (id: string) => {
 .batteries-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-xs);
 }
 
 .battery-tag {
-  padding: var(--spacing-xs) 10px;
-  background: rgba(79, 172, 254, 0.1);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--border-color-muted);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
@@ -447,7 +449,7 @@ const viewHarness = (id: string) => {
 .compliance-score {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  padding: var(--spacing-xs) 10px;
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-sm);
   display: inline-block;
 }
@@ -473,7 +475,7 @@ const viewHarness = (id: string) => {
 }
 
 .btn-link {
-  padding: 6px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
   border: var(--border-width-thin) solid var(--border-color-secondary);
   border-radius: var(--border-radius-sm);
@@ -484,13 +486,13 @@ const viewHarness = (id: string) => {
 }
 
 .btn-link:hover {
-  background: rgba(79, 172, 254, 0.1);
+  background: var(--border-color-muted);
   border-color: var(--border-color-primary-active);
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px;
+  padding: var(--spacing-2xl);
   color: var(--color-text-secondary);
 }
 
@@ -565,7 +567,7 @@ const viewHarness = (id: string) => {
 }
 
 .modal-close:hover {
-  background: rgba(79, 172, 254, 0.1);
+  background: var(--border-color-muted);
   color: var(--color-primary);
 }
 

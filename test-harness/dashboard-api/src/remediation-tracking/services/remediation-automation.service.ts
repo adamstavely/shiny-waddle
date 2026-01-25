@@ -169,7 +169,9 @@ export class RemediationAutomationService {
       }
     }
 
-    // TODO: Escalate to manager if configured
+    // NOTE: Manager escalation not yet implemented
+    // Future implementation should check if manager escalation is configured
+    // and send notification to the assigned manager
     this.logger.warn(
       `Remediation ${tracking.id} is ${Math.round(daysOverdue)} days overdue - escalation required`
     );

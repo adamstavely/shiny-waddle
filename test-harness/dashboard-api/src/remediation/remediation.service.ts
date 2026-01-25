@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ViolationEntity } from '../violations/entities/violation.entity';
 import { ViolationSeverity } from '../violations/dto/create-violation.dto';
 import { TicketingService } from '../ticketing/ticketing.service';
-import { SLAService } from '../sla/sla.service';
 
 export interface RemediationAction {
   type: 'create-ticket' | 'assign' | 'escalate' | 'auto-fix' | 'notify';
@@ -29,7 +28,6 @@ export class RemediationService {
 
   constructor(
     private readonly ticketingService: TicketingService,
-    private readonly slaService: SLAService,
   ) {}
 
   async processViolation(violation: ViolationEntity): Promise<void> {
@@ -65,12 +63,6 @@ export class RemediationService {
       }
     }
 
-    // Create SLA violation if not exists
-    try {
-      await this.slaService.createSLAViolation(violation.id, violation.severity as any);
-    } catch (error) {
-      // SLA violation might already exist, ignore
-    }
   }
 
   private async executeAction(action: RemediationAction, violation: ViolationEntity): Promise<void> {

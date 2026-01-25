@@ -2,7 +2,7 @@
  * Composable for real-time dashboard updates using Server-Sent Events (SSE)
  */
 
-import { ref, onMounted, onBeforeUnmount, type Ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 export interface DashboardUpdate {
   type: 'dashboard' | 'test-result' | 'compliance-score' | 'violation' | 'notification' | 'connected';
@@ -108,7 +108,7 @@ export function useRealtimeUpdates(options: RealtimeUpdateOptions = {}) {
         }
       };
 
-      es.onerror = (err) => {
+      es.onerror = (_err) => {
         isConnecting.value = false;
         
         if (es.readyState === EventSource.CLOSED) {

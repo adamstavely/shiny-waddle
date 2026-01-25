@@ -34,31 +34,31 @@
           class="search-input"
         />
         <Dropdown
-          v-model="filterSeverity"
+          v-model="filters.severity"
           :options="severityOptions"
           placeholder="All Severities"
           class="filter-dropdown"
         />
         <Dropdown
-          v-model="filterType"
+          v-model="filters.type"
           :options="typeOptions"
           placeholder="All Types"
           class="filter-dropdown"
         />
         <Dropdown
-          v-model="filterStatus"
+          v-model="filters.status"
           :options="statusOptions"
           placeholder="All Statuses"
           class="filter-dropdown"
         />
         <Dropdown
-          v-model="filterApplication"
+          v-model="filters.application"
           :options="applicationOptions"
           placeholder="All Applications"
           class="filter-dropdown"
         />
         <Dropdown
-          v-model="filterTeam"
+          v-model="filters.team"
           :options="teamOptions"
           placeholder="All Teams"
           class="filter-dropdown"
@@ -162,9 +162,9 @@
 
     <!-- Violation Detail Modal -->
     <ViolationDetailModal
-      :show="showDetailModal"
-      :violation="selectedViolation"
-      @close="closeDetailModal"
+      :show="violationModal.isOpen.value"
+      :violation="violationModal.data.value"
+      @close="violationModal.close()"
       @update="handleViolationUpdate"
       @viewRelated="viewRelatedViolation"
     />
@@ -172,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -184,6 +184,10 @@ import Dropdown from '../components/Dropdown.vue';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import ViolationDetailModal from '../components/ViolationDetailModal.vue';
 import type { ViolationEntity } from '../types/violation';
+import { useApiDataAuto } from '../composables/useApiData';
+import { useSearch } from '../composables/useFilters';
+import { useFilters } from '../composables/useFilters';
+import { useModal } from '../composables/useModal';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
@@ -192,18 +196,63 @@ const breadcrumbItems = [
 
 const API_BASE_URL = '/api';
 
-const violations = ref<ViolationEntity[]>([]);
-const loading = ref(true);
+// Use composable for API data fetching
+const { data: violations, loading, reload: loadViolations } = useApiDataAuto(
+  async () => {
+    const params = new URLSearchParams();
+    const response = await fetch(`${API_BASE_URL}/violations?${params.toString()}`);
+    if (!response.ok) throw new Error('Failed to load violations');
+    const data = await response.json();
+    return data.map((v: any) => ({
+      ...v,
+      detectedAt: new Date(v.detectedAt),
+      resolvedAt: v.resolvedAt ? new Date(v.resolvedAt) : undefined,
+      ignoredAt: v.ignoredAt ? new Date(v.ignoredAt) : undefined,
+      createdAt: new Date(v.createdAt),
+      updatedAt: new Date(v.updatedAt),
+    }));
+  },
+  {
+    initialData: [],
+    errorMessage: 'Failed to load violations',
+  }
+);
+
+// Use composable for search
 const searchQuery = ref('');
-const filterSeverity = ref('');
-const filterType = ref('');
-const filterStatus = ref('');
-const filterApplication = ref('');
-const filterTeam = ref('');
+const { filteredItems: searchFilteredViolations } = useSearch(
+  violations,
+  ['title', 'description'],
+  searchQuery
+);
+
+// Use composable for filters
+const filters = ref({
+  severity: '',
+  type: '',
+  status: '',
+  application: '',
+  team: '',
+});
+
+const { filteredItems: filteredViolations } = useFilters(
+  searchFilteredViolations,
+  (violation, filters) => {
+    const matchesSeverity = !filters.severity || violation.severity === filters.severity;
+    const matchesType = !filters.type || violation.type === filters.type;
+    const matchesStatus = !filters.status || violation.status === filters.status;
+    const matchesApp = !filters.application || violation.application === filters.application;
+    const matchesTeam = !filters.team || violation.team === filters.team;
+    return matchesSeverity && matchesType && matchesStatus && matchesApp && matchesTeam;
+  },
+  filters
+);
+
 const sortBy = ref('date');
 const sortOrder = ref<'asc' | 'desc'>('desc');
-const showDetailModal = ref(false);
-const selectedViolation = ref<ViolationEntity | null>(null);
+
+// Use composable for modal state
+const violationModal = useModal<ViolationEntity>();
 
 const severityOptions = computed(() => [
   { label: 'All Severities', value: '' },
@@ -261,33 +310,19 @@ const teamOptions = computed(() => {
 });
 
 const criticalCount = computed(() => {
-  return violations.value.filter(v => v.severity === 'critical' && v.status !== 'resolved').length;
+  return (violations.value || []).filter(v => v.severity === 'critical' && v.status !== 'resolved').length;
 });
 
 const openCount = computed(() => {
-  return violations.value.filter(v => v.status === 'open').length;
+  return (violations.value || []).filter(v => v.status === 'open').length;
 });
 
 const resolvedCount = computed(() => {
-  return violations.value.filter(v => v.status === 'resolved').length;
-});
-
-const filteredViolations = computed(() => {
-  return violations.value.filter(violation => {
-    const matchesSearch = !searchQuery.value ||
-      violation.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      violation.description.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesSeverity = !filterSeverity.value || violation.severity === filterSeverity.value;
-    const matchesType = !filterType.value || violation.type === filterType.value;
-    const matchesStatus = !filterStatus.value || violation.status === filterStatus.value;
-    const matchesApp = !filterApplication.value || violation.application === filterApplication.value;
-    const matchesTeam = !filterTeam.value || violation.team === filterTeam.value;
-    return matchesSearch && matchesSeverity && matchesType && matchesStatus && matchesApp && matchesTeam;
-  });
+  return (violations.value || []).filter(v => v.status === 'resolved').length;
 });
 
 const sortedViolations = computed(() => {
-  const sorted = [...filteredViolations.value];
+  const sorted = [...(filteredViolations.value || [])];
   
   sorted.sort((a, b) => {
     let comparison = 0;
@@ -317,41 +352,12 @@ const sortedViolations = computed(() => {
   return sorted;
 });
 
-const loadViolations = async () => {
-  loading.value = true;
-  try {
-    const params = new URLSearchParams();
-    if (filterSeverity.value) params.append('severity', filterSeverity.value);
-    if (filterType.value) params.append('type', filterType.value);
-    if (filterStatus.value) params.append('status', filterStatus.value);
-    if (filterApplication.value) params.append('application', filterApplication.value);
-    if (filterTeam.value) params.append('team', filterTeam.value);
-
-    const response = await fetch(`${API_BASE_URL}/violations?${params.toString()}`);
-    if (response.ok) {
-      const data = await response.json();
-      violations.value = data.map((v: any) => ({
-        ...v,
-        detectedAt: new Date(v.detectedAt),
-        resolvedAt: v.resolvedAt ? new Date(v.resolvedAt) : undefined,
-        ignoredAt: v.ignoredAt ? new Date(v.ignoredAt) : undefined,
-        createdAt: new Date(v.createdAt),
-        updatedAt: new Date(v.updatedAt),
-      }));
-    }
-  } catch (error) {
-    console.error('Error loading violations:', error);
-  } finally {
-    loading.value = false;
-  }
-};
-
 const viewViolation = async (id: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/violations/${id}`);
     if (response.ok) {
       const violation = await response.json();
-      selectedViolation.value = {
+      const formattedViolation = {
         ...violation,
         detectedAt: new Date(violation.detectedAt),
         resolvedAt: violation.resolvedAt ? new Date(violation.resolvedAt) : undefined,
@@ -359,33 +365,32 @@ const viewViolation = async (id: string) => {
         createdAt: new Date(violation.createdAt),
         updatedAt: new Date(violation.updatedAt),
       };
-      showDetailModal.value = true;
+      violationModal.open(formattedViolation);
     }
   } catch (error) {
     console.error('Error loading violation:', error);
   }
 };
 
-const closeDetailModal = () => {
-  showDetailModal.value = false;
-  selectedViolation.value = null;
-};
-
 const handleViolationUpdate = (updatedViolation: ViolationEntity) => {
-  const index = violations.value.findIndex(v => v.id === updatedViolation.id);
-  if (index !== -1) {
-    violations.value[index] = updatedViolation;
+  if (violations.value) {
+    const index = violations.value.findIndex(v => v.id === updatedViolation.id);
+    if (index !== -1) {
+      violations.value[index] = updatedViolation;
+    }
   }
-  selectedViolation.value = updatedViolation;
+  if (violationModal.data.value?.id === updatedViolation.id) {
+    violationModal.open(updatedViolation);
+  }
 };
 
 const viewRelatedViolation = (id: string) => {
-  closeDetailModal();
+  violationModal.close();
   viewViolation(id);
 };
 
 const assignViolation = async (id: string) => {
-  const violation = violations.value.find(v => v.id === id);
+  const violation = (violations.value || []).find(v => v.id === id);
   if (!violation) return;
   
   const assignee = prompt('Enter assignee email:', violation.assignedTo || '');
@@ -469,14 +474,7 @@ const formatType = (type: string): string => {
   return type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
-// Watch filters and reload violations
-watch([filterSeverity, filterType, filterStatus, filterApplication, filterTeam], () => {
-  loadViolations();
-}, { deep: true });
-
-onMounted(() => {
-  loadViolations();
-});
+// Note: useApiDataAuto automatically loads on mount, and filters/search are handled by composables
 </script>
 
 <style scoped>
@@ -494,101 +492,104 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .page-description {
-  font-size: 1.1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
 }
 
 .header-stats {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .stat-card {
-  padding: 16px 24px;
-  border-radius: 12px;
-  border: 1px solid;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  border: var(--border-width-thin) solid;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
   min-width: 120px;
 }
 
 .stat-card.critical {
-  background: rgba(252, 129, 129, 0.1);
-  border-color: rgba(252, 129, 129, 0.3);
+  background: var(--color-error-bg);
+  border-color: var(--color-error);
+  opacity: 0.3;
 }
 
 .stat-card.open {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.3);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning);
+  opacity: 0.3;
 }
 
 .stat-card.resolved {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  opacity: 0.3;
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #a0aec0;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
 .stat-card.critical .stat-label {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .stat-card.open .stat-label {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .stat-card.resolved .stat-label {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
 }
 
 .filters-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
 .filters {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
   flex: 1;
 }
 
 .search-input {
-  padding: 10px 16px;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  transition: var(--transition-all);
   min-width: 200px;
   flex: 1;
 }
@@ -599,20 +600,20 @@ onMounted(() => {
 
 .search-input:focus {
   outline: none;
-  border-color: #4facfe;
-  box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--border-color-muted);
 }
 
 .sort-section {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .sort-label {
-  font-size: 0.875rem;
-  color: #a0aec0;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
 }
 
 .sort-dropdown {
@@ -620,21 +621,21 @@ onMounted(() => {
 }
 
 .sort-order-btn {
-  padding: 8px;
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 8px;
-  color: #4facfe;
+  padding: var(--spacing-sm);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .sort-order-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.4);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-hover);
 }
 
 .sort-order-btn.desc .sort-icon {
@@ -649,65 +650,65 @@ onMounted(() => {
 
 .loading-state {
   text-align: center;
-  padding: 80px 40px;
-  color: #a0aec0;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
+  color: var(--color-text-secondary);
 }
 
 .violations-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .violation-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
   border-left: 4px solid;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: var(--transition-all);
 }
 
 .violation-card.severity-critical {
-  border-left-color: #fc8181;
-  background: linear-gradient(135deg, rgba(252, 129, 129, 0.05) 0%, #1a1f2e 100%);
+  border-left-color: var(--color-error);
+  background: linear-gradient(135deg, var(--color-error-bg) 0%, var(--color-bg-primary) 100%);
 }
 
 .violation-card.severity-high {
-  border-left-color: #fbbf24;
+  border-left-color: var(--color-warning);
 }
 
 .violation-card.severity-medium {
-  border-left-color: #4facfe;
+  border-left-color: var(--color-primary);
 }
 
 .violation-card.severity-low {
-  border-left-color: #718096;
+  border-left-color: var(--color-text-muted);
 }
 
 .violation-card:hover {
   transform: translateX(4px);
-  border-color: rgba(79, 172, 254, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .violation-header {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .violation-title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
-  gap: 16px;
+  margin-bottom: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .violation-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
   flex: 1;
 }
 
@@ -718,162 +719,166 @@ onMounted(() => {
 }
 
 .icon-critical {
-  color: #fc8181;
+  color: var(--color-error);
 }
 
 .icon-high {
-  color: #fbbf24;
+  color: var(--color-warning);
 }
 
 .icon-medium {
-  color: #4facfe;
+  color: var(--color-primary);
 }
 
 .icon-low {
-  color: #718096;
+  color: var(--color-text-muted);
 }
 
 .violation-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .violation-badges {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
 .severity-badge,
 .status-badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
 
 .badge-critical {
-  background: rgba(252, 129, 129, 0.2);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .badge-high {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .badge-medium {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .badge-low {
-  background: rgba(113, 128, 150, 0.2);
-  color: #718096;
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
+  color: var(--color-text-muted);
 }
 
 .status-open {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .status-in-progress {
-  background: rgba(79, 172, 254, 0.2);
-  color: #4facfe;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .status-resolved {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .status-ignored {
-  background: rgba(156, 163, 175, 0.2);
-  color: #9ca3af;
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
+  color: var(--color-text-muted);
 }
 
 .violation-meta {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .violation-description {
-  font-size: 0.9rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
   line-height: 1.5;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
 }
 
 .violation-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(79, 172, 254, 0.1);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: var(--border-width-thin) solid var(--border-color-muted);
 }
 
 .detail-item {
   display: flex;
-  gap: 8px;
-  font-size: 0.875rem;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
 }
 
 .detail-label {
-  color: #718096;
-  font-weight: 500;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
 }
 
 .detail-value {
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 .violation-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 8px;
-  color: #4facfe;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border: var(--border-width-thin) solid var(--border-color-secondary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   flex: 1;
   justify-content: center;
 }
 
 .action-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .assign-btn:hover {
-  background: rgba(79, 172, 254, 0.1);
-  border-color: rgba(79, 172, 254, 0.5);
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-active);
 }
 
 .resolve-btn:hover {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.5);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .ignore-btn:hover {
-  background: rgba(156, 163, 175, 0.1);
-  border-color: rgba(156, 163, 175, 0.5);
-  color: #9ca3af;
+  background: var(--color-bg-tertiary);
+  opacity: 0.6;
+  border-color: var(--color-text-muted);
+  opacity: 0.5;
+  color: var(--color-text-muted);
 }
 
 .action-icon {
@@ -883,29 +888,29 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-xl);
 }
 
 .empty-icon {
   width: 64px;
   height: 64px;
-  color: #22c55e;
-  margin: 0 auto 24px;
+  color: var(--color-success);
+  margin: 0 auto var(--spacing-lg);
   opacity: 0.5;
 }
 
 .empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .empty-state p {
-  font-size: 1rem;
-  color: #a0aec0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
 }
 </style>

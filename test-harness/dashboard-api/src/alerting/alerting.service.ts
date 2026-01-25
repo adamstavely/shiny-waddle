@@ -480,9 +480,10 @@ export class AlertingService {
       throw new Error('Slack webhook URL not configured');
     }
 
-    // In production, use axios to POST to Slack webhook
+    // NOTE: Slack webhook integration is a stub implementation
+    // Future implementation should use axios/fetch to POST formatted alert to Slack webhook
+    // See: https://api.slack.com/messaging/webhooks
     this.logger.log(`Sending Slack alert to ${webhookUrl}: ${alert.title}`);
-    // TODO: Implement actual Slack webhook call
   }
 
   /**
@@ -494,9 +495,10 @@ export class AlertingService {
       throw new Error('PagerDuty integration key not configured');
     }
 
-    // In production, use PagerDuty API
+    // NOTE: PagerDuty integration is a stub implementation
+    // Future implementation should use PagerDuty Events API v2
+    // See: https://developer.pagerduty.com/api-reference/
     this.logger.log(`Sending PagerDuty alert: ${alert.title}`);
-    // TODO: Implement actual PagerDuty API call
   }
 
   /**
@@ -508,9 +510,10 @@ export class AlertingService {
       throw new Error('Teams webhook URL not configured');
     }
 
-    // In production, use axios to POST to Teams webhook
+    // NOTE: Microsoft Teams webhook integration is a stub implementation
+    // Future implementation should POST formatted message card to Teams webhook
+    // See: https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook
     this.logger.log(`Sending Teams alert to ${webhookUrl}: ${alert.title}`);
-    // TODO: Implement actual Teams webhook call
   }
 
   /**
@@ -522,8 +525,8 @@ export class AlertingService {
       throw new Error('Webhook URL not configured');
     }
 
-    // In production, use axios to POST to webhook
+    // NOTE: Generic webhook integration is a stub implementation
+    // Future implementation should POST alert data to the configured webhook URL
     this.logger.log(`Sending webhook alert to ${url}: ${alert.title}`);
-    // TODO: Implement actual webhook call
   }
 }

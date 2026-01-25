@@ -17,10 +17,10 @@
           <h3 class="card-title">{{ provider.name }}</h3>
         </div>
         <p class="card-description">{{ provider.description }}</p>
-        <button @click="testProvider(provider.id)" class="btn-primary" :disabled="loading">
-          <Shield v-if="!loading" class="btn-icon" />
+        <button @click="testProvider(provider.id)" class="btn-primary" :disabled="testingProviders[provider.id]">
+          <Shield v-if="!testingProviders[provider.id]" class="btn-icon" />
           <div v-else class="loading-spinner-small"></div>
-          {{ loading ? 'Testing...' : 'Test Integration' }}
+          {{ testingProviders[provider.id] ? 'Testing...' : 'Test Integration' }}
         </button>
         <div v-if="testResults[provider.id]" class="test-results">
           <div class="result-status" :class="testResults[provider.id].passed ? 'status-success' : 'status-error'">
@@ -46,13 +46,13 @@ import { ref } from 'vue';
 import { Shield, CheckCircle2, XCircle, Users, Key, Cloud } from 'lucide-vue-next';
 import Breadcrumb from '../components/Breadcrumb.vue';
 import axios from 'axios';
+import { useApiData } from '../composables/useApiData';
 
 const breadcrumbItems = [
   { label: 'Home', to: '/' },
   { label: 'Identity Providers', to: '/identity-providers' },
 ];
 
-const loading = ref(false);
 const testResults = ref<Record<string, any>>({});
 
 const providers = [
@@ -64,41 +64,44 @@ const providers = [
 ];
 
 const testProvider = async (providerId: string) => {
-  loading.value = true;
-  try {
-    let endpoint = '';
-    let payload: any = {};
+  let endpoint = '';
+  let payload: any = {};
 
-    switch (providerId) {
-      case 'ad':
-        endpoint = '/api/identity-providers/test-ad-group';
-        payload = { user: { id: 'test', email: 'test@example.com', role: 'viewer', attributes: {} }, group: 'test-group' };
-        break;
-      case 'okta':
-        endpoint = '/api/identity-providers/test-okta-policy';
-        payload = { policy: { policyId: 'test', policyName: 'Test Policy', synchronized: true, lastSync: new Date(), violations: [] } };
-        break;
-      case 'auth0':
-        endpoint = '/api/identity-providers/test-auth0-policy';
-        payload = { policy: {} };
-        break;
-      case 'azure-ad':
-        endpoint = '/api/identity-providers/test-azure-ad-conditional-access';
-        payload = { policy: { id: 'test', name: 'Test Policy', conditions: {}, grantControls: {} } };
-        break;
-      case 'gcp':
-        endpoint = '/api/identity-providers/test-gcp-iam-binding';
-        payload = { binding: { resource: 'test', role: 'test-role', members: [] } };
-        break;
-    }
-
-    const response = await axios.post(endpoint, payload);
-    testResults.value[providerId] = response.data;
-  } catch (error) {
-    console.error(`Error testing ${providerId}:`, error);
-  } finally {
-    loading.value = false;
+  switch (providerId) {
+    case 'ad':
+      endpoint = '/api/identity-providers/test-ad-group';
+      payload = { user: { id: 'test', email: 'test@example.com', role: 'viewer', attributes: {} }, group: 'test-group' };
+      break;
+    case 'okta':
+      endpoint = '/api/identity-providers/test-okta-policy';
+      payload = { policy: { policyId: 'test', policyName: 'Test Policy', synchronized: true, lastSync: new Date(), violations: [] } };
+      break;
+    case 'auth0':
+      endpoint = '/api/identity-providers/test-auth0-policy';
+      payload = { policy: {} };
+      break;
+    case 'azure-ad':
+      endpoint = '/api/identity-providers/test-azure-ad-conditional-access';
+      payload = { policy: { id: 'test', name: 'Test Policy', conditions: {}, grantControls: {} } };
+      break;
+    case 'gcp':
+      endpoint = '/api/identity-providers/test-gcp-iam-binding';
+      payload = { binding: { resource: 'test', role: 'test-role', members: [] } };
+      break;
   }
+
+  const { loading, load } = useApiData(
+    async () => {
+      const response = await axios.post(endpoint, payload);
+      testResults.value[providerId] = response.data;
+      return response.data;
+    },
+    {
+      errorMessage: `Failed to test ${providerId} integration`,
+    }
+  );
+
+  await load();
 };
 </script>
 
@@ -123,61 +126,61 @@ const testProvider = async (providerId: string) => {
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .page-description {
   font-size: 1.1rem;
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .providers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .provider-card {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
-  padding: 24px;
-  transition: all 0.3s;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  transition: var(--transition-all);
 }
 
 .provider-card:hover {
-  border-color: rgba(79, 172, 254, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-primary-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .card-icon {
   width: 24px;
   height: 24px;
-  color: #4facfe;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .card-description {
   font-size: 0.9rem;
-  color: #a0aec0;
-  margin-bottom: 20px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
   line-height: 1.5;
 }
 
@@ -185,16 +188,16 @@ const testProvider = async (providerId: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--gradient-primary);
   border: none;
-  border-radius: 8px;
-  color: #ffffff;
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition-all);
   width: 100%;
 }
 
@@ -204,7 +207,7 @@ const testProvider = async (providerId: string) => {
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
@@ -216,8 +219,8 @@ const testProvider = async (providerId: string) => {
 .loading-spinner-small {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+  border: var(--border-width-medium) solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--color-text-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -227,31 +230,31 @@ const testProvider = async (providerId: string) => {
 }
 
 .test-results {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(79, 172, 254, 0.2);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: var(--border-width-thin) solid var(--border-color-primary);
 }
 
 .result-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  margin-bottom: 12px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-sm);
 }
 
 .status-success {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #22c55e;
+  background: var(--color-success-bg);
+  border: var(--border-width-thin) solid var(--color-success);
+  color: var(--color-success);
 }
 
 .status-error {
-  background: rgba(252, 129, 129, 0.1);
-  border: 1px solid rgba(252, 129, 129, 0.3);
-  color: #fc8181;
+  background: var(--color-error-bg);
+  border: var(--border-width-thin) solid var(--color-error);
+  color: var(--color-error);
 }
 
 .status-icon {
@@ -262,15 +265,15 @@ const testProvider = async (providerId: string) => {
 .result-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .check-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: #a0aec0;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .check-icon {
@@ -280,10 +283,10 @@ const testProvider = async (providerId: string) => {
 }
 
 .check-icon.success {
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .check-icon.error {
-  color: #fc8181;
+  color: var(--color-error);
 }
 </style>
