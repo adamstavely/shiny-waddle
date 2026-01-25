@@ -37,7 +37,6 @@
                 placeholder="Select a category..."
                 :disabled="isEditMode"
                 required
-                class="form-input"
                 @change="handleCategoryChange"
               />
             </div>
@@ -49,7 +48,6 @@
                 placeholder="Select a test type..."
                 :disabled="isEditMode || !selectedCategory"
                 required
-                class="form-input"
               />
               <p v-if="isEditMode" class="field-help">Test type cannot be changed after creation</p>
             </div>
