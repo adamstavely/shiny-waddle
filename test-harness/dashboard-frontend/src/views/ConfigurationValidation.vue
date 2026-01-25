@@ -311,7 +311,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .page-title {
@@ -322,7 +322,7 @@ onMounted(() => {
 }
 
 .page-description {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
@@ -352,23 +352,23 @@ onMounted(() => {
 
 .loading-state,
 .error-state {
-  padding: 40px;
+  padding: var(--spacing-2xl);
   text-align: center;
 }
 
 .loading {
   color: var(--color-primary);
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
 }
 
 .error {
   color: var(--color-error);
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   margin-bottom: var(--spacing-md);
 }
 
 .btn-retry {
-  padding: 10px var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-xl);
   background: rgba(79, 172, 254, 0.1);
   border: var(--border-width-thin) solid var(--border-color-secondary);
   border-radius: var(--border-radius-md);
@@ -458,7 +458,7 @@ onMounted(() => {
 }
 
 .target-description {
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   margin: var(--spacing-sm) 0 0 0;
 }
@@ -484,7 +484,7 @@ onMounted(() => {
 }
 
 .stat-value {
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
@@ -499,7 +499,7 @@ onMounted(() => {
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
   border: var(--border-width-thin) solid var(--border-color-secondary);
@@ -552,7 +552,7 @@ onMounted(() => {
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
   background: var(--gradient-card);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-xl);

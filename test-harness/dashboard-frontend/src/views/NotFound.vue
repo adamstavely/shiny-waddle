@@ -108,12 +108,6 @@
           <h2 class="quick-links-title">Popular Pages:</h2>
           <ul class="links-grid" role="list">
             <li>
-              <router-link to="/insights" class="quick-link" aria-label="Go to Insights dashboard">
-                <BarChart3 class="link-icon" aria-hidden="true" />
-                <span>Insights</span>
-              </router-link>
-            </li>
-            <li>
               <router-link to="/violations" class="quick-link" aria-label="Go to Violations page">
                 <AlertTriangle class="link-icon" aria-hidden="true" />
                 <span>Violations</span>

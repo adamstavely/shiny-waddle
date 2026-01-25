@@ -67,7 +67,6 @@ import {
   Shield, 
   FileText, 
   TestTube, 
-  BarChart3, 
   Settings,
   Globe,
   Database,
@@ -94,7 +93,6 @@ const menuItems = [
   { path: '/applications', label: 'Applications', icon: Database, divider: false },
   { path: '/test-design-library', label: 'Test Design Library', icon: BookOpen, divider: false },
   { path: '/policies', label: 'Policies & Config', icon: Shield, divider: false },
-  { path: '/insights', label: 'Insights & Reports', icon: BarChart3, divider: false },
 ];
 
 // Test Design Library pages
@@ -138,9 +136,6 @@ const isActive = (path: string): boolean => {
   if (path === '/policies') {
     return policiesConfigPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
   }
-  if (path === '/insights') {
-    return insightsReportsPages.some(page => currentPath.value === page || currentPath.value.startsWith(page + '/'));
-  }
   if (path === '/admin') {
     return currentPath.value === '/admin' || currentPath.value.startsWith('/admin/');
   }
@@ -164,7 +159,7 @@ const handleNavClick = (path: string) => {
     window.dispatchEvent(new CustomEvent('open-drawer', { detail: { category: 'admin' } }));
     return;
   }
-  // Use Vue Router for navigation (including /insights - it navigates directly)
+  // Use Vue Router for navigation
   router.push(path);
 };
 
@@ -197,15 +192,15 @@ watch(() => route.path, (newPath) => {
   padding: 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
   min-height: 0;
-  padding-bottom: 80px; /* Space for admin section */
+  padding-bottom: var(--spacing-2xl); /* Space for admin section */
 }
 
 .nav-items-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .nav-admin-section {
@@ -216,10 +211,10 @@ watch(() => route.path, (newPath) => {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
   background: linear-gradient(180deg, transparent 0%, var(--color-bg-primary) 20%);
-  padding-top: 8px;
-  padding-bottom: 16px;
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
   z-index: 10;
 }
 
@@ -228,7 +223,7 @@ watch(() => route.path, (newPath) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   margin: 0 8px;
   border-radius: 8px;
   text-decoration: none;
@@ -274,7 +269,7 @@ watch(() => route.path, (newPath) => {
 }
 
 .nav-label {
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   text-align: center;
   line-height: 1.2;
@@ -282,7 +277,7 @@ watch(() => route.path, (newPath) => {
 
 .nav-divider {
   height: 1px;
-  margin: 8px 16px;
+  margin: var(--spacing-sm) var(--spacing-md);
   background: rgba(79, 172, 254, 0.1);
 }
 

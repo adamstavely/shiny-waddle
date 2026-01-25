@@ -182,67 +182,6 @@
         </div>
       </div>
 
-      <!-- Insights & Reports Category -->
-      <div v-if="activeCategory === 'insights-reports'" :key="`insights-reports-${activeCategory}`" class="drawer-category" data-category="insights-reports">
-        <div class="category-items category-items-padded">
-          <a
-            href="/insights"
-            @click.prevent="handleNavClick('/insights')"
-            :class="['drawer-item', isActive('/insights') ? 'drawer-item-active' : '']"
-          >
-            <LayoutDashboard class="item-icon" />
-            <span>Overview</span>
-          </a>
-          <a
-            href="/insights/overview"
-            @click.prevent="handleNavClick('/insights/overview')"
-            :class="['drawer-item', isActive('/insights/overview') ? 'drawer-item-active' : '']"
-          >
-            <BarChart3 class="item-icon" />
-            <span>Analytics Dashboard</span>
-          </a>
-          <a
-            href="/insights/analytics"
-            @click.prevent="handleNavClick('/insights/analytics')"
-            :class="['drawer-item', isActive('/insights/analytics') ? 'drawer-item-active' : '']"
-          >
-            <FileText class="item-icon" />
-            <span>Analytics</span>
-          </a>
-          <a
-            href="/insights/predictions"
-            @click.prevent="handleNavClick('/insights/predictions')"
-            :class="['drawer-item', isActive('/insights/predictions') ? 'drawer-item-active' : '']"
-          >
-            <TrendingUp class="item-icon" />
-            <span>Predictions</span>
-          </a>
-          <a
-            href="/insights/runs"
-            @click.prevent="handleNavClick('/insights/runs')"
-            :class="['drawer-item', isActive('/insights/runs') ? 'drawer-item-active' : '']"
-          >
-            <PlayCircle class="item-icon" />
-            <span>Runs</span>
-          </a>
-          <a
-            href="/insights/reports"
-            @click.prevent="handleNavClick('/insights/reports')"
-            :class="['drawer-item', isActive('/insights/reports') ? 'drawer-item-active' : '']"
-          >
-            <FileText class="item-icon" />
-            <span>Reports</span>
-          </a>
-          <a
-            href="/insights/trends"
-            @click.prevent="handleNavClick('/insights/trends')"
-            :class="['drawer-item', isActive('/insights/trends') ? 'drawer-item-active' : '']"
-          >
-            <TrendingUp class="item-icon" />
-            <span>Trends</span>
-          </a>
-        </div>
-      </div>
 
       <!-- Admin Category -->
       <div v-if="activeCategory === 'admin'" :key="`admin-${activeCategory}`" class="drawer-category" data-category="admin">
@@ -374,16 +313,6 @@ const adminPages = [
   '/compliance/nist-800-207'
 ];
 
-// Insights & Reports pages
-const insightsReportsPages = [
-  '/insights',
-  '/insights/overview',
-  '/insights/analytics',
-  '/insights/predictions',
-  '/insights/runs',
-  '/insights/reports',
-  '/insights/trends',
-];
 
 // Determine active category based on current route
 const getCategoryFromRoute = (path: string): string | null => {
@@ -395,11 +324,6 @@ const getCategoryFromRoute = (path: string): string | null => {
   // Check if it's a policies & config page
   if (policiesConfigPages.some(page => path === page || path.startsWith(page + '/'))) {
     return 'policies-config';
-  }
-  // Check if it's an insights & reports page
-  if (path === '/insights' || path.startsWith('/insights/') ||
-      insightsReportsPages.some(page => path === page || path.startsWith(page + '/'))) {
-    return 'insights-reports';
   }
   // Check if it's an admin page
   if (path === '/admin' || path.startsWith('/admin/') ||
@@ -481,10 +405,6 @@ const isActive = (path: string): boolean => {
   if (path === '/policies') {
     // For /policies, only match exactly /policies, not /policies/*
     return currentPath.value === '/policies';
-  }
-  if (path === '/insights') {
-    // For /insights, only match exactly /insights, not /insights/*
-    return currentPath.value === '/insights';
   }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };

@@ -10,7 +10,6 @@ export class AppController {
       message: 'Heimdall Dashboard API',
       version: '1.0.0',
       endpoints: {
-        dashboardData: '/api/dashboard-data',
         reports: '/api/reports',
       },
       frontend: 'http://localhost:5173',

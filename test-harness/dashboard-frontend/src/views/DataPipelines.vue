@@ -697,7 +697,7 @@ function closeConfigModal() {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
 }
 
 .page-title {
@@ -708,7 +708,7 @@ function closeConfigModal() {
 }
 
 .page-description {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
@@ -772,7 +772,7 @@ function closeConfigModal() {
 }
 
 .tab-badge {
-  padding: 2px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: 10px;
   background: var(--color-info-bg);
   color: var(--color-primary);
@@ -786,20 +786,20 @@ function closeConfigModal() {
 
 .filters {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
   min-width: 200px;
-  padding: 10px var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-bg-overlay-light);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-md);
   color: var(--color-text-primary);
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   transition: var(--transition-all);
 }
 
@@ -896,7 +896,7 @@ function closeConfigModal() {
 }
 
 .result-stage {
-  padding: 2px var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-xs);
   background: rgba(79, 172, 254, 0.1);
   color: var(--color-primary);
@@ -962,14 +962,14 @@ function closeConfigModal() {
 
 .config-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
   background: transparent;
   border: var(--border-width-thin) solid var(--border-color-secondary);
@@ -1018,7 +1018,7 @@ function closeConfigModal() {
 
 .empty-state {
   text-align: center;
-  padding: 80px 40px;
+  padding: var(--spacing-2xl) var(--spacing-2xl);
   background: var(--gradient-card);
   border: var(--border-width-thin) solid var(--border-color-primary);
   border-radius: var(--border-radius-xl);
@@ -1057,7 +1057,7 @@ function closeConfigModal() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--spacing-lg);
 }
 
 .large-modal {
@@ -1065,28 +1065,29 @@ function closeConfigModal() {
 }
 
 .modal-content {
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 16px;
+  background: var(--gradient-card);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.2;
+  border-radius: var(--border-radius-xl);
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-xl);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
+  padding: var(--spacing-lg);
   border-bottom: 1px solid rgba(79, 172, 254, 0.2);
 }
 
 .modal-title-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .modal-title-icon {
@@ -1097,14 +1098,14 @@ function closeConfigModal() {
 }
 
 .modal-header h2 {
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   font-weight: 600;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .modal-close {
-  padding: 8px;
+  padding: var(--spacing-sm);
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -1127,30 +1128,30 @@ function closeConfigModal() {
 }
 
 .modal-body {
-  padding: 24px;
+  padding: var(--spacing-lg);
 }
 
 .config-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-lg);
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .form-group label {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
-  color: #ffffff;
+  color: var(--color-text-primary);
 }
 
 .form-group input,
 .form-group select {
-  padding: 10px 16px;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(15, 20, 25, 0.6);
   border: 1px solid rgba(79, 172, 254, 0.2);
   border-radius: 8px;

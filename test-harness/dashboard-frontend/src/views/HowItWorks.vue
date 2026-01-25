@@ -19,7 +19,7 @@
               real-time security insights and automated compliance validation.
             </p>
             <div class="hero-actions">
-              <router-link to="/insights" class="btn-primary">View Dashboard</router-link>
+              <router-link to="/dashboard" class="btn-primary">View Dashboard</router-link>
               <router-link to="/tests" class="btn-secondary">Get Started</router-link>
             </div>
           </div>

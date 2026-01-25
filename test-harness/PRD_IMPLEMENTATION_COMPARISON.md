@@ -622,10 +622,10 @@ This document compares the Product Requirements Document (PRD) with the current 
 
 ### 2. Insights & Predictions Dashboard ➕
 - **Status:** Fully implemented
-- **Location:** `dashboard-frontend/src/views/insights/`
+- **Location:** `dashboard-frontend/src/views/insights/`, `dashboard-api/src/dashboard/`
 - **Description:** Advanced analytics dashboard with predictions, trends, and insights
 - **PRD Reference:** PRD mentions "Advanced Analytics" in roadmap (Section 16.1.4) but not as core feature
-- **Recommendation:** ✅ **KEEP** - Aligns with roadmap, valuable feature
+- **Recommendation:** ⚠️ **EVALUATE** - Should be handled via Elasticsearch/Kibana exports instead of custom analytics. The dashboard reads JSON files, aggregates data manually, and generates trends in-memory - all capabilities that Elasticsearch/Kibana provides natively with better performance, ML-based predictions, and flexible dashboards.
 
 ### 3. SLA Management ➕
 - **Status:** Fully implemented

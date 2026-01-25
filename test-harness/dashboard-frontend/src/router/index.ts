@@ -78,41 +78,6 @@ const router = createRouter({
       component: ApplicationDetail,
     },
     {
-      path: '/insights',
-      name: 'Insights',
-      component: () => import('../views/insights/InsightsOverview.vue'),
-    },
-    {
-      path: '/insights/overview',
-      name: 'InsightsOverviewContent',
-      component: () => import('../views/insights/InsightsOverviewContent.vue'),
-    },
-    {
-      path: '/insights/analytics',
-      name: 'InsightsAnalytics',
-      component: () => import('../views/insights/InsightsAnalytics.vue'),
-    },
-    {
-      path: '/insights/predictions',
-      name: 'InsightsPredictions',
-      component: () => import('../views/insights/InsightsPredictions.vue'),
-    },
-    {
-      path: '/insights/runs',
-      name: 'InsightsRuns',
-      component: () => import('../views/insights/InsightsRuns.vue'),
-    },
-    {
-      path: '/insights/reports',
-      name: 'InsightsReports',
-      component: () => import('../views/insights/InsightsReports.vue'),
-    },
-    {
-      path: '/insights/trends',
-      name: 'InsightsTrends',
-      component: () => import('../views/insights/InsightsTrends.vue'),
-    },
-    {
       path: '/dashboard/app/:id',
       name: 'ApplicationDashboard',
       component: ApplicationDashboard,

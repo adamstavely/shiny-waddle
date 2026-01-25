@@ -90,7 +90,6 @@ const route = useRoute();
 const currentPath = ref(route.path);
 
 const menuItems = [
-  { path: '/insights', label: 'Insights', icon: LayoutDashboard },
   { path: '/tests', label: 'Tests', icon: TestTube },
   { path: '/policies', label: 'Policies', icon: Shield },
   { path: '/violations', label: 'Violations', icon: AlertTriangle },
@@ -99,9 +98,6 @@ const menuItems = [
 ];
 
 const isActive = (path: string): boolean => {
-  if (path === '/insights') {
-    return currentPath.value === '/insights' || currentPath.value.startsWith('/insights');
-  }
   return currentPath.value === path || currentPath.value.startsWith(path + '/');
 };
 
@@ -157,7 +153,7 @@ const handleSettingsClick = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px;
+  padding: var(--spacing-lg);
   border-bottom: 1px solid rgba(79, 172, 254, 0.2);
 }
 
@@ -175,7 +171,7 @@ const handleSettingsClick = () => {
 }
 
 .drawer-logo .logo-text {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   -webkit-background-clip: text;

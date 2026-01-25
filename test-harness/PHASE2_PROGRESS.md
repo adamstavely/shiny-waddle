@@ -33,7 +33,7 @@ Starting migration with high-priority files that have the most hardcoded values.
 - **Hardcoded colors found**: ~6,861 (estimated from plan)
 - **Hardcoded spacing found**: ~9,076 (estimated from plan)
 - **Files migrated**: 40
-- **Colors migrated**: ~405
+- **Colors migrated**: ~415
 - **Spacing migrated**: ~590
 
 ## Files to Migrate (Priority Order)
@@ -272,7 +272,17 @@ Starting migration with high-priority files that have the most hardcoded values.
 - `test-harness/dashboard-frontend/src/views/NIST800207.vue` ✅
   - Migrated padding, gap, and font-size values (multiple instances)
 - `test-harness/dashboard-frontend/src/views/PendingApprovals.vue` ✅
-  - Migrated padding, font-size, and color values (multiple instances)
+  - Migrated padding, font-size, gap, border-radius, colors, backgrounds, and borders (comprehensive migration)
+- `test-harness/dashboard-frontend/src/views/IdentityProviders.vue` ✅
+  - Migrated padding, gap, and font-size values (multiple instances)
+- `test-harness/dashboard-frontend/src/views/ConfigurationValidation.vue` ✅
+  - Migrated gap, padding, and font-size values (multiple instances)
+- `test-harness/dashboard-frontend/src/views/DataPipelines.vue` ✅
+  - Migrated gap, padding, font-size, colors, backgrounds, borders, and transitions (comprehensive migration)
+- `test-harness/dashboard-frontend/src/components/MobileDrawer.vue` ✅
+  - Migrated padding, gap, and font-size values
+- `test-harness/dashboard-frontend/src/components/Sidebar.vue` ✅
+  - Migrated padding, gap, and font-size values (multiple instances)
 - `test-harness/dashboard-frontend/src/views/CICDSecurityGates.vue` ✅ (additional)
   - Migrated additional colors, spacing, and font-size values
 - `test-harness/dashboard-frontend/src/components/StatusBadge.vue` ✅ (additional)

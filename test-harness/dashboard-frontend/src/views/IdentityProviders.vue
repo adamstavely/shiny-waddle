@@ -110,7 +110,7 @@ const testProvider = async (providerId: string) => {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--spacing-lg);
 }
 
 .page-header {
@@ -121,7 +121,7 @@ const testProvider = async (providerId: string) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 24px;
+  gap: var(--spacing-lg);
   flex-wrap: wrap;
 }
 
@@ -133,7 +133,7 @@ const testProvider = async (providerId: string) => {
 }
 
 .page-description {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-secondary);
 }
 
@@ -178,7 +178,7 @@ const testProvider = async (providerId: string) => {
 }
 
 .card-description {
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xl);
   line-height: 1.5;
@@ -194,7 +194,7 @@ const testProvider = async (providerId: string) => {
   border: none;
   border-radius: var(--border-radius-md);
   color: var(--color-text-primary);
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: var(--transition-all);

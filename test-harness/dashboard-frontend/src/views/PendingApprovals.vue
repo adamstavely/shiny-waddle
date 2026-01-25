@@ -224,7 +224,7 @@ onMounted(() => {
 
 .page-description {
   font-size: var(--font-size-base);
-  color: #a0aec0;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -242,7 +242,7 @@ onMounted(() => {
 .empty-state {
   text-align: center;
   padding: var(--spacing-2xl) var(--spacing-lg);
-  color: #a0aec0;
+  color: var(--color-text-secondary);
 }
 
 .empty-icon {
@@ -259,9 +259,11 @@ onMounted(() => {
 }
 
 .approval-card {
-  background: rgba(15, 20, 25, 0.6);
-  border: 1px solid rgba(79, 172, 254, 0.2);
-  border-radius: 12px;
+  background: var(--color-bg-overlay-light);
+  opacity: 0.6;
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.2;
+  border-radius: var(--border-radius-md);
   padding: var(--spacing-lg);
 }
 
@@ -331,24 +333,24 @@ onMounted(() => {
 }
 
 .request-date {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .approval-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .approval-reason strong,
 .approval-required strong,
 .approval-status strong {
   display: block;
-  font-size: 0.875rem;
-  color: #a0aec0;
-  margin-bottom: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .approval-reason p {
@@ -359,44 +361,45 @@ onMounted(() => {
 
 .approvers-list {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
 
 .approver-role-badge {
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: rgba(79, 172, 254, 0.1);
-  color: #4facfe;
-  border: 1px solid rgba(79, 172, 254, 0.3);
-  border-radius: 6px;
-  font-size: 0.875rem;
+  background: var(--border-color-muted);
+  color: var(--color-primary);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  opacity: 0.3;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
   font-weight: 500;
 }
 
 .approvers-status {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .approver-status-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: var(--spacing-sm) var(--spacing-sm);
   background: rgba(0, 0, 0, 0.3);
   border-radius: 6px;
 }
 
 .approver-name {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: #ffffff;
 }
 
 .status-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -429,7 +432,7 @@ onMounted(() => {
   color: #4facfe;
   cursor: pointer;
   text-decoration: underline;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .btn-link:hover {
@@ -438,17 +441,17 @@ onMounted(() => {
 
 .approval-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--spacing-sm);
 }
 
 .btn-approve,
 .btn-reject {
-  padding: 10px 20px;
+  padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   transition: all 0.2s;
 }
 
