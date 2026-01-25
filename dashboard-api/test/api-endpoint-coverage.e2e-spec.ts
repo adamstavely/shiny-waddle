@@ -24,7 +24,14 @@ describe('API Endpoint Coverage (e2e)', () => {
     app = await createE2EApp();
   });
 
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+  });
+    }
   });
 
   describe('CRUD Operations - Applications', () => {

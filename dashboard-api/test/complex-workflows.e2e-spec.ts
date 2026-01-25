@@ -22,7 +22,14 @@ describe('Complex User Workflows (e2e)', () => {
     app = await createE2EApp();
   });
 
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+  });
+    }
   });
 
   describe('Workflow 1: Application Creation → Infrastructure → Run Tests → View Results', () => {

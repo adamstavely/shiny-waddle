@@ -14,7 +14,10 @@ describe('NIST 800-207 Controller (e2e)', () => {
     app = await createE2EApp();
   });
 
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 
   const validAssessment: ComplianceAssessment = {

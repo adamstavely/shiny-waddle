@@ -185,6 +185,11 @@ export class RealtimeIngestionService extends EventEmitter {
           createdAt: new Date(),
           updatedAt: new Date(),
           riskScore: 50,
+          remediation: {
+            description: f.remediation?.description || 'Review and remediate the security finding',
+            steps: f.remediation?.steps || ['Review the finding details', 'Implement remediation', 'Verify fix'],
+            references: f.remediation?.references || [],
+          },
           raw: f,
         }));
       }
@@ -222,22 +227,17 @@ export class RealtimeIngestionService extends EventEmitter {
   private async normalizeFindings(payload: WebhookPayload): Promise<UnifiedFinding[]> {
     const normalized: UnifiedFinding[] = [];
 
-    for (const rawFinding of payload.findings) {
-      try {
-        const result = await this.normalizationEngine.normalize(
-          payload.scannerId,
-          rawFinding,
-          payload.metadata
-        );
-        if (Array.isArray(result)) {
-          normalized.push(...result);
-        } else {
-          normalized.push(result);
-        }
-      } catch (error: any) {
-        console.error(`Failed to normalize finding from ${payload.scannerId}:`, error);
-        // Continue with other findings
-      }
+    try {
+      // Use normalizeSingle which accepts scannerId, findings array, and metadata
+      const result = await this.normalizationEngine.normalizeSingle(
+        payload.scannerId,
+        payload.findings,
+        payload.metadata
+      );
+      normalized.push(...result);
+    } catch (error: any) {
+      console.error(`Failed to normalize findings from ${payload.scannerId}:`, error);
+      // Continue with basic normalization fallback
     }
 
     return normalized;
@@ -254,13 +254,10 @@ export class RealtimeIngestionService extends EventEmitter {
 
     for (const finding of findings) {
       try {
-        const riskScore = await this.riskScorer.calculateRiskScore(finding, {
-          applicationId: finding.asset.applicationId || metadata?.applicationId,
-          applicationName: metadata?.applicationName,
-        });
+        const riskScore = this.riskScorer.calculateRiskScore(finding);
 
-        finding.riskScore = riskScore.totalScore;
-        finding.businessImpact = riskScore.businessImpact;
+        finding.riskScore = riskScore.adjustedScore;
+        finding.businessImpact = riskScore.factors.businessImpact;
 
         // Emit scored event
         this.emit('finding_scored', {
@@ -296,7 +293,7 @@ export class RealtimeIngestionService extends EventEmitter {
       'sonatype-iq': 'sca',
       'aws-security-hub': 'cspm',
     };
-    return sourceMap[scannerId.toLowerCase()] || 'security';
+    return sourceMap[scannerId.toLowerCase()] || 'sast';
   }
 
   /**

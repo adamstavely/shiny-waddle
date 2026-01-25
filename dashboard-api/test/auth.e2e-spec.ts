@@ -23,7 +23,14 @@ describe('Authentication & Authorization (e2e)', () => {
     app = await createE2EApp();
   });
 
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
+  });
+    }
   });
 
   // Test data
