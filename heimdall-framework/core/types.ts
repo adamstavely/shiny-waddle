@@ -16,6 +16,25 @@ export interface AccessControlConfig {
   cacheDecisions?: boolean;
   policyMode?: 'rbac' | 'abac' | 'hybrid'; // Support RBAC, ABAC, or both
   abacPolicies?: ABACPolicy[];
+  // Agent-specific configuration
+  agentConfig?: {
+    oauthProviders?: {
+      authCode?: {
+        authorizationEndpoint: string;
+        tokenEndpoint: string;
+      };
+      oboToken?: {
+        tokenEndpoint: string;
+      };
+      clientCredentials?: {
+        tokenEndpoint: string;
+      };
+    };
+    auditLogAggregation?: {
+      enabled: boolean;
+      sources?: string[];
+    };
+  };
 }
 
 export interface ABACPolicy {
@@ -79,7 +98,12 @@ export type TestType =
   | 'environment-config'
   | 'secrets-management'
   | 'config-drift'
-  | 'environment-policies';
+  | 'environment-policies'
+  | 'agent-delegated-access'
+  | 'agent-direct-access'
+  | 'agent-multi-service'
+  | 'agent-dynamic-access'
+  | 'agent-audit-trail';
 
 // Baseline configuration for platform config test suites
 export interface BaselineConfig {
@@ -419,6 +443,199 @@ export interface SalesforceExperienceCloudTest extends BaseTest {
   };
 }
 
+// Agent Delegated Access Test - tests agents acting on behalf of users (Auth Code Flow + OBO Token Flow)
+export interface AgentDelegatedAccessTest extends BaseTest {
+  testType: 'agent-delegated-access';
+  domain: 'api_security' | 'identity';
+  policyId?: string; // Optional policy reference
+  
+  // OAuth flow configuration
+  oauthConfig: {
+    flowType: 'auth-code' | 'obo-token';
+    authorizationEndpoint: string;
+    tokenEndpoint: string;
+    clientId: string;
+    redirectUri: string;
+    scopes: string[];
+  };
+  
+  // User context (the user delegating access)
+  userContext: {
+    userId: string;
+    email: string;
+    permissions: string[];
+    attributes?: Record<string, any>;
+  };
+  
+  // Agent configuration
+  agentConfig: {
+    agentId: string;
+    agentType: 'delegated';
+    serviceEndpoints: string[]; // Services agent will access
+  };
+  
+  // Expected results
+  expected: {
+    tokenIssued: boolean;
+    userPermissionsEnforced: boolean;
+    crossServiceAccessAllowed?: boolean;
+    permissionBoundariesRespected: boolean;
+  };
+}
+
+// Agent Direct Access Test - tests autonomous agents (Client Credentials Flow)
+export interface AgentDirectAccessTest extends BaseTest {
+  testType: 'agent-direct-access';
+  domain: 'api_security' | 'identity';
+  policyId?: string; // Optional policy reference
+  
+  // OAuth Client Credentials flow configuration
+  oauthConfig: {
+    flowType: 'client-credentials';
+    tokenEndpoint: string;
+    clientId: string;
+    clientSecret?: string; // Should be provided via runtime config
+    scopes: string[];
+  };
+  
+  // Agent configuration
+  agentConfig: {
+    agentId: string;
+    agentType: 'direct' | 'autonomous';
+    serviceEndpoints: string[]; // Services agent will access
+    triggerType?: 'event-driven' | 'scheduled' | 'manual';
+  };
+  
+  // Credential management
+  credentialConfig?: {
+    rotationEnabled?: boolean;
+    secureStorage?: boolean;
+    credentialLifetime?: number; // seconds
+  };
+  
+  // Expected results
+  expected: {
+    tokenIssued: boolean;
+    scopesRespected: boolean;
+    autonomousOperation: boolean;
+    credentialSecurity?: boolean;
+  };
+}
+
+// Agent Multi-Service Test - tests agents accessing multiple services/tools
+export interface AgentMultiServiceTest extends BaseTest {
+  testType: 'agent-multi-service';
+  domain: 'api_security' | 'platform_config';
+  policyId?: string; // Optional policy reference
+  
+  // Agent configuration
+  agentConfig: {
+    agentId: string;
+    agentType: 'delegated' | 'direct';
+    userContext?: {
+      userId: string;
+      permissions: string[];
+    };
+  };
+  
+  // Services to access
+  services: Array<{
+    serviceId: string;
+    endpoint: string;
+    authentication: {
+      type: 'oauth2' | 'bearer' | 'api-key';
+      config: Record<string, any>;
+    };
+    requiredPermissions?: string[];
+  }>;
+  
+  // Access sequence
+  accessSequence: Array<{
+    serviceId: string;
+    action: string;
+    expectedAllowed: boolean;
+  }>;
+  
+  // Expected results
+  expected: {
+    allServicesAccessible: boolean;
+    permissionConsistency: boolean;
+    auditTrailComplete: boolean;
+  };
+}
+
+// Agent Dynamic Access Test - tests context-dependent access needs
+export interface AgentDynamicAccessTest extends BaseTest {
+  testType: 'agent-dynamic-access';
+  domain: 'api_security' | 'identity';
+  policyId?: string; // Optional policy reference
+  
+  // Agent configuration
+  agentConfig: {
+    agentId: string;
+    agentType: 'delegated' | 'direct';
+    userContext?: {
+      userId: string;
+      permissions: string[];
+    };
+  };
+  
+  // Dynamic access scenarios
+  scenarios: Array<{
+    name: string;
+    context: Context;
+    requestedPermission: string;
+    expectedGranted: boolean;
+    jitAccess?: boolean; // Just-in-Time access
+    timeWindow?: {
+      start: string;
+      end: string;
+    };
+  }>;
+  
+  // Expected results
+  expected: {
+    contextAwareDecisions: boolean;
+    jitAccessWorking: boolean;
+    dynamicScopeExpansion?: boolean;
+  };
+}
+
+// Agent Audit Trail Test - validates centralized audit logging for agent actions
+export interface AgentAuditTrailTest extends BaseTest {
+  testType: 'agent-audit-trail';
+  domain: 'api_security' | 'identity';
+  policyId?: string; // Optional policy reference
+  
+  // Agent configuration
+  agentConfig: {
+    agentId: string;
+    agentType: 'delegated' | 'direct';
+    userContext?: {
+      userId: string;
+    };
+  };
+  
+  // Actions to audit
+  actions: Array<{
+    serviceId: string;
+    action: string;
+    timestamp: Date;
+    expectedLogged: boolean;
+  }>;
+  
+  // Audit log sources
+  auditSources?: string[]; // Multiple providers to aggregate from
+  
+  // Expected results
+  expected: {
+    auditLogComplete: boolean;
+    auditLogIntegrity: boolean;
+    crossServiceCorrelation: boolean;
+    retentionCompliance?: boolean;
+  };
+}
+
 // Discriminated union for Test
 export type Test =
   | AccessControlTest
@@ -431,7 +648,12 @@ export type Test =
   | APISecurityTest
   | DataPipelineTest
   | PlatformConfigTest
-  | SalesforceExperienceCloudTest;
+  | SalesforceExperienceCloudTest
+  | AgentDelegatedAccessTest
+  | AgentDirectAccessTest
+  | AgentMultiServiceTest
+  | AgentDynamicAccessTest
+  | AgentAuditTrailTest;
 
 export interface User {
   id: string;
@@ -481,6 +703,13 @@ export interface Context {
   location?: string;
   device?: string;
   additionalAttributes?: Record<string, any>;
+  // Agent-specific context attributes
+  agentType?: 'delegated' | 'direct';
+  userContext?: {
+    userId: string;
+    permissions: string[];
+  };
+  serviceAccess?: string[]; // Services being accessed
 }
 
 export interface TestQuery {

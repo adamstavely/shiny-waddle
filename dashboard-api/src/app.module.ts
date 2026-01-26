@@ -54,6 +54,7 @@ import { ElasticsearchModule } from './elasticsearch/elasticsearch.module';
 import { TemplatesModule } from './templates/templates.module';
 import { BatchOperationsModule } from './batch-operations/batch-operations.module';
 import { DistributedModule } from './distributed/distributed.module';
+import { AgentTestsModule } from './agent-tests/agent-tests.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -114,6 +115,7 @@ import { AppController } from './app.controller';
     TemplatesModule,
     BatchOperationsModule,
     DistributedModule,
+    AgentTestsModule,
   ],
   controllers: [AppController],
   providers: [

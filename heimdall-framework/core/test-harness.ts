@@ -22,11 +22,19 @@ import {
   PlatformConfigTest,
   SalesforceExperienceCloudTest,
   DistributedSystemsTest,
+  AgentDelegatedAccessTest,
+  AgentDirectAccessTest,
+  AgentMultiServiceTest,
+  AgentDynamicAccessTest,
+  AgentAuditTrailTest,
   ABACPolicy,
 } from './types';
 import { RuntimeTestConfig } from './runtime-config';
 import { mergeRuntimeConfig } from './config-loader';
 import { SalesforceExperienceCloudTester, SalesforceExperienceCloudConfig } from '../services/salesforce-experience-cloud-tester';
+import { AgentAccessControlTester } from '../services/agent-access-control-tester';
+import { AgentOAuthTester } from '../services/agent-oauth-tester';
+import { AgentAuditValidator } from '../services/agent-audit-validator';
 
 // Test loader interface - implementations should load tests by IDs
 export interface TestLoader {
@@ -132,6 +140,16 @@ export class TestOrchestrator {
         return this.runSalesforceExperienceCloudTest(test as SalesforceExperienceCloudTest, suite);
       case 'distributed-systems':
         return this.runDistributedSystemsTest(test as DistributedSystemsTest, suite);
+      case 'agent-delegated-access':
+        return this.runAgentDelegatedAccessTest(test as AgentDelegatedAccessTest, suite);
+      case 'agent-direct-access':
+        return this.runAgentDirectAccessTest(test as AgentDirectAccessTest, suite);
+      case 'agent-multi-service':
+        return this.runAgentMultiServiceTest(test as AgentMultiServiceTest, suite);
+      case 'agent-dynamic-access':
+        return this.runAgentDynamicAccessTest(test as AgentDynamicAccessTest, suite);
+      case 'agent-audit-trail':
+        return this.runAgentAuditTrailTest(test as AgentAuditTrailTest, suite);
       default:
         throw new Error(`Test type ${test.testType} execution not yet implemented`);
     }
@@ -450,9 +468,333 @@ export class TestOrchestrator {
       result.passed = false;
       result.error = error.message;
       result.details = { error: error.message };
-      return result;
-    }
+    return result;
   }
+
+  /**
+   * Run agent delegated access test
+   */
+  async runAgentDelegatedAccessTest(
+    test: AgentDelegatedAccessTest,
+    suite: TestSuite
+  ): Promise<TestResult> {
+    const result: TestResult = {
+      testType: 'agent-delegated-access',
+      testName: test.name,
+      passed: false,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyId: test.policyId,
+      details: {},
+    };
+
+    try {
+      const agentAccessControlTester = new AgentAccessControlTester(
+        this.config.accessControlConfig
+      );
+      const oauthTester = new AgentOAuthTester();
+
+      // Test delegated access
+      const delegatedResult = await agentAccessControlTester.testDelegatedAccess({
+        agentId: test.agentConfig.agentId,
+        userContext: test.userContext,
+        resource: {
+          id: 'test-resource',
+          type: 'resource',
+          attributes: {},
+        },
+        action: 'read',
+        expectedAllowed: test.expected.tokenIssued && test.expected.userPermissionsEnforced,
+      });
+
+      // Test OAuth flows if configured
+      let oauthResults: any = {};
+      if (test.oauthConfig) {
+        if (test.oauthConfig.flowType === 'auth-code') {
+          const authCodeResult = await oauthTester.testAuthCodeFlow({
+            config: {
+              authorizationEndpoint: test.oauthConfig.authorizationEndpoint,
+              tokenEndpoint: test.oauthConfig.tokenEndpoint,
+              clientId: test.oauthConfig.clientId,
+              redirectUri: test.oauthConfig.redirectUri,
+              scopes: test.oauthConfig.scopes,
+            },
+            userContext: test.userContext,
+            expectedScopes: test.oauthConfig.scopes,
+          });
+          oauthResults.authCode = authCodeResult;
+        }
+      }
+
+      result.passed =
+        delegatedResult.passed &&
+        (oauthResults.authCode?.passed !== false) &&
+        test.expected.tokenIssued === delegatedResult.allowed &&
+        test.expected.userPermissionsEnforced === delegatedResult.userPermissionsEnforced;
+
+      result.details = {
+        delegatedResult,
+        oauthResults,
+        expected: test.expected,
+      };
+    } catch (error: any) {
+      result.error = error.message;
+      result.details = {
+        ...result.details,
+        error: error.message,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Run agent direct access test
+   */
+  async runAgentDirectAccessTest(
+    test: AgentDirectAccessTest,
+    suite: TestSuite
+  ): Promise<TestResult> {
+    const result: TestResult = {
+      testType: 'agent-direct-access',
+      testName: test.name,
+      passed: false,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyId: test.policyId,
+      details: {},
+    };
+
+    try {
+      const agentAccessControlTester = new AgentAccessControlTester(
+        this.config.accessControlConfig
+      );
+      const oauthTester = new AgentOAuthTester();
+
+      // Test direct access
+      const directResult = await agentAccessControlTester.testDirectAccess({
+        agentId: test.agentConfig.agentId,
+        agentType: test.agentConfig.agentType === 'autonomous' ? 'autonomous' : 'event-driven',
+        resource: {
+          id: 'test-resource',
+          type: 'resource',
+          attributes: {},
+        },
+        action: 'read',
+        expectedAllowed: test.expected.tokenIssued && test.expected.scopesRespected,
+      });
+
+      // Test OAuth client credentials flow if configured
+      let oauthResult: any = null;
+      if (test.oauthConfig) {
+        oauthResult = await oauthTester.testClientCredentialsFlow({
+          config: test.oauthConfig,
+          expectedScopes: test.oauthConfig.scopes,
+          credentialRotation: test.credentialConfig,
+        });
+      }
+
+      result.passed =
+        directResult.passed &&
+        (oauthResult?.passed !== false) &&
+        test.expected.tokenIssued === directResult.allowed &&
+        test.expected.scopesRespected === (oauthResult?.scopeMismatch?.length === 0);
+
+      result.details = {
+        directResult,
+        oauthResult,
+        expected: test.expected,
+      };
+    } catch (error: any) {
+      result.error = error.message;
+      result.details = {
+        ...result.details,
+        error: error.message,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Run agent multi-service test
+   */
+  async runAgentMultiServiceTest(
+    test: AgentMultiServiceTest,
+    suite: TestSuite
+  ): Promise<TestResult> {
+    const result: TestResult = {
+      testType: 'agent-multi-service',
+      testName: test.name,
+      passed: false,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyId: test.policyId,
+      details: {},
+    };
+
+    try {
+      const agentAccessControlTester = new AgentAccessControlTester(
+        this.config.accessControlConfig
+      );
+
+      const multiServiceResult = await agentAccessControlTester.testMultiServiceAccess({
+        agentId: test.agentConfig.agentId,
+        agentType: test.agentConfig.agentType,
+        userContext: test.agentConfig.userContext,
+        services: test.services,
+      });
+
+      result.passed =
+        multiServiceResult.passed &&
+        test.expected.allServicesAccessible === multiServiceResult.allowed &&
+        test.expected.permissionConsistency === multiServiceResult.multiServiceConsistency;
+
+      result.details = {
+        multiServiceResult,
+        expected: test.expected,
+      };
+    } catch (error: any) {
+      result.error = error.message;
+      result.details = {
+        ...result.details,
+        error: error.message,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Run agent dynamic access test
+   */
+  async runAgentDynamicAccessTest(
+    test: AgentDynamicAccessTest,
+    suite: TestSuite
+  ): Promise<TestResult> {
+    const result: TestResult = {
+      testType: 'agent-dynamic-access',
+      testName: test.name,
+      passed: false,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyId: test.policyId,
+      details: {},
+    };
+
+    try {
+      const agentAccessControlTester = new AgentAccessControlTester(
+        this.config.accessControlConfig
+      );
+
+      const dynamicResults = await agentAccessControlTester.testDynamicAccess({
+        agentId: test.agentConfig.agentId,
+        agentType: test.agentConfig.agentType,
+        userContext: test.agentConfig.userContext,
+        scenarios: test.scenarios,
+      });
+
+      const allPassed = dynamicResults.every(r => r.passed);
+      const allContextAware = dynamicResults.every(r => r.contextAwareDecision === true);
+
+      result.passed =
+        allPassed &&
+        allContextAware &&
+        test.expected.contextAwareDecisions === true &&
+        test.expected.jitAccessWorking ===
+          dynamicResults.some(r => r.details?.jitAccessGranted === true);
+
+      result.details = {
+        dynamicResults,
+        expected: test.expected,
+      };
+    } catch (error: any) {
+      result.error = error.message;
+      result.details = {
+        ...result.details,
+        error: error.message,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Run agent audit trail test
+   */
+  async runAgentAuditTrailTest(
+    test: AgentAuditTrailTest,
+    suite: TestSuite
+  ): Promise<TestResult> {
+    const result: TestResult = {
+      testType: 'agent-audit-trail',
+      testName: test.name,
+      passed: false,
+      timestamp: new Date(),
+      testId: test.id,
+      testVersion: test.version,
+      policyId: test.policyId,
+      details: {},
+    };
+
+    try {
+      const auditValidator = new AgentAuditValidator();
+
+      // Add test audit log entries
+      for (const action of test.actions) {
+        if (action.expectedLogged) {
+          auditValidator.addAuditLogEntry(
+            {
+              id: `audit-${action.serviceId}-${action.timestamp.getTime()}`,
+              timestamp: action.timestamp,
+              agentId: test.agentConfig.agentId,
+              agentType: test.agentConfig.agentType,
+              userId: test.agentConfig.userContext?.userId,
+              action: action.action,
+              serviceId: action.serviceId,
+              resourceId: action.resourceId,
+              resourceType: action.resourceType,
+              allowed: true,
+            },
+            test.auditSources?.[0]
+          );
+        }
+      }
+
+      const validationResult = await auditValidator.validateAuditTrail({
+        agentId: test.agentConfig.agentId,
+        agentType: test.agentConfig.agentType,
+        userId: test.agentConfig.userContext?.userId,
+        actions: test.actions,
+        auditSources: test.auditSources,
+        retentionPeriod: 90, // 90 days default
+      });
+
+      result.passed =
+        validationResult.passed &&
+        test.expected.auditLogComplete === validationResult.auditLogComplete &&
+        test.expected.auditLogIntegrity === validationResult.auditLogIntegrity &&
+        test.expected.crossServiceCorrelation === validationResult.crossServiceCorrelation;
+
+      result.details = {
+        validationResult,
+        expected: test.expected,
+      };
+    } catch (error: any) {
+      result.error = error.message;
+      result.details = {
+        ...result.details,
+        error: error.message,
+      };
+    }
+
+    return result;
+  }
+}
 
   /**
    * Run multi-region test

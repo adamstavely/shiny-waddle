@@ -212,6 +212,7 @@ export class PolicyDecisionPoint {
    * Resolve attribute value from request using dot notation
    * Supports: subject.attribute, resource.attribute, context.attribute
    * Also supports nested attributes like subject.abacAttributes.department
+   * Extended to support agent-specific attributes: agentType, userContext, serviceAccess
    */
   private resolveAttribute(attribute: string, request: PDPRequest): any {
     const parts = attribute.split('.');
@@ -225,12 +226,38 @@ export class PolicyDecisionPoint {
     switch (entity) {
       case 'subject':
         source = request.subject.attributes;
+        // Support agent-specific subject attributes
+        if (source.agentType) {
+          // Add agent-specific attributes to source
+          source = {
+            ...source,
+            agentScopes: source.agentScopes || [],
+            userPermissions: source.userPermissions || [],
+          };
+        }
         break;
       case 'resource':
         source = request.resource.attributes;
         break;
       case 'context':
         source = { ...request.context, ...(request.context.additionalAttributes || {}) };
+        // Support agent-specific context attributes
+        if (request.context.agentType) {
+          source.agentType = request.context.agentType;
+        }
+        if (request.context.userContext) {
+          source.userContext = request.context.userContext;
+          source.userPermissions = request.context.userContext.permissions || [];
+        }
+        if (request.context.serviceAccess) {
+          source.serviceAccess = request.context.serviceAccess;
+        }
+        if (request.context.jitAccess !== undefined) {
+          source.jitAccess = request.context.jitAccess;
+        }
+        if (request.context.auditEnabled !== undefined) {
+          source.auditEnabled = request.context.auditEnabled;
+        }
         break;
       default:
         return undefined;
@@ -254,7 +281,21 @@ export class PolicyDecisionPoint {
             }
           }
           if (!found) {
-            return undefined;
+            // Special handling for agent-specific attributes
+            // Check if we're looking for userPermissions in context
+            if (key === 'userPermissions' && source.userContext) {
+              value = source.userContext.permissions || [];
+              found = true;
+            } else if (key === 'agentType' && source.agentType) {
+              value = source.agentType;
+              found = true;
+            } else if (key === 'serviceAccess' && source.serviceAccess) {
+              value = source.serviceAccess;
+              found = true;
+            }
+            if (!found) {
+              return undefined;
+            }
           }
         }
       } else {
@@ -262,7 +303,42 @@ export class PolicyDecisionPoint {
       }
     }
 
+    // Handle template variables like {{action}} and {{resource.type}}
+    if (typeof value === 'string' && value.includes('{{')) {
+      const templateMatch = value.match(/\{\{(\w+(?:\.\w+)*)\}\}/);
+      if (templateMatch) {
+        const templateVar = templateMatch[1];
+        const templateValue = this.resolveTemplateVariable(templateVar, request);
+        if (templateValue !== undefined) {
+          value = value.replace(/\{\{[^}]+\}\}/g, String(templateValue));
+        }
+      }
+    }
+
     return value;
+  }
+
+  /**
+   * Resolve template variables like {{action}} or {{resource.type}}
+   */
+  private resolveTemplateVariable(variable: string, request: PDPRequest): any {
+    const parts = variable.split('.');
+    if (parts.length === 1) {
+      // Simple variable like {{action}}
+      if (variable === 'action') {
+        return request.action || 'read';
+      }
+    } else if (parts.length === 2) {
+      // Nested variable like {{resource.type}}
+      const [entity, attr] = parts;
+      if (entity === 'resource' && attr === 'type') {
+        return request.resource.type;
+      }
+      if (entity === 'resource' && attr in request.resource.attributes) {
+        return request.resource.attributes[attr];
+      }
+    }
+    return undefined;
   }
 
   /**

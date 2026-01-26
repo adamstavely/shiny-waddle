@@ -135,6 +135,172 @@
           "value": "{{resource.region}}"
         }
       ]
+    },
+    {
+      "id": "agent-delegated-access",
+      "name": "Delegated Agent Access Policy",
+      "description": "Agents acting on behalf of users inherit user permissions",
+      "effect": "allow",
+      "priority": 250,
+      "conditions": [
+        {
+          "attribute": "context.agentType",
+          "operator": "equals",
+          "value": "delegated"
+        },
+        {
+          "attribute": "subject.userPermissions",
+          "operator": "contains",
+          "value": "{{action}}:{{resource.type}}",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-direct-access",
+      "name": "Direct Agent Access Policy",
+      "description": "Autonomous agents can access resources based on their configured scopes",
+      "effect": "allow",
+      "priority": 260,
+      "conditions": [
+        {
+          "attribute": "context.agentType",
+          "operator": "equals",
+          "value": "direct"
+        },
+        {
+          "attribute": "subject.agentScopes",
+          "operator": "contains",
+          "value": "{{action}}:{{resource.type}}",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-permission-boundary",
+      "name": "Agent Permission Boundary Policy",
+      "description": "Agents cannot exceed user permissions in delegated access scenarios",
+      "effect": "deny",
+      "priority": 400,
+      "conditions": [
+        {
+          "attribute": "context.agentType",
+          "operator": "equals",
+          "value": "delegated"
+        },
+        {
+          "attribute": "subject.userPermissions",
+          "operator": "notIn",
+          "value": ["{{action}}:{{resource.type}}", "{{action}}:*", "*:*"],
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-dynamic-access-jit",
+      "name": "Agent Just-in-Time Access Policy",
+      "description": "Agents can request dynamic access with proper context",
+      "effect": "allow",
+      "priority": 270,
+      "conditions": [
+        {
+          "attribute": "context.jitAccess",
+          "operator": "equals",
+          "value": true
+        },
+        {
+          "attribute": "context.ipAddress",
+          "operator": "notEquals",
+          "value": null,
+          "logicalOperator": "AND"
+        },
+        {
+          "attribute": "context.timeOfDay",
+          "operator": "notEquals",
+          "value": null,
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-multi-service-access",
+      "name": "Agent Multi-Service Access Policy",
+      "description": "Agents can access multiple services with consistent permissions",
+      "effect": "allow",
+      "priority": 280,
+      "conditions": [
+        {
+          "attribute": "context.serviceAccess",
+          "operator": "notEquals",
+          "value": null
+        },
+        {
+          "attribute": "context.serviceAccess",
+          "operator": "contains",
+          "value": "{{resource.type}}",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-audit-requirement",
+      "name": "Agent Audit Requirement Policy",
+      "description": "All agent actions must be audited",
+      "effect": "allow",
+      "priority": 500,
+      "conditions": [
+        {
+          "attribute": "context.agentType",
+          "operator": "in",
+          "value": ["delegated", "direct"]
+        },
+        {
+          "attribute": "context.auditEnabled",
+          "operator": "equals",
+          "value": true,
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-time-based-restriction",
+      "name": "Agent Time-Based Restriction",
+      "description": "Agents accessing restricted resources must respect time windows",
+      "effect": "allow",
+      "priority": 290,
+      "conditions": [
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "in",
+          "value": ["restricted", "top-secret"]
+        },
+        {
+          "attribute": "context.timeOfDay",
+          "operator": "regex",
+          "value": "^(0[8-9]|1[0-8]):",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    {
+      "id": "agent-location-based-restriction",
+      "name": "Agent Location-Based Restriction",
+      "description": "Agents accessing confidential resources must be from approved locations",
+      "effect": "allow",
+      "priority": 300,
+      "conditions": [
+        {
+          "attribute": "resource.dataClassification",
+          "operator": "in",
+          "value": ["confidential", "restricted", "top-secret"]
+        },
+        {
+          "attribute": "context.location",
+          "operator": "in",
+          "value": ["headquarters", "office", "research-lab"],
+          "logicalOperator": "AND"
+        }
+      ]
     }
   ]
 }
