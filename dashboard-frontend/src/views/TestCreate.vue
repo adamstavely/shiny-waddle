@@ -112,6 +112,11 @@ import NetworkPolicyTestForm from './tests/forms/NetworkPolicyTestForm.vue';
 import APISecurityTestForm from './tests/forms/APISecurityTestForm.vue';
 import DistributedSystemsTestForm from './tests/forms/DistributedSystemsTestForm.vue';
 import DataPipelineTestForm from './tests/forms/DataPipelineTestForm.vue';
+import AgentDelegatedAccessTestForm from './tests/forms/AgentDelegatedAccessTestForm.vue';
+import AgentDirectAccessTestForm from './tests/forms/AgentDirectAccessTestForm.vue';
+import AgentMultiServiceTestForm from './tests/forms/AgentMultiServiceTestForm.vue';
+import AgentDynamicAccessTestForm from './tests/forms/AgentDynamicAccessTestForm.vue';
+import AgentAuditTrailTestForm from './tests/forms/AgentAuditTrailTestForm.vue';
 import type { Test, TestType } from '../types/test';
 
 const route = useRoute();
@@ -249,6 +254,13 @@ const testTypeOptions = {
     { label: 'Configuration Drift', value: 'config-drift' },
     { label: 'Environment Policies', value: 'environment-policies' },
   ],
+  'Agent Access Control': [
+    { label: 'Delegated Access', value: 'agent-delegated-access' },
+    { label: 'Direct Access', value: 'agent-direct-access' },
+    { label: 'Multi-Service', value: 'agent-multi-service' },
+    { label: 'Dynamic Access', value: 'agent-dynamic-access' },
+    { label: 'Audit Trail', value: 'agent-audit-trail' },
+  ],
 };
 
 const categoryOptions = [
@@ -257,6 +269,7 @@ const categoryOptions = [
   { label: 'Distributed Systems', value: 'Distributed Systems' },
   { label: 'Data & Systems', value: 'Data & Systems' },
   { label: 'Environment Configuration', value: 'Environment Configuration' },
+  { label: 'Agent Access Control', value: 'Agent Access Control' },
 ];
 
 const filteredTestTypeOptions = computed(() => {
@@ -305,6 +318,17 @@ const testTypeFormComponent = computed(() => {
       return DistributedSystemsTestForm;
     case 'data-pipeline':
       return DataPipelineTestForm;
+    // Agent Access Control types
+    case 'agent-delegated-access':
+      return AgentDelegatedAccessTestForm;
+    case 'agent-direct-access':
+      return AgentDirectAccessTestForm;
+    case 'agent-multi-service':
+      return AgentMultiServiceTestForm;
+    case 'agent-dynamic-access':
+      return AgentDynamicAccessTestForm;
+    case 'agent-audit-trail':
+      return AgentAuditTrailTestForm;
     // Platform Configuration types - form components to be implemented
     case 'salesforce-config':
     case 'salesforce-security':
@@ -357,6 +381,11 @@ const getTestTypeLabel = (testType: string): string => {
     'secrets-management': 'Secrets Management',
     'config-drift': 'Configuration Drift',
     'environment-policies': 'Environment Policies',
+    'agent-delegated-access': 'Delegated Access',
+    'agent-direct-access': 'Direct Access',
+    'agent-multi-service': 'Multi-Service',
+    'agent-dynamic-access': 'Dynamic Access',
+    'agent-audit-trail': 'Audit Trail',
   };
   return labels[testType] || testType;
 };
@@ -389,6 +418,15 @@ const validate = (): boolean => {
   const actualTestType = typeof form.value.testType === 'string' && form.value.testType.startsWith('distributed-systems:') 
     ? 'distributed-systems' 
     : form.value.testType;
+  
+  // Validation for agent access control tests
+  if (typeof actualTestType === 'string' && actualTestType.startsWith('agent-')) {
+    if (!form.value.agentConfig) {
+      validationErrors.value.push('Agent configuration is required');
+    } else if (!form.value.agentConfig.agentId) {
+      validationErrors.value.push('Agent ID is required');
+    }
+  }
     
   if (actualTestType === 'distributed-systems') {
     if (!form.value.applicationId) {
@@ -491,6 +529,9 @@ const loadTest = async () => {
       form.value.multiRegionConfig = loadedTest.multiRegionConfig;
       form.value.policyConsistencyConfig = loadedTest.policyConsistencyConfig;
       form.value.policySyncConfig = loadedTest.policySyncConfig;
+    } else if (loadedTest.testType?.startsWith('agent-')) {
+      // Load agent test configuration
+      form.value.agentConfig = loadedTest.agentConfig || {};
     }
     // Other test types would be loaded here
   } catch (err: any) {
@@ -531,6 +572,9 @@ const save = async () => {
       payload.multiRegionConfig = form.value.multiRegionConfig;
       payload.policyConsistencyConfig = form.value.policyConsistencyConfig;
       payload.policySyncConfig = form.value.policySyncConfig;
+    } else if (actualTestType?.startsWith('agent-')) {
+      // Agent access control tests
+      payload.agentConfig = form.value.agentConfig;
     }
     // Other test types would be added here
     

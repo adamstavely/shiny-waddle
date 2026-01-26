@@ -105,7 +105,7 @@ const testDesignLibraryPages = [
   '/tests',
   '/tests/batteries', '/tests/harnesses', '/tests/suites',
   '/tests/individual', '/tests/findings',
-  '/tests/history'
+  '/tests/history', '/tests/agent-tests'
 ];
 
 // Policies & Config pages

@@ -55,6 +55,7 @@ import SalesforceExperienceCloudResultsList from '../views/SalesforceExperienceC
 import SalesforceExperienceCloudResultDetail from '../views/SalesforceExperienceCloud/ResultDetail.vue';
 import Templates from '../views/Templates.vue';
 import BatchOperations from '../views/BatchOperations.vue';
+import AgentTests from '../views/AgentTests.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -405,6 +406,11 @@ const router = createRouter({
       path: '/batch-operations',
       name: 'BatchOperations',
       component: BatchOperations,
+    },
+    {
+      path: '/tests/agent-tests',
+      name: 'AgentTests',
+      component: AgentTests,
     },
     {
       path: '/:pathMatch(.*)*',
