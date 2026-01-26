@@ -58,7 +58,7 @@ export interface AuditTrailValidationResult extends TestResult {
   }>;
   correlationIssues?: string[];
   integrityIssues?: string[];
-  details?: Record<string, any>;
+  details: Record<string, any>;
 }
 
 export class AgentAuditValidator {

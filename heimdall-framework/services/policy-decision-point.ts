@@ -241,22 +241,22 @@ export class PolicyDecisionPoint {
         break;
       case 'context':
         source = { ...request.context, ...(request.context.additionalAttributes || {}) };
-        // Support agent-specific context attributes
-        if (request.context.agentType) {
-          source.agentType = request.context.agentType;
+        // Support agent-specific context attributes from additionalAttributes
+        if (request.context.additionalAttributes?.agentType) {
+          source.agentType = request.context.additionalAttributes.agentType;
         }
-        if (request.context.userContext) {
-          source.userContext = request.context.userContext;
-          source.userPermissions = request.context.userContext.permissions || [];
+        if (request.context.additionalAttributes?.userContext) {
+          source.userContext = request.context.additionalAttributes.userContext;
+          source.userPermissions = request.context.additionalAttributes.userContext.permissions || [];
         }
-        if (request.context.serviceAccess) {
-          source.serviceAccess = request.context.serviceAccess;
+        if (request.context.additionalAttributes?.serviceAccess) {
+          source.serviceAccess = request.context.additionalAttributes.serviceAccess;
         }
-        if (request.context.jitAccess !== undefined) {
-          source.jitAccess = request.context.jitAccess;
+        if (request.context.additionalAttributes?.jitAccess !== undefined) {
+          source.jitAccess = request.context.additionalAttributes.jitAccess;
         }
-        if (request.context.auditEnabled !== undefined) {
-          source.auditEnabled = request.context.auditEnabled;
+        if (request.context.additionalAttributes?.auditEnabled !== undefined) {
+          source.auditEnabled = request.context.additionalAttributes.auditEnabled;
         }
         break;
       default:

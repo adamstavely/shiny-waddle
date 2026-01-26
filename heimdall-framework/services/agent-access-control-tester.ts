@@ -68,9 +68,12 @@ export interface MultiServiceAccessTest {
   }>;
 }
 
-export interface AgentAccessControlTestResult extends TestResult {
+export interface AgentAccessControlTestResult {
+  testType: 'agent-delegated-access' | 'agent-direct-access' | 'agent-dynamic-access' | 'agent-multi-service';
   testName: string;
-  testType: 'delegated' | 'direct' | 'dynamic' | 'multi-service';
+  passed: boolean;
+  timestamp: Date;
+  error?: string;
   agentId: string;
   allowed: boolean;
   expectedAllowed: boolean;
@@ -104,7 +107,6 @@ export class AgentAccessControlTester {
       testName: `Delegated Access Test - ${test.agentId}`,
       passed: false,
       timestamp: new Date(),
-      testType: 'delegated',
       agentId: test.agentId,
       allowed: false,
       expectedAllowed: test.expectedAllowed,
@@ -130,10 +132,13 @@ export class AgentAccessControlTester {
         action: test.action,
         context: {
           ...test.context,
-          agentType: 'delegated',
-          userContext: {
-            userId: test.userContext.userId,
-            permissions: test.userContext.permissions,
+          additionalAttributes: {
+            ...test.context?.additionalAttributes,
+            agentType: 'delegated',
+            userContext: {
+              userId: test.userContext.userId,
+              permissions: test.userContext.permissions,
+            },
           },
         },
       };
@@ -192,7 +197,6 @@ export class AgentAccessControlTester {
       testName: `Direct Access Test - ${test.agentId}`,
       passed: false,
       timestamp: new Date(),
-      testType: 'direct',
       agentId: test.agentId,
       allowed: false,
       expectedAllowed: test.expectedAllowed,
@@ -214,7 +218,10 @@ export class AgentAccessControlTester {
         action: test.action,
         context: {
           ...test.context,
-          agentType: 'direct',
+          additionalAttributes: {
+            ...test.context?.additionalAttributes,
+            agentType: 'direct',
+          },
         },
       };
 
@@ -273,7 +280,6 @@ export class AgentAccessControlTester {
         testName: `Dynamic Access Test - ${scenario.name}`,
         passed: false,
         timestamp: new Date(),
-        testType: 'dynamic',
         agentId: test.agentId,
         allowed: false,
         expectedAllowed: scenario.expectedGranted,
@@ -308,9 +314,12 @@ export class AgentAccessControlTester {
           action: scenario.requestedPermission,
           context: {
             ...scenario.context,
-            agentType: test.agentType,
-            userContext: test.userContext,
-            jitAccess: scenario.jitAccess,
+            additionalAttributes: {
+              ...scenario.context?.additionalAttributes,
+              agentType: test.agentType,
+              userContext: test.userContext,
+              jitAccess: scenario.jitAccess,
+            },
           },
         };
 
@@ -362,7 +371,6 @@ export class AgentAccessControlTester {
       testName: `Multi-Service Access Test - ${test.agentId}`,
       passed: false,
       timestamp: new Date(),
-      testType: 'multi-service',
       agentId: test.agentId,
       allowed: false,
       expectedAllowed: true,
@@ -398,9 +406,11 @@ export class AgentAccessControlTester {
           resource: service.resource,
           action: service.action,
           context: {
-            agentType: test.agentType,
-            userContext: test.userContext,
-            serviceAccess: test.services.map(s => s.serviceId),
+            additionalAttributes: {
+              agentType: test.agentType,
+              userContext: test.userContext,
+              serviceAccess: test.services.map(s => s.serviceId),
+            },
           },
         };
 
@@ -472,7 +482,9 @@ export class AgentAccessControlTester {
             resource,
             action,
             context: {
-              agentType: 'delegated',
+              additionalAttributes: {
+                agentType: 'delegated',
+              },
             },
           };
 

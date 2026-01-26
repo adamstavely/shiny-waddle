@@ -182,11 +182,10 @@ describe('AgentTestsController', () => {
         agentId: 'agent-003',
         testType: 'multi-service',
         result: {
-          testType: 'agent-multi-service',
+          testType: 'agent-multi-service' as const,
           testName: 'Test',
           passed: true,
           timestamp: new Date(),
-          testType: 'multi-service',
           agentId: 'agent-003',
           allowed: true,
           expectedAllowed: true,
@@ -269,7 +268,7 @@ describe('AgentTestsController', () => {
       const expectedResult = {
         agentId: 'agent-001',
         validationResult: {
-          testType: 'agent-audit-trail',
+          testType: 'agent-audit-trail' as const,
           testName: 'Test',
           passed: true,
           timestamp: new Date(),
@@ -277,6 +276,7 @@ describe('AgentTestsController', () => {
           auditLogComplete: true,
           auditLogIntegrity: true,
           crossServiceCorrelation: true,
+          details: {},
         },
       };
 

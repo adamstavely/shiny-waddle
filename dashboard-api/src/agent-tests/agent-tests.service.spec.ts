@@ -76,11 +76,10 @@ describe('AgentTestsService', () => {
       };
 
       mockAccessControlTester.testDelegatedAccess.mockResolvedValue({
-        testType: 'agent-delegated-access',
+        testType: 'agent-delegated-access' as const,
         testName: 'Test',
         passed: true,
         timestamp: new Date(),
-        testType: 'delegated',
         agentId: 'agent-001',
         allowed: true,
         expectedAllowed: true,
@@ -124,11 +123,10 @@ describe('AgentTestsService', () => {
       };
 
       mockAccessControlTester.testDelegatedAccess.mockResolvedValue({
-        testType: 'agent-delegated-access',
+        testType: 'agent-delegated-access' as const,
         testName: 'Test',
         passed: true,
         timestamp: new Date(),
-        testType: 'delegated',
         agentId: 'agent-001',
         allowed: true,
         expectedAllowed: true,
@@ -138,7 +136,7 @@ describe('AgentTestsService', () => {
       });
 
       mockOAuthTester.testAuthCodeFlow.mockResolvedValue({
-        testType: 'agent-delegated-access',
+        testType: 'agent-delegated-access' as const,
         testName: 'Auth Code Flow Test',
         passed: true,
         timestamp: new Date(),
@@ -149,6 +147,7 @@ describe('AgentTestsService', () => {
         scopesExpected: ['read:emails'],
         userPermissionsEnforced: true,
         permissionBoundariesRespected: true,
+        details: {},
       });
 
       const result = await service.runDelegatedAccessTests(dto);
@@ -174,11 +173,10 @@ describe('AgentTestsService', () => {
       };
 
       mockAccessControlTester.testDirectAccess.mockResolvedValue({
-        testType: 'agent-direct-access',
+        testType: 'agent-direct-access' as const,
         testName: 'Test',
         passed: true,
         timestamp: new Date(),
-        testType: 'direct',
         agentId: 'agent-002',
         allowed: true,
         expectedAllowed: true,
@@ -206,7 +204,7 @@ describe('AgentTestsService', () => {
           id: 'audit-1',
           timestamp: new Date(),
           agentId: 'agent-001',
-          agentType: 'delegated',
+          agentType: 'delegated' as const,
           action: 'read',
           serviceId: 'email-service',
           resourceId: 'inbox-123',
@@ -260,11 +258,10 @@ describe('AgentTestsService', () => {
       };
 
       mockAccessControlTester.testMultiServiceAccess.mockResolvedValue({
-        testType: 'agent-multi-service',
+        testType: 'agent-multi-service' as const,
         testName: 'Test',
         passed: true,
         timestamp: new Date(),
-        testType: 'multi-service',
         agentId: 'agent-003',
         allowed: true,
         expectedAllowed: true,
@@ -308,11 +305,10 @@ describe('AgentTestsService', () => {
 
       mockAccessControlTester.testDynamicAccess.mockResolvedValue([
         {
-          testType: 'agent-dynamic-access',
+          testType: 'agent-dynamic-access' as const,
           testName: 'Test',
           passed: true,
           timestamp: new Date(),
-          testType: 'dynamic',
           agentId: 'agent-004',
           allowed: true,
           expectedAllowed: true,
@@ -351,7 +347,7 @@ describe('AgentTestsService', () => {
       };
 
       mockAuditValidator.validateAuditTrail.mockResolvedValue({
-        testType: 'agent-audit-trail',
+        testType: 'agent-audit-trail' as const,
         testName: 'Test',
         passed: true,
         timestamp: new Date(),
@@ -359,6 +355,7 @@ describe('AgentTestsService', () => {
         auditLogComplete: true,
         auditLogIntegrity: true,
         crossServiceCorrelation: true,
+        details: {},
       });
 
       const result = await service.validateAuditTrail(dto);

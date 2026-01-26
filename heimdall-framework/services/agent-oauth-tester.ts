@@ -58,7 +58,7 @@ export interface OAuthFlowTestResult extends TestResult {
   permissionBoundariesRespected?: boolean;
   credentialSecurity?: boolean;
   error?: string;
-  details?: Record<string, any>;
+  details: Record<string, any>;
 }
 
 export class AgentOAuthTester {
