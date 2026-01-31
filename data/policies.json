@@ -1,1 +1,617 @@
-[]
+[
+  {
+    "id": "policy-001",
+    "name": "Admin Full Access Policy",
+    "description": "Grants full administrative access to users with admin role",
+    "type": "rbac",
+    "version": "2.1.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 100,
+    "rules": [
+      {
+        "id": "admin-full-access",
+        "description": "Full access for administrators",
+        "effect": "allow",
+        "conditions": {
+          "subject.role": ["admin", "super-admin"]
+        }
+      },
+      {
+        "id": "admin-read-only",
+        "description": "Read-only access for admin viewers",
+        "effect": "allow",
+        "conditions": {
+          "subject.role": "admin-viewer"
+        }
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-01-15T10:00:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial policy creation"
+          }
+        ],
+        "notes": "First version of admin policy"
+      },
+      {
+        "version": "2.0.0",
+        "status": "deprecated",
+        "date": "2024-06-20T14:30:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Added support for admin-viewer role"
+          },
+          {
+            "type": "added",
+            "description": "Added read-only rule for admin-viewer"
+          }
+        ],
+        "notes": "Enhanced with viewer role support"
+      },
+      {
+        "version": "2.1.0",
+        "status": "active",
+        "date": "2024-12-01T09:15:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "fixed",
+            "description": "Fixed condition matching for super-admin role"
+          }
+        ],
+        "notes": "Current production version"
+      }
+    ],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-12-01T09:15:00Z",
+    "lastDeployedAt": "2024-12-01T09:15:00Z",
+    "deployedVersion": "2.1.0",
+    "ruleCount": 2,
+    "testCoverage": "85%",
+    "violationsDetected": 0
+  },
+  {
+    "id": "policy-002",
+    "name": "Data Classification Access Control",
+    "description": "Controls access based on data classification levels and user clearance",
+    "type": "abac",
+    "version": "1.3.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 150,
+    "conditions": [
+      {
+        "attribute": "subject.clearanceLevel",
+        "operator": "greaterThan",
+        "value": "{{resource.dataClassification}}",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "subject.department",
+        "operator": "equals",
+        "value": "{{resource.department}}",
+        "logicalOperator": "AND"
+      },
+      {
+        "attribute": "context.location",
+        "operator": "in",
+        "value": "['US', 'CA', 'UK']",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-02-10T08:00:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial ABAC policy for data classification"
+          }
+        ]
+      },
+      {
+        "version": "1.2.0",
+        "status": "deprecated",
+        "date": "2024-08-15T11:20:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Added location-based access control"
+          },
+          {
+            "type": "added",
+            "description": "Added department matching condition"
+          }
+        ]
+      },
+      {
+        "version": "1.3.0",
+        "status": "active",
+        "date": "2024-11-20T16:45:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "fixed",
+            "description": "Fixed clearance level comparison logic"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-02-10T08:00:00Z",
+    "updatedAt": "2024-11-20T16:45:00Z",
+    "lastDeployedAt": "2024-11-20T16:45:00Z",
+    "deployedVersion": "1.3.0",
+    "ruleCount": 0,
+    "testCoverage": "92%",
+    "violationsDetected": 2
+  },
+  {
+    "id": "policy-003",
+    "name": "Project-Based Access Control",
+    "description": "Manages access to resources based on project membership and role",
+    "type": "rbac",
+    "version": "1.0.0",
+    "status": "draft",
+    "effect": "allow",
+    "priority": 80,
+    "rules": [
+      {
+        "id": "project-member-access",
+        "description": "Access for project members",
+        "effect": "allow",
+        "conditions": {
+          "subject.projectAccess": "{{resource.project}}",
+          "subject.role": ["developer", "project-manager"]
+        }
+      },
+      {
+        "id": "project-reader-access",
+        "description": "Read-only access for project viewers",
+        "effect": "allow",
+        "conditions": {
+          "subject.projectAccess": "{{resource.project}}",
+          "subject.role": "viewer"
+        }
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "draft",
+        "date": "2024-12-15T10:30:00Z",
+        "author": "devops@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "New policy for project-based access"
+          }
+        ],
+        "notes": "Pending review"
+      }
+    ],
+    "createdAt": "2024-12-15T10:30:00Z",
+    "updatedAt": "2024-12-15T10:30:00Z",
+    "ruleCount": 2,
+    "testCoverage": "0%",
+    "violationsDetected": 0
+  },
+  {
+    "id": "policy-004",
+    "name": "Time-Based Access Restriction",
+    "description": "Restricts access during non-business hours and weekends",
+    "type": "abac",
+    "version": "1.1.0",
+    "status": "active",
+    "effect": "deny",
+    "priority": 200,
+    "conditions": [
+      {
+        "attribute": "context.timeOfDay",
+        "operator": "lessThan",
+        "value": "08:00",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "context.timeOfDay",
+        "operator": "greaterThan",
+        "value": "18:00",
+        "logicalOperator": "OR"
+      },
+      {
+        "attribute": "context.dayOfWeek",
+        "operator": "in",
+        "value": "['Saturday', 'Sunday']",
+        "logicalOperator": "OR"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-03-05T09:00:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial time-based restriction policy"
+          }
+        ]
+      },
+      {
+        "version": "1.1.0",
+        "status": "active",
+        "date": "2024-10-10T13:00:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Added weekend restriction"
+          },
+          {
+            "type": "fixed",
+            "description": "Fixed time zone handling"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-03-05T09:00:00Z",
+    "updatedAt": "2024-10-10T13:00:00Z",
+    "lastDeployedAt": "2024-10-10T13:00:00Z",
+    "deployedVersion": "1.1.0",
+    "ruleCount": 0,
+    "testCoverage": "78%",
+    "violationsDetected": 5
+  },
+  {
+    "id": "policy-005",
+    "name": "Department Isolation Policy",
+    "description": "Ensures users can only access resources within their own department",
+    "type": "abac",
+    "version": "2.0.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 120,
+    "conditions": [
+      {
+        "attribute": "subject.department",
+        "operator": "equals",
+        "value": "{{resource.department}}",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "subject.employmentType",
+        "operator": "equals",
+        "value": "full-time",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-01-20T10:00:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial department isolation policy"
+          }
+        ]
+      },
+      {
+        "version": "1.5.0",
+        "status": "deprecated",
+        "date": "2024-07-12T14:00:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Added employment type check"
+          }
+        ]
+      },
+      {
+        "version": "2.0.0",
+        "status": "active",
+        "date": "2024-11-05T09:30:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "fixed",
+            "description": "Improved department matching logic"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-01-20T10:00:00Z",
+    "updatedAt": "2024-11-05T09:30:00Z",
+    "lastDeployedAt": "2024-11-05T09:30:00Z",
+    "deployedVersion": "2.0.0",
+    "ruleCount": 0,
+    "testCoverage": "88%",
+    "violationsDetected": 1
+  },
+  {
+    "id": "policy-006",
+    "name": "Certification-Based Access",
+    "description": "Requires specific certifications for accessing sensitive resources",
+    "type": "abac",
+    "version": "1.0.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 180,
+    "conditions": [
+      {
+        "attribute": "subject.certifications",
+        "operator": "contains",
+        "value": "{{resource.requiresCertification}}",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "subject.clearanceLevel",
+        "operator": "greaterThan",
+        "value": "3",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "active",
+        "date": "2024-09-01T08:00:00Z",
+        "author": "compliance@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "New certification-based access policy"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-09-01T08:00:00Z",
+    "updatedAt": "2024-09-01T08:00:00Z",
+    "lastDeployedAt": "2024-09-01T08:00:00Z",
+    "deployedVersion": "1.0.0",
+    "ruleCount": 0,
+    "testCoverage": "65%",
+    "violationsDetected": 3
+  },
+  {
+    "id": "policy-007",
+    "name": "IP-Based Access Control",
+    "description": "Restricts access based on IP address ranges",
+    "type": "abac",
+    "version": "1.2.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 90,
+    "conditions": [
+      {
+        "attribute": "context.ipAddress",
+        "operator": "regex",
+        "value": "^192\\.168\\.(1|2)\\.[0-9]{1,3}$",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "subject.role",
+        "operator": "in",
+        "value": "['admin', 'developer', 'operator']",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-04-10T11:00:00Z",
+        "author": "network@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial IP-based access policy"
+          }
+        ]
+      },
+      {
+        "version": "1.1.0",
+        "status": "deprecated",
+        "date": "2024-08-20T15:00:00Z",
+        "author": "network@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Expanded IP range to include subnet 192.168.2.x"
+          }
+        ]
+      },
+      {
+        "version": "1.2.0",
+        "status": "active",
+        "date": "2024-11-25T10:00:00Z",
+        "author": "network@example.com",
+        "changes": [
+          {
+            "type": "fixed",
+            "description": "Fixed regex pattern for IP validation"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-04-10T11:00:00Z",
+    "updatedAt": "2024-11-25T10:00:00Z",
+    "lastDeployedAt": "2024-11-25T10:00:00Z",
+    "deployedVersion": "1.2.0",
+    "ruleCount": 0,
+    "testCoverage": "70%",
+    "violationsDetected": 8
+  },
+  {
+    "id": "policy-008",
+    "name": "Multi-Factor Authentication Required",
+    "description": "Requires MFA for accessing high-security resources",
+    "type": "abac",
+    "version": "1.0.0",
+    "status": "draft",
+    "effect": "deny",
+    "priority": 250,
+    "conditions": [
+      {
+        "attribute": "subject.mfaEnabled",
+        "operator": "equals",
+        "value": "false",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "resource.dataClassification",
+        "operator": "in",
+        "value": "['confidential', 'restricted']",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "draft",
+        "date": "2024-12-20T09:00:00Z",
+        "author": "security@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "New MFA requirement policy"
+          }
+        ],
+        "notes": "Awaiting security team approval"
+      }
+    ],
+    "createdAt": "2024-12-20T09:00:00Z",
+    "updatedAt": "2024-12-20T09:00:00Z",
+    "ruleCount": 0,
+    "testCoverage": "0%",
+    "violationsDetected": 0
+  },
+  {
+    "id": "policy-009",
+    "name": "Regional Access Control",
+    "description": "Controls access based on user location and resource region",
+    "type": "abac",
+    "version": "1.5.0",
+    "status": "active",
+    "effect": "allow",
+    "priority": 110,
+    "conditions": [
+      {
+        "attribute": "subject.location",
+        "operator": "equals",
+        "value": "{{resource.region}}",
+        "logicalOperator": ""
+      },
+      {
+        "attribute": "context.location",
+        "operator": "equals",
+        "value": "{{resource.region}}",
+        "logicalOperator": "AND"
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-05-15T10:00:00Z",
+        "author": "ops@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Initial regional access policy"
+          }
+        ]
+      },
+      {
+        "version": "1.3.0",
+        "status": "deprecated",
+        "date": "2024-09-10T11:00:00Z",
+        "author": "ops@example.com",
+        "changes": [
+          {
+            "type": "changed",
+            "description": "Added context location check"
+          }
+        ]
+      },
+      {
+        "version": "1.5.0",
+        "status": "active",
+        "date": "2024-12-10T14:00:00Z",
+        "author": "ops@example.com",
+        "changes": [
+          {
+            "type": "fixed",
+            "description": "Improved region matching accuracy"
+          }
+        ]
+      }
+    ],
+    "createdAt": "2024-05-15T10:00:00Z",
+    "updatedAt": "2024-12-10T14:00:00Z",
+    "lastDeployedAt": "2024-12-10T14:00:00Z",
+    "deployedVersion": "1.5.0",
+    "ruleCount": 0,
+    "testCoverage": "82%",
+    "violationsDetected": 4
+  },
+  {
+    "id": "policy-010",
+    "name": "Emergency Override Access",
+    "description": "Allows emergency access bypass for critical situations",
+    "type": "rbac",
+    "version": "1.0.0",
+    "status": "deprecated",
+    "effect": "allow",
+    "priority": 300,
+    "rules": [
+      {
+        "id": "emergency-admin-override",
+        "description": "Emergency override for admins",
+        "effect": "allow",
+        "conditions": {
+          "subject.role": "emergency-admin",
+          "subject.emergencyAccess": "true"
+        }
+      }
+    ],
+    "versions": [
+      {
+        "version": "1.0.0",
+        "status": "deprecated",
+        "date": "2024-03-01T08:00:00Z",
+        "author": "admin@example.com",
+        "changes": [
+          {
+            "type": "added",
+            "description": "Emergency override policy"
+          }
+        ],
+        "notes": "Deprecated - replaced by policy-011"
+      }
+    ],
+    "createdAt": "2024-03-01T08:00:00Z",
+    "updatedAt": "2024-10-01T12:00:00Z",
+    "lastDeployedAt": "2024-10-01T12:00:00Z",
+    "deployedVersion": "1.0.0",
+    "ruleCount": 1,
+    "testCoverage": "45%",
+    "violationsDetected": 0
+  }
+]

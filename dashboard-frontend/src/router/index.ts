@@ -221,6 +221,16 @@ const router = createRouter({
       component: () => import('../views/policies/AccessControlPolicies.vue'),
     },
     {
+      path: '/policies/compliance',
+      name: 'ComplianceDashboard',
+      component: () => import('../views/policies/ComplianceDashboard.vue'),
+    },
+    {
+      path: '/policies/summaries',
+      name: 'PolicySummaries',
+      component: () => import('../views/policies/PolicySummaries.vue'),
+    },
+    {
       path: '/policies/data-classification',
       name: 'DataClassificationPolicies',
       component: () => import('../views/policies/DataClassificationPolicies.vue'),

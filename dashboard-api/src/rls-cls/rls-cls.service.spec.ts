@@ -8,7 +8,7 @@ import { RLSCLSTester } from '../../../heimdall-framework/services/rls-cls-teste
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/rls-cls-tester');
+jest.mock('../../../heimdall-framework/services/rls-cls-tester');
 
 describe('RLSCLSService', () => {
   let service: RLSCLSService;

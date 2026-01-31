@@ -12,8 +12,9 @@ import * as fs from 'fs/promises';
 
 // Mock dependencies
 jest.mock('fs/promises');
+let uuidCounter = 0;
 jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mock-uuid-v4'),
+  v4: jest.fn(() => `mock-uuid-v4-${++uuidCounter}`),
 }));
 
 describe('AlertingService', () => {
@@ -44,6 +45,8 @@ describe('AlertingService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    // Reset UUID counter to ensure unique IDs in each test
+    uuidCounter = 0;
 
     const mockNotificationsService = {
       createNotification: jest.fn().mockResolvedValue({ id: 'notification-1' }),
@@ -68,13 +71,15 @@ describe('AlertingService', () => {
     fs.readFile = jest.fn().mockResolvedValue('[]');
     fs.writeFile = jest.fn().mockResolvedValue(undefined);
 
-    // Clear data
+    // Clear data - ensure fresh state for each test
     (service as any).rules = new Map();
     (service as any).channels = new Map();
     (service as any).alerts = [];
     
     // Mock loadData to prevent it from resetting our test data
-    jest.spyOn(service as any, 'loadData').mockResolvedValue(undefined);
+    // This is critical - loadData is called in constructor and would clear our maps
+    const loadDataSpy = jest.spyOn(service as any, 'loadData');
+    loadDataSpy.mockResolvedValue(undefined);
   });
 
   describe('createRule', () => {
@@ -173,32 +178,44 @@ describe('AlertingService', () => {
   });
 
   describe('getAllRules', () => {
-    beforeEach(async () => {
-      await service.createRule(createRuleDto);
-      await service.createRule({ ...createRuleDto, name: 'Rule 2' });
-    });
-
     it('should return all alert rules', async () => {
+      // Arrange - Clear any existing rules first
+      (service as any).rules = new Map();
+      // Create two rules with different names to ensure they're distinct
+      const rule1 = await service.createRule({ ...createRuleDto, name: 'Rule 1' });
+      const rule2 = await service.createRule({ ...createRuleDto, name: 'Rule 2' });
+      
+      // Verify rules were created with different IDs
+      expect(rule1.id).not.toBe(rule2.id);
+      
       // Act
       const result = await service.getRules();
 
       // Assert
-      expect(result.length).toBeGreaterThanOrEqual(2);
+      expect(result.length).toBe(2);
+      expect(result.map(r => r.id)).toContain(rule1.id);
+      expect(result.map(r => r.id)).toContain(rule2.id);
     });
   });
 
   describe('getAllChannels', () => {
-    beforeEach(async () => {
-      await service.createChannel(createChannelDto);
-      await service.createChannel({ ...createChannelDto, name: 'Channel 2' });
-    });
-
     it('should return all alert channels', async () => {
+      // Arrange - Clear any existing channels first
+      (service as any).channels = new Map();
+      // Create two channels with different names to ensure they're distinct
+      const channel1 = await service.createChannel({ ...createChannelDto, name: 'Channel 1' });
+      const channel2 = await service.createChannel({ ...createChannelDto, name: 'Channel 2' });
+      
+      // Verify channels were created with different IDs
+      expect(channel1.id).not.toBe(channel2.id);
+      
       // Act
       const result = await service.getChannels();
 
       // Assert
-      expect(result.length).toBeGreaterThanOrEqual(2);
+      expect(result.length).toBe(2);
+      expect(result.map(c => c.id)).toContain(channel1.id);
+      expect(result.map(c => c.id)).toContain(channel2.id);
     });
   });
 });

@@ -8,7 +8,7 @@ import { DLPTester } from '../../../heimdall-framework/services/dlp-tester';
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/dlp-tester');
+jest.mock('../../../heimdall-framework/services/dlp-tester');
 
 describe('DLPService', () => {
   let service: DLPService;

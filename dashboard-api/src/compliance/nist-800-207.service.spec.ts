@@ -8,7 +8,7 @@ import { NIST800207Compliance } from '../../../heimdall-framework/services/nist-
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/nist-800-207-compliance');
+jest.mock('../../../heimdall-framework/services/nist-800-207-compliance');
 
 describe('NIST800207Service', () => {
   let service: NIST800207Service;

@@ -21,6 +21,11 @@ export function getDomainFromTestType(testType: TestType): TestDomain {
     // Identity domain
     'access-control': 'identity',
     'rls-cls': 'identity',
+    'agent-delegated-access': 'identity',
+    'agent-direct-access': 'identity',
+    'agent-multi-service': 'identity',
+    'agent-dynamic-access': 'identity',
+    'agent-audit-trail': 'identity',
     
     // Data Contracts domain
     'data-contract': 'data_contracts',

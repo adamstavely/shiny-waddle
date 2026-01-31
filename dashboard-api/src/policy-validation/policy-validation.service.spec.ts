@@ -9,8 +9,8 @@ import { PolicyDecisionPoint } from '../../../heimdall-framework/services/policy
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/policy-validation-tester');
-jest.mock('../../../services/policy-decision-point');
+jest.mock('../../../heimdall-framework/services/policy-validation-tester');
+jest.mock('../../../heimdall-framework/services/policy-decision-point');
 
 describe('PolicyValidationService', () => {
   let service: PolicyValidationService;

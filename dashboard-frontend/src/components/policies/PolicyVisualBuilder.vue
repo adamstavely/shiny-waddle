@@ -2,6 +2,25 @@
   <div class="policy-visual-builder">
     <div class="builder-toolbar">
       <div class="toolbar-section">
+        <h4>Templates</h4>
+        <div class="template-selector">
+          <Dropdown
+            v-model="selectedTemplateId"
+            :options="templateOptions"
+            placeholder="Select a template..."
+            @update:model-value="applyTemplate"
+          />
+          <button
+            v-if="selectedTemplateId"
+            @click="clearTemplate"
+            class="btn-clear-template"
+            type="button"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+      <div class="toolbar-section">
         <h4>Elements</h4>
         <div class="element-palette">
           <!-- RBAC Elements -->
@@ -73,9 +92,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Shield, Filter, GitBranch } from 'lucide-vue-next';
 import PolicyRuleBuilder from './PolicyRuleBuilder.vue';
+import Dropdown from '../Dropdown.vue';
+import axios from 'axios';
 
 interface RBACRule {
   id: string;
@@ -104,6 +125,69 @@ const rules = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
 });
+
+// Template management
+const templates = ref<any[]>([]);
+const selectedTemplateId = ref<string>('');
+const loadingTemplates = ref(false);
+
+const templateOptions = computed(() => {
+  return templates.value
+    .filter(t => t.type === props.policyType)
+    .map(t => ({
+      label: t.name,
+      value: t.id,
+    }));
+});
+
+const loadTemplates = async () => {
+  try {
+    loadingTemplates.value = true;
+    const response = await axios.get('/api/policies/templates', {
+      params: { type: props.policyType },
+    });
+    templates.value = response.data;
+  } catch (error) {
+    console.error('Error loading templates:', error);
+  } finally {
+    loadingTemplates.value = false;
+  }
+};
+
+const applyTemplate = async (templateId: string) => {
+  if (!templateId) return;
+  
+  try {
+    const template = templates.value.find(t => t.id === templateId);
+    if (!template) return;
+
+    // Increment usage count
+    await axios.post(`/api/policies/templates/${templateId}/use`);
+
+    // Apply template to rules
+    if (props.policyType === 'rbac' && template.template.rules) {
+      const importedRules: RBACRule[] = template.template.rules.map((rule: any) => ({
+        id: rule.id || `rule-${Date.now()}`,
+        description: rule.description || '',
+        effect: rule.effect || 'allow',
+        conditions: Object.entries(rule.conditions || {}).map(([key, value]) => ({
+          key,
+          value: Array.isArray(value) ? JSON.stringify(value) : String(value),
+        })),
+      }));
+      rules.value = importedRules as RBACRule[];
+    } else if (props.policyType === 'abac' && template.template.conditions) {
+      rules.value = template.template.conditions as ABACCondition[];
+    }
+  } catch (error) {
+    console.error('Error applying template:', error);
+    alert('Failed to apply template');
+  }
+};
+
+const clearTemplate = () => {
+  selectedTemplateId.value = '';
+};
 
 const handleRulesUpdate = (newRules: RBACRule[] | ABACCondition[]) => {
   rules.value = newRules;
@@ -223,6 +307,10 @@ const copyJSON = () => {
   navigator.clipboard.writeText(formattedJSON.value);
   alert('JSON copied to clipboard');
 };
+
+onMounted(() => {
+  loadTemplates();
+});
 </script>
 
 <style scoped>
@@ -248,6 +336,29 @@ const copyJSON = () => {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+}
+
+.template-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.btn-clear-template {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.btn-clear-template:hover {
+  background: var(--border-color-muted);
+  border-color: var(--border-color-primary-hover);
 }
 
 .element-palette {

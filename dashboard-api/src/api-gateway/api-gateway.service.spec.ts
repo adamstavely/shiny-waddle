@@ -8,7 +8,7 @@ import { APIGatewayTester } from '../../../heimdall-framework/services/api-gatew
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/api-gateway-tester');
+jest.mock('../../../heimdall-framework/services/api-gateway-tester');
 
 describe('APIGatewayService', () => {
   let service: APIGatewayService;

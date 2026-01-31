@@ -152,6 +152,7 @@ export class AlertingService {
     const rule: AlertRuleEntity = {
       id: uuidv4(),
       ...dto,
+      enabled: dto.enabled !== undefined ? dto.enabled : true, // Default to true if not provided
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: userId,

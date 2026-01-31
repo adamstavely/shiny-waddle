@@ -49,6 +49,12 @@ describe('PoliciesService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    // Mock fs operations BEFORE creating the service to prevent initialization errors
+    const fs = require('fs/promises');
+    fs.mkdir = jest.fn().mockResolvedValue(undefined);
+    fs.readFile = jest.fn().mockRejectedValue({ code: 'ENOENT' });
+    fs.writeFile = jest.fn().mockResolvedValue(undefined);
+
     // Create mock versioning service
     const mockVersioningService = {
       getVersionHistory: jest.fn(),
@@ -79,12 +85,6 @@ describe('PoliciesService', () => {
     service = module.get<PoliciesService>(PoliciesService);
     versioningService = module.get(PolicyVersioningService) as jest.Mocked<PolicyVersioningService>;
     moduleRef = module.get(ModuleRef) as jest.Mocked<ModuleRef>;
-
-    // Mock fs operations
-    const fs = require('fs/promises');
-    fs.mkdir = jest.fn().mockResolvedValue(undefined);
-    fs.readFile = jest.fn().mockResolvedValue(JSON.stringify([]));
-    fs.writeFile = jest.fn().mockResolvedValue(undefined);
 
     // Clear cached policies and ensure they're loaded fresh for each test
     (service as any).policies = [];
@@ -554,6 +554,7 @@ describe('PoliciesService', () => {
           { ...mockPolicy.versions[0], version: '1.1.0', date: new Date() },
         ],
       };
+      const initialVersionCount = policyWithMultipleVersions.versions.length;
       (service as any).policies = [policyWithMultipleVersions];
 
       versioningService.rollbackToVersion.mockReturnValue({
@@ -567,7 +568,8 @@ describe('PoliciesService', () => {
 
       // Assert
       expect(result.version).toBe('1.0.1');
-      expect(result.versions.length).toBeGreaterThan(policyWithMultipleVersions.versions.length);
+      // Rollback adds a new version entry, so length should increase by 1
+      expect(result.versions.length).toBe(initialVersionCount + 1);
     });
 
     it('should throw NotFoundException when policy not found', async () => {

@@ -8,7 +8,7 @@ import { NetworkMicrosegmentationTester } from '../../../heimdall-framework/serv
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/network-microsegmentation-tester');
+jest.mock('../../../heimdall-framework/services/network-microsegmentation-tester');
 
 describe('NetworkPolicyService', () => {
   let service: NetworkPolicyService;

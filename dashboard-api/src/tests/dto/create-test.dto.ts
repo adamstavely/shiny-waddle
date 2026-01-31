@@ -322,9 +322,7 @@ export class CreateTestDto {
   policyType?: string;
 
   // DistributedSystemsTest fields
-  @IsOptional()
-  @IsString()
-  applicationId?: string; // References application with distributed systems infrastructure
+  // Note: applicationId is already defined at line 244 for RLSCLSTest, reusing it here
 
   @IsOptional()
   @IsEnum(['multi-region', 'policy-consistency', 'policy-synchronization'])

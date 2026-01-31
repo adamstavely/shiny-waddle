@@ -68,6 +68,16 @@ The documentation is organized into the following categories:
 - [Executive Overview](./product/HEIMDALL_EXECUTIVE_OVERVIEW.md) - Executive presentation/overview
 - [Aura Inspector Integration Plan](./product/AURA_INSPECTOR_INTEGRATION_PLAN.md) - Integration plan
 
+### Policy Builder Documentation
+
+- [Phase 1 Validation](./development/POLICY_BUILDER_PHASE1_VALIDATION.md) - Phase 1 implementation validation
+- [Phase 2 Implementation Plan](./development/POLICY_BUILDER_PHASE2_IMPLEMENTATION_PLAN.md) - Phase 2 plan and status
+- [Phase 3 Implementation Plan](./development/POLICY_BUILDER_PHASE3_IMPLEMENTATION_PLAN.md) - Phase 3 plan and status
+- [Phase 4 Implementation Plan](./development/POLICY_BUILDER_PHASE4_IMPLEMENTATION_PLAN.md) - Phase 4 complete plan
+- [Phase 4 Complete Summary](./development/PHASE4_COMPLETE_SUMMARY.md) - ✅ Phase 4 implementation summary
+- [Phase 4 Implementation Summary](./development/PHASE4_IMPLEMENTATION_SUMMARY.md) - Detailed implementation summary
+- [Phase 3 UI Access Guide](./development/PHASE3_UI_ACCESS_GUIDE.md) - UI access guide
+
 ### UI Documentation
 
 - [UI Requirements](./ui/UI_REQUIREMENTS.md) - UI requirements documentation

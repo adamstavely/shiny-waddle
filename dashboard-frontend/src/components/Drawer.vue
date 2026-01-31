@@ -168,6 +168,26 @@
             <span>Data Classification</span>
           </a>
 
+          <!-- Compliance Dashboard -->
+          <a
+            href="/policies/compliance"
+            @click.prevent="handleNavClick('/policies/compliance')"
+            :class="['drawer-item', isActive('/policies/compliance') ? 'drawer-item-active' : '']"
+          >
+            <ShieldCheck class="item-icon" />
+            <span>Compliance Dashboard</span>
+          </a>
+
+          <!-- Policy Summaries -->
+          <a
+            href="/policies/summaries"
+            @click.prevent="handleNavClick('/policies/summaries')"
+            :class="['drawer-item', isActive('/policies/summaries') ? 'drawer-item-active' : '']"
+          >
+            <FileText class="item-icon" />
+            <span>Policy Summaries</span>
+          </a>
+
         </div>
       </div>
 
@@ -296,6 +316,8 @@ const policiesConfigPages = [
   '/policies',
   '/policies/access-control',
   '/policies/data-classification',
+  '/policies/compliance',
+  '/policies/summaries',
   '/resources',
   '/templates'
 ];

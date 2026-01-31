@@ -8,7 +8,7 @@ import { CICDSecurityGates } from '../../../heimdall-framework/services/cicd-sec
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/cicd-security-gates');
+jest.mock('../../../heimdall-framework/services/cicd-security-gates');
 
 describe('SecurityGatesService', () => {
   let service: SecurityGatesService;

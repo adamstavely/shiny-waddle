@@ -51,6 +51,47 @@ Heimdall is an automated testing framework that validates applications are adher
 - **Advanced Reporting**: Generate HTML, JSON, JUnit XML reports
 - **Risk Scoring**: Calculate risk scores and prioritize issues
 
+### Policy Builder (Phase 4 Complete ✅)
+
+The Policy Builder provides a comprehensive, production-ready system for creating, managing, and analyzing access control policies:
+
+#### Core Features
+- **Visual Policy Builder**: Drag-and-drop interface for creating RBAC and ABAC policies
+- **Policy Versioning**: Track policy changes with full version history
+- **Policy Comparison**: Compare policy versions and detect differences
+- **Gap Analysis**: Identify compliance gaps and enforcement issues
+- **System State Comparison**: Compare expected vs actual policy enforcement
+
+#### Advanced AI Features
+- **AI-Powered Summaries**: Generate executive and detailed summaries using LLM integration (OpenAI, Anthropic, Azure OpenAI)
+- **Policy Recommendations**: Get AI-generated recommendations for policy improvements
+- **Natural Language Queries**: Ask questions about policies in plain English
+- **Intelligent Analysis**: Automated compliance analysis with AI enhancement
+
+#### Reporting & Analytics
+- **PDF/HTML Export**: Export policy summaries and reports in multiple formats
+- **Compliance Trends**: Interactive charts showing compliance trends over time
+- **Scheduled Reports**: Automated daily/weekly/monthly report generation
+- **Custom Report Templates**: Create and manage custom report templates
+
+#### Automation & Workflows
+- **Automated Remediation**: Auto-fix simple compliance gaps
+- **Automation Rules**: Configurable rules for policy change automation
+- **Scheduled Gap Analysis**: Automatic gap analysis execution
+- **Policy Change Notifications**: Notify stakeholders of policy changes
+
+#### Collaboration Features
+- **Policy Comments**: Threaded comment system with @mentions
+- **Approval Workflows**: Multi-stage approval system for policy changes
+- **Team Collaboration**: Share policies and collaborate on changes
+- **Notification Preferences**: Customize notification settings per user
+
+#### Production Features
+- **Caching**: High-performance caching for summaries and recommendations
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Performance Optimization**: Optimized API calls with timeouts and validation
+- **Monitoring**: Built-in monitoring and logging capabilities
+
 ## Architecture
 
 ```
@@ -197,6 +238,9 @@ The `/dashboard-api` directory contains the REST API backend built with NestJS:
   - **`test-harnesses/`** - Test harness management endpoints
   - **`test-batteries/`** - Test battery management endpoints
   - **`policies/`** - Policy management endpoints
+    - **`services/`** - Policy services (versioning, diff, gap analysis, AI summaries, automation, collaboration)
+    - **`builder/`** - Policy builder components
+    - **`exceptions/`** - Policy-specific exceptions
   - **`test-results/`** - Test result storage and querying
   - **`compliance/`** - Compliance reporting endpoints
   - **`api-security/`** - API security testing endpoints
@@ -218,7 +262,10 @@ import { APISecurityTester } from '../../../heimdall-framework/services/api-secu
 The `/dashboard-frontend` directory contains the web UI built with Vue.js 3:
 
 - **`src/components/`** - Reusable Vue components
+  - **`policies/`** - Policy Builder components
+    - Visual builder, diff viewer, gap analysis, AI summaries, recommendations, comments, approvals
 - **`src/views/`** - Page-level components
+  - **`policies/`** - Policy management views (Access Control, Compliance Dashboard, Summaries)
 - **`src/types/`** - TypeScript types (often mirroring core types)
 - **`src/composables/`** - Composition API utilities
 - **`src/utils/`** - Utility functions
@@ -354,12 +401,23 @@ See [`dashboard-api/LOGGING.md`](./dashboard-api/LOGGING.md) for complete loggin
 
 ## Documentation
 
+> **📚 Complete Documentation Index:** See [Documentation Index](./docs/development/DOCUMENTATION_INDEX.md) for a comprehensive list of all documentation.
+
 ### Core Documentation
-- **[Policy Creation Guide](./docs/POLICY_CREATION_GUIDE.md)**: Comprehensive guide for creating RBAC and ABAC policies
-- **[Test Creation Guide](./docs/TEST_CREATION_GUIDE.md)**: Step-by-step guide for creating test suites
-- **[Quick Reference](./docs/QUICK_REFERENCE.md)**: Quick reference for common tasks and patterns
-- **[Feature Roadmap](./docs/FEATURE_ROADMAP.md)**: Recommended enhancements and future features
+- **[Policy Creation Guide](./docs/guides/POLICY_CREATION_GUIDE.md)**: Comprehensive guide for creating RBAC and ABAC policies
+- **[Policy Builder Guide](./docs/guides/POLICY_BUILDER_GUIDE.md)**: Complete user guide for Policy Builder (Phase 4) ✅
+- **[Test Creation Guide](./docs/guides/TEST_CREATION_GUIDE.md)**: Step-by-step guide for creating test suites
+- **[Quick Reference](./docs/guides/QUICK_REFERENCE.md)**: Quick reference for common tasks and patterns
+- **[Feature Roadmap](./docs/product/FEATURE_ROADMAP.md)**: Recommended enhancements and future features
 - **[Examples](./examples/)**: Complete working examples
+
+### Policy Builder Documentation
+- **[Policy Builder Guide](./docs/guides/POLICY_BUILDER_GUIDE.md)**: User guide for Policy Builder features ✅
+- **[Phase 4 Complete Summary](./docs/development/PHASE4_COMPLETE_SUMMARY.md)**: Complete Phase 4 implementation summary ✅
+- **[Phase 4 Implementation Plan](./docs/development/POLICY_BUILDER_PHASE4_IMPLEMENTATION_PLAN.md)**: Technical implementation plan
+- **[Phase 3 Implementation Plan](./docs/development/POLICY_BUILDER_PHASE3_IMPLEMENTATION_PLAN.md)**: Phase 3 plan and status
+- **[Phase 2 Implementation Plan](./docs/development/POLICY_BUILDER_PHASE2_IMPLEMENTATION_PLAN.md)**: Phase 2 plan and status
+- **[Phase 1 Validation](./docs/development/POLICY_BUILDER_PHASE1_VALIDATION.md)**: Phase 1 validation report
 
 ### API & Implementation Documentation
 - **[API Documentation](./docs/API.md)**: Complete API endpoint documentation with request/response examples
@@ -472,6 +530,26 @@ ENCRYPTION_KEY=your-32-byte-hex-key-here
 
 # Data directory (where secrets and audit logs are stored)
 DATA_DIR=/path/to/data/directory
+```
+
+**Policy Builder (LLM Integration):**
+```bash
+# LLM Provider (openai, anthropic, azure, or disabled)
+LLM_PROVIDER=openai
+
+# LLM API Key
+LLM_API_KEY=your_api_key
+
+# LLM Model
+LLM_MODEL=gpt-4-turbo-preview
+
+# LLM Configuration
+LLM_TEMPERATURE=0.7
+LLM_MAX_TOKENS=2000
+LLM_BASE_URL=  # Required for Azure OpenAI
+
+# Cache Configuration
+CACHE_TTL=3600  # Cache TTL in seconds (default: 1 hour)
 ```
 
 ## Test Types

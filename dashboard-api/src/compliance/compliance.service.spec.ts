@@ -312,7 +312,9 @@ describe('ComplianceService', () => {
       const result = await service.createAssessment(createDto);
 
       // Assert
-      expect(result.summary.totalControls).toBe(createDto.mappings.length);
+      // totalControls comes from getControls(framework).length, not mappings.length
+      const expectedTotalControls = service.getControls(createDto.framework).length;
+      expect(result.summary.totalControls).toBe(expectedTotalControls);
       expect(result.summary.compliancePercentage).toBeGreaterThanOrEqual(0);
       expect(result.summary.compliancePercentage).toBeLessThanOrEqual(100);
     });

@@ -21,6 +21,7 @@
             <div class="hero-actions">
               <button @click="navigateTo('/policies/access-control')" class="btn-primary">View Access Control</button>
               <button @click="navigateTo('/policies/data-classification')" class="btn-secondary">Data Classification</button>
+              <button @click="navigateTo('/policies/compliance')" class="btn-secondary">Compliance Dashboard</button>
             </div>
           </div>
           <div class="hero-visual">

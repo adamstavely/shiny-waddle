@@ -468,7 +468,8 @@ export class TestOrchestrator {
       result.passed = false;
       result.error = error.message;
       result.details = { error: error.message };
-    return result;
+      return result;
+    }
   }
 
   /**
@@ -794,7 +795,6 @@ export class TestOrchestrator {
 
     return result;
   }
-}
 
   /**
    * Run multi-region test

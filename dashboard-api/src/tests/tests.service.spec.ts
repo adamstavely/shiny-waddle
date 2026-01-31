@@ -8,6 +8,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { TestsService } from './tests.service';
 import { TestDiscoveryService } from './test-discovery.service';
 import { PoliciesService } from '../policies/policies.service';
+import { ApplicationDataService } from '../shared/application-data.service';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { TestEntity } from './entities/test.entity';
@@ -55,6 +56,11 @@ describe('TestsService', () => {
       findOne: jest.fn(),
     };
 
+    const mockApplicationDataService = {
+      findAll: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn().mockResolvedValue(null),
+    };
+
     const mockModuleRef = {
       get: jest.fn().mockReturnValue(mockPoliciesService),
     };
@@ -70,19 +76,31 @@ describe('TestsService', () => {
           provide: TestDiscoveryService,
           useValue: mockDiscoveryService,
         },
+        {
+          provide: ApplicationDataService,
+          useValue: mockApplicationDataService,
+        },
       ],
     }).compile();
+
+    // Mock fs operations BEFORE creating service to prevent initialization errors
+    const fs = require('fs/promises');
+    fs.mkdir = jest.fn().mockResolvedValue(undefined);
+    fs.readFile = jest.fn().mockResolvedValue(JSON.stringify([]));
+    fs.writeFile = jest.fn().mockResolvedValue(undefined);
 
     service = module.get<TestsService>(TestsService);
     discoveryService = module.get(TestDiscoveryService) as jest.Mocked<TestDiscoveryService>;
     moduleRef = module.get(ModuleRef) as jest.Mocked<ModuleRef>;
     policiesService = mockPoliciesService as any;
 
-    // Mock fs operations
-    const fs = require('fs/promises');
-    fs.mkdir = jest.fn().mockResolvedValue(undefined);
-    fs.readFile = jest.fn().mockResolvedValue(JSON.stringify([]));
-    fs.writeFile = jest.fn().mockResolvedValue(undefined);
+    // Mock load methods to prevent async loading issues
+    // Use mockImplementation to prevent it from clearing the tests array
+    jest.spyOn(service as any, 'loadTests').mockImplementation(async () => {
+      // Don't reload from file, just return
+      return Promise.resolve();
+    });
+    jest.spyOn(service as any, 'discoverAndRegisterTests').mockResolvedValue(undefined);
 
     // Clear cached tests
     (service as any).tests = [];
@@ -155,7 +173,7 @@ describe('TestsService', () => {
 
     it('should validate policy exists for access-control tests', async () => {
       // Arrange
-      policiesService.findOne.mockRejectedValue(new NotFoundException('Policy not found'));
+      policiesService.findOne.mockResolvedValue(null); // Policy not found
       (service as any).tests = [];
 
       // Act & Assert
@@ -345,6 +363,7 @@ describe('TestsService', () => {
 
     it('should successfully update a test', async () => {
       // Arrange
+      policiesService.findOne.mockResolvedValue({ id: 'policy-1' } as any);
       (service as any).tests = [{ ...mockTest }];
 
       // Act
@@ -371,7 +390,7 @@ describe('TestsService', () => {
     it('should validate policy when updating access-control test', async () => {
       // Arrange
       (service as any).tests = [{ ...mockTest }];
-      policiesService.findOne.mockRejectedValue(new NotFoundException('Policy not found'));
+      policiesService.findOne.mockResolvedValue(null); // Policy not found
 
       const updateDtoWithPolicy: UpdateTestDto = {
         policyId: 'non-existent-policy',
@@ -385,6 +404,7 @@ describe('TestsService', () => {
 
     it('should auto-update domain when testType changes', async () => {
       // Arrange
+      policiesService.findOne.mockResolvedValue({ id: 'policy-1' } as any);
       (service as any).tests = [{ ...mockTest }];
 
       const updateDtoWithNewType: UpdateTestDto = {
@@ -402,6 +422,7 @@ describe('TestsService', () => {
 
     it('should keep only last 10 versions in history', async () => {
       // Arrange
+      policiesService.findOne.mockResolvedValue({ id: 'policy-1' } as any);
       const testWithManyVersions = {
         ...mockTest,
         version: 12,

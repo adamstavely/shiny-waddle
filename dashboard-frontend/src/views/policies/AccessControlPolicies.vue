@@ -95,6 +95,18 @@
             <History class="action-icon" />
             Versions
           </button>
+          <button @click.stop="compareVersions(policy.id)" class="action-btn view-btn">
+            <GitCompare class="action-icon" />
+            Compare
+          </button>
+          <button @click.stop="viewGapAnalysis(policy.id)" class="action-btn view-btn">
+            <AlertTriangle class="action-icon" />
+            View Gaps
+          </button>
+          <button @click.stop="viewSystemState(policy.id)" class="action-btn view-btn">
+            <Shield class="action-icon" />
+            Compare State
+          </button>
           <button @click.stop="testPolicy(policy.id)" class="action-btn test-btn">
             <TestTube class="action-icon" />
             Test
@@ -164,11 +176,73 @@
                   </button>
                   <button
                     type="button"
+                    @click="editorTab = 'code'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'code' }"
+                  >
+                    Code
+                  </button>
+                  <button
+                    type="button"
                     @click="editorTab = 'preview'"
                     class="editor-tab"
                     :class="{ active: editorTab === 'preview' }"
                   >
                     Preview
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'versions'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'versions' }"
+                    v-if="editingPolicy"
+                  >
+                    Versions
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'comparison'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'comparison' }"
+                    v-if="editingPolicy"
+                  >
+                    System State
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'gaps'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'gaps' }"
+                    v-if="editingPolicy"
+                  >
+                    Gap Analysis
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'tags'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'tags' }"
+                    v-if="editingPolicy"
+                  >
+                    Tags
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'comments'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'comments' }"
+                    v-if="editingPolicy"
+                  >
+                    Comments
+                  </button>
+                  <button
+                    type="button"
+                    @click="editorTab = 'approvals'"
+                    class="editor-tab"
+                    :class="{ active: editorTab === 'approvals' }"
+                    v-if="editingPolicy"
+                  >
+                    Approvals
                   </button>
                 </div>
 
@@ -394,6 +468,15 @@
                   />
                 </div>
 
+                <!-- Code Tab -->
+                <div v-if="editorTab === 'code'" class="editor-content code-editor-content">
+                  <PolicyJSONEditor
+                    v-model="jsonEditorValue"
+                    language="json"
+                    @update:model-value="handleJSONEditorUpdate"
+                  />
+                </div>
+
                 <!-- Preview Tab -->
                 <div v-if="editorTab === 'preview'" class="editor-content">
                   <div class="preview-section">
@@ -423,6 +506,73 @@
                   </div>
                 </div>
 
+                <!-- Versions Tab -->
+                <div v-if="editorTab === 'versions'" class="editor-content">
+                  <div class="versions-section">
+                    <h3>Version History</h3>
+                    <div v-if="policyVersions.length > 0" class="versions-list">
+                      <div
+                        v-for="version in policyVersions"
+                        :key="version.version"
+                        class="version-item"
+                      >
+                        <div class="version-header">
+                          <span class="version-number">v{{ version.version }}</span>
+                          <span class="version-date">{{ formatDate(version.date) }}</span>
+                        </div>
+                        <button
+                          @click="compareVersions(editingPolicy!)"
+                          class="btn-compare-version"
+                        >
+                          Compare with Current
+                        </button>
+                      </div>
+                    </div>
+                    <div v-else class="empty-versions">
+                      <p>No version history available</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Comparison Tab -->
+                <div v-if="editorTab === 'comparison'" class="editor-content">
+                  <SystemStateDiffPanel v-if="editingPolicy" :policy-id="editingPolicy" />
+                </div>
+
+                <!-- Gap Analysis Tab -->
+                <div v-if="editorTab === 'gaps'" class="editor-content">
+                  <GapAnalysisView v-if="editingPolicy" :policy-id="editingPolicy" />
+                </div>
+
+                <!-- Tags Tab -->
+                <div v-if="editorTab === 'tags'" class="editor-content">
+                  <div v-if="selectedResourceId" class="tags-section">
+                    <TagComparisonPanel
+                      :resource-id="selectedResourceId"
+                      :policy-id="editingPolicy!"
+                    />
+                  </div>
+                  <div v-else class="empty-tags-state">
+                    <p>Select a resource to compare tags</p>
+                    <input
+                      v-model="selectedResourceId"
+                      type="text"
+                      placeholder="Enter resource ID..."
+                      class="resource-input"
+                    />
+                  </div>
+                </div>
+
+                <!-- Comments Tab -->
+                <div v-if="editorTab === 'comments'" class="editor-content">
+                  <PolicyComments v-if="editingPolicy" :policy-id="editingPolicy" />
+                </div>
+
+                <!-- Approvals Tab -->
+                <div v-if="editorTab === 'approvals'" class="editor-content">
+                  <PolicyApprovals v-if="editingPolicy" :policy-id="editingPolicy" />
+                </div>
+
                 <div class="form-actions">
                   <button type="button" @click="closeModal" class="btn-secondary">
                     Cancel
@@ -432,6 +582,32 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Compare Versions Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showCompareModal" class="modal-overlay" @click="closeCompareModal">
+          <div class="modal-content compare-modal" @click.stop>
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <GitCompare class="modal-title-icon" />
+                <h2>Compare Policy Versions</h2>
+              </div>
+              <button @click="closeCompareModal" class="modal-close">
+                <X class="close-icon" />
+              </button>
+            </div>
+            <div class="modal-body">
+              <PolicyDiffViewer
+                v-if="comparingPolicyId"
+                :policy-id="comparingPolicyId"
+                :versions="policyVersions"
+              />
             </div>
           </div>
         </div>
@@ -453,12 +629,20 @@ import {
   X,
   Trash2,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  GitCompare
 } from 'lucide-vue-next';
 import Dropdown from '../../components/Dropdown.vue';
 import Breadcrumb from '../../components/Breadcrumb.vue';
 import PolicyVisualBuilder from '../../components/policies/PolicyVisualBuilder.vue';
 import PolicyVisualization from '../../components/policies/PolicyVisualization.vue';
+import PolicyJSONEditor from '../../components/policies/PolicyJSONEditor.vue';
+import PolicyDiffViewer from '../../components/policies/PolicyDiffViewer.vue';
+import GapAnalysisView from '../../components/policies/GapAnalysisView.vue';
+import SystemStateDiffPanel from '../../components/policies/SystemStateDiffPanel.vue';
+import TagComparisonPanel from '../../components/policies/TagComparisonPanel.vue';
+import PolicyComments from '../../components/policies/PolicyComments.vue';
+import PolicyApprovals from '../../components/policies/PolicyApprovals.vue';
 import axios from 'axios';
 
 const router = useRouter();
@@ -474,9 +658,14 @@ const filterType = ref('');
 const filterStatus = ref('');
 const showCreateModal = ref(false);
 const editingPolicy = ref<string | null>(null);
-const editorTab = ref<'basic' | 'rules' | 'visual' | 'preview'>('basic');
+const editorTab = ref<'basic' | 'rules' | 'visual' | 'code' | 'preview' | 'versions' | 'comparison' | 'gaps' | 'tags'>('basic');
+const selectedResourceId = ref<string | null>(null);
+const jsonEditorValue = ref('');
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showCompareModal = ref(false);
+const comparingPolicyId = ref<string | null>(null);
+const policyVersions = ref<Array<{ version: string; date: Date }>>([]);
 
 // Policies data from API
 const policies = ref<any[]>([]);
@@ -554,6 +743,19 @@ const editPolicy = async (id: string) => {
       conditions: policy.conditions || []
     };
     initializeConditionArrays();
+    
+    // Load versions for this policy
+    try {
+      const versionsResponse = await axios.get(`/api/policies/${id}/versions`);
+      policyVersions.value = versionsResponse.data.map((v: any) => ({
+        version: v.version,
+        date: new Date(v.date || v.createdAt),
+      }));
+    } catch (err) {
+      console.error('Failed to load versions', err);
+      policyVersions.value = [];
+    }
+    
     showCreateModal.value = true;
   } catch (err: any) {
     error.value = err.response?.data?.message || err.message || 'Failed to load policy';
@@ -565,6 +767,39 @@ const editPolicy = async (id: string) => {
 
 const viewVersions = (id: string) => {
   router.push(`/policies/${id}?tab=changelog`);
+};
+
+const compareVersions = async (id: string) => {
+  comparingPolicyId.value = id;
+  showCompareModal.value = true;
+  
+  // Load versions for this policy
+  try {
+    const response = await axios.get(`/api/policies/${id}/versions`);
+    policyVersions.value = response.data.map((v: any) => ({
+      version: v.version,
+      date: new Date(v.date || v.createdAt),
+    }));
+  } catch (err) {
+    console.error('Failed to load versions', err);
+    policyVersions.value = [];
+  }
+};
+
+const viewGapAnalysis = async (id: string) => {
+  await editPolicy(id);
+  editorTab.value = 'gaps';
+};
+
+const viewSystemState = async (id: string) => {
+  await editPolicy(id);
+  editorTab.value = 'comparison';
+};
+
+const closeCompareModal = () => {
+  showCompareModal.value = false;
+  comparingPolicyId.value = null;
+  policyVersions.value = [];
 };
 
 const testPolicy = (id: string) => {
@@ -730,6 +965,7 @@ const closeModal = () => {
   };
   conditionKeys.value = {};
   conditionValues.value = {};
+  jsonEditorValue.value = '';
 };
 
 // RBAC Rule Management
@@ -978,7 +1214,54 @@ watch(() => policyForm.value.type, () => {
   } else if (policyForm.value.type === 'abac' && policyForm.value.conditions.length === 0) {
     addABACCondition();
   }
+  updateJSONEditorValue();
 });
+
+watch(() => editorTab.value, (newTab) => {
+  if (newTab === 'code') {
+    updateJSONEditorValue();
+  }
+});
+
+watch([() => policyForm.value.rules, () => policyForm.value.conditions, () => policyForm.value.type], () => {
+  if (editorTab.value !== 'code') {
+    updateJSONEditorValue();
+  }
+});
+
+const updateJSONEditorValue = () => {
+  jsonEditorValue.value = JSON.stringify(getPolicyJSON(), null, 2);
+};
+
+const handleJSONEditorUpdate = (value: string) => {
+  jsonEditorValue.value = value;
+  try {
+    const parsed = JSON.parse(value);
+    
+    // Update policy form from JSON
+    if (parsed.name) policyForm.value.name = parsed.name;
+    if (parsed.description) policyForm.value.description = parsed.description;
+    if (parsed.version) policyForm.value.version = parsed.version;
+    if (parsed.status) policyForm.value.status = parsed.status;
+    if (parsed.effect) policyForm.value.effect = parsed.effect;
+    if (parsed.priority !== undefined) policyForm.value.priority = parsed.priority;
+    
+    if (policyForm.value.type === 'rbac' && parsed.rules) {
+      policyForm.value.rules = parsed.rules.map((rule: any) => ({
+        id: rule.id,
+        description: rule.description,
+        effect: rule.effect,
+        conditions: rule.conditions || {},
+      }));
+      initializeConditionArrays();
+    } else if (policyForm.value.type === 'abac' && parsed.conditions) {
+      policyForm.value.conditions = parsed.conditions;
+    }
+  } catch (error) {
+    // Invalid JSON - don't update form
+    console.error('Invalid JSON in editor:', error);
+  }
+};
 
 const formatDate = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -1366,6 +1649,12 @@ onMounted(() => {
   overflow: hidden;
 }
 
+.code-editor-content {
+  max-height: 70vh;
+  padding: 0;
+  overflow: hidden;
+}
+
 .form-group {
   margin-bottom: var(--spacing-xl);
 }
@@ -1564,6 +1853,18 @@ onMounted(() => {
   gap: var(--spacing-sm);
 }
 
+.compare-modal {
+  max-width: 90vw;
+  width: 1200px;
+  max-height: 90vh;
+}
+
+.compare-modal .modal-body {
+  padding: 0;
+  height: calc(90vh - 120px);
+  overflow: hidden;
+}
+
 .validation-error {
   display: flex;
   align-items: center;
@@ -1602,5 +1903,71 @@ onMounted(() => {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-sm);
+}
+
+.versions-section,
+.tags-section {
+  padding: var(--spacing-md);
+}
+
+.versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.version-item {
+  padding: var(--spacing-md);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.version-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.version-number {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+}
+
+.version-date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.btn-compare-version {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.empty-versions,
+.empty-tags-state {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.resource-input {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-overlay-light);
+  border: var(--border-width-thin) solid var(--border-color-primary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  width: 100%;
+  max-width: 400px;
 }
 </style>

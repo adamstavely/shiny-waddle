@@ -3,6 +3,7 @@
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
 import { AppLogger, LogLevel } from './logger.service';
 
 describe('AppLogger', () => {
@@ -11,6 +12,9 @@ describe('AppLogger', () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
+    // Set log level to INFO for tests to allow logging
+    process.env.LOG_LEVEL = 'INFO';
+    process.env.NODE_ENV = 'test';
     logger = new AppLogger('TestContext');
   });
 
@@ -39,7 +43,7 @@ describe('AppLogger', () => {
   describe('log', () => {
     it('should log info message', () => {
       // Arrange
-      const spy = jest.spyOn(console, 'log').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
 
       // Act
       logger.log('Test message');
@@ -51,7 +55,7 @@ describe('AppLogger', () => {
 
     it('should log with metadata', () => {
       // Arrange
-      const spy = jest.spyOn(console, 'log').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
 
       // Act
       logger.log('Test message', 'CustomContext', { key: 'value' });
@@ -65,7 +69,7 @@ describe('AppLogger', () => {
       // Arrange
       process.env.LOG_LEVEL = 'ERROR';
       const errorLogger = new AppLogger('TestContext');
-      const spy = jest.spyOn(console, 'log').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
 
       // Act
       errorLogger.log('Test message');
@@ -79,7 +83,7 @@ describe('AppLogger', () => {
   describe('error', () => {
     it('should log error message', () => {
       // Arrange
-      const spy = jest.spyOn(console, 'error').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
       // Act
       logger.error('Error message');
@@ -91,7 +95,7 @@ describe('AppLogger', () => {
 
     it('should log error with trace', () => {
       // Arrange
-      const spy = jest.spyOn(console, 'error').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
 
       // Act
       logger.error('Error message', 'stack trace');
@@ -105,7 +109,7 @@ describe('AppLogger', () => {
   describe('warn', () => {
     it('should log warning message', () => {
       // Arrange
-      const spy = jest.spyOn(console, 'warn').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
 
       // Act
       logger.warn('Warning message');
@@ -120,8 +124,9 @@ describe('AppLogger', () => {
     it('should log debug message in development', () => {
       // Arrange
       process.env.NODE_ENV = 'development';
+      process.env.LOG_LEVEL = 'DEBUG';
       const devLogger = new AppLogger('TestContext');
-      const spy = jest.spyOn(console, 'debug').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
 
       // Act
       devLogger.debug('Debug message');
@@ -135,7 +140,7 @@ describe('AppLogger', () => {
       // Arrange
       process.env.NODE_ENV = 'production';
       const prodLogger = new AppLogger('TestContext');
-      const spy = jest.spyOn(console, 'debug').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'debug').mockImplementation();
 
       // Act
       prodLogger.debug('Debug message');
@@ -151,7 +156,7 @@ describe('AppLogger', () => {
       // Arrange
       process.env.LOG_LEVEL = 'VERBOSE';
       const verboseLogger = new AppLogger('TestContext');
-      const spy = jest.spyOn(console, 'log').mockImplementation();
+      const spy = jest.spyOn(Logger.prototype, 'verbose').mockImplementation();
 
       // Act
       verboseLogger.verbose('Verbose message');

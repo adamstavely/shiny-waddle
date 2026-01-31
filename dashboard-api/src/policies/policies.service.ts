@@ -40,16 +40,32 @@ export class PoliciesService {
       try {
         const data = await fs.readFile(this.policiesFile, 'utf-8');
         const parsed = JSON.parse(data);
-        this.policies = (Array.isArray(parsed) ? parsed : []).map((policy: any) => ({
-          ...policy,
-          createdAt: new Date(policy.createdAt),
-          updatedAt: new Date(policy.updatedAt),
-          lastDeployedAt: policy.lastDeployedAt ? new Date(policy.lastDeployedAt) : undefined,
-          versions: (policy.versions || []).map((v: any) => ({
-            ...v,
-            date: new Date(v.date),
-          })),
-        }));
+        this.policies = (Array.isArray(parsed) ? parsed : []).map((policy: any) => {
+          try {
+            return {
+              ...policy,
+              createdAt: policy.createdAt ? new Date(policy.createdAt) : new Date(),
+              updatedAt: policy.updatedAt ? new Date(policy.updatedAt) : new Date(),
+              lastDeployedAt: policy.lastDeployedAt ? new Date(policy.lastDeployedAt) : undefined,
+              versions: (policy.versions || []).map((v: any) => ({
+                ...v,
+                date: v.date ? new Date(v.date) : new Date(),
+              })),
+            };
+          } catch (parseError) {
+            console.error(`Error parsing policy ${policy.id}:`, parseError);
+            // Return policy with current date as fallback
+            return {
+              ...policy,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              versions: (policy.versions || []).map((v: any) => ({
+                ...v,
+                date: new Date(),
+              })),
+            };
+          }
+        });
       } catch (readError: any) {
         if (readError.code === 'ENOENT') {
           this.policies = [];

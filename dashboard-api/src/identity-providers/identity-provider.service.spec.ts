@@ -8,7 +8,7 @@ import { IdentityProviderTester } from '../../../heimdall-framework/services/ide
 import { ValidationException, InternalServerException } from '../common/exceptions/business.exception';
 
 // Mock the dependencies
-jest.mock('../../../services/identity-provider-tester');
+jest.mock('../../../heimdall-framework/services/identity-provider-tester');
 
 describe('IdentityProviderService', () => {
   let service: IdentityProviderService;

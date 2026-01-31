@@ -446,7 +446,7 @@ export class TestsService implements OnModuleInit {
     }
     
     // Keep only last 10 versions
-    if (versionHistory.length > 10) {
+    while (versionHistory.length > 10) {
       versionHistory.shift();
     }
     

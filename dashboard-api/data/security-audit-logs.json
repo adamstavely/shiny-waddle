@@ -1,5 +1,137 @@
 [
   {
+    "id": "a5636787-1b4a-4d56-a5aa-29864f1968a1",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:15:14.188Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "134"
+    },
+    "requestId": "req-1769890514186-tsrcyw0tm",
+    "responseCode": 404,
+    "duration": 1
+  },
+  {
+    "id": "1517817a-798e-48d3-a3ce-cc42d6e712a9",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:15:11.104Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "135"
+    },
+    "requestId": "req-1769890511103-lji9cuotp",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
+    "id": "ce762d12-385a-454b-93c6-5c5b6f2f0c49",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:14:57.690Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "134"
+    },
+    "requestId": "req-1769890497690-5k1vt838h",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
+    "id": "fe24823f-4980-446a-976a-a74a7118535d",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:14:53.939Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "129"
+    },
+    "requestId": "req-1769890493939-w0q0x93x2",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
+    "id": "55f1f83d-f3f3-4baf-8d15-7dfcc6593a2a",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:14:45.406Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "122"
+    },
+    "requestId": "req-1769890485396-rtwp9fjm4",
+    "responseCode": 404,
+    "duration": 4
+  },
+  {
+    "id": "c366b046-739e-42f3-ac8c-0ebbfdee5ada",
+    "type": "data-write",
+    "severity": "medium",
+    "action": "POST /api/policies/builder/validate",
+    "description": "Data write operation: POST /api/policies/builder/validate",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+    "resourceType": "endpoint",
+    "resourceId": "/api/policies/builder/validate",
+    "timestamp": "2026-01-31T20:11:28.351Z",
+    "success": false,
+    "errorMessage": "HTTP 404",
+    "metadata": {
+      "method": "POST",
+      "path": "/api/policies/builder/validate",
+      "query": {},
+      "bodySize": "122"
+    },
+    "requestId": "req-1769890288350-1vwcscosx",
+    "responseCode": 404,
+    "duration": 0
+  },
+  {
     "id": "56473ccd-86c7-4348-9e52-f91572fde2b3",
     "type": "access-denied",
     "severity": "medium",

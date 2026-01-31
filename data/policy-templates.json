@@ -1,0 +1,165 @@
+[
+  {
+    "id": "5528e187-7b2b-42a9-a95c-64676d417a99",
+    "name": "Department-Based Access",
+    "description": "RBAC policy template for department-based access control",
+    "type": "rbac",
+    "category": "department",
+    "tags": [
+      "rbac",
+      "department",
+      "access-control"
+    ],
+    "template": {
+      "name": "Department Access Policy",
+      "description": "Controls access based on user department",
+      "type": "rbac",
+      "version": "1.0.0",
+      "status": "draft",
+      "rules": [
+        {
+          "id": "department-match",
+          "description": "Allow access if user department matches resource department",
+          "effect": "allow",
+          "conditions": {
+            "subject.department": "{{resource.department}}"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-01-31T20:42:49.712Z",
+    "updatedAt": "2026-01-31T20:42:49.712Z",
+    "usageCount": 0
+  },
+  {
+    "id": "4d89b303-b028-4def-994a-8b7bed2e705e",
+    "name": "Role-Based Admin Access",
+    "description": "RBAC policy template for admin role access",
+    "type": "rbac",
+    "category": "role",
+    "tags": [
+      "rbac",
+      "role",
+      "admin"
+    ],
+    "template": {
+      "name": "Admin Role Policy",
+      "description": "Grants full access to admin role",
+      "type": "rbac",
+      "version": "1.0.0",
+      "status": "draft",
+      "rules": [
+        {
+          "id": "admin-full-access",
+          "description": "Full access for admin role",
+          "effect": "allow",
+          "conditions": {
+            "subject.role": "admin"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-01-31T20:42:49.712Z",
+    "updatedAt": "2026-01-31T20:42:49.712Z",
+    "usageCount": 0
+  },
+  {
+    "id": "8dbee152-1b75-41ad-911a-250b3186f397",
+    "name": "Clearance Level Access",
+    "description": "ABAC policy template for clearance level-based access",
+    "type": "abac",
+    "category": "compliance",
+    "tags": [
+      "abac",
+      "clearance",
+      "security"
+    ],
+    "template": {
+      "name": "Clearance Level Policy",
+      "description": "Controls access based on clearance level",
+      "type": "abac",
+      "version": "1.0.0",
+      "status": "draft",
+      "effect": "allow",
+      "priority": 200,
+      "conditions": [
+        {
+          "attribute": "subject.clearanceLevel",
+          "operator": "greaterThan",
+          "value": "{{resource.minClearanceLevel}}"
+        }
+      ]
+    },
+    "createdAt": "2026-01-31T20:42:49.712Z",
+    "updatedAt": "2026-01-31T20:42:49.712Z",
+    "usageCount": 0
+  },
+  {
+    "id": "f9bd157b-fbef-4b53-8b94-65424f904d26",
+    "name": "Data Classification Match",
+    "description": "ABAC policy template for data classification matching",
+    "type": "abac",
+    "category": "resource",
+    "tags": [
+      "abac",
+      "data-classification",
+      "compliance"
+    ],
+    "template": {
+      "name": "Data Classification Policy",
+      "description": "Ensures user clearance matches resource classification",
+      "type": "abac",
+      "version": "1.0.0",
+      "status": "draft",
+      "effect": "allow",
+      "priority": 150,
+      "conditions": [
+        {
+          "attribute": "subject.dataClassification",
+          "operator": "equals",
+          "value": "{{resource.dataClassification}}"
+        }
+      ]
+    },
+    "createdAt": "2026-01-31T20:42:49.712Z",
+    "updatedAt": "2026-01-31T20:42:49.712Z",
+    "usageCount": 0
+  },
+  {
+    "id": "95023782-d0e2-4cdf-b621-ed24817da156",
+    "name": "Multi-Condition Access",
+    "description": "ABAC policy template with multiple conditions",
+    "type": "abac",
+    "category": "custom",
+    "tags": [
+      "abac",
+      "multi-condition",
+      "complex"
+    ],
+    "template": {
+      "name": "Multi-Condition Policy",
+      "description": "Policy with multiple attribute conditions",
+      "type": "abac",
+      "version": "1.0.0",
+      "status": "draft",
+      "effect": "allow",
+      "priority": 100,
+      "conditions": [
+        {
+          "attribute": "subject.department",
+          "operator": "equals",
+          "value": "{{resource.department}}"
+        },
+        {
+          "attribute": "subject.clearanceLevel",
+          "operator": "greaterThan",
+          "value": "{{resource.minClearanceLevel}}",
+          "logicalOperator": "AND"
+        }
+      ]
+    },
+    "createdAt": "2026-01-31T20:42:49.712Z",
+    "updatedAt": "2026-01-31T20:42:49.712Z",
+    "usageCount": 0
+  }
+]
